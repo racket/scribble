@@ -3,10 +3,17 @@
            "docpos.ss"
            "colldocs.ss"
            "path.ss"
-           (lib "list.ss"))
+           (lib "list.ss")
+           (lib "contract.ss"))
   
   (provide do-search
            doc-collections-changed)
+  (provide/contract (build-string-finds/finds (string? 
+                                               boolean?
+                                               boolean?
+                                               . -> . 
+                                               (values (listof string?) 
+                                                       (listof (union regexp? string?))))))
 
   (define (html-doc-position x)
     (or (user-defined-doc-position x)
@@ -83,8 +90,7 @@
 			  txt-doc-names)))
     (set! doc-kinds (append (map (lambda (x) 'html) std-docs) (map (lambda (x) 'text) txt-docs)))
     
-    (with-handlers ([not-break-exn?
-		     (lambda (x) (set! doc-collection-date 'none))])
+    (with-handlers ([not-break-exn? (lambda (x) (set! doc-collection-date 'none))])
 		   (set! doc-collection-date 
 			 (file-or-directory-modify-seconds
 			  (collection-path "doc")))))
@@ -114,17 +120,17 @@
   
   (define (with-hash-table ht key compute)
     (dynamic-wind
-	(lambda () (semaphore-wait ht-lock))
-	(lambda ()
-	  (let ([sym (string->symbol key)])
-	    (hash-table-get
-	     ht
-	     sym
-	     (lambda ()
-	       (let ([v (compute)])
-		 (hash-table-put! ht sym v)
-		 v)))))
-	(lambda () (semaphore-post ht-lock))))
+     (lambda () (semaphore-wait ht-lock))
+     (lambda ()
+       (let ([sym (string->symbol key)])
+         (hash-table-get
+          ht
+          sym
+          (lambda ()
+            (let ([v (compute)])
+              (hash-table-put! ht sym v)
+              v)))))
+     (lambda () (semaphore-post ht-lock))))
   
   (define html-keywords (make-hash-table))
   (define (load-html-keywords doc)
@@ -133,8 +139,8 @@
      doc
      (lambda ()
        (with-handlers ([not-break-exn? (lambda (x) null)])
-		      (with-input-from-file (build-path doc "keywords")
-			read)))))
+         (with-input-from-file (build-path doc "keywords")
+           read)))))
       
   (define html-indices (make-hash-table))
   (define (load-html-index doc)
@@ -143,8 +149,8 @@
      doc
      (lambda ()
        (with-handlers ([not-break-exn? (lambda (x) null)])
-		      (with-input-from-file (build-path doc "hdindex")
-			read)))))
+         (with-input-from-file (build-path doc "hdindex")
+           read)))))
       
   (define (parse-txt-file doc ht handle-one)
     (with-hash-table
@@ -281,170 +287,176 @@
   
    (define max-reached #f)
 
-   ; do-search : (string          ; the search text, unprocessed
-      ;              num          ; 0 = keyword, 1 = keyword+index, 2 = all text
-      ;              boolean      ; #t if string should be used as a regexp
-      ;              boolean      ; #t if the string should match exactly (not just "contains")
-      ;              value        ; arbitrary key supplied to the "add" functions
-      ;              (-> A)       ; called when more than enough are found; must escape
-      ;              (string value -> void) ; called to output a document section header (e.g., a manual name)
-      ;              (symbol value -> void) ; called to output a document-kind section header, 'text or 'html
-      ;              (string string string string (union string #f) value -> void)
-      ;                ^       ^      ^     ^       ^- label within page
-      ;                ^       ^      ^     ^- path to doc page
-      ;                ^       ^      ^- source doc title
-      ;                ^       ^- display label
-      ;                ^- found entry's key 
-      ;              ->
-      ;              (union string #f))
-      (define (do-search given-find search-level regexp? exact? ckey maxxed-out
-                         add-doc-section add-kind-section add-choice)
-        ; When new docs are installed, the directory's modification date changes:
-        (set! max-reached #f)
-        (unless (eq? doc-collection-date 'none)
-          (when (or (not doc-collection-date)
-                    (> (file-or-directory-modify-seconds (collection-path "doc"))
-                       doc-collection-date))
-            (reset-doc-lists)))
-        (let* ([hit-count 0]
-               [string-finds (list given-find)]
-               [finds (cond
-                        [exact? (list given-find)]
-                        [regexp? (list (regexp given-find))]
-                        [else (let ([wl (split-words given-find)])
-                                (set! string-finds wl)
-                                (map regexp (map non-regexp wl)))])])
-          (for-each
-           (lambda (doc doc-name doc-kind)
-             (define found-one #f)
-             (define (found kind)
-	       (unless found-one
-		       (add-doc-section doc-name ckey))
-	       (unless (equal? found-one kind)
-		       (set! found-one kind)
-		       (add-kind-section kind ckey))
-	       (set! hit-count (add1 hit-count))
-	       (unless (< hit-count MAX-HIT-COUNT)
-		       (maxxed-out)))
+  (define (build-string-finds/finds given-find regexp? exact?)
+    (cond
+      [exact? (values (list given-find)
+                      (list given-find))]
+      [regexp? (values (list given-find)
+                       (list (regexp given-find)))]
+      [else (let ([wl (split-words given-find)])
+              (values wl
+                      (map regexp (map non-regexp wl))))]))
+  
+  ; do-search : (string          ; the search text, unprocessed
+  ;              num          ; 0 = keyword, 1 = keyword+index, 2 = all text
+  ;              boolean      ; #t if string should be used as a regexp
+  ;              boolean      ; #t if the string should match exactly (not just "contains")
+  ;              value        ; arbitrary key supplied to the "add" functions
+  ;              (-> A)       ; called when more than enough are found; must escape
+  ;              (string value -> void) ; called to output a document section header (e.g., a manual name)
+  ;              (symbol value -> void) ; called to output a document-kind section header, 'text or 'html
+  ;              (string string string string (union string #f) value -> void)
+  ;                ^       ^      ^     ^       ^- label within page
+  ;                ^       ^      ^     ^- path to doc page
+  ;                ^       ^      ^- source doc title
+  ;                ^       ^- display label
+  ;                ^- found entry's key 
+  ;              ->
+  ;              (union string #f))
+  (define (do-search given-find search-level regexp? exact? ckey maxxed-out
+                     add-doc-section add-kind-section add-choice)
+    ; When new docs are installed, the directory's modification date changes:
+    (set! max-reached #f)
+    (unless (eq? doc-collection-date 'none)
+      (when (or (not doc-collection-date)
+                (> (file-or-directory-modify-seconds (collection-path "doc"))
+                   doc-collection-date))
+        (reset-doc-lists)))
+    (let ([hit-count 0])
+      (let-values ([(string-finds finds) (build-string-finds/finds given-find regexp? exact?)])
+        (for-each
+         (lambda (doc doc-name doc-kind)
+           (define found-one #f)
+           (define (found kind)
+             (unless found-one
+               (add-doc-section doc-name ckey))
+             (unless (equal? found-one kind)
+               (set! found-one kind)
+               (add-kind-section kind ckey))
+             (set! hit-count (add1 hit-count))
+             (unless (< hit-count MAX-HIT-COUNT)
+               (maxxed-out)))
+           
+           ; Keyword search
+           (let ([keys (case doc-kind
+                         [(html) (load-html-keywords doc)]
+                         [(text) (load-txt-keywords doc)]
+                         [else null])]
+                 [add-key-choice (lambda (v)
+                                   (found "keyword entries")
+                                   (add-choice
+                                    (car v) ; key
+                                    (cadr v) ; display
+                                    (list-ref v 4) ; title
+                                    (if (eq? 'text doc-kind)
+                                        (apply build-path doc)
+                                        (let ([file (list-ref v 2)])
+                                          (if (servlet-path? file)
+                                              file
+                                              (build-path doc file))))
+                                    (list-ref v 3) ; label
+                                    ckey))])
              
-             ; Keyword search
-             (let ([keys (case doc-kind
-                           [(html) (load-html-keywords doc)]
-                           [(text) (load-txt-keywords doc)]
-                           [else null])]
-                   [add-key-choice (lambda (v)
-                                     (found "keyword entries")
-                                     (add-choice
-                                      (car v) ; key
-                                      (cadr v) ; display
-                                      (list-ref v 4) ; title
-                                      (if (eq? 'text doc-kind)
-                                          (apply build-path doc)
-					  (let ([file (list-ref v 2)])
-					    (if (servlet-path? file)
-						file
-						(build-path doc file))))
-                                      (list-ref v 3) ; label
-                                      ckey))])
-               
-               (unless regexp?
-                 (for-each
-                  (lambda (v)
-                    (when (string=? given-find (car v))
-                      (add-key-choice v)))
-                  keys))
-               (unless (or exact? (null? finds))
-                 (for-each
-                  (lambda (v)
-                    (when (andmap (lambda (find) (regexp-match find (car v))) finds)
-                      (unless (and (not regexp?) (string=? given-find (car v)))
-                        (add-key-choice v))))
-                  keys)))
-             ; Index search
-             (unless (< search-level 1)
-               (let ([index (case doc-kind
-                              [(html) (load-html-index doc)]
-                              [(text) (load-txt-index doc)]
-                              [else null])]
-                     [add-index-choice (lambda (name desc)
-                                         (case doc-kind
-                                           [(html)
-                                            (found "index entries")
-                                            (add-choice 
-					     "" name
-					     (list-ref desc 2)
-					     (let ([filename (list-ref desc 0)])
-					       (if (servlet-path? filename)
-						   filename
-						   (combine-path/url-path doc filename)))
-					     (list-ref desc 1)
-					     ckey)]
-                                           [(text)
-                                            (found "index entries")
-                                            (add-choice 
-					     "" name
-					     "indexed content"
-					     (apply build-path doc)
-					     desc
-					     ckey)]))])
-                 (when index
-                   (unless regexp?
-                     (for-each
-                      (lambda (v)
-                        (when (string=? given-find (car v))
-                          (add-index-choice (car v) (cdr v))))
-                      index))
-                   (unless (or exact? (null? finds))
-                     (for-each
-                      (lambda (v)
-                        (when (andmap (lambda (find) (regexp-match find (car v))) finds)
-                          (unless (and (not regexp?) (string=? given-find (car v)))
-                            (add-index-choice (car v) (cdr v)))))
-                      index)))))
-             ; Content Search
-             (unless (or (< search-level 2) exact? (null? finds))
-               (let ([files (case doc-kind
-                              [(html) (with-handlers ([not-break-exn? (lambda (x) null)]) 
-                                        (map (lambda (x) (build-path doc x)) 
-                                             (filter
-                                              (lambda (x) (file-exists? (build-path doc x)))
-                                              (directory-list doc))))]
-                              [(text) (list (apply build-path doc))]
-                              [else null])])
-                 (for-each
-                  (lambda (f)
-                    (with-handlers ([not-break-exn? (lambda (x) #f)])
-                      (with-input-from-file f
-                        (lambda ()
-                          (let loop ()
-                            (let ([pos (file-position (current-input-port))]
-                                  [r (read-line)])
-                              (unless (eof-object? r)
-                                (let ([m (andmap (lambda (find) (regexp-match find r)) finds)])
-                                  (when m
-                                    (found "text")
-                                    (add-choice (car m)
-                                                ; Strip leading space and clean HTML
-                                                (regexp-replace
-                                                 "^ [ ]*"
-                                                 (if (eq? doc-kind 'html)
-                                                     (clean-html r)
-                                                     r)
-                                                 "")
-                                                "content"
-                                                f
-                                                (if (eq? doc-kind 'text) pos "NO TAG")
-                                                ckey)))
-                                (loop))))))))
-                  files))))
-           docs doc-names doc-kinds)
-          (if (= 0 hit-count)
-	      (format (string-constant plt:hd:nothing-found-for)
-                         (apply
-                          string-append
-			  (cons (format "\"~a\"" (car string-finds))
-				(map (lambda (i) (format " ~a \"~a\"" (string-constant plt:hd:and) i))
-				     (cdr string-finds)))))
-              #f))))
+             (unless regexp?
+               (for-each
+                (lambda (v)
+                  (when (string=? given-find (car v))
+                    (add-key-choice v)))
+                keys))
+             (unless (or exact? (null? finds))
+               (for-each
+                (lambda (v)
+                  (when (andmap (lambda (find) (regexp-match find (car v))) finds)
+                    (unless (and (not regexp?) (string=? given-find (car v)))
+                      (add-key-choice v))))
+                keys)))
+           ; Index search
+           (unless (< search-level 1)
+             (let ([index (case doc-kind
+                            [(html) (load-html-index doc)]
+                            [(text) (load-txt-index doc)]
+                            [else null])]
+                   [add-index-choice (lambda (name desc)
+                                       (case doc-kind
+                                         [(html)
+                                          (found "index entries")
+                                          (add-choice 
+                                           "" name
+                                           (list-ref desc 2)
+                                           (let ([filename (list-ref desc 0)])
+                                             (if (servlet-path? filename)
+                                                 filename
+                                                 (combine-path/url-path doc filename)))
+                                           (list-ref desc 1)
+                                           ckey)]
+                                         [(text)
+                                          (found "index entries")
+                                          (add-choice 
+                                           "" name
+                                           "indexed content"
+                                           (apply build-path doc)
+                                           desc
+                                           ckey)]))])
+               (when index
+                 (unless regexp?
+                   (for-each
+                    (lambda (v)
+                      (when (string=? given-find (car v))
+                        (add-index-choice (car v) (cdr v))))
+                    index))
+                 (unless (or exact? (null? finds))
+                   (for-each
+                    (lambda (v)
+                      (when (andmap (lambda (find) (regexp-match find (car v))) finds)
+                        (unless (and (not regexp?) (string=? given-find (car v)))
+                          (add-index-choice (car v) (cdr v)))))
+                    index)))))
+           ; Content Search
+           (unless (or (< search-level 2) exact? (null? finds))
+             (let ([files (case doc-kind
+                            [(html) (with-handlers ([not-break-exn? (lambda (x) null)]) 
+                                      (map (lambda (x) (build-path doc x)) 
+                                           (filter
+                                            (lambda (x) (file-exists? (build-path doc x)))
+                                            (directory-list doc))))]
+                            [(text) (list (apply build-path doc))]
+                            [else null])])
+               (for-each
+                (lambda (f)
+                  (with-handlers ([not-break-exn? (lambda (x) #f)])
+                    (with-input-from-file f
+                      (lambda ()
+                        (let loop ()
+                          (let ([pos (file-position (current-input-port))]
+                                [r (read-line)])
+                            (unless (eof-object? r)
+                              (let ([m (andmap (lambda (find) (regexp-match find r)) finds)])
+                                (when m
+                                  (found "text")
+                                  (add-choice (car m)
+                                              ; Strip leading space and clean HTML
+                                              (regexp-replace
+                                               "^ [ ]*"
+                                               (if (eq? doc-kind 'html)
+                                                   (clean-html r)
+                                                   r)
+                                               "")
+                                              "content"
+                                              f
+                                              (if (eq? doc-kind 'text) pos "NO TAG")
+                                              ckey)))
+                              (loop))))))))
+                files))))
+         docs doc-names doc-kinds)
+        (if (= 0 hit-count)
+            (format (string-constant plt:hd:nothing-found-for)
+                    (if (null? string-finds)
+                        ""
+                        (apply
+                         string-append
+                         (cons (format "\"~a\"" (car string-finds))
+                               (map (lambda (i) (format " ~a \"~a\"" (string-constant plt:hd:and) i))
+                                    (cdr string-finds))))))
+            #f)))))
 
 
