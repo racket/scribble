@@ -16,7 +16,7 @@
 (require-library "url.ss" "net")
 
 (define startup-url 
-  (string-append "file:" (build-path (collection-path "help") "index.htm")))
+  (string-append "file:" (build-path (collection-path "helpdoc") "helpdesk.html")))
 
 (invoke-unit/sig
  (require-relative-library "helpr.ss")
