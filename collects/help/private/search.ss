@@ -32,43 +32,11 @@
   ; doc-collection-date : (union #f number 'none)
   (define doc-collection-date #f)
       
-  (define re:title (regexp "<[tT][iI][tT][lL][eE]>(.*)</[tT][iI][tT][lL][eE]>"))
-      
-  ; get-std-doc-title : string -> string
-  ; gets the standard title of the documentation, from the
-  ; known docs list.
-  (define (get-std-doc-title path/doc)
-    (let-values ([(path doc _1) (split-path path/doc)])
-      (cond
-        [(string=? doc "help")
-         "PLT Help Desk"]
-        [(assoc doc known-docs)
-         => (lambda (a) (cdr a))]
-        [else
-         (let ([index-file (build-path path doc "index.htm")])
-           (if (file-exists? index-file)
-               (call-with-input-file index-file
-                 (lambda (port)
-                   (let loop ()
-                     (let ([l (read-line port)])
-                       (cond
-                         [(eof-object? l)
-                          doc]
-                         [(regexp-match re:title l)
-                          =>
-                          (lambda (m)
-                            (apply
-                             string
-                             (map (lambda (x) (if (char-whitespace? x) #\space x))
-                                  (string->list (cadr m)))))]
-                         [else (loop)])))))
-               doc))])))
-            
   (define (reset-doc-lists)
   ; Locate standard HTML documentation
     (define-values (std-docs std-doc-names)
       (let* ([docs (find-doc-directories)]
-             [doc-names (map get-std-doc-title docs)])
+             [doc-names (map get-doc-name docs)])
         ; Order the standard docs:
         (let ([ordered (quicksort
                         (map list docs doc-names)
