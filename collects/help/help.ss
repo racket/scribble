@@ -5,11 +5,16 @@
   
   (when install-cm?
     (printf "~a: installing compilation manager\n" cm-env-var)
-    (current-load/use-compiled
-     ((dynamic-require '(lib "cm.ss") 'make-compilation-manager-load/use-compiled-handler)))
-    (when cm-trace?
-      ((dynamic-require '(lib "cm.ss") 'manager-trace-handler)
-       (lambda (x) (display x) (newline)))))
+    (let-values ([(make-compilation-manager-load/use-compiled-handler
+                   manager-trace-handller)
+                  (parameterize ([current-namespace (make-namespace)])
+                    (values
+                     (dynamic-require '(lib "cm.ss") 'make-compilation-manager-load/use-compiled-handler)
+                     (dynamic-require '(lib "cm.ss") 'manager-trace-handler)))])
+      (current-load/use-compiled (make-compilation-manager-load/use-compiled-handler))
+      (when cm-trace?
+        (manager-trace-handler
+         (lambda (x) (display x) (newline))))))
   
   ;; start help desk for real
   (dynamic-require '(lib "help-app-main.ss" "help" "private") #f))
