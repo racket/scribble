@@ -2,16 +2,28 @@
   (require (lib "string-constant.ss" "string-constants")
            "docpos.ss"
            "colldocs.ss"
+	   "server.ss"
+	   "browser.ss"
            (lib "list.ss")
 	   (lib "util.ss" "help" "servlets" "private")
-           (lib "server.ss" "help")
-           (lib "browser.ss" "help"))
+	   (lib "specs.ss" "framework"))
   
   (provide do-search
-           doc-collections-changed
-	   search-for-docs)
-  
-  ; hd-cookie string sym sym any -> void
+           doc-collections-changed)
+
+  (provide/contract 
+   (search-for-docs
+    (hd-cookie? string? 
+		(lambda (s) 
+		  (member s
+		   '("keyword" "keyword-index" "keyword-index-text")))
+		(lambda (s) 
+		  (member s
+		   '("exact-match" "containing-match" "regexp-match")))
+		any?
+		. -> . any?)))
+
+  ; hd-cookie string string string any -> void
   ; shows search result in default browser
   (define (search-for-docs cookie search-string search-type match-type lucky?)
     (let* ([port (hd-cookie->port cookie)]

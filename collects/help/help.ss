@@ -3,8 +3,8 @@
 	   (lib "util.ss" "web-server")
 	   (lib "configuration.ss" "web-server")
 	   (lib "configuration-structures.ss" "web-server")
-	   (lib "server.ss" "help")
-	   (lib "browser.ss" "help"))	
+	   "private/server.ss"
+	   "private/browser.ss")
 
   (require (lib "exit.ss" "help" "servlets" "private"))
 
