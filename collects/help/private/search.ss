@@ -77,8 +77,7 @@
                 (values null null))))
         
         ; Check collections for doc.txt files:
-        (define-values (txt-docs txt-doc-names)
-          (colldocs quicksort))
+        (define-values (txt-docs txt-doc-names) (colldocs))
         
         (set! docs (append std-docs txt-docs))
         (set! doc-names (append
