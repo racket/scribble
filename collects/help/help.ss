@@ -1,5 +1,4 @@
 (module help mzscheme 
-
   (require (lib "web-server.ss" "web-server")
 	   (lib "util.ss" "web-server")
 	   (lib "configuration.ss" "web-server")
@@ -28,13 +27,3 @@
   (help-desk-browser hd-cookie)
   ; wait until shutdown
   (semaphore-wait/enable-break exit-sem))
-
-
-
-
-
-
-
-
-
-
