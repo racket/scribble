@@ -276,15 +276,20 @@
                        rest)))]
             [else (build-path path url-path)])))
       
-      ; do-search : ((? -> ?)
-      ;              ??
-      ;              boolean
-      ;              boolean
-      ;              ??
-      ;              (-> A) ; doesn't return
-      ;              (?? -> ??)
-      ;              (?? -> ??)
-      ;              (?? ?? ?? ?? ?? ?? -> ??)
+      ; do-search : (string       ; the search text, unprocessed
+      ;              num          ; 0 = keyword, 1 = keyword+index, 2 = all text
+      ;              boolean      ; #t if string should be used as a regexp
+      ;              boolean      ; #t if the string should match exactly (not just "contains")
+      ;              value        ; arbitrary key supplied to the "add" functions
+      ;              (-> A)       ; called when more than enough are found; must escape
+      ;              (string value -> void) ; called to output a document section header (e.g., a manual name)
+      ;              (symbol value -> void) ; called to output a document-kind section header, 'text or 'html
+      ;              (string string string string (union string #f) value -> void)
+      ;                ^       ^      ^     ^       ^- label within page
+      ;                ^       ^      ^     ^- path to doc page
+      ;                ^       ^      ^- source doc title
+      ;                ^       ^- display label
+      ;                ^- found entry's key 
       ;              ->
       ;              (union string #f))
       (define (do-search given-find search-level regexp? exact? ckey maxxed-out
