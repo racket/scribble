@@ -6,7 +6,7 @@
   (when install-cm?
     (printf "~a: installing compilation manager\n" cm-env-var)
     (let-values ([(make-compilation-manager-load/use-compiled-handler
-                   manager-trace-handller)
+                   manager-trace-handler)
                   (parameterize ([current-namespace (make-namespace)])
                     (values
                      (dynamic-require '(lib "cm.ss") 'make-compilation-manager-load/use-compiled-handler)
