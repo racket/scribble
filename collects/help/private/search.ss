@@ -17,13 +17,13 @@
      boolean?
      (listof path?)
      boolean? 
-     any?
+     any/c
      (-> any)
-     (string? any? . -> . void?)
-     (string? any? . -> . void?)
-     (string? string? string? path? (union string? number? false?) any? . -> . void?)
+     (string? any/c . -> . void?)
+     (string? any/c . -> . void?)
+     (string? string? string? path? (union string? number? false/c) any/c . -> . void?)
      . -> .
-     (union string? false?))]
+     (union string? false/c))]
    
    (build-string-finds/finds (string? 
                               boolean?
