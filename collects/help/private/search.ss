@@ -450,9 +450,13 @@
         [else (let ([man (car manuals)])
                 (let-values ([(r-doc r-doc-names r-doc-kinds) (loop (cdr manuals))]
                              [(t-doc t-doc-names t-doc-kinds) (find-doc man)])
-                  (values (cons t-doc r-doc)
-                          (cons t-doc-names r-doc-names)
-                          (cons t-doc-kinds r-doc-kinds))))])))
+                  (if t-doc
+                      (values (cons t-doc r-doc)
+                              (cons t-doc-names r-doc-names)
+                              (cons t-doc-kinds r-doc-kinds))
+                      (values r-doc
+                              r-doc-names
+                              r-doc-kinds))))])))
   
   ;; find-doc :
   ;; string -> (values doc[element of docs] doc-name[element of doc-names] doc-kind[element of doc-kinds])
@@ -461,16 +465,20 @@
                [x-doc-names doc-names]
                [x-doc-kinds doc-kinds])
       (cond
-        [(null? x-docs) (error 'find-doc "didn't find the manual ~s" man)]
-        [(or (null? x-doc-names) (null? x-doc-kinds))
+        [(and (null? x-docs) (null? x-doc-names) (null? x-doc-kinds))
+         (values #f #f #f)]
+        [(or (null? x-docs) (null? x-doc-names) (null? x-doc-kinds))
          (error 'find-doc "mismatched lists\n")]
         [else
          (let ([doc (car x-docs)])
-           (let-values ([(base name dir?) (split-path doc)])
-             (cond
-               [(and (eq? 'html (car x-doc-kinds)) (equal? man name))
-                (values doc (car x-doc-names) (car x-doc-kinds))]
-               [else (loop (cdr x-docs) (cdr x-doc-names) (cdr x-doc-kinds))])))])))
+           (cond
+             [(eq? 'html (car x-doc-kinds))
+              (let-values ([(base name dir?) (split-path doc)])
+                (cond
+                  [(equal? man name)
+                   (values doc (car x-doc-names) (car x-doc-kinds))]
+                  [else (loop (cdr x-docs) (cdr x-doc-names) (cdr x-doc-kinds))]))]
+             [else (loop (cdr x-docs) (cdr x-doc-names) (cdr x-doc-kinds))]))])))
   
   ;; extract-doc-txt : (listof string) boolean -> (values docs[sublist] doc-names[sublist] doc-kinds[sublist])
   ;; returns the manuals that are not 'html.
