@@ -24,6 +24,7 @@
 (require-library "framework.ss" "framework")
 
 (require-library "plt-installer.ss" "setup")
+(require-library "get-info.ss" "setup")
 
 (begin-elaboration-time
  (require-library "invoke.ss"))
@@ -58,6 +59,7 @@
   mzlib:file^
   mzlib:url^
   setup:plt-installer^
+  setup:info^
   mred^
   framework^
   (frame-mixin)
