@@ -1,4 +1,5 @@
 (when (getenv "MREDDEBUG")
+  (current-load (let ([ol (current-load)]) (lambda (x) (printf "~a~n" x) (ol x))))
   (require-library "errortrace.ss" "errortrace")
   (error-print-width 180))
 #|
@@ -19,6 +20,8 @@
 (require-library "startup-url.ss" "help")
 
 (require-library "framework.ss" "framework")
+
+(require-library "plt-installer.ss" "setup")
 
 (begin-elaboration-time
  (require-library "invoke.ss"))
@@ -52,6 +55,7 @@
   mzlib:string^
   mzlib:file^
   mzlib:url^
+  setup:plt-installer^
   mred^
   framework^
   (frame-mixin)
