@@ -1,13 +1,13 @@
 (module help mzscheme 
   (require (lib "web-server.ss" "web-server")
 	   (lib "util.ss" "web-server")
+	   (lib "class.ss")
+	   (lib "mred.ss" "mred")
 	   (lib "cmdline.ss")
 	   (lib "configuration.ss" "web-server")
 	   (lib "configuration-structures.ss" "web-server")
 	   "private/server.ss"
 	   "private/browser.ss")
-
-  (require (lib "exit.ss" "help" "servlets" "private"))
 
   (define launch-browser? #t)
   (define external-connections? #f)
@@ -33,9 +33,6 @@
   (define hd-cookie (start-help-server port external-connections?))
   (define help-desk-port (hd-cookie->port hd-cookie))
 
-  (define exit-sem (make-semaphore 0))
-  (set-box! exit-box (lambda () (semaphore-post exit-sem)))
-
   ; allow server startup time
   (let loop ()
     (with-handlers
@@ -47,7 +44,42 @@
       (close-input-port iport))))
 
   (when launch-browser?
-	(help-desk-browser hd-cookie))
+	(help-desk-browser hd-cookie)
+       ; allow browser startup time
+	(sleep 2))
 
-  ; wait until shutdown
-  (semaphore-wait/enable-break exit-sem))
+  (define hd-frame%
+    (class frame%
+	   (inherit show)
+	   (field
+	    [panel #f])
+	   (super-instantiate ())
+	   (set! panel
+		 (instantiate vertical-panel% ()
+			      (parent this)))
+	   (instantiate button% ()
+			(label "New browser")
+			(parent panel)
+			(min-width 100)
+			(callback 
+			 (lambda (b ev)
+			   (help-desk-browser hd-cookie))))
+	   (instantiate button% ()
+			(label "Shutdown server")
+			(parent panel)
+			(min-width 100)
+			(callback (lambda (b ev)
+				    (send this show #f))))))
+
+  (define frame 
+    (instantiate hd-frame% ()
+		 (label "PLT Help Desk")
+		 (min-width 175)
+		 (stretchable-width #f)
+		 (stretchable-height #f)))
+
+  (send frame center)
+  (send frame show #t))
+
+
+
