@@ -19,6 +19,27 @@
  '(frame:basic-mixin frame%))
 
 (test-creation
+ 'info-mixin-creation
+ '(frame:info-mixin frame:basic%))
+(test-creation
+ 'info%-creation
+ 'frame:info%)
+
+(test-creation
+ 'text-info-mixin-creation
+ '(frame:text-info-mixin frame:info%))
+(test-creation
+ 'text-info%-creation
+ 'frame:text-info%)
+
+(test-creation
+ 'pasteboard-info-mixin-creation
+ '(frame:pasteboard-info-mixin frame:info%))
+(test-creation
+ 'pasteboard-info%-creation
+ 'frame:pasteboard-info%)
+
+(test-creation
  'standard-menus%-creation
  'frame:standard-menus%)
 (test-creation
@@ -33,7 +54,7 @@
  '(frame:text-mixin frame:editor%))
 (test-creation
  'text-mixin-creation
- '(frame:text-mixin (frame:editor-mixin frame:standard-menus%)))
+ '(frame:text-mixin frame:editor%))
 
 (test-creation
  'searchable%-creation
@@ -43,21 +64,11 @@
  '(frame:searchable-mixin frame:text%))
 
 (test-creation
- 'info-mixin-creation
- '(frame:info-mixin frame:searchable%))
-(test-creation
- 'text-info-mixin-creation
- '(frame:text-info-mixin (frame:info-mixin frame:searchable%)))
-(test-creation
- 'text-info%-creation
- 'frame:text-info%)
-
-(test-creation
  'text-info-file%-creation
  'frame:text-info-file%)
 (test-creation
  'text-info-file-mixin-creation
- '(frame:file-mixin frame:text-info%))
+ '(frame:file-mixin frame:text%))
 
 (test-creation
  'pasteboard-mixin-creation
@@ -70,15 +81,8 @@
  'frame:pasteboard%)
 
 (test-creation
- 'pasteboard-info-mixin-creation
- '(frame:info-mixin frame:searchable%))
-(test-creation
- 'pasteboard-info%-creation
- 'frame:pasteboard-info%)
-
-(test-creation
  'pasteboard-info-file-mixin-creation
- '(frame:file-mixin frame:pasteboard-info%))
+ '(frame:file-mixin frame:pasteboard%))
 (test-creation
  'pasteboard-info-file%-creation
  'frame:pasteboard-info-file%)
@@ -130,5 +134,4 @@
 
 (test-open "frame:editor open" 'frame:text%)
 (test-open "frame:searchable open" 'frame:searchable%)
-(test-open "frame:text-info open" 'frame:text-info%)
-(test-open "frame:text-info-file open" 'frame:text-info-file%)
+(test-open "frame:text-info open" 'frame:text-info-file%)

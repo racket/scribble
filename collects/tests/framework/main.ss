@@ -158,15 +158,17 @@
 					  (string-append
 					   (exn-message x)
 					   "; rest of string: "
-					   (apply
-					    string
-					    (let loop ()
-					      (if (char-ready? in-port)
-						  (let ([char (read-char in-port)])
-						    (if (eof-object? char)
-							null
-							(cons char (loop))))
-						  null))))))])
+					   (format
+					    "~s"
+					    (apply
+					     string
+					     (let loop ()
+					       (if (char-ready? in-port)
+						   (let ([char (read-char in-port)])
+						     (if (eof-object? char)
+							 null
+							 (cons char (loop))))
+						   null)))))))])
 		   (read in-port))])
 	    (unless (or (eof-object? answer)
 			(and (list? answer)

@@ -1,4 +1,4 @@
-;(require-library "errortrace.ss" "errortrace") (error-print-width 180)
+(require-library "errortrace.ss" "errortrace") (error-print-width 180)
 #|
  TODO:
    * demonstrate setup-plt launcher
@@ -22,6 +22,7 @@
  (require-library "invoke.ss"))
 
 (define frame-mixin values)
+(define (user-defined-doc-position x) #f)
 
 (define-values/invoke-unit/sig help:help^
   (require-relative-library "helpr.ss")
@@ -32,7 +33,8 @@
   mzlib:url^
   mred^
   framework^
-  (frame-mixin))
+  (frame-mixin)
+  help:doc-position^)
 
 (new-help-frame startup-url)
 

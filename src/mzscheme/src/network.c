@@ -58,10 +58,6 @@ static int mzerrno = 0;
 #endif
 #include "schfd.h"
 
-#if defined(USE_UNIX_SOCKETS_TCP) || defined(USE_WINSOCK_TCP)
-# define USE_SOCKETS_TCP
-#endif
-
 #ifdef USE_MAC_TCP
 # include <MacTCP.h>
 # include <dnr.c>

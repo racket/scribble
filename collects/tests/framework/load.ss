@@ -72,6 +72,30 @@
       (global-defined-value 'test:run-one)
       (global-defined-value 'test:button-push)
       (void)))
+
+  (test
+   'frameworkp.ss
+   pred
+   '(parameterize ([current-namespace (make-namespace 'mred)])
+      (require-library "frameworks.ss" "framework")
+      (require-library "file.ss")
+      (eval
+       '(define-values/invoke-unit/sig
+	  framework^
+	  (compound-unit/sig
+	    (import)
+	    (link [mred : mred^ (mred@)]
+		  [core : mzlib:core^ ((require-library "corer.ss"))]
+		  [pf : framework:prefs-file^
+		      ((let ([tf (make-temporary-file)])
+			 (unit/sig framework:prefs-file^ (import)
+				   (define preferences-filename tf))))]
+		  [framework : framework^ ((require-library "frameworkp.ss" "framework")
+					   core mred pf)])
+	    (export (open framework)))))
+      (global-defined-value 'preferences:get)
+      (void)))
+
   (test
    'frameworkr.ss
    pred

@@ -62,9 +62,9 @@
 (test-creation 'frame:text%
 	       'text:searching%
 	       'text:searching-creation)
-(test-creation 'frame:text-info%
+(test-creation '(frame:searchable-mixin frame:text%)
 	       '(text:info-mixin (editor:info-mixin text:searching%))
 	       'text:info-mixin-creation)
-(test-creation 'frame:text-info%
+(test-creation '(frame:searchable-mixin frame:text%)
 	       'text:info%
 	       'text:info-creation)

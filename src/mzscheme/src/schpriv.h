@@ -1373,6 +1373,10 @@ Scheme_Object *scheme_default_load_extension(int argc, Scheme_Object **argv);
 # define USE_TCP
 #endif
 
+#if defined(USE_UNIX_SOCKETS_TCP) || defined(USE_WINSOCK_TCP)
+# define USE_SOCKETS_TCP
+#endif
+
 extern int scheme_active_but_sleeping;
 extern int scheme_internal_checking_char;
 extern int scheme_file_open_count;
