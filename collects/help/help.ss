@@ -1,4 +1,4 @@
-(require-library "errortrace.ss" "errortrace")
+;(require-library "errortrace.ss" "errortrace")
 (error-print-width 80)
 #|
  TODO:
