@@ -3,6 +3,7 @@
            "docpos.ss"
            "colldocs.ss"
            "path.ss"
+           "manuals.ss"
            (lib "list.ss")
            (lib "contract.ss"))
   
@@ -36,54 +37,51 @@
   ; get-std-doc-title : string -> string
   ; gets the standard title of the documentation, from the
   ; known docs list.
-  (define (get-std-doc-title path doc)
-    (cond
-     [(string=? doc "help")
-      "PLT Help Desk"]
-     [(assoc doc known-docs)
-      => (lambda (a) (cdr a))]
-     [else
-      (let ([index-file (build-path path doc "index.htm")])
-	(if (file-exists? index-file)
-	    (call-with-input-file index-file
-	      (lambda (port)
-		(let loop ()
-		  (let ([l (read-line port)])
-		    (cond
-		     [(eof-object? l)
-		      doc]
-		     [(regexp-match re:title l)
-		      =>
-		      (lambda (m)
-			(apply
-			 string
-			 (map (lambda (x) (if (char-whitespace? x) #\space x))
-			      (string->list (cadr m)))))]
-		     [else (loop)])))))
-	    doc))]))
+  (define (get-std-doc-title path/doc)
+    (let-values ([(path doc _1) (split-path path/doc)])
+      (cond
+        [(string=? doc "help")
+         "PLT Help Desk"]
+        [(assoc doc known-docs)
+         => (lambda (a) (cdr a))]
+        [else
+         (let ([index-file (build-path path doc "index.htm")])
+           (if (file-exists? index-file)
+               (call-with-input-file index-file
+                 (lambda (port)
+                   (let loop ()
+                     (let ([l (read-line port)])
+                       (cond
+                         [(eof-object? l)
+                          doc]
+                         [(regexp-match re:title l)
+                          =>
+                          (lambda (m)
+                            (apply
+                             string
+                             (map (lambda (x) (if (char-whitespace? x) #\space x))
+                                  (string->list (cadr m)))))]
+                         [else (loop)])))))
+               doc))])))
             
   (define (reset-doc-lists)
   ; Locate standard HTML documentation
     (define-values (std-docs std-doc-names)
-      (let* ([path (with-handlers ([not-break-exn? (lambda (x) #f)])
-				  (collection-path "doc"))])
-	(if path
-	    (let* ([doc-collections (directory-list path)]
-		   [docs (map (lambda (x) (build-path path x)) doc-collections)]
-               	   [doc-names (map (lambda (x) (get-std-doc-title path x)) doc-collections)])
-		; Order the standard docs:
-	      (let ([ordered (quicksort
-			      (map list docs doc-collections doc-names)
-			      (lambda (a b) ; html-doc-position expects collection name
-				(< (html-doc-position (cadr a))
-				   (html-doc-position (cadr b)))))])
-		(values (map car ordered) (map caddr ordered)))) ; here we want the std title
-	    (values null null))))
+      (let* ([docs (find-doc-directories)]
+             [doc-names (map get-std-doc-title docs)])
+        ; Order the standard docs:
+        (let ([ordered (quicksort
+                        (map list docs doc-names)
+                        (lambda (a b) ; html-doc-position expects collection name
+                          (< (html-doc-position (cadr a))
+                             (html-doc-position (cadr b)))))])
+          (values (map car ordered) (map cadr ordered))))) ; here we want the std title
     
     ; Check collections for doc.txt files:
     (define-values (txt-docs txt-doc-names) (colldocs))
     
     (set! docs (append std-docs txt-docs))
+
     (set! doc-names (append
 		     std-doc-names
 		     (map (lambda (s) (format "the ~a collection" s))
