@@ -90,6 +90,8 @@
 			   (send main-sd-button enable #f)
 			   (send cb-frame center)
 			   (send cb-frame show #t)))])
+		     (define/override can-close? 
+		       (lambda () (shutdown-dialog) #f))
 		     (super-instantiate ())
 		     (set! panel
 			   (instantiate vertical-panel% ()
