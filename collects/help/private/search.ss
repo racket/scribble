@@ -322,19 +322,24 @@
                          [(text) (load-txt-keywords doc)]
                          [else null])]
                  [add-key-choice (lambda (v)
-                                   (found "keyword entries")
-                                   (add-choice
-                                    (car v) ; key
-                                    (cadr v) ; display
-                                    (list-ref v 4) ; title
-                                    (if (eq? 'text doc-kind)
-                                        (apply build-path doc)
-                                        (let ([file (list-ref v 2)])
-                                          (if (servlet-path? file)
-                                              file
-                                              (build-path doc file))))
-                                    (list-ref v 3) ; label
-                                    ckey))])
+                                   (when (and (pair? v)
+                                              (pair? (cdr v))
+                                              (pair? (cddr v))
+                                              (pair? (cdddr v))
+                                              (pair? (cddddr v)))
+                                     (found "keyword entries")
+                                     (add-choice
+                                      (car v) ; key
+                                      (cadr v) ; display
+                                      (list-ref v 4) ; title
+                                      (if (eq? 'text doc-kind)
+                                          (apply build-path doc)
+                                          (let ([file (list-ref v 2)])
+                                            (if (servlet-path? file)
+                                                file
+                                                (build-path doc file))))
+                                      (list-ref v 3) ; label
+                                      ckey)))])
              (unless regexp?
                (for-each
                 (lambda (v)
@@ -358,16 +363,19 @@
                    [add-index-choice (lambda (name desc)
                                        (case doc-kind
                                          [(html)
-                                          (found "index entries")
-                                          (add-choice 
-                                           "" name
-                                           (list-ref desc 2)
-                                           (let ([filename (list-ref desc 0)])
-                                             (if (servlet-path? filename)
-                                                 filename
-                                                 (combine-path/url-path doc filename)))
-                                           (list-ref desc 1)
-                                           ckey)]
+                                          (when (and (pair? desc)
+                                                     (pair? (cdr desc))
+                                                     (pair? (cddr desc)))
+                                            (found "index entries")
+                                            (add-choice 
+                                             "" name
+                                             (list-ref desc 2)
+                                             (let ([filename (list-ref desc 0)])
+                                               (if (servlet-path? filename)
+                                                   filename
+                                                   (combine-path/url-path doc filename)))
+                                             (list-ref desc 1)
+                                             ckey))]
                                          [(text)
                                           (found "index entries")
                                           (add-choice 
