@@ -76,7 +76,7 @@
 			  txt-doc-names)))
     (set! doc-kinds (append (map (lambda (x) 'html) std-docs) (map (lambda (x) 'text) txt-docs)))
     
-    (with-handlers ([not-break-exn? (lambda (x) (set! doc-collection-date 'none))])
+    (with-handlers ([exn:fail:filesystem? (lambda (x) (set! doc-collection-date 'none))])
 		   (set! doc-collection-date 
 			 (file-or-directory-modify-seconds
 			  (collection-path "doc")))))
@@ -123,7 +123,8 @@
      html-keywords
      doc
      (lambda ()
-       (with-handlers ([not-break-exn? (lambda (x) null)])
+       (with-handlers ([exn:fail:read? (lambda (x) null)]
+                       [exn:fail:filesystem? (lambda (x) null)])
          (transform-keywords
           (with-input-from-file (build-path doc "keywords")
             read))))))
@@ -134,7 +135,8 @@
      html-indices
      doc
      (lambda ()
-       (with-handlers ([not-break-exn? (lambda (x) null)])
+       (with-handlers ([exn:fail:read? (lambda (x) null)]
+                       [exn:fail:filesystem? (lambda (x) null)])
          (transform-hdindex
           (with-input-from-file (build-path doc "hdindex")
             read))))))
@@ -185,8 +187,7 @@
      ht
      doc
      (lambda ()
-       (with-handlers 
-	([not-break-exn? (lambda (x) null)])
+       (with-handlers ([exn:fail:filesystem? (lambda (x) null)])
 	(with-input-from-file doc
 	  (lambda ()
 	    (let loop ([start 0])
@@ -211,7 +212,7 @@
          (let/ec k
            (let* ([p (open-input-string (substring r 1 (string-length r)))]
                   [entry (parameterize ([read-accept-bar-quote #f])
-                           (with-handlers ([not-break-exn?
+                           (with-handlers ([exn:fail:read?
                                             (lambda (x)
                                               (k null))])
                              (read p)))]
@@ -224,7 +225,7 @@
                                               (loop (car entry)))]
                            [else (error "bad entry")]))]
                   [content (if (symbol? entry)
-                               (with-handlers ([not-break-exn? (lambda (x) #f)])
+                               (with-handlers ([exn:fail:read? (lambda (x) #f)])
                                  (let ([s (read p)])
                                    (if (eq? s '::)
                                        (read p)
@@ -463,7 +464,7 @@
            ; Content Search
            (unless (or (< search-level 2) exact? (null? finds))
              (let ([files (case doc-kind
-                            [(html) (with-handlers ([not-break-exn? (lambda (x) null)]) 
+                            [(html) (with-handlers ([exn:fail:filesystem? (lambda (x) null)]) 
                                       (map (lambda (x) (build-path doc x)) 
                                            (filter
                                             (lambda (x) (file-exists? (build-path doc x)))
@@ -472,7 +473,7 @@
                             [else null])])
                (for-each
                 (lambda (f)
-                  (with-handlers ([not-break-exn? (lambda (x) #f)])
+                  (with-handlers ([exn:fail:filesystem? (lambda (x) #f)])
                     (with-input-from-file f
                       (lambda ()
                         (let loop ()
