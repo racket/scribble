@@ -3,7 +3,8 @@
 	   (lib "mred.ss" "mred")
 	   (lib "cmdline.ss")
 	   "private/server.ss"
-	   "private/browser.ss")
+	   "private/browser.ss"
+	   "private/plt-browser.ss")
 
   (define launch-browser? #t)
   (define external-connections? #f)
