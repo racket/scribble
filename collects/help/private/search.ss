@@ -2,7 +2,6 @@
   (require (lib "string-constant.ss" "string-constants")
            "docpos.ss"
            "colldocs.ss"
-	   "server.ss"
            "path.ss"
            (lib "list.ss"))
   
