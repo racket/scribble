@@ -22,6 +22,8 @@
 (begin-elaboration-time
  (require-library "invoke.ss"))
 
+(define frame-mixin values)
+
 (define-values/invoke-unit/sig help:help^
   (require-relative-library "helpr.ss")
   #f
@@ -30,7 +32,8 @@
   mzlib:file^
   mzlib:url^
   mred^
-  framework^)
+  framework^
+  (frame-mixin))
 
 (new-help-frame startup-url #f)
 
