@@ -170,7 +170,7 @@
                      ,(? string? title))
                    (list keyword
                          result
-                         (string->path file)
+                         file
                          label 
                          title)]
                  [else (fail)]))
@@ -369,7 +369,9 @@
                                       (list-ref v 4) ; title
                                       (if (eq? 'text doc-kind)
                                           (apply build-path doc)
-                                          (let ([file (bytes->path (string->bytes/utf-8 (list-ref v 2)))])
+                                          (let ([file (bytes->path 
+                                                       (string->bytes/utf-8
+                                                        (list-ref v 2)))])
                                             (if (servlet-path? file)
                                                 file
                                                 (build-path doc file))))
