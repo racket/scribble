@@ -35,6 +35,6 @@
   framework^
   (frame-mixin))
 
-(new-help-frame startup-url #f)
+(new-help-frame startup-url)
 
 (yield (make-semaphore))
