@@ -8,7 +8,7 @@
 	   "private/plt-browser.ss")
 
   (define launch-browser? #t)
-  (define external-connections? #f)
+  (define remote-connections? #f)
   (define iconize? #f)
   (define quiet? #f)
   (define port #f)
@@ -19,8 +19,8 @@
    (once-each
     [("-n" "--no-browser") "Do not launch browser (ignored for PLT browser)"
      (set! launch-browser? #f)]
-    [("-x" "--external-connections") "Allow external connections (ignored for PLT browser)"
-     (set! external-connections? #t)]
+    [("-r" "--remote-connections") "Allow remote connections (ignored for PLT browser)"
+     (set! remote-connections? #t)]
     [("-i" "--iconize") "Iconize the control panel"
      (set! iconize? #t)]
     [("-q" "--quiet") "Don't show the control panel"
@@ -34,7 +34,7 @@
 		(raise 'not-exact-integer))
 	(set! port port-val)))]))
 
-  (define hd-cookie (start-help-server port external-connections?))
+  (define hd-cookie (start-help-server port remote-connections?))
   (unless hd-cookie (exit))
   (define help-desk-port (hd-cookie->port hd-cookie))
 
