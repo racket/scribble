@@ -7,15 +7,31 @@
            (lib "list.ss")
            (lib "contract.ss"))
   
-  (provide do-search
-           doc-collections-changed)
-  (provide/contract (build-string-finds/finds (string? 
-                                               boolean?
-                                               boolean?
-                                               . -> . 
-                                               (values (listof string?) 
-                                                       (listof (union regexp? string?)))))
-                    (non-regexp (string? . -> . string?)))
+  (provide doc-collections-changed)
+  (provide/contract
+   [do-search
+    (string?
+     number?
+     boolean?
+     boolean?
+     (listof path?)
+     boolean? 
+     any?
+     (-> any)
+     (string? any? . -> . void?)
+     (string? any? . -> . void?)
+     (string? string? string? string? (union string? false?) any . -> . void?)
+     . -> .
+     (union string? false?))]
+   
+   (build-string-finds/finds (string? 
+                              boolean?
+                              boolean?
+                              . -> . 
+                              (values (listof string?) 
+                                      (listof (union regexp? string?)))))
+   
+   (non-regexp (string? . -> . string?)))
 
   (define (html-doc-position x)
     (or (user-defined-doc-position x)
@@ -24,7 +40,7 @@
   ; These are set by reset-doc-lists:
   ; docs, doc-names and doc-kinds are parallel lists. doc-kinds
   ; distinguishes between the two variants of docs.
-  ; docs : (list-of (union string (list string string)))
+  ; docs : (list-of (union string (list path string)))
   (define docs null)
   ; doc-names : (list-of string)
   (define doc-names null)
@@ -275,7 +291,7 @@
   ;              num          ; 0 = keyword, 1 = keyword+index, 2 = all text
   ;              boolean      ; #t if string should be used as a regexp
   ;              boolean      ; #t if the string should match exactly (not just "contains")
-  ;              (listof string)  the manuals to search
+  ;              (listof path) ; the manuals to search
   ;              boolean      ; #t if the doc.txt files should be searched
   ;              value        ; arbitrary key supplied to the "add" functions
   ;              (-> A)       ; called when more than enough are found; must escape
@@ -448,7 +464,7 @@
                                     (cdr string-finds))))))
             #f))))
   
-  ;; filter-docs : (listof string) boolean -> (values docs[sublist] doc-names[sublist] doc-kinds[sublist])
+  ;; filter-docs : (listof path) boolean -> (values docs[sublist] doc-names[sublist] doc-kinds[sublist])
   ;; given the list of manuals specified by `manuals', returns the sublists of the global
   ;; variables docs, doc-names, and doc-kinds that make sense for this search.
   (define (filter-docs manuals doc-txt?)
@@ -469,7 +485,7 @@
                               r-doc-kinds))))])))
   
   ;; find-doc :
-  ;; string -> (values doc[element of docs] doc-name[element of doc-names] doc-kind[element of doc-kinds])
+  ;; path -> (values doc[element of docs] doc-name[element of doc-names] doc-kind[element of doc-kinds])
   (define (find-doc man)
     (let loop ([x-docs docs]
                [x-doc-names doc-names]
