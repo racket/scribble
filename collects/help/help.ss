@@ -80,7 +80,8 @@
 					      (send cb-frame show #f))))])
 		      (send main-sd-button enable #f)
 		      (send cb-frame center)
-		      (send cb-frame show #t)))])
+		      (send cb-frame show #t)
+	              (send sd-button focus)))])
 		(define/override can-close? 
 		  (lambda () (shutdown-dialog) #f))
 		(super-instantiate ())
