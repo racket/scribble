@@ -3,9 +3,9 @@
            "docpos.ss"
            "colldocs.ss"
            (lib "list.ss")
-	   (lib "util.ss" "doc" "help" "servlets" "private")
-           "../server.ss"
-           "../browser.ss")
+	   (lib "util.ss" "help" "servlets" "private")
+           (lib "server.ss" "help")
+           (lib "browser.ss" "help"))
   
   (provide do-search
            doc-collections-changed

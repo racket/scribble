@@ -6,7 +6,7 @@
 	   (lib "server.ss" "help")
 	   (lib "browser.ss" "help"))	
 
-  (require (lib "exit.ss" "doc" "help" "servlets" "private"))
+  (require (lib "exit.ss" "help" "servlets" "private"))
 
   (define hd-cookie (start-help-server))
   (define help-desk-port (hd-cookie->port hd-cookie))
