@@ -9,15 +9,17 @@
 |#
 
 (module help mzscheme 
-  (require "startup-url.ss"
-           (lib "framework.ss" "framework")
+  (require (lib "class.ss")
+           (lib "unitsig.ss")
+           "startup-url.ss"
            "help-unit.ss"
            "help-sig.ss"
+           (lib "framework.ss" "framework")
+           (lib "framework-sig.ss" "framework")
            (lib "plt-installer.ss" "setup")
-           (lib "getinfo.ss" "setup")
-           (lib "mred.ss"))
-  
-  (provide-signature-elements help^)
+           (lib "plt-installer-sig.ss" "setup")
+           (lib "mred-sig.ss" "mred")
+           (lib "mred.ss" "mred"))
   
   (define frame-mixin values)
   (define (user-defined-doc-position x) #f)
@@ -33,14 +35,12 @@
    (lambda (x) (and (number? x) (exact? x) (= x (floor x)))))
 
   (define-values/invoke-unit/sig help^
-                                 help-unit@
+                                 help@
                                  #f
                                  setup:plt-installer^
-                                 setup:get-info^
                                  mred^
                                  framework^
                                  (frame-mixin)
                                  help:doc-position^)
   
   (new-help-frame startup-url))
-

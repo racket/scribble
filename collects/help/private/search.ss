@@ -4,6 +4,7 @@
            "sig.ss"
            "../help-sig.ss"
            "docpos.ss"
+           "colldocs.ss"
            (lib "list.ss"))
   
   (provide search@)
@@ -27,8 +28,6 @@
       (define doc-kinds null)
       ; doc-collection-date : ??
       (define doc-collection-date #f)
-      
-      (define colldocs (require-library "colldocs.ss" "help"))
       
       (define re:title (regexp "<[tT][iI][tT][lL][eE]>(.*)</[tT][iI][tT][lL][eE]>"))
       
