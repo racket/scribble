@@ -305,6 +305,8 @@
   ;              num          ; 0 = keyword, 1 = keyword+index, 2 = all text
   ;              boolean      ; #t if string should be used as a regexp
   ;              boolean      ; #t if the string should match exactly (not just "contains")
+  ;              (listof string)  the manuals to search
+  ;              boolean      ; #t if the doc.txt files should be searched
   ;              value        ; arbitrary key supplied to the "add" functions
   ;              (-> A)       ; called when more than enough are found; must escape
   ;              (string value -> void) ; called to output a document section header (e.g., a manual name)
@@ -317,8 +319,10 @@
   ;                ^- found entry's key 
   ;              ->
   ;              (union string #f))
-  (define (do-search given-find search-level regexp? exact? ckey maxxed-out
+  (define (do-search given-find search-level regexp? exact? manuals doc-txt?
+                     ckey maxxed-out
                      add-doc-section add-kind-section add-choice)
+    
     ; When new docs are installed, the directory's modification date changes:
     (set! max-reached #f)
     (unless (eq? doc-collection-date 'none)
@@ -327,7 +331,9 @@
                    doc-collection-date))
         (reset-doc-lists)))
     (let ([hit-count 0])
-      (let-values ([(string-finds finds) (build-string-finds/finds given-find regexp? exact?)])
+      (let-values ([(string-finds finds) (build-string-finds/finds given-find regexp? exact?)]
+                   [(filtered-docs filtered-doc-names filtered-doc-kinds)
+                    (filter-docs manuals doc-txt?)])
         (for-each
          (lambda (doc doc-name doc-kind)
            (define found-one #f)
@@ -374,6 +380,7 @@
                     (unless (and (not regexp?) (string=? given-find (car v)))
                       (add-key-choice v))))
                 keys)))
+           
            ; Index search
            (unless (< search-level 1)
              (let ([index (case doc-kind
@@ -451,7 +458,7 @@
                                               ckey)))
                               (loop))))))))
                 files))))
-         docs doc-names doc-kinds)
+         filtered-docs filtered-doc-names filtered-doc-kinds)
         (if (= 0 hit-count)
             (format (string-constant plt:hd:nothing-found-for)
                     (if (null? string-finds)
@@ -461,6 +468,60 @@
                          (cons (format "\"~a\"" (car string-finds))
                                (map (lambda (i) (format " ~a \"~a\"" (string-constant plt:hd:and) i))
                                     (cdr string-finds))))))
-            #f)))))
+            #f))))
+  
+  ;; filter-docs : (listof string) boolean -> (values docs[sublist] doc-names[sublist] doc-kinds[sublist])
+  ;; given the list of manuals specified by `manuals', returns the sublists of the global
+  ;; variables docs, doc-names, and doc-kinds that make sense for this search.
+  (define (filter-docs manuals doc-txt?)
+    (let loop ([manuals manuals])
+      (cond
+        [(null? manuals) (if doc-txt?
+                             (extract-doc-txt)
+                             (values null null null))]
+        [else (let ([man (car manuals)])
+                (let-values ([(r-doc r-doc-names r-doc-kinds) (loop (cdr manuals))]
+                             [(t-doc t-doc-names t-doc-kinds) (find-doc man)])
+                  (values (cons t-doc r-doc)
+                          (cons t-doc-names r-doc-names)
+                          (cons t-doc-kinds r-doc-kinds))))])))
+  
+  ;; find-doc :
+  ;; string -> (values doc[element of docs] doc-name[element of doc-names] doc-kind[element of doc-kinds])
+  (define (find-doc man)
+    (let loop ([x-docs docs]
+               [x-doc-names doc-names]
+               [x-doc-kinds doc-kinds])
+      (cond
+        [(null? x-docs) (error 'find-doc "didn't find the manual ~s" man)]
+        [(or (null? x-doc-names) (null? x-doc-kinds))
+         (error 'find-doc "mismatched lists\n")]
+        [else
+         (let ([doc (car x-docs)])
+           (let-values ([(base name dir?) (split-path doc)])
+             (cond
+               [(and (eq? 'html (car x-doc-kinds)) (equal? man name))
+                (values doc (car x-doc-names) (car x-doc-kinds))]
+               [else (loop (cdr x-docs) (cdr x-doc-names) (cdr x-doc-kinds))])))])))
+  
+  ;; extract-doc-txt : (listof string) boolean -> (values docs[sublist] doc-names[sublist] doc-kinds[sublist])
+  ;; returns the manuals that are not 'html.
+  (define (extract-doc-txt)
+    (let loop ([x-docs docs]
+               [x-doc-names doc-names]
+               [x-doc-kinds doc-kinds])
+      (cond
+        [(null? x-docs) (values null null null)]
+        [(or (null? x-doc-names) (null? x-doc-kinds))
+         (error 'extract-doc-txt "mismatched lists\n")]
+        [else
+         (if (eq? (car x-doc-kinds) 'html)
+             (loop (cdr x-docs) (cdr x-doc-names) (cdr x-doc-kinds))
+             (let-values ([(r-docs r-doc-names r-doc-kinds) (loop (cdr x-docs) 
+                                                                  (cdr x-doc-names) 
+                                                                  (cdr x-doc-kinds))])
+               (values (cons (car x-docs) r-docs)
+                       (cons (car x-doc-names) r-doc-names)
+                       (cons (car x-doc-kinds) r-doc-kinds))))]))))
 
 
