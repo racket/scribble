@@ -436,14 +436,12 @@
                   files))))
            docs doc-names doc-kinds)
           (if (= 0 hit-count)
-              (cond
-                [(null? string-finds) (string-constant nothing-found-for-empty-search)]
-                [else
-                 (format (string-constant nothing-found-for)
+	      (format (string-constant nothing-found-for)
                          (apply
                           string-append
 			  (cons (format "\"~a\"" (car string-finds))
 				(map (lambda (i) (format " ~a \"~a\"" (string-constant and) i))
-				     (cdr string-finds)))))])
+				     (cdr string-finds)))))
               #f))))
+
 
