@@ -38,21 +38,16 @@
   (unless hd-cookie (exit))
   (define help-desk-port (hd-cookie->port hd-cookie))
 
-  (define internal-browser? (use-plt-browser?))
-
-  (if internal-browser?
+  (if (use-plt-browser?)
     (set! launch-browser? #t) ; always launch
     ; allow server startup time
     (wait-for-connection help-desk-port))
 
   (when launch-browser?
-    (help-desk-browser hd-cookie)
-    ; starting an external browser may have failed
-    ;  so we may have switched to the internal browser
-    (set! internal-browser? (use-plt-browser?)))
+    (help-desk-browser hd-cookie))
 
   (cond
-   [internal-browser? (void)]
+   [(use-plt-browser?) (void)]
    [quiet? (semaphore-wait (make-semaphore 0))]
    [else
     (let* ([hd-frame%
