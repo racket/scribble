@@ -20,7 +20,7 @@
            (lib "mred.ss" "mred"))
     
   (preferences:add-editor-checkbox-panel)
-  (preferences:add-misc-checkbox-panel)
+  (preferences:add-warnings-checkbox-panel)
   ;; don't call preferences:add-scheme-checkbox-panel
   ;; here since those prefs don't really apply to Help Desk
   (add-proxy-prefs-panel)
