@@ -61,7 +61,7 @@
       (define (reset-doc-lists)
         ; Locate standard HTML documentation
         (define-values (std-docs std-doc-names)
-          (let* ([path (with-handlers ([void (lambda (x) #f)])
+          (let* ([path (with-handlers ([not-break-exn? (lambda (x) #f)])
                          (collection-path "doc"))])
             (if path
                 (let* ([doc-collections (directory-list path)]
@@ -86,8 +86,8 @@
                               txt-doc-names)))
         (set! doc-kinds (append (map (lambda (x) 'html) std-docs) (map (lambda (x) 'text) txt-docs)))
         
-        (with-handlers ([void (lambda (x)
-                                (set! doc-collection-date 'none))])
+        (with-handlers ([not-break-exn?
+                         (lambda (x) (set! doc-collection-date 'none))])
           (set! doc-collection-date 
                 (file-or-directory-modify-seconds
                  (collection-path "doc")))))
@@ -112,8 +112,6 @@
           "")
          ""))
       
-      (define not-break? (lambda (x) (not (exn:break? x))))
-      
       ; One lock for all hash table operations is good enough
       (define ht-lock (make-semaphore 1))
       
@@ -137,7 +135,7 @@
          html-keywords
          doc
          (lambda ()
-           (with-handlers ([not-break? (lambda (x) null)])
+           (with-handlers ([not-break-exn? (lambda (x) null)])
              (with-input-from-file (build-path doc "keywords")
                read)))))
       
@@ -147,7 +145,7 @@
          html-indices
          doc
          (lambda ()
-           (with-handlers ([not-break? (lambda (x) null)])
+           (with-handlers ([not-break-exn? (lambda (x) null)])
              (with-input-from-file (build-path doc "hdindex")
                read)))))
       
@@ -156,7 +154,7 @@
          ht
          doc
          (lambda ()
-           (with-handlers ([not-break? (lambda (x) null)])
+           (with-handlers ([not-break-exn? (lambda (x) null)])
              (with-input-from-file doc
                (lambda ()
                  (let loop ([start 0])
@@ -189,7 +187,7 @@
                                                  (loop (car entry)))]
                               [else (error "bad entry")]))]
                      [content (if (symbol? entry)
-                                  (with-handlers ([not-break? (lambda (x) #f)])
+                                  (with-handlers ([not-break-exn? (lambda (x) #f)])
                                     (let ([s (read p)])
                                       (if (eq? s '::)
                                           (read p)
@@ -386,7 +384,7 @@
              ; Content Search
              (unless (or (< search-level 2) exact? (null? finds))
                (let ([files (case doc-kind
-                              [(html) (with-handlers ([not-break? (lambda (x) null)]) 
+                              [(html) (with-handlers ([not-break-exn? (lambda (x) null)]) 
                                         (map (lambda (x) (build-path doc x)) 
                                              (filter
                                               (lambda (x) (file-exists? (build-path doc x)))
@@ -395,7 +393,7 @@
                               [else null])])
                  (for-each
                   (lambda (f)
-                    (with-handlers ([not-break? (lambda (x) #f)])
+                    (with-handlers ([not-break-exn? (lambda (x) #f)])
                       (with-input-from-file f
                         (lambda ()
                           (let loop ()
