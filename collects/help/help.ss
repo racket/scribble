@@ -10,14 +10,38 @@
            "startup-url.ss"
            "help-unit.ss"
            "help-sig.ss"
+	   "proxy-prefs.ss"
+           (lib "string-constant.ss" "string-constants")
            (lib "framework.ss" "framework")
            (lib "framework-sig.ss" "framework")
            (lib "plt-installer.ss" "setup")
            (lib "plt-installer-sig.ss" "setup")
            (lib "mred-sig.ss" "mred")
            (lib "mred.ss" "mred"))
+    
+  (preferences:add-general-panel)
+  (add-proxy-prefs-panel)
+
+  (define (frame-mixin %)
+    (class %
+      (define/override (help-menu:about-string)
+        (string-constant about-help-desk))
+      (define/override (help-menu:about-callback i e)
+        (message-box (string-constant about-help-desk)
+                     (format 
+                      (string-constant help-desk-about-string)
+                      (version:version))
+                     this))
+      (define/override (help-menu:create-about?) #t)
+      (define/override (help-menu:after-about menu)
+        (make-object menu-item% (string-constant help-on-help) menu
+          (lambda (i e)
+            (message-box
+             (string-constant help-on-help)
+             (string-constant help-on-help-details)
+             this))))
+      (super-instantiate ())))
   
-  (define frame-mixin values)
   (define (user-defined-doc-position x) #f)
 
   ;; just in case drscheme hasn't been run before, we
