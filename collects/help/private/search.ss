@@ -350,6 +350,7 @@
              (set! hit-count (add1 hit-count))
              (unless (< hit-count MAX-HIT-COUNT)
                (maxxed-out)))
+
            
            ; Keyword search
            (let ([keys (case doc-kind
