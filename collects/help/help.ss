@@ -1,10 +1,9 @@
-(require-library "errortrace.ss" "errortrace")
-(error-print-width 80)
+; (require-library "errortrace.ss" "errortrace")
+; (error-print-width 80)
 #|
  TODO:
    * demonstrate setup-plt launcher
    * manuals as `doc' sub-collections?
-   * doc.txt in sub-collections?
 |#
 
 
