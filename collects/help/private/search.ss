@@ -180,37 +180,43 @@
      (lambda (r start)
        (cond
 	[(regexp-match re:keyword-line r)
-	 (let* ([p (open-input-string (substring r 1 (string-length r)))]
-		[entry (parameterize ([read-accept-bar-quote #f])
-				     (read p))]
-		[key (let loop ([entry entry])
-		       (cond
-			[(symbol? entry) entry]
-			[(pair? entry) (if (eq? (car entry) 'quote)
-					   (loop (cadr entry))
-					   (loop (car entry)))]
-			[else (error "bad entry")]))]
-		[content (if (symbol? entry)
-			     (with-handlers ([not-break-exn? (lambda (x) #f)])
-					    (let ([s (read p)])
-					      (if (eq? s '::)
-						  (read p)
-						  #f)))
-			     #f)])
-	   (list
-            ; Make the keyword entry:
-	    (list (symbol->string key) ; the keyword name
-		  (let ([p (open-output-string)])
-		    (if content
-			(display content p)
-			(if (and (pair? entry) 
-				 (eq? (car entry) 'quote))
-			    (fprintf p "'~s" (cadr entry))
-			    (display entry p)))
-		    (get-output-string p)) ; the text to display
-		  (cadr doc) ; file
-		  start ; label (a position in this case)
-		  "doc.txt")))] ; title
+         (let/ec k
+           (let* ([p (open-input-string (substring r 1 (string-length r)))]
+                  [entry (parameterize ([read-accept-bar-quote #f])
+                           (with-handlers ([not-break-exn?
+                                            (lambda (x)
+                                              (k null))])
+                             (read p)))]
+                  [key (let loop ([entry entry])
+                         (cond
+                           [(symbol? entry) entry]
+                           [(pair? entry) (if (and (eq? (car entry) 'quote)
+                                                   (pair? (cdr entry)))
+                                              (loop (cadr entry))
+                                              (loop (car entry)))]
+                           [else (error "bad entry")]))]
+                  [content (if (symbol? entry)
+                               (with-handlers ([not-break-exn? (lambda (x) #f)])
+                                 (let ([s (read p)])
+                                   (if (eq? s '::)
+                                       (read p)
+                                       #f)))
+                               #f)])
+             (list
+              ; Make the keyword entry:
+              (list (symbol->string key) ; the keyword name
+                    (let ([p (open-output-string)])
+                      (if content
+                          (display content p)
+                          (if (and (pair? entry) 
+                                   (pair? (cdr entry))
+                                   (eq? (car entry) 'quote))
+                              (fprintf p "'~s" (cadr entry))
+                              (display entry p)))
+                      (get-output-string p)) ; the text to display
+                    (cadr doc) ; file
+                    start ; label (a position in this case)
+                    "doc.txt"))))] ; title
 	[else #f]))))
       
   (define re:index-line (regexp "_([^_]*)_(.*)"))
