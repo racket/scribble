@@ -35,6 +35,7 @@
 	(set! port port-val)))]))
 
   (define hd-cookie (start-help-server port external-connections?))
+  (unless hd-cookie (exit))
   (define help-desk-port (hd-cookie->port hd-cookie))
 
   (define internal-browser? (use-plt-browser?))
