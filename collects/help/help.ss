@@ -1,6 +1,6 @@
 (when (getenv "MREDDEBUG")
   (current-load (let ([ol (current-load)]) (lambda (x) (printf "~a~n" x) (ol x))))
-  (eval '(require "errortrace.ss" "errortrace"))
+  (eval '(require (lib "errortrace.ss" "errortrace")))
   (error-print-width 180))
 #|
  TODO:
