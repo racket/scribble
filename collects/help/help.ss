@@ -1,16 +1,12 @@
 
 #|
  TODO:
-   * starting location as option
-   * define a max hit count
-
-   * setup-plt launcher
+   * demonstrate setup-plt launcher
 
    * manuals as `doc' sub-collections?
    * doc.txt in sub-collections?
 
    * document help system
-   * keywordize and index existing doc.txt files
 |#
 
 
@@ -22,8 +18,12 @@
 
 (require-library "url.ss" "net")
 
+(define startup-url 
+  (string-append "file:" (build-path (collection-path "doc") "index.htm")))
+
 (invoke-unit/sig
  (require-relative-library "helpr.ss")
+ help:option^
  mzlib:function^
  mzlib:string^
  mzlib:file^
