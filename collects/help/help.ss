@@ -39,9 +39,20 @@
   (wait-for-connection help-desk-port)
 
   (when launch-browser?
-	(help-desk-browser hd-cookie)
-        ; allow browser startup time
-	(sleep 2))
+	(with-handlers
+	  ([void 
+	    (lambda _
+	      (message-box 
+	       "Help Desk" 
+	       (format 
+		(string-append
+		 "Unable to start a browser. "
+		 "Manually start a browser and use the URL "
+		 "http://127.0.0.1:~a/servlets/home.ss.")
+		(hd-cookie->port hd-cookie))))])
+	  (help-desk-browser hd-cookie)
+	  ; allow browser startup time
+	  (sleep 2)))
 
   (if quiet?
       (semaphore-wait (make-semaphore 0))
