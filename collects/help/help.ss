@@ -17,11 +17,18 @@
 
 (require-library "startup-url.ss" "help")
 
-(invoke-unit/sig
+(require-library "framework.ss" "framework")
+
+(invoke-open-unit/sig
  (require-relative-library "helpr.ss")
- help:option^
+ #f
  mzlib:function^
  mzlib:string^
  mzlib:file^
  mzlib:url^
- mred^)
+ mred^
+ framework^)
+
+(new-help-frame startup-url)
+
+(yield (make-semaphore))
