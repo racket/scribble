@@ -11,6 +11,7 @@
 
   (define launch-browser? #t)
   (define external-connections? #f)
+  (define port #f)
 
   (command-line
    "help-desk"
@@ -19,9 +20,17 @@
     [("-n" "--no-browser") "Do not launch browser"
      (set! launch-browser? #f)]
     [("-x" "--external-connections") "Allow external connections"
-     (set! external-connections? #t)]))
+     (set! external-connections? #t)]
+    [("-p" "--port") number "Use given port number"
+     (with-handlers
+      ((void (lambda _
+	       (error "Help Desk: expected exact integer for port"))))
+      (let ([port-val (string->number number)])
+	(unless (and (integer? port-val) (exact? port-val))
+		(raise 'not-exact-integer))
+	(set! port port-val)))]))
 
-  (define hd-cookie (start-help-server external-connections?))
+  (define hd-cookie (start-help-server port external-connections?))
   (define help-desk-port (hd-cookie->port hd-cookie))
 
   (define exit-sem (make-semaphore 0))
