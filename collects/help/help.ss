@@ -10,17 +10,10 @@
 
 
 (module help mzscheme 
-  (require "sig.ss"
-           (lib "get-info.ss" "setup")
-           (lib "file.ss")
-           (lib "list.ss")
-           (lib "string.ss")
-           (lib "url.ss" "net")
-           "startup-url.ss"
+  (require "startup-url.ss"
            (lib "framework.ss" "framework")
-           (lib "plt-installer.ss" "setup")
-           (lib "get-info.ss" "setup")
-           "help-unit.ss")
+           "help-unit.ss"
+           "help-sig.ss")
   
   (define-values/invoke-unit/sig
    help:get-info^
