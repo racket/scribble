@@ -21,7 +21,7 @@
      (-> any)
      (string? any? . -> . void?)
      (string? any? . -> . void?)
-     (string? string? string? path? (union string? false?) any? . -> . void?)
+     (string? string? string? path? (union string? number? false?) any? . -> . void?)
      . -> .
      (union string? false?))]
    
@@ -100,22 +100,15 @@
        "\\&")
       "")
      ""))
-  
-  ; One lock for all hash table operations is good enough
-  (define ht-lock (make-semaphore 1))
-  
+    
   (define (with-hash-table ht key compute)
-    (dynamic-wind
-     (lambda () (semaphore-wait ht-lock))
+    (hash-table-get
+     ht
+     key
      (lambda ()
-       (hash-table-get
-        ht
-        key
-        (lambda ()
-          (let ([v (compute)])
-            (hash-table-put! ht key v)
-            v))))
-     (lambda () (semaphore-post ht-lock))))
+       (let ([v (compute)])
+         (hash-table-put! ht key v)
+         v))))
   
   (define html-keywords (make-hash-table 'equal))
   (define (load-html-keywords doc)
@@ -171,12 +164,12 @@
                (match l
                  [`(,(? string? keyword)
                      ,(? string? result)
-                     ,(? bytes? file)
+                     ,(? path-string? file)
                      ,(? string? label)
                      ,(? string? title))
                    (list keyword
                          result
-                         (bytes->path file)
+                         (string->path file)
                          label 
                          title)]
                  [else (fail)]))
@@ -402,6 +395,7 @@
                                                 (build-path doc file))))
                                       (list-ref v 3) ; label
                                       ckey)))])
+
              (unless regexp?
                (for-each
                 (lambda (v)
