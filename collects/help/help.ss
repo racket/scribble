@@ -1,4 +1,4 @@
-
+(require-library "errortrace.ss" "errortrace")
 #|
  TODO:
    * demonstrate setup-plt launcher
