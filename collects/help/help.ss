@@ -37,6 +37,14 @@
 (define frame-mixin values)
 (define (user-defined-doc-position x) #f)
 
+(preferences:set-default
+ 'drscheme:font-size
+ (send (send (send (make-object text%) 
+		   get-style-list)
+	     basic-style)
+       get-size)
+ (lambda (x) (and (number? x) (exact? x) (= x (floor x)))))
+
 (define-values/invoke-unit/sig help:help^
   (require-relative-library "helpr.ss")
   #f
