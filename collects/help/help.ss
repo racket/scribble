@@ -56,8 +56,10 @@ It is only loaded when Help Desk is run by itself (outside DrScheme).
                (string-append "file://" filename)
                #f))
        browser-frame)))
-  
+
   (define-values/invoke-unit/sig gui^ help-desk@ #f setup:plt-installer^ mred^ net:tcp^)
+  
+  (preferences:read)
       
   (new-help-desk))
   
