@@ -8,27 +8,22 @@
    * manuals as `doc' sub-collections?
 |#
 
-
 (module help mzscheme 
   (require "startup-url.ss"
            (lib "framework.ss" "framework")
            "help-unit.ss"
-           "help-sig.ss")
+           "help-sig.ss"
+           (lib "plt-installer.ss" "setup")
+           (lib "getinfo.ss" "setup")
+           (lib "mred.ss"))
   
-  (define-values/invoke-unit/sig
-   help:get-info^
-   (unit/sig help:get-info^
-     (import)
-     
-     (define (get-language-level)
-       'unknown)
-     (define (get-teachpack-names)
-       'unknown))
-   drscheme:export:help-info)
-
+  (provide-signature-elements help^)
+  
   (define frame-mixin values)
   (define (user-defined-doc-position x) #f)
 
+  ;; just in case drscheme hasn't been run before, we
+  ;; need a default for this preference.
   (preferences:set-default
    'drscheme:font-size
    (send (send (send (make-object text%) 
@@ -37,10 +32,11 @@
          get-size)
    (lambda (x) (and (number? x) (exact? x) (= x (floor x)))))
 
-  (define-values/invoke-unit/sig help:help^
+  (define-values/invoke-unit/sig help^
                                  help-unit@
                                  #f
                                  setup:plt-installer^
+                                 setup:get-info^
                                  mred^
                                  framework^
                                  (frame-mixin)
