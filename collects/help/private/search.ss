@@ -3,6 +3,7 @@
   (require (lib "unitsig.ss")
            "sig.ss"
            "../help-sig.ss"
+           "docpos.ss"
            (lib "list.ss"))
   
   (provide search@)
@@ -10,12 +11,6 @@
   (define search@
     (unit/sig search^
       (import help:doc-position^)
-      
-      ; Define an order for the documentation:
-      ; and the names of the standard documentation
-      (define-values (standard-html-doc-position known-manuals)
-        (let ([pr (require-library "docpos.ss" "help")])
-          (values (car pr) (cdr pr))))
       
       (define (html-doc-position x)
         (or (user-defined-doc-position x)
@@ -41,7 +36,7 @@
       ; gets the standard title of the documentation, from the
       ; known docs list.
       (define (get-std-doc-title path doc)
-        (let ([a (assoc doc known-manuals)])
+        (let ([a (assoc doc known-docs)])
           (if a
               (cdr a)
               (let ([index-file (build-path path doc "index.htm")])
