@@ -1,4 +1,4 @@
-; $Id: scm-main.ss,v 1.205 2000/04/30 22:31:01 clements Exp $
+; $Id: scm-main.ss,v 1.208 2000/05/31 18:55:21 shriram Exp $
 
 (unit/sig zodiac:scheme-main^
   (import zodiac:misc^ zodiac:structures^
@@ -430,8 +430,8 @@
 		  vars)
 		(make-internal-definition vars val))))
 	  (else
-	    (static-error expr
-	      "internal definition" 'kwd:define
+	    (static-error
+	      "internal definition" 'kwd:define expr
 	      "malformed definition"))))))
 
   (add-primitivized-micro-form 'begin internal-define-vocab-delta
@@ -1064,24 +1064,6 @@
 				       (make-ds-micro internal-handler #f))
 	  (add-primitivized-micro-form 'define-struct full-local-extract-vocab
 				       (make-ds-micro internal-handler #t)))))
-
-    (let* ((kwd '())
-	   (in-pattern '(_ (type-spec fields ...)))
-	   (out-pattern '(define-struct type-spec (fields ...)))
-	   (m&e (pat:make-match&env in-pattern kwd)))
-      (add-primitivized-macro-form 'define-structure intermediate-vocabulary
-	(lambda (expr env)
-	  (or (pat:match-and-rewrite expr m&e out-pattern kwd env)
-	      (static-error
-		"define-structure" 'kwd:define-structure
-		expr "malformed definition"))))
-      (let ([int-ds-macro (lambda (expr env)
-			    (or (pat:match-and-rewrite expr m&e out-pattern kwd env)
-				(static-error
-				  "define-structure" 'kwd:define-structure
-				  expr "malformed definition")))])
-	(add-primitivized-macro-form 'define-structure nobegin-local-extract-vocab int-ds-macro)
-	(add-primitivized-macro-form 'define-structure full-local-extract-vocab int-ds-macro)))
 
     (define (make-let-struct-micro begin? allow-supertype?)
       (let* ((kwd '())
@@ -1979,9 +1961,19 @@
 	      (let* ((params (pat:pexpand '(param ...) p-env kwd))
 		     (vals (pat:pexpand '(value ...) p-env kwd))
 		     (body (pat:pexpand body p-env kwd))
-		     (pzs (map generate-name params))
-		     (saves (map generate-name params))
-		     (swap (generate-name (structurize-syntax 'swap expr '(-1)))))
+		      ;; The following two have this strange code
+		      ;; because generate-name expects a z:symbol,
+		      ;; but the param can be an arbitrary expression,
+		      ;; not just the name of a parameter
+		     (pzs (map generate-name
+			    (map (lambda (param)
+				   (structurize-syntax 'pz param '(-1)))
+			      params)))
+		      (saves (map generate-name
+			      (map (lambda (param)
+				     (structurize-syntax 'save param '(-1)))
+				params)))
+		      (swap (generate-name (structurize-syntax 'swap expr '(-1)))))
 		(expand-expr
 		 (structurize-syntax
 		  (if (null? params)

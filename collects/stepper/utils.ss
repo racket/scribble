@@ -3,25 +3,6 @@
           [e : zodiac:interface^])
   
   
-  ; get-binding-name extracts the S-expression name for a binding. Zodiac
-  ; creates a unique, gensym'd symbol for each binding, but the name is
-  ; unreadable. Here, we create a new gensym, but the name of the generated
-  ; symbol prints in the same way as the original symbol.
-  
-  (define (get-binding-name binding)
-    (let ([name (lookup-new-binding-name binding)])
-      (or name
-	  (let* ([orig-name (z:binding-orig-name binding)]
-		 [name (string->uninterned-symbol (symbol->string orig-name))])
-	    (set-new-binding-name! binding name)
-	    name))))
-
-  (define-values (lookup-new-binding-name set-new-binding-name!)
-    (let-values ([(getter setter) (z:register-client 'new-name (lambda () #f))])
-      (values
-       (lambda (parsed) (getter (z:parsed-back parsed)))
-       (lambda (parsed n) (setter (z:parsed-back parsed) n)))))
-
   ; check whether the supplied id is a keyword. if the id is a syntax or
   ; macro keyword, issue an error.  If disallow-procedures? is true, then
   ; we issue an error for _any_ use of a keyword. These procedures are used
@@ -45,7 +26,8 @@
 			 (let ([gdv (global-defined-value real-id)])
 			   (or (syntax? gdv)
 			       (macro? gdv)))))
-	    (e:static-error id "keyword: invalid use of keyword ~s" real-id))))))
+	    (e:static-error "keyword" 'term:keyword-out-of-context
+                            id "invalid use of keyword ~s" real-id))))))
   
   (define check-for-keyword (check-for-keyword/both #t))
   (define check-for-syntax-or-macro-keyword (check-for-keyword/both #f))
