@@ -2,11 +2,8 @@
 #|
  TODO:
    * demonstrate setup-plt launcher
-
    * manuals as `doc' sub-collections?
    * doc.txt in sub-collections?
-
-   * document help system
 |#
 
 
@@ -19,7 +16,7 @@
 (require-library "url.ss" "net")
 
 (define startup-url 
-  (string-append "file:" (build-path (collection-path "doc") "index.htm")))
+  (string-append "file:" (build-path (collection-path "help") "index.htm")))
 
 (invoke-unit/sig
  (require-relative-library "helpr.ss")
