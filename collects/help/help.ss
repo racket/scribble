@@ -46,8 +46,6 @@
 
   (when launch-browser?
     (help-desk-browser hd-cookie)
-    ; allow browser startup time
-    (sleep (add1 browser-timeout))
     ; starting an external browser may have failed
     ;  so we may have switched to the internal browser
     (set! internal-browser? (use-plt-browser?)))
