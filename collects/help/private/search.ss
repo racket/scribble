@@ -3,8 +3,8 @@
            "docpos.ss"
            "colldocs.ss"
 	   "server.ss"
-           (lib "list.ss")
-	   (lib "util.ss" "help" "servlets" "private"))
+           "path.ss"
+           (lib "list.ss"))
   
   (provide do-search
            doc-collections-changed)
@@ -335,7 +335,7 @@
                                       (if (eq? 'text doc-kind)
                                           (apply build-path doc)
 					  (let ([file (list-ref v 2)])
-					    (if (hd-servlet? file)
+					    (if (servlet-path? file)
 						file
 						(build-path doc file))))
                                       (list-ref v 3) ; label
@@ -368,7 +368,7 @@
 					     "" name
 					     (list-ref desc 2)
 					     (let ([filename (list-ref desc 0)])
-					       (if (hd-servlet? filename)
+					       (if (servlet-path? filename)
 						   filename
 						   (combine-path/url-path doc filename)))
 					     (list-ref desc 1)
