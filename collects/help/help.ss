@@ -52,7 +52,5 @@ It is only loaded when Help Desk is run by itself (outside DrScheme).
                #f))
        browser-frame)))
 
-  (preferences:read)
-      
   (new-help-desk))
   
