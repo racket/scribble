@@ -41,6 +41,7 @@ It is only loaded when Help Desk is run by itself (outside DrScheme).
         'framework:standard-style-list:font-size
         (lambda (p v) (send size set-value v)))
        hp)))
+  (color-prefs:add-background-preferences-panel)
   (preferences:add-warnings-checkbox-panel)
   (install-help-browser-preference-panel)
   
