@@ -23,6 +23,17 @@
 (begin-elaboration-time
  (require-library "invoke.ss"))
 
+(define-values/invoke-unit/sig
+ help:get-info^
+ (unit/sig help:get-info^
+   (import)
+   
+   (define (get-language-level)
+     'unknown)
+   (define (get-teachpack-names)
+     'unknown))
+ drscheme:export:help-info)
+
 (define frame-mixin values)
 (define (user-defined-doc-position x) #f)
 
