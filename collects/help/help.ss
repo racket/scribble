@@ -1,6 +1,7 @@
 (module help mzscheme 
   (require (lib "web-server.ss" "web-server")
 	   (lib "util.ss" "web-server")
+	   (lib "cmdline.ss")
 	   (lib "configuration.ss" "web-server")
 	   (lib "configuration-structures.ss" "web-server")
 	   "private/server.ss"
@@ -8,7 +9,19 @@
 
   (require (lib "exit.ss" "help" "servlets" "private"))
 
-  (define hd-cookie (start-help-server))
+  (define launch-browser? #t)
+  (define external-connections? #f)
+
+  (command-line
+   "help-desk"
+   (current-command-line-arguments)
+   (once-each
+    [("-n" "--no-browser") "Do not launch browser"
+     (set! launch-browser? #f)]
+    [("-x" "--external-connections") "Allow external connections"
+     (set! external-connections? #t)]))
+
+  (define hd-cookie (start-help-server external-connections?))
   (define help-desk-port (hd-cookie->port hd-cookie))
 
   (define exit-sem (make-semaphore 0))
@@ -24,6 +37,8 @@
       (close-output-port oport)
       (close-input-port iport))))
 
-  (help-desk-browser hd-cookie)
+  (when launch-browser?
+	(help-desk-browser hd-cookie))
+
   ; wait until shutdown
   (semaphore-wait/enable-break exit-sem))
