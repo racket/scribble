@@ -5,6 +5,7 @@
            "path.ss"
            "manuals.ss"
            (lib "list.ss")
+           (lib "plt-match.ss")
            (lib "contract.ss"))
   
   (provide doc-collections-changed)
@@ -123,8 +124,9 @@
      doc
      (lambda ()
        (with-handlers ([not-break-exn? (lambda (x) null)])
-         (with-input-from-file (build-path doc "keywords")
-           read)))))
+         (transform-keywords
+          (with-input-from-file (build-path doc "keywords")
+            read))))))
       
   (define html-indices (make-hash-table 'equal))
   (define (load-html-index doc)
@@ -133,9 +135,51 @@
      doc
      (lambda ()
        (with-handlers ([not-break-exn? (lambda (x) null)])
-         (with-input-from-file (build-path doc "hdindex")
-           read)))))
-      
+         (transform-hdindex
+          (with-input-from-file (build-path doc "hdindex")
+            read))))))
+  
+  ;; transform-hdindex : any -> (listof (list string path string string)
+  ;; makes sure the input from the file is well-formed and changes
+  ;; the bytes to paths.
+  (define (transform-hdindex l)
+    (let/ec k
+      (let ([fail (lambda () (k '()))])
+        (unless (list? l) (fail))
+        (map (lambda (l)
+               (match l
+                 [`(,(? string? index)
+                     ,(? bytes? file)
+                     ,(? string? label)
+                     ,(? string? title))
+                   (list index
+                         (bytes->path file)
+                         label 
+                         title)]
+                 [else (fail)]))
+             l))))
+  
+  ;; transform-keywords : any -> (listof (list string string path string string)
+  ;; as with transform-hdindex
+  (define (transform-keywords l)
+    (let/ec k
+      (let ([fail (lambda () (k '()))])
+        (unless (list? l) (fail))
+        (map (lambda (l)
+               (match l
+                 [`(,(? string? keyword)
+                     ,(? string? result)
+                     ,(? bytes? file)
+                     ,(? string? label)
+                     ,(? string? title))
+                   (list keyword
+                         result
+                         (bytes->path file)
+                         label 
+                         title)]
+                 [else (fail)]))
+             l))))
+    
   (define (parse-txt-file doc ht handle-one)
     (with-hash-table
      ht
