@@ -144,14 +144,15 @@
         (map (lambda (l)
                (match l
                  [`(,(? string? index)
-                     ,(? bytes? file)
+                     ,(? string? file)
                      ,(? string? label)
                      ,(? string? title))
                    (list index
-                         (bytes->path file)
+                         file
                          label 
                          title)]
-                 [else (fail)]))
+                 [else
+                  (fail)]))
              l))))
   
   ;; transform-keywords : any -> (listof (list string string path string string)
@@ -292,29 +293,8 @@
     (set! text-keywords (make-hash-table 'equal))
     (set! text-indices (make-hash-table 'equal))
     (reset-doc-positions!))
-      
-  (define re:url-dir (regexp "^([^/]*)/(.*)$"))
-  (define (combine-path/url-path path url-path)
-    (let loop ([path path]
-	       [url-path url-path])
-      (cond
-       [(regexp-match re:url-dir url-path)
-	=>
-	(lambda (m)
-	  (let* ([url-dir (cadr m)]
-		 [rest (caddr m)]
-		 [dir
-		  (cond
-		   [(string=? ".." url-dir) 'up]
-		   [(string=? "." url-dir) 'same]
-		   [(string=? "" url-dir) 'same]
-		   [else url-dir])])
-	    (loop (build-path path dir)
-		  rest)))]
-       [else (build-path path url-path)])))
 
-  
-   (define max-reached #f)
+  (define max-reached #f)
 
   (define (build-string-finds/finds given-find regexp? exact?)
     (cond
@@ -389,7 +369,7 @@
                                       (list-ref v 4) ; title
                                       (if (eq? 'text doc-kind)
                                           (apply build-path doc)
-                                          (let ([file (list-ref v 2)])
+                                          (let ([file (bytes->path (string->bytes/utf-8 (list-ref v 2)))])
                                             (if (servlet-path? file)
                                                 file
                                                 (build-path doc file))))
@@ -426,10 +406,10 @@
                                             (add-choice 
                                              "" name
                                              (list-ref desc 2)
-                                             (let ([filename (list-ref desc 0)])
+                                             (let ([filename (bytes->path (string->bytes/utf-8 (list-ref desc 0)))])
                                                (if (servlet-path? filename)
                                                    filename
-                                                   (combine-path/url-path doc filename)))
+                                                   (build-path doc filename)))
                                              (list-ref desc 1)
                                              ckey))]
                                          [(text)
