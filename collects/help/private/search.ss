@@ -69,7 +69,7 @@
     (define-values (txt-docs txt-doc-names) (colldocs))
     
     (set! docs (append std-docs txt-docs))
-
+    
     (set! doc-names (append
 		     std-doc-names
 		     (map (lambda (s) (format "the ~a collection" s))
@@ -116,8 +116,8 @@
      html-keywords
      doc
      (lambda ()
-       (with-handlers ([exn:fail:read? (lambda (x) null)]
-                       [exn:fail:filesystem? (lambda (x) null)])
+       (with-handlers ([exn:fail:read? (λ (x) null)]
+                       [exn:fail:filesystem? (λ (x) null)])
          (transform-keywords
           (with-input-from-file (build-path doc "keywords")
             read))))))
