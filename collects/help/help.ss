@@ -1,124 +1,21 @@
 (module help mzscheme 
-  (require (lib "class.ss")
-	   (lib "mred.ss" "mred")
-	   (lib "cmdline.ss")
+  (require (lib "cmdline.ss")
 	   "private/server.ss"
-	   "private/browser.ss"
-	   "private/start.ss"
-	   "private/plt-browser.ss")
+	   "private/browser.ss")
 
-  (define launch-browser? #t)
   (define remote-connections? #f)
   (define iconize? #f)
   (define quiet? #f)
-  (define port #f)
-
+  
   (command-line
    "help-desk"
-   (current-command-line-arguments)
-   (once-each
-    [("-n" "--no-browser") "Do not launch browser (ignored for PLT browser)"
-     (set! launch-browser? #f)]
-    [("-r" "--remote-connections") "Allow remote connections (ignored for PLT browser)"
-     (set! remote-connections? #t)]
-    [("-i" "--iconize") "Iconize the control panel"
-     (set! iconize? #t)]
-    [("-q" "--quiet") "Don't show the control panel"
-     (set! quiet? #t)]
-    [("-p" "--port") number "Use given port number (ignored for PLT browser)"
-     (with-handlers
-      ((void (lambda _
-	       (error "Help Desk: expected exact integer for port"))))
-      (let ([port-val (string->number number)])
-	(unless (and (integer? port-val) (exact? port-val))
-		(raise 'not-exact-integer))
-	(set! port port-val)))]))
+   (current-command-line-arguments))
 
-  (define hd-cookie (start-help-server port remote-connections?))
-  (unless hd-cookie (exit))
-  (define help-desk-port (hd-cookie->port hd-cookie))
+  (define hd-cookie (start-help-server (lambda (x) x)))
+  (unless hd-cookie 
+    (printf "Help Desk: could not start server\n")
+    (exit -1))
 
-  (if (use-plt-browser?)
-    (set! launch-browser? #t) ; always launch
-    ; allow server startup time
-    (wait-for-connection help-desk-port))
+  (help-desk-browser hd-cookie))
 
-  (when launch-browser?
-    (help-desk-browser hd-cookie))
-
-  (cond
-   [(use-plt-browser?) (void)]
-   [quiet? (semaphore-wait (make-semaphore 0))]
-   [else
-    (let* ([hd-frame%
-	    (class frame%
-		   (inherit show)
-		   (field
-		    [panel #f]
-		    [main-sd-button #f]
-		    [shutdown-dialog
-		     (lambda ()
-		       (let* ([cb-frame (instantiate frame% ()
-						     (label "Confirm"))]
-			      [vpanel (instantiate vertical-panel% ()
-						   (parent cb-frame))]
-			      [msg (instantiate message% ()
-						(label "Really shutdown Help Desk server?")
-						(parent vpanel))]
-			      [hpanel (instantiate horizontal-panel% ()
-						   (parent vpanel)
-						   (alignment '(center center)))]
-			      [sd-button (instantiate button% ()
-						      (label "Shutdown")
-						      (parent hpanel)
-						      (callback 
-						       (lambda (b ev)
-							 (send cb-frame show #f)
-							 (send this show #f))))]
-			      [no-sd-button (instantiate button% ()
-							 (label "Cancel")
-							 (parent hpanel)
-							 (callback 
-							  (lambda (b ev)
-							    (send main-sd-button 
-								  enable #t)
-							    (send cb-frame show #f))))])
-			 (send main-sd-button enable #f)
-			 (send cb-frame center)
-			 (send cb-frame show #t)
-			 (send sd-button focus)))])
-		   (define/override can-close? 
-		     (lambda () (shutdown-dialog) #f))
-		   (super-instantiate ())
-		   (set! panel
-			 (instantiate vertical-panel% ()
-				      (parent this)))
-		   (instantiate message% () 
-				(label (format "Help Desk server running on port ~a" 
-					       (hd-cookie->port hd-cookie)))
-				(parent panel))
-		   (instantiate button% ()
-				(label "Help Desk Home")
-				(parent panel)
-				(min-width 100)
-				(callback 
-				 (lambda (b ev)
-				   (help-desk-browser hd-cookie))))
-		   (set! main-sd-button
-			 (instantiate button% ()
-				      (label "Shutdown Server")
-				      (parent panel)
-				      (min-width 100)
-				      (callback (lambda (b ev)
-						  (shutdown-dialog))))))]
-	   [frame 
-	    (instantiate hd-frame% ()
-			 (label "PLT Help Desk")
-			 (min-width 175)
-			 (stretchable-width #f)
-			 (stretchable-height #f))])
-      (send frame center)
-      (send frame show #t)
-      (when iconize?
-	    (send frame iconize #t)))]))
 
