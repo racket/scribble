@@ -1,6 +1,7 @@
 
 (module search mzscheme
-  (require (lib "unitsig.ss")
+  (require (lib "string-constant.ss" "string-constants")
+           (lib "unitsig.ss")
            "sig.ss"
            "../help-sig.ss"
            "docpos.ss"
@@ -419,15 +420,15 @@
                   files))))
            docs doc-names doc-kinds)
           (if (= 0 hit-count)
-              (apply
-               string-append
-               "Nothing found for "
-               (cond
-                 [(null? string-finds) (list "the empty search.")]
-                 [else
-                  (append
-                   (cons (format "\"~a\"" (car string-finds))
-                         (map (lambda (i) (format " and \"~a\"" i))
-                              (cdr string-finds)))
-                   (list "."))]))
+              (cond
+                [(null? string-finds) (string-constant nothing-found-for-empty-search)]
+                [else
+                 (format (string-constant nothing-found-for)
+                         (apply
+                          string-append
+                          (append
+                           (cons (format "\"~a\"" (car string-finds))
+                                 (map (lambda (i) (format " ~a \"~a\"" (string-constant and) i))
+                                      (cdr string-finds)))
+                           (list "."))))])
               #f))))))
