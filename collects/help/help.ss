@@ -11,6 +11,8 @@
 
 (require-relative-library "sig.ss")
 
+(require-library "get-info.ss" "setup")
+
 (require-library "file.ss")
 (require-library "functio.ss")
 (require-library "string.ss")
