@@ -20,7 +20,7 @@
      (-> any)
      (string? any? . -> . void?)
      (string? any? . -> . void?)
-     (string? string? string? string? (union string? false?) any . -> . void?)
+     (string? string? string? path? (union string? false?) any? . -> . void?)
      . -> .
      (union string? false?))]
    
@@ -58,8 +58,10 @@
         (let ([ordered (quicksort
                         (map list docs doc-names)
                         (lambda (a b) ; html-doc-position expects collection name
-                          (< (html-doc-position (cadr a))
-                             (html-doc-position (cadr b)))))])
+                          (let-values ([(_1 a-short _2) (split-path (car a))]
+                                       [(_3 b-short _4) (split-path (car b))])
+                            (< (html-doc-position a-short)
+                               (html-doc-position b-short)))))])
           (values (map car ordered) (map cadr ordered))))) ; here we want the std title
     
     ; Check collections for doc.txt files:
@@ -105,17 +107,16 @@
     (dynamic-wind
      (lambda () (semaphore-wait ht-lock))
      (lambda ()
-       (let ([sym (string->symbol key)])
-         (hash-table-get
-          ht
-          sym
-          (lambda ()
-            (let ([v (compute)])
-              (hash-table-put! ht sym v)
-              v)))))
+       (hash-table-get
+        ht
+        key
+        (lambda ()
+          (let ([v (compute)])
+            (hash-table-put! ht key v)
+            v))))
      (lambda () (semaphore-post ht-lock))))
   
-  (define html-keywords (make-hash-table))
+  (define html-keywords (make-hash-table 'equal))
   (define (load-html-keywords doc)
     (with-hash-table
      html-keywords
@@ -125,7 +126,7 @@
          (with-input-from-file (build-path doc "keywords")
            read)))))
       
-  (define html-indices (make-hash-table))
+  (define html-indices (make-hash-table 'equal))
   (define (load-html-index doc)
     (with-hash-table
      html-indices
@@ -155,7 +156,7 @@
 		 [else (loop next)])))))))))
   
   (define re:keyword-line (regexp "^>"))
-  (define text-keywords (make-hash-table))
+  (define text-keywords (make-hash-table 'equal))
   (define (load-txt-keywords doc)
     (parse-txt-file
      (apply build-path doc)
@@ -203,7 +204,7 @@
 	[else #f]))))
       
   (define re:index-line (regexp "_([^_]*)_(.*)"))
-  (define text-indices (make-hash-table))
+  (define text-indices (make-hash-table 'equal))
   (define (load-txt-index doc)
     (parse-txt-file
      (apply build-path doc)
@@ -248,10 +249,10 @@
       
   (define (doc-collections-changed)
     (set! doc-collection-date #f)
-    (set! html-keywords (make-hash-table))
-    (set! html-indices (make-hash-table))
-    (set! text-keywords (make-hash-table))
-    (set! text-indices (make-hash-table))
+    (set! html-keywords (make-hash-table 'equal))
+    (set! html-indices (make-hash-table 'equal))
+    (set! text-keywords (make-hash-table 'equal))
+    (set! text-indices (make-hash-table 'equal))
     (reset-doc-positions!))
       
   (define re:url-dir (regexp "^([^/]*)/(.*)$"))
@@ -297,8 +298,8 @@
   ;              (-> A)       ; called when more than enough are found; must escape
   ;              (string value -> void) ; called to output a document section header (e.g., a manual name)
   ;              (symbol value -> void) ; called to output a document-kind section header, 'text or 'html
-  ;              (string string string string (union string #f) value -> void)
-  ;                ^       ^      ^     ^       ^- label within page
+  ;              (string string string path (union string #f) value -> void)
+  ;                ^       ^      ^     ^      ^- label within page
   ;                ^       ^      ^     ^- path to doc page
   ;                ^       ^      ^- source doc title
   ;                ^       ^- display label
