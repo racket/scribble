@@ -252,6 +252,10 @@
       
   (define (doc-collections-changed)
     (set! doc-collection-date #f)
+    (set! html-keywords (make-hash-table))
+    (set! html-indices (make-hash-table))
+    (set! text-keywords (make-hash-table))
+    (set! text-indices (make-hash-table))
     (reset-doc-positions!))
       
   (define re:url-dir (regexp "^([^/]*)/(.*)$"))
