@@ -22,7 +22,7 @@
      (set! launch-browser? #f)]
     [("-x" "--external-connections") "Allow external connections"
      (set! external-connections? #t)]
-    [("-i" "--iconizer") "Iconize the control panel"
+    [("-i" "--iconize") "Iconize the control panel"
      (set! iconize? #t)]
     [("-p" "--port") number "Use given port number"
      (with-handlers
@@ -55,24 +55,58 @@
     (class frame%
 	   (inherit show)
 	   (field
-	    [panel #f])
+	    [panel #f]
+	    [main-sd-button #f]
+	    [shutdown-dialog
+	     (lambda ()
+	       (let* ([cb-frame (instantiate frame% ()
+					    (label "Confirm"))]
+		      [vpanel (instantiate vertical-panel% ()
+					   (parent cb-frame))]
+		      [msg (instantiate message% ()
+					(label "Really shutdown Help Desk server?")
+					(parent vpanel))]
+		      [hpanel (instantiate horizontal-panel% ()
+					   (parent vpanel)
+					   (alignment '(center center)))]
+		      [sd-button (instantiate button% ()
+				   (label "Shutdown")
+				   (parent hpanel)
+				   (callback (lambda (b ev)
+					       (send cb-frame show #f)
+					       (send this show #f))))]
+		      [no-sd-button (instantiate button% ()
+				      (label "Cancel")
+				      (parent hpanel)
+				      (callback (lambda (b ev)
+						  (send main-sd-button 
+							enable #t)
+						  (send cb-frame show #f))))])
+		 (send main-sd-button enable #f)
+		 (send cb-frame center)
+		 (send cb-frame show #t)))])
 	   (super-instantiate ())
 	   (set! panel
 		 (instantiate vertical-panel% ()
 			      (parent this)))
+	   (instantiate message% () 
+			(label (format "Help Desk server running on port ~a" 
+				       (hd-cookie->port hd-cookie)))
+			(parent panel))
 	   (instantiate button% ()
-			(label "New browser")
+			(label "Help Desk Home")
 			(parent panel)
 			(min-width 100)
 			(callback 
 			 (lambda (b ev)
 			   (help-desk-browser hd-cookie))))
-	   (instantiate button% ()
-			(label "Shutdown server")
-			(parent panel)
-			(min-width 100)
-			(callback (lambda (b ev)
-				    (send this show #f))))))
+	   (set! main-sd-button
+		 (instantiate button% ()
+			      (label "Shutdown Server")
+			      (parent panel)
+			      (min-width 100)
+			      (callback (lambda (b ev)
+					  (shutdown-dialog)))))))
 
   (define frame 
     (instantiate hd-frame% ()
