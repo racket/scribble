@@ -11,6 +11,7 @@
 
   (define launch-browser? #t)
   (define external-connections? #f)
+  (define iconize? #f)
   (define port #f)
 
   (command-line
@@ -21,6 +22,8 @@
      (set! launch-browser? #f)]
     [("-x" "--external-connections") "Allow external connections"
      (set! external-connections? #t)]
+    [("-i" "--iconizer") "Iconize the control panel"
+     (set! iconize? #t)]
     [("-p" "--port") number "Use given port number"
      (with-handlers
       ((void (lambda _
@@ -79,7 +82,13 @@
 		 (stretchable-height #f)))
 
   (send frame center)
-  (send frame show #t))
+  (send frame show #t)
+  (when iconize?
+	(send frame iconize #t)))
+
+
+
+
 
 
 
