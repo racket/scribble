@@ -112,7 +112,7 @@
           "")
          ""))
       
-      (define not-break? (lambda (x) (not (exn:misc:user-break? x))))
+      (define not-break? (lambda (x) (not (exn:break? x))))
       
       ; One lock for all hash table operations is good enough
       (define ht-lock (make-semaphore 1))
