@@ -4,6 +4,7 @@
 	   (lib "cmdline.ss")
 	   "private/server.ss"
 	   "private/browser.ss"
+	   "private/start.ss"
 	   "private/plt-browser.ss")
 
   (define launch-browser? #t)
@@ -57,7 +58,10 @@
 		(hd-cookie->port hd-cookie))))])
 	  (help-desk-browser hd-cookie)
 	  ; allow browser startup time
-	  (sleep 2)))
+	  (sleep (add1 browser-timeout))
+          ; starting an external browser may have failed
+          ;  so we may have switched to the internal browser
+	  (set! internal-browser? (use-plt-browser?))))
 
   (cond
    [internal-browser? (void)]
