@@ -14,7 +14,8 @@
                                                boolean?
                                                . -> . 
                                                (values (listof string?) 
-                                                       (listof (union regexp? string?))))))
+                                                       (listof (union regexp? string?)))))
+                    (non-regexp (string? . -> . string?)))
 
   (define (html-doc-position x)
     (or (user-defined-doc-position x)
@@ -213,7 +214,8 @@
 	  (cons (cadr m)
 		(split-words (caddr m)))
 	  null)))
-      
+
+  ;; non-regexp : string -> string
   (define (non-regexp s)
     (list->string
      (apply
@@ -290,7 +292,6 @@
   (define (do-search given-find search-level regexp? exact? manuals doc-txt?
                      ckey maxxed-out
                      add-doc-section add-kind-section add-choice)
-    
     ; When new docs are installed, the directory's modification date changes:
     (set! max-reached #f)
     (unless (eq? doc-collection-date 'none)
@@ -334,7 +335,6 @@
                                               (build-path doc file))))
                                     (list-ref v 3) ; label
                                     ckey))])
-             
              (unless regexp?
                (for-each
                 (lambda (v)
@@ -390,6 +390,7 @@
                         (unless (and (not regexp?) (string=? given-find (car v)))
                           (add-index-choice (car v) (cdr v)))))
                     index)))))
+           
            ; Content Search
            (unless (or (< search-level 2) exact? (null? finds))
              (let ([files (case doc-kind
@@ -427,6 +428,7 @@
                               (loop))))))))
                 files))))
          filtered-docs filtered-doc-names filtered-doc-kinds)
+        
         (if (= 0 hit-count)
             (format (string-constant plt:hd:nothing-found-for)
                     (if (null? string-finds)
