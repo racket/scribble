@@ -29,6 +29,6 @@
  mred^
  framework^)
 
-(new-help-frame startup-url)
+(new-help-frame startup-url #f)
 
 (yield (make-semaphore))
