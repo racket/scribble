@@ -19,15 +19,18 @@
 
 (require-library "framework.ss" "framework")
 
-(invoke-open-unit/sig
- (require-relative-library "helpr.ss")
- #f
- mzlib:function^
- mzlib:string^
- mzlib:file^
- mzlib:url^
- mred^
- framework^)
+(begin-elaboration-time
+ (require-library "invoke.ss"))
+
+(define-values/invoke-unit/sig help:help^
+  (require-relative-library "helpr.ss")
+  #f
+  mzlib:function^
+  mzlib:string^
+  mzlib:file^
+  mzlib:url^
+  mred^
+  framework^)
 
 (new-help-frame startup-url #f)
 
