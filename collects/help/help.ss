@@ -6,20 +6,14 @@ It is only loaded when Help Desk is run by itself (outside DrScheme).
 |#
 
 (module help mzscheme 
-  (require (lib "cmdline.ss")
+  (require "bug-report.ss" ;; load now to init the preferences early
+           (lib "cmdline.ss")
            (lib "class.ss")
-           (lib "unitsig.ss")
            (lib "framework.ss" "framework")
            (lib "external.ss" "browser")
-           "bug-report.ss" ;; load now to init the preferences early
            "private/link.ss"
-           "private/sig.ss"
            (lib "string-constant.ss" "string-constants")
-           (lib "mred-sig.ss" "mred")
-           (lib "mred.ss" "mred")
-           (lib "tcp-sig.ss" "net")
-           (lib "plt-installer-sig.ss" "setup")
-           (lib "plt-installer.ss" "setup"))
+           (lib "mred.ss" "mred"))
   
   (command-line
    "help-desk"
@@ -58,8 +52,6 @@ It is only loaded when Help Desk is run by itself (outside DrScheme).
                #f))
        browser-frame)))
 
-  (define-values/invoke-unit/sig gui^ help-desk@ #f setup:plt-installer^ mred^ net:tcp^)
-  
   (preferences:read)
       
   (new-help-desk))
