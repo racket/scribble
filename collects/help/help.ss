@@ -1,6 +1,6 @@
 (when (getenv "MREDDEBUG")
   (current-load (let ([ol (current-load)]) (lambda (x) (printf "~a~n" x) (ol x))))
-  (require-library "errortrace.ss" "errortrace")
+  (eval '(require "errortrace.ss" "errortrace"))
   (error-print-width 180))
 #|
  TODO:
@@ -19,7 +19,8 @@
            "startup-url.ss"
            (lib "framework.ss" "framework")
            (lib "plt-installer.ss" "setup")
-           (lib "get-info.ss" "setup"))
+           (lib "get-info.ss" "setup")
+           "help-unit.ss")
   
   (define-values/invoke-unit/sig
    help:get-info^
@@ -44,13 +45,13 @@
    (lambda (x) (and (number? x) (exact? x) (= x (floor x)))))
 
   (define-values/invoke-unit/sig help:help^
-                                 (require-relative-library "helpr.ss")
+                                 help-unit@
                                  #f
                                  setup:plt-installer^
                                  mred^
                                  framework^
                                  (frame-mixin)
                                  help:doc-position^)
-
+  
   (new-help-frame startup-url))
 
