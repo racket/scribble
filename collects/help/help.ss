@@ -66,5 +66,3 @@
   help:doc-position^)
 
 (new-help-frame startup-url)
-
-(yield (make-semaphore))
