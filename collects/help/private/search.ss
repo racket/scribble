@@ -299,7 +299,10 @@
 	    (loop (build-path path dir)
 		  rest)))]
        [else (build-path path url-path)])))
-      
+
+  
+   (define max-reached #f)
+
    ; do-search : (string          ; the search text, unprocessed
       ;              num          ; 0 = keyword, 1 = keyword+index, 2 = all text
       ;              boolean      ; #t if string should be used as a regexp
@@ -319,6 +322,7 @@
       (define (do-search given-find search-level regexp? exact? ckey maxxed-out
                          add-doc-section add-kind-section add-choice)
         ; When new docs are installed, the directory's modification date changes:
+        (set! max-reached #f)
         (unless (eq? doc-collection-date 'none)
           (when (or (not doc-collection-date)
                     (> (file-or-directory-modify-seconds (collection-path "doc"))
@@ -336,14 +340,14 @@
            (lambda (doc doc-name doc-kind)
              (define found-one #f)
              (define (found kind)
-               (unless found-one
-                 (add-doc-section doc-name ckey))
-               (unless (equal? found-one kind)
-                 (set! found-one kind)
-                 (add-kind-section kind ckey))
-               (set! hit-count (add1 hit-count))
-               (unless (< hit-count MAX-HIT-COUNT)
-                 (maxxed-out)))
+	       (unless found-one
+		       (add-doc-section doc-name ckey))
+	       (unless (equal? found-one kind)
+		       (set! found-one kind)
+		       (add-kind-section kind ckey))
+	       (set! hit-count (add1 hit-count))
+	       (unless (< hit-count MAX-HIT-COUNT)
+		       (maxxed-out)))
              
              ; Keyword search
              (let ([keys (case doc-kind
@@ -358,7 +362,10 @@
                                       (list-ref v 4) ; title
                                       (if (eq? 'text doc-kind)
                                           (apply build-path doc)
-                                          (build-path doc (list-ref v 2))) ; file
+					  (let ([file (list-ref v 2)])
+					    (if (hd-servlet? file)
+						file
+						(build-path doc file))))
                                       (list-ref v 3) ; label
                                       ckey))])
                
@@ -385,18 +392,23 @@
                                          (case doc-kind
                                            [(html)
                                             (found "index entries")
-                                            (add-choice "" name
-                                                        (list-ref desc 2)
-                                                        (combine-path/url-path doc (list-ref desc 0))
-                                                        (list-ref desc 1)
-                                                        ckey)]
+                                            (add-choice 
+					     "" name
+					     (list-ref desc 2)
+					     (let ([filename (list-ref desc 0)])
+					       (if (hd-servlet? filename)
+						   filename
+						   (combine-path/url-path doc filename)))
+					     (list-ref desc 1)
+					     ckey)]
                                            [(text)
                                             (found "index entries")
-                                            (add-choice "" name
-                                                        "indexed content"
-                                                        (apply build-path doc)
-                                                        desc
-                                                        ckey)]))])
+                                            (add-choice 
+					     "" name
+					     "indexed content"
+					     (apply build-path doc)
+					     desc
+					     ckey)]))])
                  (when index
                    (unless regexp?
                      (for-each
