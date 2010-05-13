@@ -20,12 +20,14 @@
 
 
 (provide defform defform* defform/subs defform*/subs defform/none
-         defidform
+         defidform defidform/inline
          specform specform/subs
          specsubform specsubform/subs specspecsubform specspecsubform/subs
          specsubform/inline
          defsubform defsubform*
-         schemegrammar schemegrammar*
+         racketgrammar racketgrammar*
+         (rename-out [racketgrammar schemegrammar]
+                     [racketgrammar* schemegrammar*])
          var svar)
 
 (define-syntax (defform*/subs stx)
@@ -171,6 +173,12 @@
      (syntax/loc stx
        (fm #:literals () spec desc ...))]))
 
+(define-syntax (defidform/inline stx)
+  (syntax-case stx ()
+    [(_ id)
+     (identifier? #'id)
+     #'(defform-site (quote-syntax id))]))
+
 (define-syntax (defidform stx)
   (syntax-case stx ()
     [(_ spec-id desc ...)
@@ -269,32 +277,32 @@
    ([form/maybe (#f spec)])
    (*specsubform 'spec null #f null null null (lambda () (list desc ...)))))
 
-(define-syntax schemegrammar
+(define-syntax racketgrammar
   (syntax-rules ()
     [(_ #:literals (lit ...) id clause ...)
      (with-scheme-variables
       (lit ...)
       ([non-term (id clause ...)])
-      (*schemegrammar '(lit ...)
+      (*racketgrammar '(lit ...)
                       '(id clause ...)
                       (lambda ()
                         (list (list (scheme id)
                                     (schemeblock0/form clause) ...)))))]
-    [(_ id clause ...) (schemegrammar #:literals () id clause ...)]))
+    [(_ id clause ...) (racketgrammar #:literals () id clause ...)]))
 
-(define-syntax schemegrammar*
+(define-syntax racketgrammar*
   (syntax-rules ()
     [(_ #:literals (lit ...) [id clause ...] ...)
      (with-scheme-variables
       (lit ...)
       ([non-term (id clause ...)] ...)
-      (*schemegrammar '(lit ...)
+      (*racketgrammar '(lit ...)
                       '(id ... clause ... ...)
                       (lambda ()
                         (list (list (scheme id) (schemeblock0/form clause) ...)
                               ...))))]
     [(_ [id clause ...] ...)
-     (schemegrammar* #:literals () [id clause ...] ...)]))
+     (racketgrammar* #:literals () [id clause ...] ...)]))
 
 (define-syntax-rule (var id)
   (*var 'id))
@@ -304,6 +312,29 @@
 
 
 (define (meta-symbol? s) (memq s '(... ...+ ?)))
+
+(define (defform-site kw-id)
+  (let ([target-maker (id-to-form-target-maker kw-id #t)]
+        [content (list (definition-site (syntax-e kw-id)
+                         kw-id #t))])
+    (if target-maker
+        (target-maker
+         content
+         (lambda (tag)
+           (make-toc-target-element
+            #f
+            (if kw-id
+                (list (make-index-element
+                       #f content tag
+                       (list (symbol->string (syntax-e kw-id)))
+                       content
+                       (with-exporting-libraries
+                        (lambda (libs)
+                          (make-form-index-desc (syntax-e kw-id)
+                                                libs)))))
+                content)
+            tag)))
+        (car content))))
 
 (define (*defforms kw-id forms form-procs subs sub-procs contract-procs content-thunk)
   (parameterize ([current-meta-list '(... ...+)])
@@ -323,27 +354,7 @@
                       (list (to-element `(,x . ,(cdr form)))))))
                (and kw-id
                     (eq? form (car forms))
-                    (let ([target-maker (id-to-form-target-maker kw-id #t)]
-                          [content (list (definition-site (syntax-e kw-id)
-                                                          kw-id #t))])
-                      (if target-maker
-                        (target-maker
-                         content
-                         (lambda (tag)
-                           (make-toc-target-element
-                            #f
-                            (if kw-id
-                              (list (make-index-element
-                                     #f content tag
-                                     (list (symbol->string (syntax-e kw-id)))
-                                     content
-                                     (with-exporting-libraries
-                                      (lambda (libs)
-                                        (make-form-index-desc (syntax-e kw-id)
-                                                              libs)))))
-                              content)
-                            tag)))
-                        (car content)))))))))
+                    (defform-site kw-id)))))))
          forms form-procs)
         (if (null? sub-procs)
           null
@@ -409,7 +420,7 @@
 (define (*schemerawgrammar style nonterm clause1 . clauses)
   (*schemerawgrammars style (list nonterm) (list (cons clause1 clauses))))
 
-(define (*schemegrammar lits s-expr clauseses-thunk)
+(define (*racketgrammar lits s-expr clauseses-thunk)
   (let ([l (clauseses-thunk)])
     (*schemerawgrammars #f
                         (map (lambda (x)
