@@ -47,10 +47,10 @@
 
 (define cached-roots '(#f . #f))
 (define (current-url-roots)
-  ;; takes in a (listof (list prefix-string url-string . flags)), and produces
-  ;; an alist with lists of strings for the keys; the prefix-strings are split
-  ;; on "/"s, and the url-strings can be anything at all actually (they are put
-  ;; as-is before the path with a "/" between them).
+  ;; takes `url-roots', a (listof (list prefix-string url-string . flags)), and
+  ;; produces an alist with lists of strings for the keys; the prefix-strings
+  ;; are split on "/"s, and the url-strings can be anything at all actually
+  ;; (they are put as-is before the path with a "/" between them).
   (let ([roots (url-roots)])
     (unless (eq? roots (car cached-roots))
       (set! cached-roots
@@ -86,7 +86,7 @@
         ;; find shared prefix
         [(and (pair? t) (pair? c) (equal? (car t) (car c)))
          (loop (cdr t) (cdr c) (cons (car t) pfx))]
-        ;; done
+        ;; done with the shared prefix, deal with the root now
         ;; no roots => always use a relative path (useful for debugging)
         [(not roots) `(,@(map (lambda (_) "..") c) ,@t ,file*)]
         ;; share a root => use a relative path unless its an absolute root
@@ -197,16 +197,26 @@
                    (printf "  ~a\n" path)
                    (renderer filename))))))
     (define (url) (relativize filename dirpathlist (rendered-dirpath)))
+    (define absolute-url
+      (delay (let ([url (relativize filename dirpathlist '())])
+               (if (url-roots)
+                 url
+                 ;; we're in local build mode, and insist on an absolute url,
+                 ;; so construct a `file://' result
+                 (list* "file://" (current-directory) url)))))
     (add-renderer path render)
     (make-keyword-procedure
      (lambda (kws kvs . args) (keyword-apply referrer kws kvs (url) args))
-     (case-lambda [(x) (if (eq? x get-resource-path) (url) (referrer (url) x))]
+     (case-lambda [(x) (if (and (pair? x) (eq? (car x) get-path))
+                         (if (cdr x) absolute-url (url))
+                         (referrer (url) x))]
                   [args (apply referrer (url) args)]))))
 
 ;; make it possible to always get the path to a resource
 (provide get-resource-path)
-(define (get-resource-path resource)
-  (resource get-resource-path))
+(define get-path (gensym))
+(define (get-resource-path resource [absolute? #f])
+  (resource (cons get-path absolute?)))
 
 ;; a convenient utility to create renderers from some output function (like
 ;; `output-xml' or `display') and some content
@@ -218,9 +228,11 @@
 (provide render-all)
 (define (render-all)
   (printf "Rendering...\n")
-  (let loop ()
-    (let ([todo (get/reset-renderers)])
+  (define todo (get/reset-renderers))
+  (if (null? todo)
+    (printf "  Warning: no content to render\n")
+    (let loop ([todo todo])
       (unless (null? todo)
         (for-each (lambda (r) (r)) todo)
-        (loop)))) ; if more were created
+        (loop (get/reset-renderers))))) ; if more were created
   (printf "Rendering done.\n"))
