@@ -8,6 +8,7 @@
            mzlib/for
            syntax/modresolve
            syntax/modcode
+           file/convertible
            (for-syntax racket/base))
   
   (provide define-code
@@ -215,7 +216,8 @@
                                  quote-depth)])
             (if (or (element? (syntax-e c))
                     (delayed-element? (syntax-e c))
-                    (part-relative-element? (syntax-e c)))
+                    (part-relative-element? (syntax-e c))
+                    (convertible? (syntax-e c)))
                 (out (syntax-e c) #f)
                 (out (if (and (identifier? c)
                               color?
@@ -441,7 +443,7 @@
             (let ([l (syntax->list c)]
                   [h? highlight?])
               (unless (and l (= 2 (length l)))
-                (error "bad code:redex: ~e" (syntax->datum c)))
+                (error "bad code:redex: ~.s" (syntax->datum c)))
               (advance c init-line!)
               (set! src-col (syntax-column (cadr l)))
               (hash-set! next-col-map src-col dest-col)
@@ -604,7 +606,10 @@
                                 [(mpair? (syntax-e c))
                                  (syntax-e c)]
                                 [else c])]
-                            [first-expr? (and expr? (not (struct-proxy? (syntax-e c))) (not no-cons?))]
+                            [first-expr? (and expr? 
+                                              (or (zero? quote-depth)
+                                                  (not (struct-proxy? (syntax-e c))))
+                                              (not no-cons?))]
                             [dotted? #f])
                   (cond
                    [(and (syntax? l)
@@ -1088,14 +1093,15 @@
                             (list (do-syntax-ize (car v) col line ht #f qq #f)
                                   c)
                             (vector #f line col (+ 1 col)
-                                    (+ 1 
-                                       (if (and qq (zero? qq)) 1 0)
+                                    (+ delta
                                        (syntax-span c))))))]
      [(or (list? v)
           (vector? v)
           (and (struct? v)
                (or (and qq 
-                        ;; Watch out for partially transparent subtypes of `element':
+                        ;; Watch out for partially transparent subtypes of `element'
+                        ;;  or convertible values:
+                        (not (convertible? v))
                         (not (element? v)))
                    (prefab-struct-key v))))
       (let ([orig-ht (unbox ht)]
@@ -1115,10 +1121,10 @@
                         [else 0])]
                [delta (if (and qq (zero? qq))
                           (cond
-                           [(vector? v) 8]
-                           [(struct? v) 1]
-                           [no-cons? 1]
-                           [else 5])
+                           [(vector? v) 8] ; `(vector '
+                           [(struct? v) 1] ; '('
+                           [no-cons? 1]    ; '('
+                           [else 6])       ; `(list '
                           1)]
                [r (let ([l (let loop ([col (+ col delta vec-sz graph-sz)]
                                       [v (cond

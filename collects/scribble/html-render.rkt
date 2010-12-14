@@ -9,6 +9,7 @@
          scheme/port
          scheme/list
          scheme/string
+         file/convertible
          mzlib/runtime-path
          setup/main-doc
          setup/main-collects
@@ -947,6 +948,15 @@
       (cond
         [(string? e) (super render-content e part ri)] ; short-cut for common case
         [(list? e) (super render-content e part ri)] ; also a short-cut
+        [(and (convertible? e)
+              (convert e 'png-bytes))
+         => (lambda (bstr)
+              (let ([w (integer-bytes->integer (subbytes bstr 16 20) #f #t)]
+                    [h (integer-bytes->integer (subbytes bstr 20 24) #f #t)])
+                `((img ([src ,(install-file "pict.png" bstr)]
+                        [alt "image"]
+                        [width ,(number->string w)]
+                        [height ,(number->string h)])))))]
         [(image-element? e)
          (let* ([src (main-collects-relative->path (image-element-path e))]
                 [suffixes (image-element-suffixes e)]
@@ -1046,7 +1056,7 @@
                (begin
                  (when #f
                    (fprintf (current-error-port)
-                            "Undefined link: ~s~n"
+                            "Undefined link: ~s\n"
                             (tag-key (link-element-tag e) ri)))
                  `((font ([class "badlink"])
                      ,@(if (empty-content? (element-content e))
@@ -1253,7 +1263,7 @@
              (ascii-ize i)))]
         [(symbol? i)
          (case i
-           [(mdash) '(" " ndash " ")]
+           [(mdash) '(8212 (wbr))] ;; <wbr> encourages breaking after rather than before
            ;; use "single left/right-pointing angle quotation mark"
            ;; -- it's not a correct choice, but works best for now
            ;;    (see the "Fonts with proper angle brackets"
@@ -1421,7 +1431,12 @@
                    [full-path (build-path (path-only (current-output-file))
                                           filename)])
               (parameterize ([on-separate-page-ok #f])
-                (with-output-to-file full-path #:exists 'truncate/replace
+                ;; We use 'replace instead of the usual 'truncate/replace
+                ;;  to avoid problems where a filename changes only in case,
+                ;;  in which case some platforms will see the old file
+                ;;  as matching the new name, while others don't. Replacing
+                ;;  the file syncs the case with the current uses.
+                (with-output-to-file full-path #:exists 'replace
                   (lambda () (render-one-part d ri full-path number)))
                 null))
             (parameterize ([on-separate-page-ok #t])

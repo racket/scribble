@@ -30,6 +30,60 @@ includes a @racket[latex-defaults] @tech{style property}.
 @; ------------------------------------------------------------------------
 @section[#:tag "scribble:manual:code"]{Typesetting Code}
 
+@defform/subs[(codeblock option ... str-expr ...+)
+              ([option (code:line #:indent indent-expr)
+                       (code:line #:expand expand-expr)
+                       (code:line #:context context-expr)
+                       (code:line #:keep-lang-line? keep-expr)])
+              #:contracts ([indent-expr exact-nonnegative-integer?]
+                           [expand-expr (or/c #f (syntax-object? . -> . syntax-object?))]
+                           [context-expr syntax-object?]
+                           [keep-expr any/c])]{
+
+Parses the code formed by the strings produced by the
+@racket[str-expr]s as a Racket module and produces a @tech{block} that
+typesets the code. The code is indented by the amount specified by
+@racket[indent-expr], which defaults to @racket[2].
+
+When @racket[expand-expr] produces @racket[#f] (which is the default),
+identifiers in the typeset code are colored and linked based on
+for-label bindings in the lexical environment of the syntax object
+provided by @racket[context-expr]. The default @racket[context-expr]
+has the same lexical context as the first @racket[str-expr].
+
+When @racket[expand-expr] produces a procedure, it is used to
+macro-expand the parsed program, and syntax coloring is based on the
+parsed program.
+
+When @racket[keep-lang-line?-expr] produces a true value (the
+default), the @hash-lang[] line in the input is preserved in the
+typeset output, otherwise the first line is dropped.
+
+For example,
+
+@codeblock[#:keep-lang-line? #f]|<|{
+  #lang scribble/manual
+  @codeblock|{
+    #lang scribble/manual
+    @codeblock{
+      #lang scribble/manual
+      @title{Hello}
+    }
+  }|
+}|>|
+
+produces the typeset result
+
+  @codeblock|{
+    #lang scribble/manual
+    @codeblock{
+      #lang scribble/manual
+      @title{Hello}
+    }
+  }|               
+
+}
+
 @defform[(racketblock datum ...)]{
 
 Typesets the @racket[datum] sequence as a table of Racket code inset
@@ -1022,16 +1076,19 @@ If @racket[style?] is true, then @racket[defterm] is used on
 @racket[pre-content].}
 
 @defproc[(tech [pre-content pre-content?] ...
-               [#:doc module-path (or/c module-path? false/c) #f]
-               [#:tag-prefixes prefixes (or/c (listof string?) false/c) #f])
+               [#:key key (or/c string? #f) #f]
+               [#:doc module-path (or/c module-path? #f) #f]
+               [#:tag-prefixes prefixes (or/c (listof string?) #f) #f])
          element?]{
 
 Produces an element for the @tech{decode}d @racket[pre-content], and
-hyperlinks it to the definition of the content as established by
-@racket[deftech]. The content's string form is normalized in the same
-way as for @racket[deftech]. The @racket[#:doc] and
-@racket[#:tag-prefixes] arguments support cross-document and
-section-specific references, like in @racket[secref].
+hyperlinks it to the definition of the key as established by
+@racket[deftech]. If @racket[key] is false, the decoded content is
+converted to a string (using @racket[content->string]) to use as a
+key; in either case, the key is normalized in the same way as for
+@racket[deftech]. The @racket[#:doc] and @racket[#:tag-prefixes]
+arguments support cross-document and section-specific references, like
+in @racket[secref].
 
 With the default style files, the hyperlink created by @racket[tech]
 is somewhat quieter than most hyperlinks: the underline in HTML output
@@ -1045,11 +1102,12 @@ defined, but a sentence uses the term ``binding,'' the latter can be
 linked to the former using @racketfont["@tech{bind}ing"].}
 
 @defproc[(techlink [pre-content pre-content?] ...
-                   [#:doc module-path (or/c module-path? false/c) #f]
-                   [#:tag-prefixes prefixes (or/c (listof string?) false/c) #f]) 
+                   [#:key key (or/c string? #f) #f]
+                   [#:doc module-path (or/c module-path? #f) #f]
+                   [#:tag-prefixes prefixes (or/c (listof string?) #f) #f]) 
          element?]{
 
-Like @racket[tech], but the link is not a quiet. For example, in HTML
+Like @racket[tech], but the link is not quiet. For example, in HTML
 output, a hyperlink underline appears even when the mouse is not over
 the link.}
 
@@ -1122,12 +1180,12 @@ which is created with @racket[bib-entry]. The entries are typeset in
 order as given.}
 
 @defproc[(bib-entry [#:key key string?]
-                    [#:title title (or/c false/c pre-content?)]
+                    [#:title title (or/c #f pre-content?)]
                     [#:is-book? is-book? boolean? #f]
-                    [#:author author (or/c false/c pre-content?) #f]
-                    [#:location location (or/c false/c pre-content?) #f]
-                    [#:date date (or/c false/c pre-content?) #f] 
-                    [#:url url (or/c false/c pre-content?) #f])
+                    [#:author author (or/c #f pre-content?) #f]
+                    [#:location location (or/c #f pre-content?) #f]
+                    [#:date date (or/c #f pre-content?) #f] 
+                    [#:url url (or/c #f pre-content?) #f])
          bib-entry?]{
 
 Creates a bibliography entry. The @racket[key] is used to refer to the
