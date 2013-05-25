@@ -912,44 +912,78 @@
                                                                ""))))))))])
                     (let-values ([(dest-file normalized-dest-file)
                                   (let loop ([dest-file dest-file])
-                                    (let ([normalized-dest-file 
-                                           (normal-case-path (simplify-path (path->complete-path dest-file)))]
-                                          [check-same
-                                           (lambda (src)
-                                             (call-with-input-file* 
-                                                dest-file
-                                                (lambda (dest)
-                                                  (or (and (not content)
-                                                           (equal? (port-file-identity src)
-                                                                   (port-file-identity dest)))
-                                                      (let loop ()
-                                                        (let ([s (read-bytes 4096 src)]
-                                                              [d (read-bytes 4096 dest)])
-                                                          (and (equal? s d)
-                                                               (or (eof-object? s) (loop)))))))))])
-                                      (if (file-exists? dest-file)
-                                          (cond
-                                           [(or (and content
-                                                     (check-same (open-input-bytes content)))
-                                                (and (not content)
-                                                     (call-with-input-file* src-file check-same)))
-                                            ;; same content at that destination
-                                            (values dest-file normalized-dest-file)]
-                                           [(hash-ref copied-dests normalized-dest-file #f)
-                                            ;; need a different file
-                                            (loop (next-file-name dest-file))]
-                                           [else
-                                            ;; replace the file
-                                            (delete-file dest-file)
-                                            (values dest-file normalized-dest-file)])
-                                          ;; new file
-                                          (values dest-file normalized-dest-file))))])
-                      (unless (file-exists? dest-file)
+                                    (let* ([normalized-dest-file 
+                                            (normal-case-path (simplify-path (path->complete-path dest-file)))]
+                                           [check-same
+                                            (lambda (src dest-file)
+                                              (call-with-input-file* 
+                                               dest-file
+                                               (lambda (dest)
+                                                 (or (and (not content)
+                                                          (equal? (port-file-identity src)
+                                                                  (port-file-identity dest)))
+                                                     (let loop ()
+                                                       (let ([s (read-bytes 4096 src)]
+                                                             [d (read-bytes 4096 dest)])
+                                                         (and (equal? s d)
+                                                              (or (eof-object? s) (loop)))))))))]
+                                           [same-directories?
+                                            (lambda (s d)
+                                              (let loop ([s s] [d d])
+                                                (cond
+                                                 [(and (file-exists? s) (file-exists? d))
+                                                  (call-with-input-file* s (lambda (in)
+                                                                             (check-same in d)))]
+                                                 [(directory-exists? s)
+                                                  (and (directory-exists? d)
+                                                       (let ([sl (sort (directory-list s) bytes<? #:key path-element->bytes)]
+                                                             [dl (sort (directory-list d) bytes<? #:key path-element->bytes)])
+                                                         (and (equal? sl dl)
+                                                              (andmap loop sl dl))))]
+                                                 [else #f])))]
+                                           [not-same
+                                            (lambda (delete-dest)
+                                              (cond
+                                               [(hash-ref copied-dests normalized-dest-file #f)
+                                                ;; need a different file/directory
+                                                (loop (next-file-name dest-file))]
+                                               [else
+                                                ;; replace the file/directory
+                                                (delete-dest dest-file)
+                                                (values dest-file normalized-dest-file)]))])
+                                      (cond
+                                       [(and (file-exists? src-file)
+                                             (file-exists? dest-file))
+                                        (cond
+                                         [(or (and content
+                                                   (check-same (open-input-bytes content) dest-file))
+                                              (and (not content)
+                                                   (call-with-input-file* src-file (lambda (in) (check-same in dest-file)))))
+                                          ;; same content at that destination
+                                          (values dest-file normalized-dest-file)]
+                                         [else
+                                          (not-same delete-file)])]
+                                       [(and (directory-exists? src-file)
+                                             (directory-exists? dest-file))
+                                        (if (same-directories? src-file dest-file)
+                                            (values dest-file normalized-dest-file)
+                                            (not-same delete-directory/files))]
+                                       [(file-exists? dest-file)
+                                        (not-same delete-file)]
+                                       [(directory-exists? dest-file)
+                                        (not-same delete-directory/files)]
+                                       [else
+                                        ;; new file/directory
+                                        (values dest-file normalized-dest-file)])))])
+                      (unless (or (file-exists? dest-file)
+                                  (directory-exists? dest-file))
                         (if content
                             (call-with-output-file*
                              dest-file
                              (lambda (dest) (write-bytes content dest)))
-                            (copy-file src-file dest-file)))
+                            (if (directory-exists? src-file)
+                                (copy-directory/files src-file dest-file)
+                                (copy-file src-file dest-file))))
                       (hash-set! copied-dests normalized-dest-file #t)
                       (let ([result (path->string (file-name-from-path dest-file))])
                         (unless content

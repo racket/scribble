@@ -424,7 +424,8 @@
  [seclink (->* (string?)
                (#:doc module-path?
                       #:tag-prefixes (or/c #f (listof string?))
-                      #:underline? any/c)
+                      #:underline? any/c
+                      #:indirect? any/c)
                #:rest (listof pre-content?)
                element?)]
  [other-doc (->* (module-path?)
@@ -445,8 +446,23 @@
      (element-content le)
      (link-element-tag le))))
 
-(define (seclink tag #:underline? [u? #t] #:doc [doc #f] #:tag-prefixes [prefix #f] . s)
-  (make-link-element (if u? #f "plainlink") (decode-content s)
+(define normal-indirect (style #f '(indirect-link)))
+(define plain-indirect (style "plainlink" '(indirect-link)))
+
+(define (seclink tag 
+                 #:doc [doc #f] 
+                 #:underline? [u? #t] 
+                 #:tag-prefixes [prefix #f]
+                 #:indirect? [indirect? #f]
+                 . s)
+  (make-link-element (if indirect?
+                         (if u?
+                             normal-indirect
+                             plain-indirect)
+                         (if u? 
+                             #f 
+                             "plainlink"))
+                     (decode-content s)
                      `(part ,(doc-prefix doc prefix tag))))
 
 (define (other-doc #:underline? [u? #t] doc)

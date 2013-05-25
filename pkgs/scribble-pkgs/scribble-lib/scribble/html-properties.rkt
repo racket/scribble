@@ -20,4 +20,7 @@
  [attributes ([assoc (listof (cons/c symbol? string?))])]
  [column-attributes ([assoc (listof (cons/c symbol? string?))])]
 
+ [part-link-redirect ([url url?])]
+ [install-resource ([path path-string?])]
+
  [head-extra ([xexpr xexpr/c])])

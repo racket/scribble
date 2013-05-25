@@ -172,7 +172,7 @@
      #'(process-begin/text begin/collect begin expr ...)]))
 
 ;; include for templates
-(require (for-syntax scheme/base (prefix-in scribble: "../reader.rkt") syntax/parse)
+(require (for-syntax scheme/base (prefix-in scribble: scribble/reader) syntax/parse)
          scheme/include)
 (define-syntax (include/text stx)
   (syntax-case stx ()

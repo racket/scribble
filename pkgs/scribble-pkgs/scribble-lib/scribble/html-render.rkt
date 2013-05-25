@@ -301,15 +301,24 @@
       (part-whole-page? d ri))
 
     (define/override (collect-part-tags d ci number)
+      (define redirect (let ([s (part-style d)])
+                         (and s
+                              (for/or ([p (in-list (style-properties s))])
+                                (and (part-link-redirect? p)
+                                     (part-link-redirect-url p))))))
       (for ([t (part-tags d)])
         (let ([key (generate-tag t ci)])
           (collect-put! ci key
-                        (vector (or (part-title-content d) '("???"))
-                                (add-current-tag-prefix key)
-                                number ; for consistency with base
-                                (and (current-output-file)
-                                     (path->relative (current-output-file)))
-                                (current-part-whole-page? d))))))
+                        (let ([v (vector (or (part-title-content d) '("???"))
+                                         (add-current-tag-prefix key)
+                                         number ; for consistency with base
+                                         (and (current-output-file)
+                                              (path->relative (current-output-file)))
+                                         (current-part-whole-page? d))])
+                          (if redirect
+                              (list->vector (append (vector->list v)
+                                                    (list (url->string* redirect))))
+                              v))))))
 
     (define/override (collect-target-element i ci)
       (let ([key (generate-tag (target-element-tag i) ci)])
@@ -340,6 +349,10 @@
       (vector-ref dest 4))
     (define (dest-anchor dest)
       (vector-ref dest 1))
+    (define (dest-redirect dest)
+      (if ((vector-length dest) . > . 5)
+          (vector-ref dest 5)
+          #f))
 
     ;; ----------------------------------------
 
@@ -406,6 +419,23 @@
                                     tag
                                     (serialize tag)))))
 
+    (define/private (link-element-indirect? e)
+      (memq 'indirect-link 
+            (let ([s (element-style e)])
+              (or (and (style? s)
+                       (style-properties s))
+                  null))))
+
+    (define/override (resolve-content i d ri)
+      (cond
+        [(and (link-element? i)
+              external-tag-path
+              (link-element-indirect? i))
+         ;; don't resolve indirect link
+         (resolve-content (element-content i) d ri)]
+        [else
+         (super resolve-content i d ri)]))
+
     ;; ----------------------------------------
 
     (define/private (reveal-subparts? p) ;!!! need to use this
@@ -416,18 +446,19 @@
 
     (define/private (dest->url dest [abs? #f])
       (if dest
-          (format "~a~a~a"
-                  (let ([p (relative->path (dest-path dest))])
-                    (if abs?
-                        (path->url-string (path->complete-path p))
-                        (if (equal? p (current-output-file))
-                            ""
-                            (from-root p (get-dest-directory)))))
-                  (if (dest-page? dest) "" "#")
-                  (if (dest-page? dest)
-                      ""
-                      (uri-unreserved-encode
-                       (anchor-name (dest-anchor dest)))))
+          (or (dest-redirect dest)
+              (format "~a~a~a"
+                      (let ([p (relative->path (dest-path dest))])
+                        (if abs?
+                            (path->url-string (path->complete-path p))
+                            (if (equal? p (current-output-file))
+                                ""
+                                (from-root p (get-dest-directory)))))
+                      (if (dest-page? dest) "" "#")
+                      (if (dest-page? dest)
+                          ""
+                          (uri-unreserved-encode
+                           (anchor-name (dest-anchor dest))))))
           "???"))
 
     (define/public (render-toc-view d ri)
@@ -1150,9 +1181,13 @@
            ,@(render-content (element-content e) part ri))]
         [(and (link-element? e) (not (current-no-links)))
          (parameterize ([current-no-links #t])
+           (define indirect-link? (link-element-indirect? e))
            (let-values ([(dest ext?)
-                         (resolve-get/ext? part ri (link-element-tag e))])
-             (if dest
+                         (if (and indirect-link?
+                                  external-tag-path)
+                             (values #f #f)
+                             (resolve-get/ext? part ri (link-element-tag e)))])
+             (if (or indirect-link? dest)
                `((a [(href
                       ,(cond
                         [(and ext? external-root-url
@@ -1177,7 +1212,8 @@
                                 [fragment
                                  (and (not (dest-page? dest))
                                       (anchor-name (dest-anchor dest)))])))]
-                        [(and ext? external-tag-path)
+                        [(or indirect-link?
+                             (and ext? external-tag-path))
                          ;; Redirected to search:
                          (url->string*
                           (let ([u (string->url external-tag-path)])
@@ -1190,7 +1226,8 @@
                         [else
                          ;; Normal link:
                          (dest->url dest)]))
-                     ,@(attribs (if (and ext? external-tag-path)
+                     ,@(attribs (if (or indirect-link?
+                                        (and ext? external-tag-path))
                                     '((class "Sq"))
                                     null))
                      [data-pltdoc "x"]]
@@ -1222,6 +1259,9 @@
               (let ([s (content-style e)])
                 (and (style? s)
                      (style->tag s)))]
+             [resources (for/list ([p (in-list properties)]
+                                   #:when (install-resource? p))
+                          (install-resource-path p))]
              [link? (and (ormap target-url? properties)
                          (not (current-no-links)))]
              [anchor? (ormap url-anchor? properties)]
@@ -1246,6 +1286,8 @@
               (lambda ()
                 (when (render-element? e)
                   ((render-element-render e) this part ri)))])
+        (for ([r (in-list resources)])
+          (install-file r))
         (let-values ([(content) (cond
                                  [link?
                                   (parameterize ([current-no-links #t])

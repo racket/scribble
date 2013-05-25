@@ -4,6 +4,7 @@
          "../scheme.rkt"
          "../search.rkt"
          "../basic.rkt"
+         (only-in "../core.rkt" style style-properties)
          "manual-style.rkt"
          "manual-utils.rkt" ;; used via datum->syntax
          (for-syntax racket/base)
@@ -97,7 +98,8 @@
                                               ,(if (identifier? #'lang)
                                                    `(as-modname-link
                                                      ',#'lang
-                                                     (to-element ',#'lang))
+                                                     (to-element ',#'lang)
+                                                     #f)
                                                    #'(racket lang)))))
                             #'lang)])
        (if (syntax-e #'filename)
@@ -190,22 +192,34 @@
   (syntax-rules (unsyntax)
     [(racketmodname #,n)
      (let ([sym n])
-       (as-modname-link sym (to-element sym)))]
+       (as-modname-link sym (to-element sym) #f))]
     [(racketmodname n)
-     (as-modname-link 'n (**racketmodname n))]))
+     (as-modname-link 'n (**racketmodname n) #f)]
+    [(racketmodname #,n #:indirect)
+     (let ([sym n])
+       (as-modname-link sym (to-element sym) #t))]
+    [(racketmodname n #:indirect)
+     (as-modname-link 'n (**racketmodname n) #t)]))
 
 (define-syntax racketmodlink
   (syntax-rules (unsyntax)
     [(racketmodlink n content ...)
-     (*as-modname-link 'n (elem #:style #f content ...))]))
+     (*as-modname-link 'n (elem #:style #f content ...) #f)]))
 
-(define (as-modname-link s e)
+(define (as-modname-link s e indirect?)
   (if (symbol? s)
-      (*as-modname-link s e)
+      (*as-modname-link s e indirect?)
       e))
 
-(define (*as-modname-link s e)
-  (make-link-element module-link-color
+(define indirect-module-link-color
+  (struct-copy style module-link-color
+               [properties (cons 'indirect-link
+                                 (style-properties module-link-color))]))
+
+(define (*as-modname-link s e indirect?)
+  (make-link-element (if indirect?
+                         indirect-module-link-color
+                         module-link-color)
                      (list e)
                      `(mod-path ,(datum-intern-literal (format "~s" s)))))
 
