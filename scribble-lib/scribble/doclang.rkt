@@ -17,9 +17,9 @@
 
 (define-syntax (doc-begin stx)
   (syntax-case stx ()
-    [(_ m-id post-process (expr ...))
+    [(_ m-id post-process exprs)
      #`(begin
-         (define m-id (post-process (decode (list . #,(reverse (syntax->list #'(expr ...)))))))
+         (define m-id (post-process (decode (list . #,(reverse (syntax->list #'exprs))))))
          (provide m-id))]
     [(_ m-id post-process exprs . body)
      ;; `body' probably starts with lots of string constants; it's
