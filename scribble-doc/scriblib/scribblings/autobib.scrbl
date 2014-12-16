@@ -37,6 +37,16 @@ function. See below for an example.
   @(generate-bibliography)
 }|
 
+For citations that reference a page number or section, the @racket[in-bib]
+function can be used. For example, the following snippet:
+
+@codeblock[#:keep-lang-line? #f]|{
+  #lang scribble/base
+  Racket has a contract library.@~cite[(in-bib plt-tr1 ", §8")]
+}|
+
+includes a citation to section 8 of the Racket reference.
+
 @defform/subs[(define-cite ~cite-id citet-id generate-bibliography-id
                            option ...)
               ([option (code:line #:style style-expr)
