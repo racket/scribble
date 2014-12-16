@@ -2,6 +2,7 @@
 @(require scribble/manual scribble/core scribble/html-properties
           scribble/latex-properties
           racket/runtime-path
+          racket/file
           "utils.rkt"
           (prefix-in lp-ex: "lp-ex-doc.scrbl")
           (for-label scribble/lp-include scribble/lp))
@@ -12,49 +13,56 @@
                                  (make-tex-addition "lp.tex")))
       ]{Literate Programming}
 
-Programs written using @racketmodname[scribble/lp] are simultaneously
-two things: a program and a document describing the program.
+Programs written using @racketmodname[scribble/lp2] are simultaneously
+two things: a program and a document describing the program:
 
-Programs in @racketmodname[scribble/lp] are viewed in two different
-ways, either by running the program directly or by including it with
-@racket[lp-include].  When running the program, all of the
-@racket[chunk] expressions are collected and stitched together into a
-program, and the rest of the module is discarded. When using
-@racket[lp-include], the entire contents of the module are preserved
-and are treated like an ordinary Scribble document, where
-@racket[chunk]s are typeset in a manner similar to @racket[codeblock].
+@itemlist[
+
+ @item{When the program is run, all of the @racket[chunk] expressions
+       are collected and stitched together into a program, and the
+       rest of the module is discarded.}
+
+ @item{When the program is provided to Scribble---or used through
+       @racket[include-section] in another Scribble document with a
+       @raclet[(submod ... doc)] module path---the entire contents of
+       the module are treated like an ordinary Scribble document,
+       where @racket[chunk]s are typeset in a manner similar to
+       @racket[codeblock].}
+
+]
 
 @(define-runtime-path lp-ex "lp-ex.rkt")
 
 For example, consider this program:
 
-@(call-with-input-file lp-ex
-   (lambda (port)
-     (verbatim
-      #:indent 2
-      (apply 
-       string-append
-       (let loop ()
-	 (let ([line (read-line port 'any)])
-	   (cond
-	    [(eof-object? line) '()]
-            [(equal? line "") (cons "  \n" (loop))]
-            [else 
-	       (list* line "\n" (loop))])))))))
+@(codeblock (file->string lp-ex))
 
 When this file is @racket[require]d in the normal manner, it defines a
 function @racket[f] that squares its argument, and the documentation
-is ignored. When it is included with @racket[lp-include], it looks
-like this:
+is ignored. When it is rendered as a Scribble document, the output
+looks like this:
 
 @(make-nested-flow
   (make-style "LPBoxed" null)
   (part-blocks lp-ex:doc))
 
-@section{@racketmodname[scribble/lp] Language}
+@; ------------------------------------------------------------
 
-@defmodulelang[scribble/lp]{The @racketmodname[scribble/lp] language
-provides core support for literate programming.}
+@section{@racketmodname[scribble/lp2] Language}
+
+@defmodulelang[scribble/lp2 #:use-sources (scribble/lp)]{The
+@racketmodname[scribble/lp] language provides core support for
+literate programming. It is read like a @racketmodname[scribble/base]
+program, but its bindings extend @racketmodname[racket/base] with two
+forms: @racket[chunk] and @racket[CHUNK].}
+
+More precisely, a module in @racketmodname[scribble/lp2] has its
+@racketmodname[racket/base]-like content in a @racketidfont{doc}
+submodule, which is recognized by tools such as @exec{raco scribble}.
+The content of the @racket[chunk] and @racket[CHUNK] forms is
+stitched together as the immediate content of the module.
+
+@history[#:added "1.8"]
 
 @defform[(chunk id form ...)]{
 
@@ -83,13 +91,30 @@ use @racket[UNSYNTAX].
 
 }
 
+@; ------------------------------------------------------------
+
+@section{@racketmodname[scribble/lp] Language}
+
+@defmodulelang[scribble/lp]{Programs written using the older
+@racketmodname[scribble/lp] language are similar to
+@racketmodname[scribble/lp2] programs, except that the module cannot
+be provided directly to Scribble. Instead, the document content must be
+extracted using @racket[lp-include].}
+
+The @racketmodname[scribble/lp] language effectively binds only
+@racket[chunk] and @racket[CHUNK], while all other bindings for
+documentation are taken from the context where @racket[lp-include] is
+used.
+
+@; ------------------------------------------------------------
+
 @section{@racketmodname[scribble/lp-include] Module}
 
 @defmodule[scribble/lp-include]{The
 @racketmodname[scribble/lp-include] library is normally used within a
 Scribble document---that is, a module that starts with something like
-@racket[#, @hash-lang[] scribble/base] or @racket[#, @hash-lang[]
-scribble/manual], instead of @racket[#, @hash-lang[] racket].}
+@racket[#, @hash-lang[] @racketmodname[scribble/base]] or @racket[#, @hash-lang[]
+@racketmodname[scribble/manual]], instead of @racket[#, @hash-lang[] @racketmodname[racket]].}
 
 @defform[(lp-include filename)]{
 Includes the source of @racket[filename] as the typeset version of the literate

@@ -1,4 +1,5 @@
-#lang scribble/lp
+#lang scribble/lp2
+@(require scribble/manual)
 
 Literate programs have chunks of code, like this one:
 

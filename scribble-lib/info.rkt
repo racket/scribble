@@ -22,4 +22,4 @@
 
 (define pkg-authors '(mflatt eli))
 
-(define version "1.7")
+(define version "1.8")
