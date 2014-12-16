@@ -24,7 +24,7 @@ two things: a program and a document describing the program:
 
  @item{When the program is provided to Scribble---or used through
        @racket[include-section] in another Scribble document with a
-       @raclet[(submod ... doc)] module path---the entire contents of
+       @racket[(submod ... doc)] module path---the entire contents of
        the module are treated like an ordinary Scribble document,
        where @racket[chunk]s are typeset in a manner similar to
        @racket[codeblock].}
