@@ -30,7 +30,7 @@ To document a collection, including a collection implemented by a
         @filepath{manual.scrbl} (but pick a more specific name in practice).}
 
   @item{Start @filepath{manual.scrbl} like this:
-          @verbatim[#:indent 2]|{
+          @codeblock|{
             #lang scribble/manual
 
             @title{My Library}
@@ -89,7 +89,8 @@ but the @racketidfont{list} identifier is not hyperlinked to the usual
 definition. To cause @racketidfont{list} to be hyperlinked, add a
 @racket[require] form like this:
 
-@verbatim[#:indent 2]|{
+@codeblock[#:keep-lang-line? #f]|{
+  #lang scribble/base
   @(require (for-label racket))
 }|
 
@@ -107,7 +108,7 @@ preferred mechanism for linking to information outside of a single
 document. Such links require no information about where and how a
 binding is documented elsewhere:
 
-@verbatim[#:indent 2]|{
+@codeblock|{
   #lang scribble/manual
   @(require (for-label racket))
 
@@ -121,7 +122,7 @@ so it ignores the source formatting of the expression. The
 @racket[racketblock] form, in contrast, typesets inset Racket code,
 and it preserves the expression's formatting from the document source.
 
-@verbatim[#:indent 2]|{
+@codeblock|{
   #lang scribble/manual
   @(require (for-label racket))
 
@@ -150,7 +151,7 @@ hyperlink with text other than the section title.
 
 The following example illustrates section hyperlinks:
 
-@verbatim[#:indent 2]|{
+@codeblock|{
   #lang scribble/manual
   @(require (for-label racket))
 
@@ -188,7 +189,7 @@ prefix, which is based on the target document's main source file.  The
 following example links to a section in the Racket reference
 manual:
 
-@verbatim[#:indent 2]|{
+@codeblock|{
   #lang scribble/manual
   @(require (for-label racket))
   @(define ref-src
@@ -240,9 +241,7 @@ To document a @racket[my-helper] procedure that is exported by
 Adding these pieces to @filepath{"manual.scrbl"} gives us the
 following:
 
-@; [Eli] This is also using `my-lib/helper' which doesn't work with
-@; planet libraries
-@verbatim[#:indent 2]|{
+@codeblock|{
   #lang scribble/manual
   @(require (for-label racket
                        "helper.rkt"))
@@ -312,7 +311,7 @@ bindings introduced into the document source by
 from the previous section, @filepath{helper.rkt} must be imported both
 via @racket[(require (for-label ....))] and @racket[require]:
 
-@verbatim[#:indent 2]|{
+@codeblock|{
   #lang scribble/manual
   @(require scribble/eval    ; <--- added
             "helper.rkt"     ; <--- added
@@ -351,7 +350,7 @@ sub-sections.
 
 Revising @filepath{cows.scrbl} from the previous section:
 
-@verbatim[#:indent 2]|{
+@codeblock|{
   #lang scribble/manual
 
   @title[#:style '(toc)]{Cows}
