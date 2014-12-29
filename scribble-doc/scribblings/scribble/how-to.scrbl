@@ -301,38 +301,39 @@ on forms to document Racket bindings.
 @; ----------------------------------------
 @section{Showing Racket Examples}
 
-The @racket[examples] form from @racket[scribble/eval]
-helps you generate examples in your documentation.
-
-To use @racket[examples], the procedures to document must be suitable
-for use at documentation time; in fact, @racket[examples] uses
-bindings introduced into the document source by
-@racket[require]. Thus, to generate examples using @racket[my-helper]
-from the previous section, @filepath{helper.rkt} must be imported both
-via @racket[(require (for-label ....))] and @racket[require]:
+The @racket[examples] form from @racket[scribble/eval] helps you
+generate examples in your documentation. To use @racket[examples], the
+procedures to document must be suitable for use at documentation time,
+but the @racket[examples] form does not use any binding introduced
+into the document source by @racket[require]. Instead, create a new
+evaluator with its own namespace using @racket[make-base-eval], and
+use @racket[interaction-eval] to require @filepath{helper.rkt} in that
+evaluator. Finally, supply the same evaluator to @racket[examples]:
 
 @codeblock|{
   #lang scribble/manual
-  @(require scribble/eval    ; <--- added
-            "helper.rkt"     ; <--- added
+  @(require scribble/eval
             (for-label racket
                        "helper.rkt"))
 
   @title{My Library}
 
-  @defmodule[my-lib/helper]{The @racketmodname[my-lib/helper]
-  module---now with extra cows!}
+  @defmodule[my-lib/helper]
 
   @defproc[(my-helper [lst list?])
-           (listof (not/c (one-of/c 'cow)))]{
-
+           (listof
+            (not/c (one-of/c 'cow)))]{
    Replaces each @racket['cow] in @racket[lst] with
    @racket['aardvark].
 
+   @(define helper-eval (make-base-eval))
+   @interaction-eval[#:eval helper-eval
+                     (require "helper.rkt")]
    @examples[
-     (my-helper '())
-     (my-helper '(cows such remarkable cows))
-   ]}
+       #:eval helper-eval
+       (my-helper '())
+       (my-helper '(cows such remarkable cows))
+     ]}
 }|
 
 @;----------------------------------------
