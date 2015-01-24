@@ -692,10 +692,13 @@
                                [all-left-line?s all-left-line?s]
                                [need-left? #f])
                       (unless (null? flows)
+                        (define (render-cell cnt)
+                          (render-table-cell (car flows) part ri (/ twidth cnt) (car cell-styles) (not index?)))
                         (define right-line?
                           (cond
                            [index?
                             (printf "\n\\item ")
+                            (render-cell 1)
                             #f]
                            [(eq? 'cont (car flows))
                             #f]
@@ -711,7 +714,7 @@
                                              (memq 'left-border (style-properties (car cell-styles)))
                                              (memq 'border (style-properties (car cell-styles)))))
                                 (printf "\\vline "))
-                              (render-table-cell (car flows) part ri (/ twidth cnt) (car cell-styles) (not index?))
+                              (render-cell cnt)
                               (define right-line? (or (memq 'right-border (style-properties (list-ref cell-styles (sub1 cnt))))
                                                       (memq 'border (style-properties (list-ref cell-styles (sub1 cnt))))))
                               (when (and right-line? (null? (list-tail flows cnt)) (not all-right-line?))
