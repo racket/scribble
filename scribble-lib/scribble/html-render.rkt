@@ -1336,10 +1336,15 @@
                  `((a ([href
                       ,(cond
                         [(and ext-id external-root-url
-                              (let ([rel (find-relative-path
-                                          (find-doc-dir)
-                                          (relative->path (dest-path dest)))])
-                                (and (relative-path? rel)
+                              (let* ([ref-path (relative->path (dest-path dest))]
+                                     [rel (if (relative-path? ref-path)
+                                              #f
+                                              (find-relative-path
+                                               (find-doc-dir)
+                                               ref-path))])
+                                (and rel
+                                     (relative-path? rel)
+                                     (not (memq 'up (explode-path rel)))
                                      rel)))
                          => (lambda (rel)
                               (url->string*
