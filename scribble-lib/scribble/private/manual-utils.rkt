@@ -2,7 +2,8 @@
 (require "../struct.rkt"
          "../base.rkt"
          (only-in "../core.rkt"
-                   content?)
+                   content?
+                   style?)
          racket/contract/base
          scheme/list)
 
@@ -13,7 +14,7 @@
  [flow-spacer flow?]
  [flow-spacer/n (-> exact-nonnegative-integer? flow?)]
  [flow-empty-line flow?]
- [make-table-if-necessary (content? list? . -> . (list/c (or/c omitable-paragraph? table?)))]
+ [make-table-if-necessary ((or/c style? string?) list? . -> . (list/c (or/c omitable-paragraph? table?)))]
  [current-display-width (parameter/c exact-nonnegative-integer?)])
 
 (define spacer (hspace 1))

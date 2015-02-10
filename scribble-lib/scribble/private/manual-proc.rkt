@@ -458,7 +458,8 @@
         (make-flow
          (if short?
              ;; The single-line case:
-             (make-table-if-necessary
+             (top-align
+              make-table-if-necessary
               "prototype"
               (list
                (cons
@@ -481,7 +482,8 @@
                                       flow-spacer flow-spacer))]
                    [one-ok? (and (not (eq? mode 'new)) (tagged+arg-width . < . (- max-proto-width 5)))])
                (list
-                (make-table
+                (top-align
+                 make-table
                  "prototype"
                  (cons
                   (cons
@@ -538,8 +540,10 @@
                            (loop ((if dots-next? cddr cdr)
                                   args)))))))))))))))
      (if result-next-line?
-       (list (list (make-flow (make-table-if-necessary "prototype"
-                                                       (list end)))))
+       (list (list (make-flow (top-align
+                               make-table-if-necessary
+                               "prototype"
+                               (list end)))))
        null)
      (append-map
       (lambda (arg arg-contract arg-val)
@@ -563,21 +567,25 @@
                 (if (and (arg-optional? arg)
                          ((+ base-len 3 def-len) . >= . max-proto-width))
                   (list
-                   (make-table
+                   (top-align
+                    make-table
                     "argcontract"
                     (list base-list (list flow-spacer flow-spacer flow-spacer
                                           (to-flow "=") flow-spacer
                                           (make-flow (list arg-val))))))
-                  (make-table-if-necessary
-                   "argcontract"
-                   (list
-                    (append
-                     base-list
-                     (if (and (arg-optional? arg)
-                              ((+ base-len 3 def-len) . < . max-proto-width))
-                       (list flow-spacer (to-flow "=") flow-spacer
-                             (make-flow (list arg-val)))
-                       null)))))))))]
+                  (let ([show-default?
+                         (and (arg-optional? arg)
+                              ((+ base-len 3 def-len) . < . max-proto-width))])
+                    (top-align
+                     make-table-if-necessary
+                     "argcontract"
+                     (list
+                      (append
+                       base-list
+                       (if show-default?
+                           (list flow-spacer (to-flow "=") flow-spacer
+                                 (make-flow (list arg-val)))
+                           null))))))))))]
           [else null]))
       args
       arg-contracts
@@ -586,7 +594,8 @@
          (let ([result-block  (if (block? result-value)
                                   result-value
                                   (make-omitable-paragraph (list result-value)))])
-           (list (list (list (make-table
+           (list (list (list (top-align
+                              make-table
                               "argcontract"
                               (list (list
                                      (to-flow (make-element #f (list spacer "=" spacer)))
@@ -636,6 +645,24 @@
      #'(defproc* #:kind "parameter" #:link-target? lt.expr
          ([(id) boolean?] [(id [arg any/c]) void? #:value value.value])
          desc ...)]))
+
+(define top-align-styles (make-hash))
+(define (top-align make-table style-name cols)
+  (if (null? cols)
+      (make-table style-name null)
+      (let* ([n (length (car cols))]
+             [k (cons style-name n)])
+        (make-table
+         (hash-ref top-align-styles
+                   k
+                   (lambda ()
+                     (define s
+                       (make-style style-name
+                                   (list (make-table-columns (for/list ([i n])
+                                                               (make-style #f '(top)))))))
+                     (hash-set! top-align-styles k s)
+                     s))
+         cols))))
 
 ;; ----------------------------------------
 
@@ -980,7 +1007,8 @@
              (cond
               [(pair? v)
                (list
-                (make-table-if-necessary
+                (top-align
+                 make-table-if-necessary
                  "argcontract"
                  (list (list (to-flow (hspace 2))
                              (to-flow (to-element (field-name v)))
@@ -1099,7 +1127,8 @@
              (list
               (list
                ((if (zero? i) (add-background-label (or kind "value")) values)
-                (make-table-if-necessary
+                (top-align
+                 make-table-if-necessary
                  "argcontract"
                  (append
                   (list
@@ -1118,14 +1147,16 @@
                         null))))))))
              (if contract-on-first-line?
                  null
-                 (list (list (make-table-if-necessary
+                 (list (list (top-align
+                              make-table-if-necessary
                               "argcontract"
                               (list 
                                (list (to-flow (list spacer ":" spacer))
                                      (list contract-block)))))))
              (if (or single-line? (not result-block))
                  null
-                 (list (list (make-table-if-necessary
+                 (list (list (top-align
+                              make-table-if-necessary
                               "argcontract"
                               (list (list
                                      (to-flow (list spacer "=" spacer))
