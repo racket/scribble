@@ -19,6 +19,7 @@
          net/base64
          scheme/serialize
          racket/draw/gif
+         pkg/path
          (prefix-in xml: xml/xml)
          (for-syntax scheme/base)
          "search.rkt"
@@ -312,6 +313,7 @@
              root-relative?)
 
     (define path-cache (make-hash))
+    (define pkg-cache (make-hash))
 
     (define (path->relative p)
       (let ([p (path->main-doc-relative p)])
@@ -1116,6 +1118,14 @@
                                                (cadr t)))])
                             (if (and src taglet)
                                 `([x-source-module ,(format "~s" src)]
+                                  ,@(let* ([path (resolved-module-path-name
+                                                  (module-path-index-resolve
+                                                   (module-path-index-join src #f)))]
+                                           [pkg (and (path? path)
+                                                     (path->pkg path #:cache pkg-cache))])
+                                      (if pkg
+                                          `([x-source-pkg ,pkg])
+                                          null))
                                   ,@(let ([prefixes (current-tag-prefixes)])
                                       (if (null? prefixes)
                                           null
