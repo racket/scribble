@@ -206,7 +206,10 @@ produces the output
 with the @racket[(loop (not x))] indented under @racket[define],
 because that's the way it is idented the use of @racket[racketblock].
 Source-location span information is used to preserve @racket[#true]
-versus @racket[#t] and @racket[#false] versus @racket[#f], and
+versus @racket[#t] and @racket[#false] versus @racket[#f]; span
+information is also used heuristically to add @racketvalfont{#i}
+to the start of an inexact number if its printed form would otherwise
+be two characters shorter than the source;
 syntax-object properties are used to preserve square brackets and
 curly braces versus parentheses; otherwise, using syntax objects tends
 to normalize the form of S-expression elements, such as rendering
@@ -299,7 +302,8 @@ A few other escapes are recognized symbolically:
 ]
 
 See also @racketmodname[scribble/comment-reader].
-}
+
+@history[#:changed "1.9" @elem{Added heuristic for adding @racketvalfont{#i} to inexact numbers.}]}
 
 @defform[(RACKETBLOCK maybe-escape datum ...)]{Like @racket[racketblock], but with
 the default expression escape @racket[UNSYNTAX] instead of @racket[unsyntax].}

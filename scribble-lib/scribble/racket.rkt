@@ -248,6 +248,15 @@
                                      (if (equal? (syntax-span c) 6)
                                          "#false"
                                          "#f")]
+                                    [(and (number? sc)
+                                          (inexact? sc))
+                                     (define s (iformat "~s" sc))
+                                     (if (= (string-length s)
+                                            (- (syntax-span c) 2))
+                                         ;; There's no way to know whether the source used #i,
+                                         ;; but it should be ok to include it:
+                                         (string-append "#i" s)
+                                         s)]
                                     [else (iformat "~s" sc)])])
                            (if (and escapes?
                                     (symbol? sc)
