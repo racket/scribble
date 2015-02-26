@@ -64,13 +64,26 @@
      (values null null))))
 
 (define-syntax (doc-submodule stx)
+  (define (shift-and-introduce s)
+    (syntax-local-introduce
+     (syntax-shift-phase-level s #f)))
   (with-syntax ([((req ...) ...)
-                 (map syntax-local-introduce (reverse requires))]
-                [(expr ...) (map syntax-local-introduce (reverse doc-exprs))]
+                 (map (lambda (rs)
+                        (map (lambda (r)
+                               (syntax-case r ()
+                                 [(op arg ...)
+                                  (with-syntax ([(arg ...)
+                                                 (map shift-and-introduce
+                                                      (syntax->list #'(arg ...)))])
+                                    #'(op arg ...))]
+                                 [else
+                                  (shift-and-introduce r)]))
+                             (syntax->list rs)))
+                      (reverse requires))]
+                [(expr ...)
+                 (map shift-and-introduce (reverse doc-exprs))]
                 [doc-body
-                 (map (lambda (s) (syntax-local-introduce
-                                   (syntax-shift-phase-level s #f)))
-                      (reverse doc-body))])
+                 (map shift-and-introduce (reverse doc-body))])
     ;; This module will be required `for-template':
     (if delayed?
         ;; delayed mode: return syntax objects to drop into context:
