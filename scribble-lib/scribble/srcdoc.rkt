@@ -31,7 +31,10 @@
      (syntax-local-lift-module-end-declaration
       #`(begin-for-syntax (add-relative-requires! (#%variable-reference)
                                                   (quote-syntax #,specs)))))
-   (add-requires! (syntax-local-introduce specs)))
+   (with-syntax ([(spec ...) (syntax-local-introduce specs)])
+     ;; Using `combine-in` protects `spec` against
+     ;; matching `(op arg ...)` in `doc-submodule`:
+     (add-requires! #'((combine-in spec) ...))))
 
  (define (add-relative-requires! varref specs)
    (define mpi (variable-reference->module-path-index varref))

@@ -14,7 +14,7 @@
                                                    [e #'(e)])
                                               srcdoc)
                                       get-docs)
-                              (datum->syntax stx 'get-docs))]
+                              #'get-docs)]
                    [(wrap ...) wraps])
        #'(begin
            (define-syntax (docs stx)

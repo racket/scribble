@@ -92,10 +92,16 @@
                     ;; The `doc` submodule allows a `scribble/lp` module
                     ;; to be provided to `scribble`:
                     #,@(if submod?
-                           #`((module doc scribble/doclang2
-                                (require scribble/manual
-                                         (only-in scribble/private/lp chunk CHUNK))
-                                #,(strip-context #'(begin body0 . body))))
+                           (list
+                            (let ([submod
+                                   (strip-context
+                                    #`(module doc scribble/doclang2
+                                        (require scribble/manual
+                                                 (only-in scribble/private/lp chunk CHUNK))
+                                        (begin body0 . body)))])
+                              (syntax-case submod ()
+                                [(_ . rest)
+                                 (datum->syntax submod (cons #'module #'rest))])))
                            '())))]))]))
 
 (define-syntax module-begin/plain (make-module-begin #f))
