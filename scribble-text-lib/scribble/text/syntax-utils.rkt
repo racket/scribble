@@ -123,6 +123,16 @@
     (if (null? exprs)
       (values (reverse ds) (reverse es) '())
       (let ([expr* (local-expand (car exprs) ctx stoplist (car ctx))])
+        (define (rebuild-bindings)
+          (syntax-case expr* ()
+            [(def ids rhs)
+             (datum->syntax expr*
+                            (list #'def
+                                  (map syntax-local-identifier-as-binding
+                                       (syntax->list #'ids))
+                                  #'rhs)
+                            expr*
+                            expr*)]))
         (syntax-case expr* (begin define-syntaxes define-values)
           [(begin x ...)
            (loop (append (syntax->list #'(x ...)) (cdr exprs)) ds es)]
@@ -132,7 +142,7 @@
              (let ([ids (syntax->list #'(id ...))])
                (syntax-local-bind-syntaxes
                 ids (local-transformer-expand #'rhs 'expression '()) (car ctx))
-               (loop (cdr exprs) (cons expr* ds) es))
+               (loop (cdr exprs) (cons (rebuild-bindings) ds) es))
              ;; return the unexpanded expr, to be re-expanded later, in the
              ;; right contexts
              (values (reverse ds) (reverse es) exprs))]
@@ -141,7 +151,7 @@
            (if (null? es)
              (begin (syntax-local-bind-syntaxes
                      (syntax->list #'(id ...)) #f (car ctx))
-                    (loop (cdr exprs) (cons expr* ds) es))
+                    (loop (cdr exprs) (cons (rebuild-bindings) ds) es))
              ;; same note here
              (values (reverse ds) (reverse es) exprs))]
           [_ (loop (cdr exprs) ds (cons expr* es))])))))
