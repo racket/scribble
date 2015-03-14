@@ -238,9 +238,34 @@
   (define-syntax (id stx)
     (syntax-case stx ()
       [(_ a)
-       (with-syntax ([ellipses (datum->syntax #'a '(... ...))])
-         #'(let ([ellipses #f])
-             (base a)))])))
+       ;; Remove the context from any ellipsis in `a`:
+       (with-syntax ([a (strip-ellipsis-context #'a)])
+         #'(base a))])))
+
+(define-for-syntax (strip-ellipsis-context a)
+  (define a-ellipsis (datum->syntax a '...))
+  (let loop ([a a])
+    (cond
+     [(identifier? a)
+      (if (free-identifier=? a a-ellipsis #f)
+          (datum->syntax #f '... a a)
+          a)]
+     [(syntax? a)
+      (datum->syntax a (loop (syntax-e a)) a a)]
+     [(pair? a)
+      (cons (loop (car a))
+            (loop (cdr a)))]
+     [(vector? a)
+      (list->vector
+       (map loop (vector->list a)))]
+     [(box? a)
+      (box (loop (unbox a)))]
+     [(prefab-struct-key a)
+      => (lambda (k)
+           (apply make-prefab-struct
+                  k
+                  (loop (cdr (vector->list (struct->vector a))))))]
+     [else a])))
 
 (define-/form racketblock0/form racketblock0)
 (define-/form racketblock/form racketblock)
