@@ -1009,8 +1009,8 @@
                             [(#\”) "{''}"]
                             [(#\u2013) "{--}"]
                             [(#\u2014) "{---}"]
-                            [(#\〈) "$\\langle$"]
-                            [(#\〉) "$\\rangle$"]
+                            [(#\⟨ #\〈) "$\\langle$"] ; [MATHEMATICAL] LEFT ANGLE BRACKET
+                            [(#\⟩ #\〉) "$\\rangle$"] ; [MATHEMATICAL] RIGHT ANGLE BRACKET
                             [(#\∞) "$\\infty$"]
                             [(#\⇓) "$\\Downarrow$"]
                             [(#\↖) "$\\nwarrow$"]
@@ -1168,6 +1168,8 @@
                             [(#\u2079) "$^9$"]
                             [(#\u207a) "$^+$"]
                             [(#\u207b) "$^-$"]
+                            [(#\⋖) "$\\precdot$"]
+                            [(#\⋗) "$\\succdot$"]
                             [(#\⋮) "\\vdots"]
                             [(#\⋱) "$\\ddots$"]
                             [(#\⋯) "$\\cdots$"]
