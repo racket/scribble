@@ -221,13 +221,16 @@
              [(list one) (org-author-name one)]
              [(list one two) (author-name one two)]
              [(list-rest first rest) 
-              (author-name first (apply string-append (add-between rest " ")))])))))
+              (author-name (apply string-append (add-between (cons first (drop-right rest 1))
+                                                             " "))
+                           (last rest))])))))
 
 (module+ test
   (require rackunit)
   
   ;; use this as a predicate to hack around lack of 
-  ;; ability to use equal? on author element structs
+  ;; ability to use equal? on author element structs;
+  ;; unfortunately, it ony compares the composed strings
   (define (print-as-equal-string? a b)
     (equal? (format "~s" a)
             (format "~s" b)))
