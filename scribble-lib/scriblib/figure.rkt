@@ -25,7 +25,8 @@
   (let ([abs (lambda (s)
                (path->main-collects-relative
                 (collection-file-path s "scriblib")))])
-    (list (make-css-addition (abs "figure.css"))
+    (list 'never-indents
+          (make-css-addition (abs "figure.css"))
           (make-tex-addition (abs "figure.tex")))))
 
 ;; outer layer:
