@@ -1,5 +1,5 @@
 #lang racket/base
-(require setup/dirs 
+(require setup/xref
          racket/serialize
          racket/contract
          scribble/core)
@@ -56,11 +56,8 @@
 (define (build-blueboxes-cache)
   (filter
    values
-   (for*/list ([doc-search-dir (in-list (get-doc-search-dirs))]
-               [doc-dir-name (in-list (if (directory-exists? doc-search-dir)
-                                          (directory-list doc-search-dir)
-                                          '()))])
-     (define x (build-path doc-search-dir doc-dir-name "blueboxes.rktd"))
+   (for*/list ([doc-dir-name (in-list (get-rendered-doc-directories #f #f))])
+     (define x (build-path doc-dir-name "blueboxes.rktd"))
      (and (file-exists? x)
           (call-with-input-file x
             (λ (port)
