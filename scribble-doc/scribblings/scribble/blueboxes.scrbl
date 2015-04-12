@@ -2,7 +2,8 @@
 @(require scribble/manual "utils.rkt"
           (for-label scribble/core
                      scribble/blueboxes
-                     racket/contract))
+                     racket/contract
+                     setup/xref))
 
 @title[#:tag "blueboxes"]{Blue Boxes Utilities}
 
@@ -14,7 +15,7 @@
 @defproc[(fetch-blueboxes-strs [tag tag?]
                                [#:blueboxes-cache blueboxes-cache
                                                   blueboxes-cache?
-                                                  (make-blueboxes-cache)])
+                                                  (make-blueboxes-cache #t)])
          (or/c #f (non-empty-listof string?))]{
   Returns a list of strings that show the content of the blue box
   (without any styling information) for the documentation referenced
@@ -25,13 +26,21 @@
   was used to document the export).
 }
 
-@defproc[(make-blueboxes-cache [populate? boolean?]) blueboxes-cache?]{
+@defproc[(make-blueboxes-cache
+          [populate? boolean?]
+          [#:blueboxes-dirs blueboxes-dirs (listof path?) (get-doc-search-dirs)])
+         blueboxes-cache?]{
   Constructs a new (mutable) blueboxes cache. 
   
   If @racket[populate?] is @racket[#f], the cache is initially
   unpopulated, in which case it is filled in the first time the cache
   is passed to @racket[fetch-bluebxoes-strs]. Otherwise, the cache is
-  initially populated.
+  populated immediately.
+
+  The @racket[blueboxes-dirs] argument is a list of directories that are
+  looked inside for @filepath{blueboxes.rktd} files. The default value
+  is only an approximation for where those files usually reside. See
+  also @racket[get-rendered-doc-directories].
 }
 
 @defproc[(blueboxes-cache? [v any/c]) boolean?]{

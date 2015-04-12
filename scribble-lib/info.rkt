@@ -12,8 +12,7 @@
                "at-exp-lib"
                "draw-lib" 
                "syntax-color-lib"
-               "sandbox-lib"
-               "racket-index"))
+               "sandbox-lib"))
 (define build-deps '("rackunit-lib"
                      "eli-tester"))
 
@@ -23,4 +22,4 @@
 
 (define pkg-authors '(mflatt eli))
 
-(define version "1.9")
+(define version "1.10")

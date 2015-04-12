@@ -1,5 +1,5 @@
 #lang racket/base
-(require setup/xref
+(require setup/dirs
          racket/serialize
          racket/contract
          scribble/core)
@@ -8,12 +8,14 @@
  (contract-out
   [fetch-blueboxes-strs (->* (tag?) (#:blueboxes-cache blueboxes-cache?) 
                              (or/c #f (non-empty-listof string?)))]
-  [make-blueboxes-cache (-> boolean? blueboxes-cache?)]
+  [make-blueboxes-cache (->* (boolean?) (#:blueboxes-dirs (listof path?)) blueboxes-cache?)]
   [blueboxes-cache? (-> any/c boolean?)]))
 
-(struct blueboxes-cache (info) #:mutable)
-(define (make-blueboxes-cache populate?)
-  (blueboxes-cache (and populate? (build-blueboxes-cache))))
+(struct blueboxes-cache (info-or-paths) #:mutable)
+(define (make-blueboxes-cache populate? #:blueboxes-dirs [blueboxes-dirs (get-doc-search-dirs)])
+  (define cache (blueboxes-cache blueboxes-dirs))
+  (when populate? (populate-cache! cache))
+  cache)
 
 (define (fetch-blueboxes-strs tag #:blueboxes-cache [cache (make-blueboxes-cache #f)])
   (define plain-strs (fetch-strs-for-single-tag tag cache))
@@ -33,9 +35,8 @@
      plain-strs]))
 
 (define (fetch-strs-for-single-tag tag cache)
-  (unless (blueboxes-cache-info cache)
-    (set-blueboxes-cache-info! cache (build-blueboxes-cache)))
-  (for/or ([ent (in-list (blueboxes-cache-info cache))])
+  (populate-cache! cache)
+  (for/or ([ent (in-list (blueboxes-cache-info-or-paths cache))])
     (define offset+lens (hash-ref (list-ref ent 2) tag #f))
     (cond
       [offset+lens
@@ -52,14 +53,19 @@
                 (read-line port))))))]
       [else #f])))
 
+(define (populate-cache! cache)
+  (define cache-content (blueboxes-cache-info-or-paths cache))
+  (when ((listof path?) cache-content)
+    (set-blueboxes-cache-info-or-paths! cache (build-blueboxes-cache cache-content))))
+
 ;; build-blueboxes-cache : (listof (list file-path int hash[tag -o> (cons int int)]))
-(define (build-blueboxes-cache)
+(define (build-blueboxes-cache blueboxes-dirs)
   (filter
    values
-   (for*/list ([doc-dir-name (in-list (get-rendered-doc-directories #f #f))])
-     (define x (build-path doc-dir-name "blueboxes.rktd"))
-     (and (file-exists? x)
-          (call-with-input-file x
+   (for*/list ([doc-dir-name (in-list blueboxes-dirs)])
+     (define blueboxes.rktd (build-path doc-dir-name "blueboxes.rktd"))
+     (and (file-exists? blueboxes.rktd)
+          (call-with-input-file blueboxes.rktd
             (λ (port)
               (port-count-lines! port)
               (define first-line (read-line port))
@@ -72,6 +78,6 @@
                                              #f)])
                   (deserialize (read port))))
               (and desed
-                   (list x
+                   (list blueboxes.rktd
                          (+ (string->number first-line) pos)
                          desed))))))))
