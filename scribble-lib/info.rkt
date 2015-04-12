@@ -12,7 +12,8 @@
                "at-exp-lib"
                "draw-lib" 
                "syntax-color-lib"
-               "sandbox-lib"))
+               "sandbox-lib"
+               "racket-index"))
 (define build-deps '("rackunit-lib"
                      "eli-tester"))
 
