@@ -12,7 +12,14 @@
   [blueboxes-cache? (-> any/c boolean?)]))
 
 (struct blueboxes-cache (info-or-paths) #:mutable)
-(define (make-blueboxes-cache populate? #:blueboxes-dirs [blueboxes-dirs (get-doc-search-dirs)])
+(define (make-blueboxes-cache
+         populate?
+         #:blueboxes-dirs
+         [blueboxes-dirs (for*/list ([d (in-list (get-doc-search-dirs))]
+                                     [c (in-list (if (directory-exists? d)
+                                                     (directory-list d)
+                                                     '()))])
+                           (build-path d c))])
   (define cache (blueboxes-cache blueboxes-dirs))
   (when populate? (populate-cache! cache))
   cache)
