@@ -24,7 +24,7 @@
           (pair? tag)
           (eq? (car tag) 'def))
      (define constructor-strs 
-       (fetch-strs-for-single-tag (cons 'construtor (cdr tag)) cache))
+       (fetch-strs-for-single-tag (cons 'constructor (cdr tag)) cache))
      (if constructor-strs
          (append plain-strs 
                  '("") 
