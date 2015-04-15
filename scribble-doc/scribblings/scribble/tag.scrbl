@@ -89,3 +89,38 @@ Returns a value that is @racket[equal?] to @racket[v], where multiple
 calls to @racket[intern-taglet] for @racket[equal?] @racket[v]s
 produce the same (i.e., @racket[eq?]) value.}
 
+
+@defproc[(definition-tag->class/interface-tag [definition-tag definition-tag?])
+         class/interface-tag?]{
+  Constructs a tag like @racket[definition-tag], except that
+  it matches documentation for the class. If @racket[definition-tag]
+  doesn't document a class or interface, this function still returns
+  the tag that the class or interface documentation would have had,
+  as if @racket[definition-tag] had documented a class or interface.
+}
+@defproc[(class/interface-tag->constructor-tag [class/interface-tag class/interface-tag?])
+         constructor-tag?]{
+  Constructs a tag like @racket[definition-tag], except that
+  it matches documentation for the constructor of the class.
+}
+@defproc[(get-class/interface-and-method [method-tag method-tag?])
+         (values symbol? symbol?)]{
+  Returns the class name and method name (respectively) for the method documented
+  by the docs at @racket[method-tag].
+}
+@defproc[(definition-tag? [v any/c]) boolean?]{
+ Recognizes definition tags. If @racket[(definition-tag? _v)] is
+ @racket[#t], then so is @racket[(tag? _v)].
+}                               
+@defproc[(class/interface-tag? [v any/c]) boolean?]{
+ Recognizes class or interface tags. If @racket[(class/interface-tag? _v)] is
+ @racket[#t], then so is @racket[(tag? _v)].
+}
+@defproc[(method-tag? [v any/c]) boolean?]{
+ Recognizes method tags. If @racket[(method-tag? _v)] is
+ @racket[#t], then so is @racket[(tag? _v)].
+}
+@defproc[(constructor-tag? [v any/c]) boolean?]{
+ Recognizes class constructor tags. If @racket[(constructor-tag? _v)] is
+ @racket[#t], then so is @racket[(tag? _v)].
+}

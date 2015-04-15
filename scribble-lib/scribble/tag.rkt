@@ -3,6 +3,7 @@
          syntax/modcollapse
          setup/collects
          scribble/core
+         racket/match
          ;; Needed to normalize planet version numbers:
          (only-in planet/resolver get-planet-module-path/pkg)
          (only-in planet/private/data pkg-maj pkg-min))
@@ -21,7 +22,15 @@
   [intern-taglet (any/c . -> . any/c)]
   [doc-prefix (case->
                ((or/c #f module-path?) taglet? . -> . taglet?)
-               ((or/c #f module-path?) (or/c #f (listof string?)) taglet? . -> . taglet?))]))
+               ((or/c #f module-path?) (or/c #f (listof string?)) taglet? . -> . taglet?))]
+  [definition-tag->class/interface-tag (-> definition-tag? class/interface-tag?)]
+  [class/interface-tag->constructor-tag (-> class/interface-tag? constructor-tag?)]
+  [get-class/interface-and-method (-> method-tag? (values symbol? symbol?))]
+  [definition-tag? (-> any/c boolean?)]
+  [class/interface-tag? (-> any/c boolean?)]
+  [method-tag? (-> any/c boolean?)]
+  [constructor-tag? (-> any/c boolean?)]))
+
 
 (define (make-section-tag s #:doc [doc #f] #:tag-prefixes [prefix #f])
   `(part ,(doc-prefix doc prefix s)))
@@ -111,3 +120,13 @@
                                            (list s)))
                         s))]))
 
+(define (definition-tag->class/interface-tag t) (cons 'class/intf (cdr t)))
+(define (class/interface-tag->constructor-tag t) (cons 'constructor (cdr t)))
+(define (get-class/interface-and-method meth-tag)
+  (match meth-tag
+    [`(meth ((,_ ,class/interface) ,method))
+     (values class/interface method)]))
+(define (definition-tag? x) (and (tag? x) (equal? (car x) 'def)))
+(define (class/interface-tag? x) (and (tag? x) (equal? (car x) 'class/intf)))
+(define (method-tag? x) (and (tag? x) (equal? (car x) 'meth)))
+(define (constructor-tag? x) (and (tag? x) (equal? (car x) 'constructor)))
