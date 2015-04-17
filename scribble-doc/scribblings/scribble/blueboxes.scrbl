@@ -26,6 +26,17 @@
   was used to document the export).
 }
 
+@defproc[(fetch-blueboxes-method-tags [method-name symbol?]
+                                      [#:blueboxes-cache blueboxes-cache
+                                                         blueboxes-cache?
+                                                         (make-blueboxes-cache #t)])
+         (listof method-tag?)]{
+  Returns the list of tags for all methods that are documented in the documentation
+  in @racket[blueboxes-cache].
+
+  @history[#:added "1.11"]
+}
+
 @defproc[(make-blueboxes-cache
           [populate? boolean?]
           [#:blueboxes-dirs blueboxes-dirs (listof path?) (get-doc-search-dirs)])
