@@ -203,7 +203,7 @@ with a ``@litchar["|@"]''.
 In cases when even this is not convenient enough, punctuation
 characters can be added between the @litchar{|} and the braces and the
 @"@" in nested forms.  (The punctuation is mirrored for parentheses
-and @litchar{<>}s.)  With this extension, Scribble syntax can be used as a
+and @litchar{<>}s.)  With this extension, @tech{@"@"-form} syntax can be used as a
 ``here string'' replacement.
 
 @scribble-examples|==={
@@ -233,7 +233,7 @@ code).  (More on using braces in body texts below.)
   @foo{bar @baz[2 3] {4 5}}
 }===|
 
-Finally, remember that the Scribble is just an alternate for
+Finally, remember that @tech{@"@"-forms} are just an alternate form of
 S-expressions. Identifiers still get their meaning, as in any
 Racket code, through the lexical context in which they appear.
 Specifically, when the above @tech{@"@"-form} appears in a Racket expression
@@ -561,7 +561,7 @@ as the Racket command part of an @tech{@"@"-form}.  The latter is used in this c
 @;--------------------------------------------------------------------
 @subsection{Comments}
 
-As noted above, there are two kinds of Scribble comments: @litchar|{@;{...}}| is
+As noted above, there are two kinds of @tech{@"@"-form} comments: @litchar|{@;{...}}| is
 a (nestable) comment for a whole body of text (following the same
 rules for @tech{@"@"-forms}), and @litchar|{@;...}| is a line-comment.
 
@@ -587,7 +587,7 @@ around it are not merged.
 @;--------------------------------------------------------------------
 @subsection{Spaces, Newlines, and Indentation}
 
-The Scribble syntax treats spaces and newlines in a special way is
+The @tech{@"@"-form} syntax treats spaces and newlines in a special way is
 meant to be sensible for dealing with text.  As mentioned above,
 spaces at the beginning and end of body lines are discarded, except
 for spaces between a @litchar["{"] and text, or between text and a
