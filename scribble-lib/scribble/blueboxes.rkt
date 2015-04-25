@@ -55,7 +55,7 @@
     (check-and-update-bluebox-info! ent)
     (match ent
       [(bluebox-info blueboxes.rktd offset tag-ht _)
-       (define offset+lens (hash-ref tag-ht tag #f))
+       (define offset+lens (and tag-ht (hash-ref tag-ht tag #f)))
        (cond
          [offset+lens
           (define lines
