@@ -90,10 +90,11 @@
   (for ([a-bluebox-info (in-list lst)])
     (match a-bluebox-info
       [(bluebox-info blueboxes.rktd offset tag-ht mod-time)
-       (for ([(tag val) (in-hash tag-ht)])
-         (when (method-tag? tag)
-           (define-values (class/intf meth) (get-class/interface-and-method tag))
-           (hash-set! meth-ht meth (cons tag (hash-ref meth-ht meth '())))))]))
+       (when tag-ht
+         (for ([(tag val) (in-hash tag-ht)])
+           (when (method-tag? tag)
+             (define-values (class/intf meth) (get-class/interface-and-method tag))
+             (hash-set! meth-ht meth (cons tag (hash-ref meth-ht meth '()))))))]))
   meth-ht)
 
 ;; build-blueboxes-cache : ... -> (listof (list file-path int valid-blueboxes-info?))
