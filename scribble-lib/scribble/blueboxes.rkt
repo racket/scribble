@@ -80,9 +80,10 @@
 (define (populate-cache! cache)
   (define cache-content (blueboxes-cache-info-or-paths cache))
   (when ((listof path?) cache-content)
-    (set-blueboxes-cache-info-or-paths! cache (build-blueboxes-cache cache-content))
-    (define mtd-table (compute-methods-table (blueboxes-cache-info-or-paths cache)))
-    (set-blueboxes-cache-method->tags! cache mtd-table)))
+    (define the-cache (build-blueboxes-cache cache-content))
+    (define mtd-table (compute-methods-table the-cache))
+    (set-blueboxes-cache-method->tags! cache mtd-table)
+    (set-blueboxes-cache-info-or-paths! cache the-cache)))
 
 (define (compute-methods-table lst)
   (define meth-ht (make-hash))
