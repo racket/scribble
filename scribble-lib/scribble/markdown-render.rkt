@@ -6,8 +6,6 @@
          scribble/text/wrap)
 (provide render-mixin)
 
-(define current-preserve-spaces (make-parameter #f))
-
 (define current-indent (make-parameter 0))
 (define (make-indent amt)
   (+ amt (current-indent)))
@@ -18,8 +16,6 @@
   (newline)
   (indent))
 
-(define table-ticks-depth (make-parameter 0))
-(define phrase-ticks-depth (make-parameter 0))
 (define note-depth (make-parameter 0))
 
 (define (render-mixin %)
@@ -81,59 +77,61 @@
 
     (define/override (render-table i part ht inline?)
       (define flowss (table-blockss i))
-      (unless (null? flowss)
-        ;; Set table-ticks-depth prior to render-block calls
-        (define tick? (member (style-name (table-style i))
-                              (list 'boxed "defmodule" "RktBlk")))
-        (when tick?
-          (when (zero? (table-ticks-depth))
-            (displayln "```racket"))
-          (table-ticks-depth (add1 (table-ticks-depth))))
-        (define strs (map (lambda (flows)
-                            (map (lambda (d)
-                                   (if (eq? d 'cont)
-                                       d
-                                       (let ([o (open-output-string)])
-                                         (parameterize ([current-indent 0]
-                                                        [current-output-port o])
-                                           (render-block d part ht #f))
-                                         (regexp-split
-                                          #rx"\n"
-                                          (regexp-replace #rx"\n$"
-                                                          (get-output-string o)
-                                                          "")))))
-                                 flows))
-                          flowss))
-        (define widths (map (lambda (col)
-                              (for/fold ([d 0]) ([i (in-list col)])
-                                (if (eq? i 'cont)
-                                    0
-                                    (apply max d (map string-length i)))))
-                            (apply map list strs)))
-        (define x-length (lambda (col) (if (eq? col 'cont) 0 (length col))))
-        (for/fold ([indent? #f]) ([row (in-list strs)])
-          (let ([h (apply max 0 (map x-length row))])
-            (let ([row* (for/list ([i (in-range h)])
-                          (for/list ([col (in-list row)])
-                            (if (i . < . (x-length col))
-                                (list-ref col i)
-                                "")))])
-              (for/fold ([indent? indent?]) ([sub-row (in-list row*)])
-                (when indent? (indent))
-                (for/fold ([space? #f])
-                    ([col (in-list sub-row)]
-                     [w (in-list widths)])
-                  (let ([col (if (eq? col 'cont) "" col)])
-                    (display (regexp-replace* #rx"\uA0" col " "))
-                    (display (make-string (max 0 (- w (string-length col))) #\space)))
-                  #t)
-                (newline)
-                #t)))
-          #t)
-        (when tick?
-          (table-ticks-depth (sub1 (table-ticks-depth)))
-          (when (zero? (table-ticks-depth))
-            (displayln "```"))))
+
+      (define tick? (member (style-name (table-style i))
+                            (list 'boxed "defmodule" "RktBlk")))
+
+      (cond
+        [(null? flowss) null]
+
+        [(and tick? (not (in-code?)))
+          (displayln "```racket")
+          (parameterize ([in-code? #t])
+            (render-table i part ht inline?))
+          (displayln "```")]
+
+        [else
+          (define strs (map (lambda (flows)
+                              (map (lambda (d)
+                                     (if (eq? d 'cont)
+                                         d
+                                         (let ([o (open-output-string)])
+                                           (parameterize ([current-indent 0]
+                                                          [current-output-port o])
+                                             (render-block d part ht #f))
+                                           (regexp-split
+                                            #rx"\n"
+                                            (regexp-replace #rx"\n$"
+                                                            (get-output-string o)
+                                                            "")))))
+                                   flows))
+                            flowss))
+          (define widths (map (lambda (col)
+                                (for/fold ([d 0]) ([i (in-list col)])
+                                  (if (eq? i 'cont)
+                                      0
+                                      (apply max d (map string-length i)))))
+                              (apply map list strs)))
+          (define x-length (lambda (col) (if (eq? col 'cont) 0 (length col))))
+          (for/fold ([indent? #f]) ([row (in-list strs)])
+            (let ([h (apply max 0 (map x-length row))])
+              (let ([row* (for/list ([i (in-range h)])
+                            (for/list ([col (in-list row)])
+                              (if (i . < . (x-length col))
+                                  (list-ref col i)
+                                  "")))])
+                (for/fold ([indent? indent?]) ([sub-row (in-list row*)])
+                  (when indent? (indent))
+                  (for/fold ([space? #f])
+                      ([col (in-list sub-row)]
+                       [w (in-list widths)])
+                    (let ([col (if (eq? col 'cont) "" col)])
+                      (display (regexp-replace* #rx"\uA0" col " "))
+                      (display (make-string (max 0 (- w (string-length col))) #\space)))
+                    #t)
+                  (newline)
+                  #t)))
+            #t)])
       null)
 
     (define/override (render-itemization i part ht)
@@ -183,25 +181,60 @@
        [(multiarg-element? e) (multiarg-element-style e)]
        [else #f]))
 
+    (define in-bold? (make-parameter #f))
+    (define in-italic? (make-parameter #f))
+    (define in-code? (make-parameter #f))
+    (define preserving-spaces? (make-parameter #f))
+
+    (define (bold? i)
+      (and (element? i) (eq? (element-style i) 'bold)))
+
+    (define (italic? i)
+      (and (element? i) (eq? (element-style i) 'italic)))
+
+    (define (code? i)
+      (and (element? i)
+           (let ([s (element-style i)])
+             (or (eq? 'tt s)
+                 (and (style? s)
+                      (style-name s)
+                      (regexp-match? #rx"^Rkt[A-Z]" (style-name s)))))))
+
+    (define (preserve-spaces? i)
+      (and (element? i)
+           (let ([s (element-style i)])
+             (or (eq? 'hspace s)
+                 (and (style? s)
+                      (eq? 'hspace (style-name s)))))))
+
     (define/override (render-content i part ri)
-      (define tick?
-        (and (zero? (table-ticks-depth))
-             (element? i)
-             (let ([s (element-style i)])
-               (or (eq? 'tt s)
-                   (and (style? s)
-                        (style-name s)
-                        (regexp-match? #rx"^Rkt[A-Z]" (style-name s)))))))
-      (when tick?
-        (when (zero? (phrase-ticks-depth))
-          (display "`"))
-        (phrase-ticks-depth (add1 (phrase-ticks-depth))))
-      (define properties (let ([s (content-style i)])
-                           (if (style? s) (style-properties s) '())))
-      (define targ (for/or ([p properties])
-                    (if (target-url? p) p #f)))
-      (define url (and targ (target-url-addr targ)))
-      (begin0
+      (define (recurse-wrapped str param)
+        (display str)
+        (begin0
+          (parameterize ([param #t])
+            (render-content i part ri))
+          (display str)))
+
+      (cond
+        [(and (code? i) (not (in-code?)))
+          (recurse-wrapped "`" in-code?)]
+
+        [(and (bold? i) (not (in-bold?)))
+          (recurse-wrapped "**" in-bold?)]
+
+        [(and (italic? i) (not (in-italic?)))
+          (recurse-wrapped "_" in-italic?)]
+
+        [(and (preserve-spaces? i) (not (preserving-spaces?)))
+          (parameterize ([preserving-spaces? #t])
+            (render-content i part ri))]
+
+        [else
+          (define properties (let ([s (content-style i)])
+                               (if (style? s) (style-properties s) '())))
+          (define targ (for/or ([p properties])
+                        (if (target-url? p) p #f)))
+          (define url (and targ (target-url-addr targ)))
           (cond [url (define new-i
                        (match (element-content i)
                          [(list (? string? s))
@@ -209,26 +242,7 @@
                             (list (format "[~a](~a)" s url)))]
                          [else i]))
                      (super render-content new-i part ri)]
-                [(and (element? i)
-                      (let ([s (element-style i)])
-                        (or (eq? 'hspace s)
-                            (and (style? s)
-                                 (eq? 'hspace (style-name s))))))
-                 (parameterize ([current-preserve-spaces #t])
-                   (super render-content i part ri))]
-                [else (define style (and (element? i) (element-style i)))
-                      (define bold?   (eq? style 'bold))
-                      (define italic? (eq? style 'italic))
-                      (cond [bold?   (display "**")]
-                            [italic? (display "_")])
-                      (begin0
-                          (super render-content i part ri)
-                        (cond [bold?   (display "**")]
-                              [italic? (display "_")]))])
-        (when tick?
-          (phrase-ticks-depth (sub1 (phrase-ticks-depth)))
-          (when (zero? (phrase-ticks-depth))
-            (display "`")))))
+                [else (super render-content i part ri)])]))
 
     (define/override (render-nested-flow i part ri starting-item?)
       (define s (nested-flow-style i))
@@ -260,12 +274,11 @@
                     [else (error 'markdown-render "unknown element symbol: ~e"
                                  i)]))]
         [(string? i)
-         (let* ([i (if (or (not (zero? (phrase-ticks-depth)))
-                           (not (zero? (table-ticks-depth))))
+         (let* ([i (if (in-code?)
                        (regexp-replace** i '([#rx"``" . "\U201C"]
                                              [#rx"''" . "\U201D"]))
                        (regexp-replace* #px"([#_*`]{1})" i "\\\\\\1"))]
-                [i (if (current-preserve-spaces)
+                [i (if (preserving-spaces?)
                        (regexp-replace* #rx" " i "\uA0")
                        i)])
            (display i))]
