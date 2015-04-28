@@ -30,6 +30,10 @@ Here is a hyperlink:
 
 @hyperlink["http://racket-lang.org/" "I am a hyperlink to Racket."]
 
+@hyperlink["http://racket-lang.org/"]{I am a @bold{Bold} hyperlink to Racket.}
+
+@hyperlink["http://racket-lang.org/"]{I am a @bold{Bold} hyperlink to Racket with [wacky characters](blah blah).}
+
 @italic{Italic}.
 _Just underlines_.
 

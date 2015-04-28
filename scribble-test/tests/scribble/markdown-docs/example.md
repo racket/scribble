@@ -22,6 +22,11 @@ Here is a hyperlink:
 
 [I am a hyperlink to Racket.](http://racket-lang.org/)
 
+[I am a **Bold** hyperlink to Racket.](http://racket-lang.org/)
+
+[I am a **Bold** hyperlink to Racket with \[wacky characters\]\(blah
+blah\).](http://racket-lang.org/)
+
 _Italic_. \_Just underlines\_.
 
 **Bold**. \*Just asterisks.\*

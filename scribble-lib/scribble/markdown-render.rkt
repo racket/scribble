@@ -184,6 +184,7 @@
     (define in-bold? (make-parameter #f))
     (define in-italic? (make-parameter #f))
     (define in-code? (make-parameter #f))
+    (define in-link? (make-parameter #f))
     (define preserving-spaces? (make-parameter #f))
 
     (define (bold? i)
@@ -200,12 +201,22 @@
                       (style-name s)
                       (regexp-match? #rx"^Rkt[A-Z]" (style-name s)))))))
 
+    (define (link? i)
+      (let ([s (content-style i)])
+        (and (style? s) (findf target-url? (style-properties s)))))
+
+    (define (link-from i)
+      (target-url-addr (findf target-url? (style-properties (content-style i)))))
+
     (define (preserve-spaces? i)
       (and (element? i)
            (let ([s (element-style i)])
              (or (eq? 'hspace s)
                  (and (style? s)
                       (eq? 'hspace (style-name s)))))))
+
+    (define (sanitize-parens str)
+      (regexp-replace #rx"[\\(\\)]" str "\\&"))
 
     (define/override (render-content i part ri)
       (define (recurse-wrapped str param)
@@ -229,20 +240,15 @@
           (parameterize ([preserving-spaces? #t])
             (render-content i part ri))]
 
-        [else
-          (define properties (let ([s (content-style i)])
-                               (if (style? s) (style-properties s) '())))
-          (define targ (for/or ([p properties])
-                        (if (target-url? p) p #f)))
-          (define url (and targ (target-url-addr targ)))
-          (cond [url (define new-i
-                       (match (element-content i)
-                         [(list (? string? s))
-                          (element (element-style i)
-                            (list (format "[~a](~a)" s url)))]
-                         [else i]))
-                     (super render-content new-i part ri)]
-                [else (super render-content i part ri)])]))
+        [(and (link? i) (not (in-link?)))
+          (let ([link (link-from i)])
+            (display "[")
+            (begin0
+              (parameterize ([in-link? #t])
+                (render-content i part ri))
+              (printf "](~a)" (sanitize-parens link))))]
+
+        [else (super render-content i part ri)]))
 
     (define/override (render-nested-flow i part ri starting-item?)
       (define s (nested-flow-style i))
@@ -277,7 +283,7 @@
          (let* ([i (if (in-code?)
                        (regexp-replace** i '([#rx"``" . "\U201C"]
                                              [#rx"''" . "\U201D"]))
-                       (regexp-replace* #px"([#_*`]{1})" i "\\\\\\1"))]
+                       (regexp-replace* #px"([#_*`\\[\\(\\]\\)]{1})" i "\\\\\\1"))]
                 [i (if (preserving-spaces?)
                        (regexp-replace* #rx" " i "\uA0")
                        i)])
