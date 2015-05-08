@@ -1239,7 +1239,7 @@ Outputs values to @racket[port] as follows for each kind of @racket[v]:
          @tech/r{characters}: converts the value to a string along the
          same lines as @racket[display], and then passes the string to
          the @deftech{current writer}, which is initially
-         @racket[display]}
+         @racket[write-string]}
 
    @item{@|void-const|, @racket[#f], or @racket[null]: no output}
 
