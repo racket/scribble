@@ -77,14 +77,14 @@ and @racket[code] versus @racket[racketblock] and
               #:contracts ([keep-expr any/c]
                            [indent-expr exact-nonnegative-integer?]
                            [expand-expr (or/c #f (syntax? . -> . syntax?))]
-                           [context-expr syntax?]
+                           [context-expr (or/c #f syntax?)]
                            [line-number-expr (or/c #f exact-nonnegative-integer?)]
                            [line-number-sep-expr exact-nonnegative-integer?])]{
 
 Parses the code formed by the strings produced by the
 @racket[str-expr]s as a Racket module (roughly) and produces a
 @tech{block} that typesets the code inset via @racket[nested] with the
-style @racket['code-inset].
+style @racket['code-inset]. See also @racket[typeset-code].
 
 The @racket[str-expr]s should normally start with @hash-lang[] to
 determine the reader syntax for the module, but the resulting
@@ -152,7 +152,7 @@ Like @racket[codeblock], but without the @racket['code-inset]
                        (code:line #:context context-expr)])
               #:contracts ([lang-line-expr (or/c #f string?)]
                            [expand-expr (or/c #f (syntax? . -> . syntax?))]
-                           [context-expr syntax?])]{
+                           [context-expr (or/c #f syntax?)])]{
 
 Like @racket[codeblock], but produces @tech{content} instead of a
 @tech{block}. No @hash-lang[] line should appear in the string content;
@@ -176,6 +176,21 @@ produces the typeset result
   @bold{Hi}.
 }
 
+}
+
+@defproc[(typeset-code [#:context context (or/c #f syntax?) #f]
+                       [#:expand expand (or/c #f (syntax? . -> . syntax?)) #f]
+                       [#:indent indent exact-nonnegative-integer? 2]
+                       [#:keep-lang-line? keep? any/c #t]
+                       [#:line-numbers line-numbers (or/c #f exact-nonnegative-integer?) #f]
+                       [#:line-number-sep line-number-sep exact-nonnegative-integer? 1]
+                       [#:block? block? #t]
+                       [strs string?] ...)
+         block?]{
+ A function-based version of @racket[codeblock], allowing you to compute the @racket[strs] arguments.
+
+ Unlike @racket[codeblock], the default @racket[context] argument (@racket[#f]) implies that
+ the context is untouched. The other arguments are treated the same way.
 }
 
 @; ----------------------------------------
