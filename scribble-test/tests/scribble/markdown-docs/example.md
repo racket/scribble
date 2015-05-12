@@ -44,16 +44,16 @@ Example of vebatim:
 
 Another example of verbatim, with ticks/quotes:
 
-`THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS`   
-`“AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT`     
-`LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR` 
+`THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS`
+`“AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT`
+`LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR`
 `A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT`  
 `HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,`
-`SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT`      
-`LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,` 
-`DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY` 
-`THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT`   
-`(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE` 
+`SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT`
+`LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,`
+`DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY`
+`THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT`
+`(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE`
 `OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.`  
 
 Example of a defmodule:
@@ -66,8 +66,8 @@ Example of a defproc:
 
 ```racket
 (make-string k [char]) -> string?
-  k : exact-nonnegative-integer? 
-  char : char? = #\nul           
+  k : exact-nonnegative-integer?
+  char : char? = #\nul
 ```
 
 Returns a new mutable string of length `k` where each position in the
@@ -78,21 +78,21 @@ Blah blah `(or/c string? bytes?)`.
 Example of Scribble `examples`:
 
 ```racket
-Examples:      
-> (define x 0) 
-               
+Examples:
+> (define x 0)
+
 > (displayln x)
-0              
-               
+0
+
 ```
 
 Example of Scribble `interaction`:
 
 ```racket
 > (define x 0)
-              
-> x           
-0             
+
+> x
+0
 ```
 
 > Note: This is a note. Let’s make it long enough that the markdown output
