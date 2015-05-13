@@ -11,7 +11,7 @@
 
 As much as possible, Scribble documents should be independent of the
 target format for rendering the document. To customize generated
-output, use styes plus ``back end'' configurations for each target
+output, use styles plus ``back end'' configurations for each target
 format (see @secref[#:doc scribble-doc "config"] in
 @other-manual[scribble-doc]).
 
