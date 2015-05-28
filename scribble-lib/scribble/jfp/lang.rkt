@@ -35,8 +35,10 @@
 (define ((post-process) doc)
   (add-defaults doc
                 (string->bytes/utf-8
-                 (format "\\documentclass{jfp1}\n~a\\usepackage{times}\n\\usepackage{qcourier}\n"
-                         unicode-encoding-packages))
+                 (format "\\documentclass{jfp1}\n~a\\usepackage{times}\n\\usepackage{qcourier}\n~a"
+                         unicode-encoding-packages
+                         ;; Avoid a conflict with mathabx:
+                         "\\let\\amalg\\relax\n"))
                 (scribble-file "jfp/style.tex")
                 (list cls-file)
                 #f))
