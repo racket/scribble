@@ -124,6 +124,7 @@
                           (loop (if (dont-stop? mode)
                                     (dont-stop-val mode)
                                     mode))))))]
+           [program-source 'prog]
            [e (parameterize ([read-accept-reader #t])
                 ((or expand 
                      (lambda (stx) 
@@ -133,7 +134,7 @@
                  (let ([p (open-input-string bstr)])
                    (port-count-lines! p)
                    (let loop ()
-                     (let ([v (read-syntax 'prog p)])
+                     (let ([v (read-syntax program-source p)])
                        (cond
                         [expand v]
                         [(eof-object? v) null]
@@ -141,7 +142,9 @@
            [ids (let loop ([e e])
                   (cond
                    [(and (identifier? e)
-                         (syntax-original? e))
+                         (syntax-original? e)
+                         (syntax-position e)
+                         (eq? program-source (syntax-source e)))
                     (let ([pos (sub1 (syntax-position e))])
                       (list (list (lambda (str)
                                     (to-element (syntax-property
