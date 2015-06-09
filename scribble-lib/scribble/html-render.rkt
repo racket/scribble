@@ -580,7 +580,7 @@
                          "tocviewselflink"
                          "tocviewlink")]
                [data-pltdoc "x"])
-              ,@(render-content (or (part-title-content t) '("???")) d ri)))
+              ,@(render-content (strip-aux (or (part-title-content t) '("???"))) d ri)))
          (format-number (collected-info-number (part-collected-info t ri))
                         '(nbsp))))
       (define (toc-item->block t i)
@@ -787,8 +787,9 @@
                                               [data-pltdoc "x"])
                                              ,@(render-content
                                                 (if (part? p)
-                                                    (or (part-title-content p)
-                                                        "???")
+                                                    (strip-aux
+                                                     (or (part-title-content p)
+                                                         "???"))
                                                     (if (toc-target2-element? p)
                                                         (toc-target2-element-toc-content p)
                                                         (element-content p)))
