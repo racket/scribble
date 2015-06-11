@@ -141,7 +141,8 @@
            [ids (let loop ([e e])
                   (cond
                    [(and (identifier? e)
-                         (syntax-original? e))
+                         (syntax-original? e)
+                         (syntax-position e))
                     (let ([pos (sub1 (syntax-position e))])
                       (list (list (lambda (str)
                                     (to-element (syntax-property
