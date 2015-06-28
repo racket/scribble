@@ -8,11 +8,13 @@
                "scribble-text-lib"
                "scribble-html-lib"
                "planet-lib" ; used dynamically
-	       "net-lib"
+               "net-lib"
                "at-exp-lib"
                "draw-lib" 
                "syntax-color-lib"
-               "sandbox-lib"))
+               "sandbox-lib"
+               "typed-racket-lib"
+               ))
 (define build-deps '("rackunit-lib"
                      "eli-tester"))
 
