@@ -264,12 +264,12 @@
                              (get-outputs)))])
       (cons (render-value (do-plain-eval ev s #t)) (get-outputs))))
   (define (do-ev/expect s expect)
-    (define r (do-ev s))
     (when expect
-      (let ([expect (do-plain-eval ev (car expect) #t)])
-        (unless (equal? (car r) expect)
+      (let ([r (do-plain-eval ev s #t)]
+            [expect (do-plain-eval ev (car expect) #t)])
+        (unless (equal? r expect)
           (raise-syntax-error 'eval "example result check failed" s))))
-    r)
+    (do-ev s))
   (lambda (str)
     (if (eval-results? str)
         (list (map formatted-result (eval-results-contents str))
@@ -279,6 +279,12 @@
           (if (nothing-to-eval? s)
               (list (list (void)) "" "")
               (do-ev/expect s expect))))))
+
+(module+ test
+  (require rackunit)
+  (test-case
+   "eval:check in interaction"
+   (check-not-exn (λ () (interaction (eval:check #t #t))))))
 
 (define scribble-exn->string
   (make-parameter
