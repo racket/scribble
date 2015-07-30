@@ -852,7 +852,7 @@ The following @tech{style properties} are currently recognized:
        color to the background of @racket[content].}
 
  @item{@racket[alt-tag] structure --- Generates the given HTML tag
-       instead of the default one (@tt{<span>}, @tt{b}, @|etc|).}
+       instead of the default one (@tt{<span>}, @tt{<b>}, @|etc|).}
 
  @item{@racket[attributes] structure --- Provides additional HTML
        attributes for a tag.}
