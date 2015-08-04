@@ -554,9 +554,20 @@
                         [else (make-paragraph plain cell)]))
                      (define l (map cvt row))
                      (if sep
-                         (add-between l (cvt sep))
+                         (add-between/cont l (cvt sep))
                          l))
                    cells)))
+
+;; Like `add-between`, but change `sep` to 'cont when
+;; adding before a 'cont:
+(define (add-between/cont l sep)
+  (cond
+   [(null? l) null]
+   [(null? (cdr l)) l]
+   [else
+    (list* (car l)
+           (if (eq? 'cont (cadr l)) 'cont sep)
+           (add-between/cont (cdr l) sep))]))
 
 ;; ----------------------------------------
 

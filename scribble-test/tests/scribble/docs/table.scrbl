@@ -18,3 +18,7 @@
           #:sep "-"
           (list (list "A" "B" "C" "D")
                 (list "apple" "banana" "coconut" "donut")))
+
+@(tabular #:sep "-"
+          (list (list "A" 'cont "C" 'cont 'cont)
+                (list "apple" "banana" "coconut" "donut" "eclair")))
