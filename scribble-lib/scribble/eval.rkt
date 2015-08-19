@@ -11,7 +11,7 @@
          scribble/private/serialize ;; attached into new namespace via anchor
          racket/sandbox racket/promise racket/port
          racket/gui/dynamic
-         (for-syntax racket/base syntax/srcloc unstable/struct)
+         (for-syntax racket/base syntax/srcloc racket/struct)
          racket/stxparam
          racket/splicing
          racket/string
