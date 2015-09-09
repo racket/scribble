@@ -40,7 +40,7 @@ same line as @hash-lang[], with only whitespace (or other options) between
 
 @defidform[onecolumn]{
 
-Enables the @tt{onecolumn} option. Use @racket[onecolumn] only on the
+Enables the @tt{onecolumn} option. Use only on the
 same line as @hash-lang[], with only whitespace (or other options) between
 @racketmodname[scribble/sigplan] and @racket[onecolumn]:
 
@@ -52,8 +52,8 @@ same line as @hash-lang[], with only whitespace (or other options) between
 @defidform[notimes]{
 
 Disables the use of @tt{\usepackage@"{"times@"}"} in the generated LaTeX output.
-Use @racket[onecolumn] only on the
-same line as @hash-lang[], with only whitespace (or other options) between
+Use only on the same line as @hash-lang[],
+with only whitespace (or other options) between
 @racketmodname[scribble/sigplan] and @racket[notimes]:
 
 @codeblock|{
@@ -63,8 +63,8 @@ same line as @hash-lang[], with only whitespace (or other options) between
 @defidform[noqcourier]{
 
 Disables the use of @tt{\usepackage@"{"qcourier@"}"} in the generated LaTeX output.
-Use @racket[onecolumn] only on the
-same line as @hash-lang[], with only whitespace (or other options) between
+Use only on the same line as @hash-lang[],
+with only whitespace (or other options) between
 @racketmodname[scribble/sigplan] and @racket[noqcourier]:
 
 @codeblock|{
