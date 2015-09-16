@@ -105,7 +105,7 @@ identifiers in the typeset code are colored and linked based on
 for-label bindings in the lexical environment of the syntax object
 provided by @racket[context-expr]. The default @racket[context-expr]
 has the same lexical context as the first @racket[str-expr].
-When @racket[line-number-expr] is true, line number is enabled starting 
+When @racket[line-number-expr] is true, line number is enabled starting
 from @racket[line-number-expr], and @racket[line-number-sep] controls
 the separation (in spaces; defaults to 1) between the line numbers and
 code.
@@ -135,7 +135,7 @@ produces the typeset result
       #lang scribble/manual
       @title{Hello}
     }
-  }|               
+  }|
 
 }
 
@@ -288,7 +288,7 @@ A few other escapes are recognized symbolically:
        @racket[_datum], but colored as a comment and prefixed with a
        semi-colon. A typical @racket[_datum] escapes from
        Racket-typesetting mode using @racket[unsyntax] and
-       produces a paragraph using @racket[t]: 
+       produces a paragraph using @racket[t]:
 
        @verbatim[#:indent 2]|{
          (code:comment @#,t{this is a comment})
@@ -863,7 +863,7 @@ Examples:
    reuben.
  }]
 
-When @racket[id] is indexed and registered, 
+When @racket[id] is indexed and registered,
 a @racket[defmodule] or @racket[declare-exporting] form (or one of the
 variants) in an enclosing section determines the @racket[id] binding
 that is being defined. The @racket[id] should also have a for-label
@@ -1009,7 +1009,7 @@ be documented. This split between @racket[id] and @racket[id-expr]
 roles is useful for functional abstraction of @racket[defform].
 
 Unless @racket[link-target?-expr] is specified
-and produces @racket[#f], 
+and produces @racket[#f],
 the @racket[id] (or result of @racket[id-expr]) is indexed, and it is
 also registered so that @racket[racket]-typeset uses of the identifier
 (with the same for-label binding) are hyperlinked to this
@@ -1135,7 +1135,7 @@ Examples:
 }
 
 
-@defform[(defform/none maybe-kind maybe-literal form-datum 
+@defform[(defform/none maybe-kind maybe-literal form-datum
            maybe-grammar maybe-contracts
            pre-flow ...)]{
 
@@ -1284,7 +1284,7 @@ Examples:
 }
 
 
-@defform[(defparam* maybe-link id arg-id 
+@defform[(defparam* maybe-link id arg-id
            in-contract-expr-datum out-contract-expr-datum
            maybe-value
            pre-flow ...)]{
@@ -1429,7 +1429,7 @@ Examples:
 @defform/subs[(racketgrammar maybe-literals id clause-datum ...+)
               ([maybe-literals code:blank
                                (code:line #:literals (literal-id ...))])]{
- 
+
 Creates a table to define the grammar of @racket[id]. Each identifier
 mentioned in a @racket[clause-datum] is typeset as a non-terminal,
 except for the identifiers listed as @racket[literal-id]s, which are
@@ -1558,7 +1558,7 @@ Like @racket[defconstructor], but the constructor is
 annotated to indicate that additional initialization arguments are
 accepted and propagated to the superclass.}
 
-@defform/subs[#:literals (override override-final public-final 
+@defform/subs[#:literals (override override-final public-final
                           augment augment-final pubment extend extend-final)
               (defmethod maybe-mode maybe-link (id arg-spec ...)
                          result-contract-expr-datum
@@ -1714,7 +1714,7 @@ Compatibility alias for @racket[racketlink].}
 
 @defproc[(link [url string?] [pre-content any/c] ...
                 [#:underline? underline? any/c #t]
-                [#:style style (or/c style? string? symbol? #f) (if underline? #f "plainlink")]) 
+                [#:style style (or/c style? string? symbol? #f) (if underline? #f "plainlink")])
          element?]{
 
 Alias of @racket[hyperlink] for backward compatibility.}
@@ -1786,11 +1786,17 @@ normalization performed on the term. For example, if ``bind'' is
 defined, but a sentence uses the term ``binding,'' the latter can be
 linked to the former using @racketfont["@tech{bind}ing"].}
 
+For example:
+@racketblock[@tech[#:doc '(lib "scribblings/guide/guide.scrbl")]{blame object}]
+
+creates a link to @tech[#:doc '(lib "scribblings/guide/guide.scrbl")]{blame object} in
+@other-doc['(lib "scribblings/guide/guide.scrbl")].
+
 @defproc[(techlink [pre-content pre-content?] ...
                    [#:key key (or/c string? #f) #f]
                    [#:normalize? normalize? any/c #t]
                    [#:doc module-path (or/c module-path? #f) #f]
-                   [#:tag-prefixes prefixes (or/c (listof string?) #f) #f]) 
+                   [#:tag-prefixes prefixes (or/c (listof string?) #f) #f])
          element?]{
 
 Like @racket[tech], but the link is not quiet. For example, in HTML
@@ -1861,7 +1867,7 @@ order as given.}
                     [#:is-book? is-book? boolean? #f]
                     [#:author author (or/c #f pre-content?) #f]
                     [#:location location (or/c #f pre-content?) #f]
-                    [#:date date (or/c #f pre-content?) #f] 
+                    [#:date date (or/c #f pre-content?) #f]
                     [#:url url (or/c #f pre-content?) #f])
          bib-entry?]{
 
@@ -2084,7 +2090,7 @@ documentation for the method's class or interface.}
 Indicates that the index entry corresponds to a constructor
 via @racket[defconstructor] and company. The @racket[_name] field
 from @racket[exported-index-desc] names the class or interface that
-contains the method. 
+contains the method.
 The @racket[class-tag] field provides a pointer to the start of the
 documentation for the method's class or interface.}
 
