@@ -326,7 +326,7 @@
 (module+ test
   (require racket/list
            racket/match
-           tests/eli-tester)
+           rackunit)
 
   (define (tokens strs)
     (define-values (toks _) (get-tokens strs #f #f))
@@ -348,24 +348,26 @@
     (list* `(function 0 5 1) `(white-space 5 6 0) `(function 6 12 1) `(function 6 12 1)
            (reverse res)))
 
-  (test
+  (check-equal?
    (tokens (list "#lang racket\n1"))
-   => `((function 0 5 1) (white-space 5 6 0) ;"#lang "
-        (function 6 12 1) (function 6 12 1) (white-space 12 13 0) ;"racket\n"
-        (constant 13 14 0)) ; "1"
+   `((function 0 5 1) (white-space 5 6 0) ;"#lang "
+     (function 6 12 1) (function 6 12 1) (white-space 12 13 0) ;"racket\n"
+     (constant 13 14 0))) ; "1"
+  (check-equal?
    (tokens (list "#lang racket\n" "(+ 1 2)"))
-   => (make-test-result
-       '((white-space 1)
-         (parenthesis 1) (function 1)
-         (white-space 1) (constant 1) (white-space 1) (constant 1)
-         (parenthesis 1)))
+   (make-test-result
+    '((white-space 1)
+      (parenthesis 1) (function 1)
+      (white-space 1) (constant 1) (white-space 1) (constant 1)
+      (parenthesis 1))))
+  (check-equal?
    (tokens (list "#lang racket\n(apply x (list y))"))
-   => (make-test-result
-       '((white-space 1)
-         (parenthesis 1)
-         (function 5) (white-space 1);apply
-         (function 1) (white-space 1);x
-         (parenthesis 1)
-         (function 4) (white-space 1) (function 1);list y
-         (parenthesis 1)
-         (parenthesis 1)))))
+   (make-test-result
+    '((white-space 1)
+      (parenthesis 1)
+      (function 5) (white-space 1);apply
+      (function 1) (white-space 1);x
+      (parenthesis 1)
+      (function 4) (white-space 1) (function 1);list y
+      (parenthesis 1)
+      (parenthesis 1)))))

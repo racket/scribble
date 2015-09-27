@@ -15,8 +15,7 @@
                "sandbox-lib"
                "typed-racket-lib"
                ))
-(define build-deps '("rackunit-lib"
-                     "eli-tester"))
+(define build-deps '("rackunit-lib"))
 
 (define implies '("scribble-html-lib"))
 
