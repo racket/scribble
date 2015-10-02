@@ -49,7 +49,7 @@ Certain patterns in @racket[datum] are treated specially:
        @racket[(@#,indexed-racket[code:line] _code-datum (@#,racketidfont{code:comment} _comment-datum ...))]
        is treated as @racket[_code-datum] for evaluation.}
 
- @item{Other uses of @racketidfont{code:comment} and
+ @item{Other uses of @racketidfont{code:comment}, @racketidfont{code:contract}, and
        @racketidfont{code:blank} are stripped from each @racket[datum]
        before evaluation.}
 

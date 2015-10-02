@@ -206,10 +206,12 @@
 
 (define (extract-to-evaluate s)
   (let loop ([s s] [expect #f])
-    (syntax-case s (code:line code:comment eval:alts eval:check)
+    (syntax-case s (code:line code:comment code:contract eval:alts eval:check)
       [(code:line v (code:comment . rest))
        (loop (extract s cdr car) expect)]
       [(code:comment . rest)
+       (values (nothing-to-eval) expect)]
+      [(code:contract . rest)
        (values (nothing-to-eval) expect)]
       [(eval:alts p e)
        (loop (extract s cdr cdr car) expect)]
@@ -346,8 +348,10 @@
      (define (comment? a)
        (and (pair? a)
             (or (eq? (car a) 'code:comment)
+                (eq? (car a) 'code:contract)
                 (and (identifier? (car a))
-                     (eq? (syntax-e (car a)) 'code:comment)))))
+                     (or (eq? (syntax-e (car a)) 'code:comment)
+                         (eq? (syntax-e (car a)) 'code:contract))))))
      (if (or (comment? a) (and (syntax? a) (comment? (syntax-e a))))
        (strip-comments (cdr stx))
        (cons (strip-comments a)
