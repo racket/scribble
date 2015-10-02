@@ -300,7 +300,7 @@ A few other escapes are recognized symbolically:
        }
 
  @item{@racket[(#,(indexed-racket code:contract) _datum ...)] typesets like
-       the sequence of @racket[_datum]s, but colored as a comment and prefixed with a
+       the sequence of @racket[_datum]s (including its coloring), but prefixed with a
        semi-colon.}
 
  @item{@as-index[@racketidfont{code:blank}] typesets as a blank space.}
