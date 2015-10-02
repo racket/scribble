@@ -109,7 +109,7 @@
     (current-redirect-main url)]
    [("--redirect") url "redirect external links to tag search via <url>"
     (current-redirect url)]
-   [("+m" "++main-xref-in") ("load format-speficic cross-ref info for"
+   [("+m" "++main-xref-in") ("load format-specific cross-ref info for"
                              "all installed library collections")
     (current-xref-input-modules
      (cons (cons 'setup/xref 'load-collections-xref) (current-xref-input-modules)))]
