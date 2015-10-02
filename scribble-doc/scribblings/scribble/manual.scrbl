@@ -284,19 +284,24 @@ A few other escapes are recognized symbolically:
        sequence of @racket[_datum]s (i.e., without the
        @racket[code:line] wrapper).}
 
- @item{@racket[(#,(indexed-racket code:comment) _datum)] typesets like
-       @racket[_datum], but colored as a comment and prefixed with a
-       semi-colon. A typical @racket[_datum] escapes from
+ @item{@racket[(#,(indexed-racket code:comment) _content)] typesets like
+       @racket[_content], but colored as a comment and prefixed with a
+       semi-colon. A typical @racket[_content] escapes from
        Racket-typesetting mode using @racket[unsyntax] and
-       produces a paragraph using @racket[t]: 
+       produces a string, an element using @racket[elem],
+       or a paragraph using @racket[t]:
 
        @verbatim[#:indent 2]|{
-         (code:comment @#,t{this is a comment})
+         (code:comment @#,elem{this is a comment})
        }|
 
        (Note that @litchar|{@#,foo{...}}| reads as
        @RACKET[(unsyntax (foo "..."))].)
        }
+
+ @item{@racket[(#,(indexed-racket code:contract) _datum ...)] typesets like
+       the sequence of @racket[_datum]s, but colored as a comment and prefixed with a
+       semi-colon.}
 
  @item{@as-index[@racketidfont{code:blank}] typesets as a blank space.}
 
