@@ -237,6 +237,8 @@ indicating that it is out of sync with @racket[log-file].
 Use @racket[make-log-based-eval] to document libraries when the
 embedded examples rely on external features that may not be present or
 appropriately configured on all machines.
+
+@history[#:added "1.12"]{}
 }
 
 
