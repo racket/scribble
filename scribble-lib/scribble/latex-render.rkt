@@ -985,6 +985,8 @@
                           ;; though, so we keep this table around to avoid regressions.
                           (case c
                             [(#\╔ #\═ #\╗ #\║ #\╚ #\╝ #\╦ #\╠ #\╣ #\╬ #\╩) (box-character c)]
+                            [(#\┌ #\─ #\┐ #\│ #\└ #\┘ #\┬ #\├ #\┤ #\┼ #\┴) (box-character c)]
+                            [(#\┏ #\━ #\┓ #\┃ #\┗ #\┛ #\┳ #\┣ #\┫ #\╋ #\┻) (box-character c 2)]
                             [(#\u2011) "\\mbox{-}"] ; non-breaking hyphen
                             [(#\uB0) "$^{\\circ}$"] ; degree
                             [(#\uB2) "$^2$"]
@@ -1211,10 +1213,13 @@
                 (loop (add1 i))))))]))
     
     
-    (define/private (box-character c)
+    (define/private (box-character c [line-thickness 1])
       (define (combine . args) 
         (apply string-append
                "\\setlength{\\unitlength}{0.05em}"
+               (if (= line-thickness 1)
+                   ""
+                   (format "\\linethickness{~apt}" (* 0.4 line-thickness)))
                (filter (λ (x) (not (regexp-match #rx"^[ \n]*$" x)))
                        (flatten args))))
       (define (adjust % v) 
@@ -1225,8 +1230,10 @@
       (define (x v) (adjust 1 v))
       (define (y v) (adjust 6/4 v))
       (define upper-horizontal @list{\put(@x[0],@y[6]){\line(1,0){@x[10]}}})
+      (define mid-horizontal @list{\put(@x[0],@y[5]){\line(1,0){@x[10]}}})
       (define lower-horizontal @list{\put(@x[0],@y[4]){\line(1,0){@x[10]}}})
       (define righter-vertical @list{\put(@x[6],@y[10]){\line(0,-1){@y[10]}}})
+      (define mid-vertical @list{\put(@x[5],@y[10]){\line(0,-1){@y[10]}}})
       (define lefter-vertical @list{\put(@x[4],@y[10]){\line(0,-1){@y[10]}}})
       (define bottom-right @list{\put(@x[6],@y[4]){\line(1,0){@x[4]}}
                                  \put(@x[6],@y[0]){\line(0,1){@y[4]}}})
@@ -1300,6 +1307,55 @@
                    @bottom-left
                    @upper-right
                    @bottom-right
+                   @footer}]
+        [(#\┌ #\┏)
+         @combine{@header
+                   \put(@x[5],@y[5]){\line(1,0){@x[5]}}
+                   \put(@x[5],@y[0]){\line(0,1){@y[5]}}
+                   @footer}]
+        [(#\─ #\━) @combine{@header
+                        @mid-horizontal
+                        @footer}]
+        [(#\┐ #\┓) @combine{@header
+                        \put(@x[0],@y[5]){\line(1,0){@x[5]}}
+                        \put(@x[5],@y[0]){\line(0,1){@y[5]}}
+                        @footer}]
+        [(#\│ #\┃) @combine{@header
+                        @mid-vertical
+                        @footer}]
+        [(#\└ #\┗) @combine{@header
+                        \put(@x[5],@y[5]){\line(1,0){@x[5]}}
+                        \put(@x[5],@y[10]){\line(0,-1){@y[5]}}
+                        @footer}]
+        [(#\┘ #\┛)
+         @combine{@header
+                  \put(@x[0],@y[5]){\line(1,0){@x[5]}}
+                  \put(@x[5],@y[10]){\line(0,-1){@y[5]}}
+                  @footer}]
+        [(#\┤ #\┫)
+         @combine{@header
+                  \put(@x[0],@y[5]){\line(1,0){@x[5]}}
+                  @mid-vertical
+                  @footer}]
+        [(#\├ #\┣)
+         @combine{@header
+                  \put(@x[5],@y[5]){\line(1,0){@x[5]}}
+                  @mid-vertical
+                  @footer}]
+        [(#\┴ #\┻)
+         @combine{@header
+                  \put(@x[5],@y[10]){\line(0,-1){@y[5]}}
+                  @mid-horizontal
+                  @footer}]
+        [(#\┬ #\┳)
+         @combine{@header
+                  \put(@x[5],@y[5]){\line(0,-1){@y[5]}}
+                  @mid-horizontal
+                  @footer}]
+        [(#\┼ #\╋)
+          @combine{@header
+                   @mid-horizontal
+                   @mid-vertical
                    @footer}]))
 
     ;; ----------------------------------------
