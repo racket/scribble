@@ -110,6 +110,13 @@ e-mail address with the author name.}
 Declares information that is collected into the copyright region of the paper.}
 
 
+@defproc[(to-appear [content pre-content?] ...) block?]{
+
+Declares alternate content for the copyright region of the paper.
+
+@history[#:added "1.13"]}
+
+
 @deftogether[(
 @defproc[(category [CR-number pre-content?] 
                    [subcategory pre-content?]

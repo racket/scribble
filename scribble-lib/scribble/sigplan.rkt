@@ -33,6 +33,9 @@
  [doi
   (->* () () #:rest (listof pre-content?)
        block?)]
+ [to-appear
+  (->* () () #:rest pre-content?
+       block?)]
  [category
   (->* (pre-content? pre-content? pre-content?)
        ((or/c false/c pre-content?))
@@ -144,6 +147,13 @@
    (make-style 'pretitle null)
    (make-element
     (make-style "SPexclusivelicense" sigplan-extras)
+    (decode-content what))))
+
+(define (to-appear . what)
+  (make-paragraph
+   (make-style 'pretitle null)
+   (make-element
+    (make-style "toappear" sigplan-extras)
     (decode-content what))))
 
 ;; ----------------------------------------
