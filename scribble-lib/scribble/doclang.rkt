@@ -68,31 +68,26 @@
     [(_ s e)
      (if (string? (syntax-e #'s))
          #'s
-         (with-syntax ([src (syntax-source #'e)]
-                       [line (syntax-line #'e)]
-                       [col (syntax-column #'e)]
-                       [pos (syntax-position #'e)]
-                       [span (syntax-column #'e)])
-           #'(check-pre-part e (vector 'src 'line 'col 'pos 'span))))]))
+         (with-syntax ([loc (datum->syntax #f 'loc #'e)])
+           #'(check-pre-part e (quote-syntax loc))))]))
 
-(define (check-pre-part v s)
+(define (check-pre-part v loc-stx)
   (if (pre-part? v)
       v
       (error
        (format
         "~a: not valid in document body (need a pre-part for decode) in: ~e"
         (cond
-         [(and (vector-ref s 0)
-               (vector-ref s 1))
+         [(and (syntax-source loc-stx)
+               (syntax-line loc-stx))
           (format "~a:~a:~a"
-                  (vector-ref s 0)
-                  (vector-ref s 1)
-                  (vector-ref s 2))]
-         [(and (vector-ref s 0)
-               (vector-ref s 3))
+                  (syntax-source loc-stx)
+                  (syntax-line loc-stx)
+                  (syntax-column loc-stx))]
+         [(and (syntax-source loc-stx)
+               (syntax-position loc-stx))
           (format "~a:::~a"
-                  (vector-ref s 0)
-                  (vector-ref s 1)
-                  (vector-ref s 3))]
+                  (syntax-source loc-stx)
+                  (syntax-position loc-stx))]
          [else 'document])
         v))))
