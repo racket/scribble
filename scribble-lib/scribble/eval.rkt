@@ -205,20 +205,23 @@
   (eval-results (list content) out err))
 
 (define (extract-to-evaluate s)
-  (let loop ([s s] [expect #f])
-    (syntax-case s (code:line code:comment code:contract eval:alts eval:check)
+  (let loop ([s s] [expect #f] [error-expected? #f])
+    (syntax-case s (code:line code:comment code:contract eval:alts eval:check eval:error)
       [(code:line v (code:comment . rest))
-       (loop (extract s cdr car) expect)]
+       (loop (extract s cdr car) expect error-expected?)]
       [(code:comment . rest)
-       (values (nothing-to-eval) expect)]
+       (values (nothing-to-eval) expect error-expected?)]
       [(code:contract . rest)
-       (values (nothing-to-eval) expect)]
+       (values (nothing-to-eval) expect error-expected?)]
+      [(eval:error e)
+       (loop (extract s cdr car) expect #t)]
       [(eval:alts p e)
-       (loop (extract s cdr cdr car) expect)]
+       (loop (extract s cdr cdr car) expect error-expected?)]
       [(eval:check e expect)
        (loop (extract s cdr car)
-             (list (syntax->datum (datum->syntax #f (extract s cdr cdr car)))))]
-      [else (values s expect)])))
+             (list (syntax->datum (datum->syntax #f (extract s cdr cdr car))))
+             error-expected?)]
+      [else (values s expect error-expected?)])))
 
 (define (do-eval ev who)
   (define (get-outputs)
@@ -259,13 +262,22 @@
                        (map (current-print) v))
                      (close-output-port out)
                      in)))])))
-  (define (do-ev/expect s expect)
+  (define (do-ev/expect s expect error-expected?)
     (define-values (val render+output)
       (with-handlers ([(lambda (x) (not (exn:break? x)))
                        (lambda (e)
-                         (cons ((scribble-exn->string) e)
-                               (get-outputs)))])
+                         (unless error-expected?
+                           (log-error "interaction without `eval:error` raised an exception: ~s; form: ~.s"
+                                      (if (exn? e)
+                                          (exn-message e)
+                                          e)
+                                      s))
+                         (values e
+                                 (cons ((scribble-exn->string) e)
+                                       (get-outputs))))])
         (define val (do-plain-eval ev s #t))
+        (when error-expected?
+          (log-error "interaction failed to raise an expected exception: ~.s" s))
         (values val (cons (render-value val) (get-outputs)))))
     (when expect
       (let ([expect (do-plain-eval ev (car expect) #t)])
@@ -277,10 +289,10 @@
         (list (map formatted-result (eval-results-contents str))
               (eval-results-out str)
               (eval-results-err str))
-        (let-values ([(s expect) (extract-to-evaluate str)])
+        (let-values ([(s expect error-expected?) (extract-to-evaluate str)])
           (if (nothing-to-eval? s)
               (list (list (void)) "" "")
-              (do-ev/expect s expect))))))
+              (do-ev/expect s expect error-expected?))))))
 
 (module+ test
   (require rackunit)
@@ -621,7 +633,7 @@
             #'(quote e)])]))
 
 (define (do-interaction-eval ev e)
-  (let-values ([(e expect) (extract-to-evaluate e)])
+  (let-values ([(e expect error-expected?/ignored) (extract-to-evaluate e)])
     (unless (nothing-to-eval? e)
       (parameterize ([current-command-line-arguments #()])
         (do-plain-eval (or ev (make-base-eval)) e #f)))
@@ -646,15 +658,19 @@
     [(_ e) (do-interaction-eval-show #f (quote-expr e))]))
 
 (define-syntax racketinput*
-  (syntax-rules (eval:alts code:comment)
+  (syntax-rules (eval:alts code:comment eval:check eval:error)
     [(_ #:escape id (code:comment . rest)) (racketblock0 #:escape id (code:comment . rest))]
     [(_ #:escape id (eval:alts a b)) (racketinput* #:escape id a)]
+    [(_ #:escape id (eval:check a b)) (racketinput* #:escape id a)]
+    [(_ #:escape id (eval:error a)) (racketinput* #:escape id a)]
     [(_ #:escape id e) (racketinput0 #:escape id e)]))
 
 (define-syntax racketblock*
-  (syntax-rules (eval:alts code:comment)
+  (syntax-rules (eval:alts code:comment eval:check eval:error)
     [(_ #:escape id (code:comment . rest)) (racketblock0 #:escape id (code:comment . rest))]
     [(_ #:escape id (eval:alts a b)) (racketblock #:escape id a)]
+    [(_ #:escape id (eval:check a b)) (racketblock #:escape id a)]
+    [(_ #:escape id (eval:error a)) (racketblock #:escape id a)]
     [(_ #:escape id e) (racketblock0 #:escape id e)]))
 
 (define-code racketblock0+line (to-paragraph/prefix "" "" (list " ")))

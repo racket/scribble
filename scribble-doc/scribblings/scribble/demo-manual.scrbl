@@ -51,7 +51,7 @@
 
  @item{@css{RktErr} (errors): @racketerror{example} or the error message in
 
-       @interaction[(+ 1 'a)]}
+       @interaction[(eval:error (+ 1 'a))]}
 
  @item{@css{RktCmt} (comments): @racketcommentfont{example} or
 

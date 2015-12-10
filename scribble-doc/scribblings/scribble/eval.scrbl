@@ -54,6 +54,13 @@ Certain patterns in @racket[datum] are treated specially:
        before evaluation.}
 
  @item{A @racket[datum] of the form 
+       @racket[(@#,indexed-racket[eval:error] #,(svar eval-datum))]
+       is treated like @racket[_eval-datum], but @racket[_eval-datum] is expected to
+       raise an exception: no error is logged if an exception is raised,
+       but an exception is raised if @racket[_eval-datum]
+       does @emph{not} raise an exception.}
+
+ @item{A @racket[datum] of the form 
        @racket[(@#,indexed-racket[eval:alts] #,(svar show-datum) #,(svar eval-datum))]
        is treated as @svar[show-datum] for typesetting and @svar[eval-datum] for evaluation.}
 
@@ -81,6 +88,10 @@ Certain patterns in @racket[datum] are treated specially:
 
 ]
 
+By default, if evaluation raises an exception, an error is shown as
+the evaluation's result, but an error is also logged. Use @racket[eval:error]
+to avoid logging exceptions.
+
 As an example,
 
 @codeblock|{
@@ -99,7 +110,12 @@ As an example,
              (my-sqr 42)]
 }|
 
-uses an evaluator whose language is @racketmodname[typed/racket/base].}
+uses an evaluator whose language is @racketmodname[typed/racket/base].
+
+@history[#:changed "1.14" @elem{Added @racket[eval:error] and added
+                                logging of exceptions from expressions
+                                that are not wrapped with
+                                @racket[eval:error].}]}
 
 @defform[(interaction0 maybe-eval maybe-escape datum ...)]{
 Like @racket[interaction], but without insetting the code via
@@ -112,7 +128,8 @@ Like @racket[interaction], but without insetting the code via
 @defform[(interaction-eval maybe-eval maybe-escape datum)]{
 
 Like @racket[interaction], evaluates the @racket[quote]d form of
-@racket[datum], but returns the empty string and does not catch errors.}
+@racket[datum], but returns the empty string and does not catch
+exceptions (so @racket[eval:error] has no effect).}
 
 
 @defform[(interaction-eval-show maybe-eval maybe-escape datum)]{
