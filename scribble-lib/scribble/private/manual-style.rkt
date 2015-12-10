@@ -162,7 +162,7 @@
   (make-blockquote "insetpara" (flow-paragraphs (decode-flow c))))
 
 (define code-inset-style 
-  (make-style 'code-inset null))
+  (make-style 'code-inset '(never-indents)))
 (define (code-inset b)
   (make-blockquote code-inset-style (list b)))
 

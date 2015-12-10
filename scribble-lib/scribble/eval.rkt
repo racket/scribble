@@ -1,7 +1,7 @@
 #lang racket/base
 
 (require "manual.rkt" "struct.rkt" "scheme.rkt" "decode.rkt"
-         (only-in "core.rkt" content?)
+         (only-in "core.rkt" content? compound-paragraph plain)
          racket/contract/base
          racket/file
          racket/list
@@ -170,9 +170,18 @@
     (if inset?
       (let ([p (code-inset (make-table block-color lines))])
         (if title
-          (make-table block-color (list (list.flow.list title) (list.flow.list p)))
+            (compound-paragraph
+             plain
+             (list
+              title
+              p))
           p))
-      (make-table block-color (if title (cons (list.flow.list title) lines) lines)))))
+      (if title
+          (compound-paragraph plain
+                              (list
+                               title
+                               (make-table block-color lines)))
+          (make-table block-color lines)))))
 
 ;; extracts from a datum or syntax object --- while keeping the
 ;; syntax-objectness of the original intact, instead of always
@@ -843,5 +852,8 @@
   (case-lambda
     [(t) (as-examples examples-title t)]
     [(example-title t)
-     (make-table #f (list (list.flow.list example-title)
-                          (list (make-flow (do-splice (list t))))))]))
+     (compound-paragraph
+      plain
+      (list
+       example-title
+       (make-table #f (list (list (make-flow (do-splice (list t))))))))]))
