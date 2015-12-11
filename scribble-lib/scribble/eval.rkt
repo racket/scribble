@@ -315,7 +315,8 @@
     render+output)
   (lambda (str)
     (if (eval-results? str)
-        (list (map formatted-result (eval-results-contents str))
+        (list #f
+              (map formatted-result (eval-results-contents str))
               (eval-results-out str)
               (eval-results-err str))
         (extract-to-evaluate

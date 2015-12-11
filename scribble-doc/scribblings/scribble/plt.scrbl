@@ -19,7 +19,7 @@ relevant libraries and APIs in detail.
 @include-section["style.scrbl"]
 @include-section["manual.scrbl"]
 @include-section["scheme.scrbl"]
-@include-section["eval.scrbl"]
+@include-section["examples.scrbl"]
 @include-section["srcdoc.scrbl"]
 @include-section["bnf.scrbl"]
 @include-section["compat.scrbl"]

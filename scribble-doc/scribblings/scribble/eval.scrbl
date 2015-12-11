@@ -1,131 +1,54 @@
 #lang scribble/doc
 @(require scribble/manual
           "utils.rkt"
-          (for-label racket/sandbox
+          (for-label scribble/eval
+                     racket/sandbox
                      racket/pretty
                      file/convertible
                      racket/serialize))
 
-@title[#:tag "eval"]{Evaluation and Examples}
+@(define-syntax-rule (define-new-examples new-examples)
+   (begin
+     (require (for-label scribble/examples))
+     (define new-examples @racket[examples])))
+@(define-new-examples new-examples)
 
-@defmodule[scribble/eval]{The @racket[scribble/eval] library provides
-utilities for evaluating code at document-build time and incorporating
-the results in the document, especially to show example uses of
-defined procedures and syntax.}
+
+@title[#:tag "old-eval"]{Legacy Evaluation}
+
+@defmodule[scribble/eval]{The @racketmodname[scribble/eval] library provides
+an older interface to the functionality of @racketmodname[scribble/examples].
+The @racketmodname[scribble/examples] library should be used, instead.}
+
+In addition to the forms listed below, @racket[scribble/eval]
+re-exports several functions from @racket[scribble/examples]:
+@racket[make-base-eval] @racket[make-base-eval-factory],
+@racket[make-eval-factory], @racket[make-log-based-eval],
+@racket[close-eval], and @racket[scribble-eval-handler].
+
 
 @defform/subs[(interaction maybe-options datum ...)
-              ([maybe-options maybe-eval maybe-escape maybe-disallow-errors]
+              ([maybe-options maybe-eval maybe-escape maybe-no-errors]
                [maybe-eval code:blank
                             (code:line #:eval eval-expr)]
                [maybe-escape code:blank
                             (code:line #:escape escape-id)]
-               [maybe-disallow-errors code:blank
-                                      (code:line #:no-errors? no-errors?-expr)])]{
+               [maybe-no-errors code:blank
+                                (code:line #:no-errors? no-errors?-expr)])]{
 
-Like @racket[racketinput], except that the result for each input
-@racket[datum] is shown on the next line. The result is determined by
-evaluating the @racket[quote]d form of the @racket[datum] using the
-evaluator produced by @racket[eval-expr], if provided.
-
-The @racket[eval-expr] must produce a sandbox evaluator via
-@racket[make-evaluator] or @racket[make-module-evaluator] with the
-@racket[sandbox-output] and @racket[sandbox-error-output] parameters
-set to @racket['string]. If @racket[eval-expr] is not provided or is
-@racket[#f], an evaluator is created using @racket[make-base-eval]. See also
-@racket[make-eval-factory].
-
-If @racket[no-errors?-expr] is provided and produces a true
-value, then when evaluating a @racket[datum] produces an error (and
-@racket[datum] does not have an @racket[eval:error] wrapper), an
-exception is raised by @racket[interaction]. Otherwise, any exception
-produced by a @racket[datum] evaluation is typeset as an error result.
-
-If the value of @racket[current-print] in the sandbox is changed from
-its default value, or if @racket[print-as-expression] in the sandbox
-is set to @racket[#f], then each evaluation result is formatted to a
-port by applying @racket[(current-print)] to the value; the output
-port is set to a pipe that supports specials in the sense of
-@racket[write-special], and non-character values written to the port
-are used as @tech{content}. Otherwise, when the default
-@racket[current-print] is in place, result values are typeset using
-@racket[to-element/no-color].
-
-Certain patterns in @racket[datum] are treated specially:
+Like @|new-examples| from @racketmodname[scribble/examples], except that
 
 @itemlist[
 
- @item{A @racket[datum] of the form 
-       @racket[(@#,indexed-racket[code:line] _code-datum (@#,racketidfont{code:comment} _comment-datum ...))]
-       is treated as @racket[_code-datum] for evaluation.}
+ @item{the ``Examples:'' label is always supressed,}
 
-@item{A @racket[datum] of the form 
-       @racket[(@#,indexed-racket[code:line] _code-datum ...)]
-       evaluates each @racket[_code-datum], but only the last result is used.}
+ @item{exceptions raised during the evaluation of a @racket[datum] are
+       always rendered as errors, unless @racket[#:no-errors?] is
+       specified with a true value; and}
 
- @item{Other uses of @racketidfont{code:comment}, @racketidfont{code:contract}, and
-       @racketidfont{code:blank} are stripped from each @racket[datum]
-       before evaluation.}
-
- @item{A @racket[datum] of the form
-       @racket[(@#,indexed-racket[eval:error] #,(svar eval-datum))] is
-       treated like @racket[_eval-datum], but @racket[_eval-datum] is
-       expected to raise an exception, and an error is shown as the
-       evaluation's result---even if @racket[#:no-errors? #t] is
-       specified for the @racket[interactions] form.}
-
- @item{A @racket[datum] of the form 
-       @racket[(@#,indexed-racket[eval:alts] #,(svar show-datum) #,(svar eval-datum))]
-       is treated as @svar[show-datum] for typesetting and @svar[eval-datum] for evaluation.}
-
- @item{A @racket[datum] of the form 
-       @racket[(@#,indexed-racket[eval:check] #,(svar eval-datum) #,(svar expect-datum))]
-       is treated like @racket[_eval-datum], but @svar[check-datum] is also
-       evaluated, and an error is raised if they are not @racket[equal?].}
-
- @item{A @racket[datum] of the form 
-       @racket[(@#,indexed-racket[eval:result] _content-expr _out-expr _err-expr)]
-       involves no sandboxed evaluation; instead, the @tech{content} result of @racket[_content-expr] is used as the
-       typeset form of the result, @racket[_out-expr] is treated as output printed
-       by the expression, and @racket[_err-expr] is error output printed by the
-       expression. The @racket[_out-expr] and/or @racket[_err-expr] can be omitted,
-       in which case they default to empty strings.
-
-       Normally, @racketidfont{eval:result}
-       is used in the second part of an @racketidfont{eval:alts} combination.}
-
- @item{A @racket[datum] of the form 
-       @racket[(@#,indexed-racket[eval:results] _content-list-expr _out-expr _err-expr)]
-       is treated like an @racketidfont{eval:result} form, except that @racket[_content-list-expr]
-       should produce a list of @tech{content} for multiple results of evaluation. As
-       with @racketidfont{eval:result}, @racket[_out-expr] and @racket[_err-expr] are optional.}
-
- @item{A @racket[datum] of the form 
-       @racket[(@#,indexed-racket[eval:no-prompt] _eval-datum ...)]
-       is treated like @racket[(@#,racket[code:line] _eval-datum ...)], but no prompt is shown before
-       the group, and a blank line is added before and after
-       @(svar eval-datum) and its result.}
+ @item{the @racket[#:once] option is never implicitly used.}
 
 ]
-
-As an example,
-
-@codeblock|{
-#lang scribble/manual
-@(require racket/sandbox
-          scribble/eval)
-@(define my-evaluator
-   (parameterize ([sandbox-output 'string]
-                  [sandbox-error-output 'string])
-     (make-evaluator 'typed/racket/base)))
-@interaction[#:eval my-evaluator
-
-             (: my-sqr (Real -> Real))
-             (define (my-sqr x)
-               (* x x))
-             (my-sqr 42)]
-}|
-
-uses an evaluator whose language is @racketmodname[typed/racket/base].
 
 @history[#:changed "1.14" @elem{Added @racket[#:no-errors?],
                                 @racket[eval:no-prompt], and
@@ -133,40 +56,57 @@ uses an evaluator whose language is @racketmodname[typed/racket/base].
                                 @racket[code:line] to support multiple
                                 @racket[_datum]s.}]}
 
+
 @defform[(interaction0 maybe-options datum ...)]{
 Like @racket[interaction], but without insetting the code via
-@racket[nested].}
+@racket[nested].
+
+Use @|new-examples| with @racket[#:no-indent], instead.}
+
 
 @defform[(interaction/no-prompt maybe-eval maybe-escape datum)]{
   Like @racket[interaction], but does not render each @racket[datum] with a prompt.
-}
+
+ Use @|new-examples| with @racket[#:no-prompt], instead.}
+ 
 
 @defform[(interaction-eval maybe-eval datum)]{
 
 Like @racket[interaction], evaluates the @racket[quote]d form of
 @racket[datum], but returns the empty string and does not catch
-exceptions (so @racket[eval:error] has no effect).}
+exceptions (so @racket[eval:error] has no effect).
+
+Use @|new-examples| with @racket[#:hidden], instead.}
 
 
 @defform[(interaction-eval-show maybe-eval datum)]{
 
 Like @racket[interaction-eval], but produces an element representing
-the printed form of the evaluation result.}
+the printed form of the evaluation result.
+
+Use @|new-examples| with @racket[#:result-only], instead.}
 
 
 @defform[(racketblock+eval maybe-eval maybe-escape datum ...)]{
 
-Combines @racket[racketblock] and @racket[interaction-eval].}
+Combines @racket[racketblock] and @racket[interaction-eval].
+
+Use @|new-examples| with @racket[#:no-result], instead.}
 
 
 @defform[(racketblock0+eval maybe-eval maybe-escape datum ...)]{
 
-Combines @racket[racketblock0] and @racket[interaction-eval].}
+Combines @racket[racketblock0] and @racket[interaction-eval].
+
+Use @|new-examples| with @racket[#:no-result] and
+@racket[#:no-indent], instead.}
 
 
 @defform[(racketmod+eval maybe-eval maybe-escape name datum ...)]{
 
-Combines @racket[racketmod] and @racket[interaction-eval].}
+Combines @racket[racketmod] and @racket[interaction-eval].
+
+Use @|new-examples| with @racket[#:lang], instead.}
 
 
 @defform[(def+int maybe-options defn-datum expr-datum ...)]{
@@ -178,31 +118,45 @@ space is inserted before the @racket[expr-datum]s.}
 
 @defform[(defs+int maybe-options (defn-datum ...) expr-datum ...)]{
 
-Like @racket[def+int], but for multiple leading definitions.}
+Like @racket[def+int], but for multiple leading definitions.
+
+Use @|new-examples| with @racket[eval:no-prompt] wrappers on
+definitions, instead.}
 
 
 @defform[(examples maybe-options datum ...)]{
 
-Like @racket[interaction], but with an ``Examples:'' label prefixed.}
+Like @racket[interaction], but with an ``Examples:'' label prefixed.
+
+Use @|new-examples| from @racketmodname[scribble/examples], instead.}
 
 
 @defform[(examples* label-expr maybe-options datum ...)]{
 
 Like @racket[examples], but using the result of @racket[label-expr] in
-place of the default ``Examples:'' label.}
+place of the default ``Examples:'' label.
+
+Use @|new-examples| from @racketmodname[scribble/examples] with the
+@racket[#:label] option, instead.}
 
 
 @defform[(defexamples maybe-options datum ...)]{
 
 Like @racket[examples], but each definition using @racket[define] or
 @racket[define-struct] among the @racket[datum]s is typeset without a
-prompt, and with line of space after it.}
+prompt, and with line of space after it.
+
+Use @|new-examples| with @racket[eval:no-prompt] wrappers on
+definitions, instead.}
 
 
 @defform[(defexamples* label-expr maybe-options datum ...)]{
 
 Like @racket[defexamples], but using the result of @racket[label-expr] in
-place of the default ``Examples:'' label.}
+place of the default ``Examples:'' label.
+
+Use @|new-examples| with the @racket[#:label] option and
+@racket[eval:no-prompt] wrappers on definitions, instead.}
 
 
 @defproc*[([(as-examples [b block?]) block?]
@@ -213,114 +167,6 @@ place of the default ``Examples:'' label.}
 Adds an ``examples'' label to @racket[b], using either a default label
 or the given @racket[label].}
 
-
-@defproc[(make-base-eval [#:pretty-print? pretty-print? any/c #t]
-                         [#:lang lang
-                          (or/c module-path?
-                                (list/c 'special symbol?)
-                                (cons/c 'begin list?))
-                          '(begin)]
-                         [input-program any/c] ...)
-         (any/c . -> . any)]{
-
-Creates an evaluator using @racket[(make-evaluator 'racket/base #:lang lang input-program ...)],
-setting sandbox parameters to disable limits, setting the outputs to
-@racket['string], and not adding extra security guards.
-
-If @racket[pretty-print?] is true, the sandbox's printer is set to
-@racket[pretty-print-handler]. In that case, values that are convertible
-in the sense of @racket[convertible?] are printed using @racket[write-special],
-except that values that are serializable in the sense of @racket[serializable?]
-are serialized for tranfers from inside the sandbox to outside (which can avoid
-pulling code and support from the sandboxed environment into the document-rendering
-environment).
-
-@history[#:changed "1.6" @elem{Changed treatment of convertible values that are
-                               serializable.}]}
-
-
-@defproc[(make-base-eval-factory [mod-paths (listof module-path?)]
-                                 [#:pretty-print? pretty-print? any/c #t]
-                                 [#:lang lang
-                                  (or/c module-path?
-                                        (list/c 'special symbol?)
-                                        (cons/c 'begin list?))
-                                  '(begin)])
-         (-> (any/c . -> . any))]{
-
-Produces a function that is like @racket[make-base-eval], except that
-each module in @racket[mod-paths] is attached to the evaluator's
-namespace. The modules are loaded and instantiated once (when the
-returned @racket[make-base-eval]-like function is called the first
-time) and then attached to each evaluator that is created.}
-
-
-@defproc[(make-eval-factory [mod-paths (listof module-path?)]
-                            [#:pretty-print? pretty-print? any/c #t]
-                            [#:lang lang
-                             (or/c module-path?
-                                   (list/c 'special symbol?)
-                                   (cons/c 'begin list?))
-                             '(begin)])
-         (-> (any/c . -> . any))]{
-
-Like @racket[make-base-eval-factory], but each module in @racket[mod-paths] is
-also required into the top-level environment for each generated evaluator.}
-
-
-@defproc[(make-log-based-eval [log-file path-string?]
-                              [mode (or/c 'record 'replay)])
-         (-> any/c any)]{
-
-Creates an evaluator (like @racket[make-base-eval]) that uses a log
-file to either record or replay evaluations.
-
-If @racket[mode] is @racket['record], the evaluator records every
-interaction to @racket[log-file], replacing @racket[log-file] if it
-already exists. The result of each interaction must be
-@seclink["serialization" #:doc '(lib
-"scribblings/reference/reference.scrbl")]{serializable}.
-
-If @racket[mode] is @racket['replay], the evaluator uses the contents
-of @racket[log-file] instead of actually performing evaluatings. For
-each interaction, it compares the term to evaluate against the next
-interaction recorded in @racket[log-file]. If the term matches, the
-stored result is returned; if not, the evaluator raises an error
-indicating that it is out of sync with @racket[log-file].
-
-Use @racket[make-log-based-eval] to document libraries when the
-embedded examples rely on external features that may not be present or
-appropriately configured on all machines.
-
-@history[#:added "1.12"]{}
-}
-
-
-@defproc[(close-eval [eval (any/c . -> . any)]) (one-of/c "")]{
-
-Shuts down an evaluator produced by @racket[make-base-eval]. Use
-@racket[close-eval] when garbage collection cannot otherwise reclaim
-an evaluator (e.g., because it is defined in a module body).}
-
-
-@defparam[scribble-eval-handler handler 
-          ((any/c . -> . any) any/c boolean? . -> . any)]{
-
-A parameter that serves as a hook for evaluation. The evaluator to use
-is supplied as the first argument to the parameter's value, and the
-second argument is the form to evaluate. The last argument is
-@racket[#t] if exceptions are being captured (to display exception
-results), @racket[#f] otherwise.}
-
-@defparam[scribble-exn->string handler (-> (or/c exn? any/c) string?)]{
-  A parameter that controls how exceptions are rendered by 
-  @racket[interaction]. Defaults to
-  @racketblock[(λ (e)
-                 (if (exn? e)
-                     (exn-message e)
-                     (format "uncaught exception: ~s" e)))]
-}
-
 @defform[(with-eval-preserve-source-locations expr ...)]{
 
 By default, the evaluation forms provided by this module, such as
@@ -329,4 +175,6 @@ locations from the expressions they evaluate. Within a
 @racket[with-eval-preserve-source-locations] form, the source
 locations are preserved. This can be useful for documenting forms that
 depend on source locations, such as Redex's typesetting macros.
-}
+
+Use @|new-examples| with the @racket[#:preserve-source-locations]
+option, instead.}

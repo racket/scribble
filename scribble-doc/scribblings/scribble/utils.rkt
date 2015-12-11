@@ -23,7 +23,6 @@
                   scribble/racket
                   scribble/html-properties
                   scribble/latex-properties
-                  scribble/eval
                   scribble/bnf)
 
 (provide scribble-examples litchar/lines doc-render-examples)
