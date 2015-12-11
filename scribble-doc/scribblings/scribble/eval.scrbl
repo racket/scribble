@@ -13,11 +13,14 @@ utilities for evaluating code at document-build time and incorporating
 the results in the document, especially to show example uses of
 defined procedures and syntax.}
 
-@defform/subs[(interaction maybe-eval maybe-escape datum ...)
-              ([maybe-eval code:blank
+@defform/subs[(interaction maybe-options datum ...)
+              ([maybe-options maybe-eval maybe-escape maybe-disallow-errors]
+               [maybe-eval code:blank
                             (code:line #:eval eval-expr)]
                [maybe-escape code:blank
-                            (code:line #:escape escape-id)])]{
+                            (code:line #:escape escape-id)]
+               [maybe-disallow-errors code:blank
+                                      (code:line #:no-errors? no-errors?-expr)])]{
 
 Like @racket[racketinput], except that the result for each input
 @racket[datum] is shown on the next line. The result is determined by
@@ -27,9 +30,15 @@ evaluator produced by @racket[eval-expr], if provided.
 The @racket[eval-expr] must produce a sandbox evaluator via
 @racket[make-evaluator] or @racket[make-module-evaluator] with the
 @racket[sandbox-output] and @racket[sandbox-error-output] parameters
-set to @racket['string]. If @racket[eval-expr] is not provided, an
-evaluator is created using @racket[make-base-eval]. See also
+set to @racket['string]. If @racket[eval-expr] is not provided or is
+@racket[#f], an evaluator is created using @racket[make-base-eval]. See also
 @racket[make-eval-factory].
+
+If @racket[no-errors?-expr] is provided and produces a true
+value, then when evaluating a @racket[datum] produces an error (and
+@racket[datum] does not have an @racket[eval:error] wrapper), an
+exception is raised by @racket[interaction]. Otherwise, any exception
+produced by a @racket[datum] evaluation is typeset as an error result.
 
 If the value of @racket[current-print] in the sandbox is changed from
 its default value, or if @racket[print-as-expression] in the sandbox
@@ -49,16 +58,20 @@ Certain patterns in @racket[datum] are treated specially:
        @racket[(@#,indexed-racket[code:line] _code-datum (@#,racketidfont{code:comment} _comment-datum ...))]
        is treated as @racket[_code-datum] for evaluation.}
 
+@item{A @racket[datum] of the form 
+       @racket[(@#,indexed-racket[code:line] _code-datum ...)]
+       evaluates each @racket[_code-datum], but only the last result is used.}
+
  @item{Other uses of @racketidfont{code:comment}, @racketidfont{code:contract}, and
        @racketidfont{code:blank} are stripped from each @racket[datum]
        before evaluation.}
 
- @item{A @racket[datum] of the form 
-       @racket[(@#,indexed-racket[eval:error] #,(svar eval-datum))]
-       is treated like @racket[_eval-datum], but @racket[_eval-datum] is expected to
-       raise an exception: no error is logged if an exception is raised,
-       but an exception is raised if @racket[_eval-datum]
-       does @emph{not} raise an exception.}
+ @item{A @racket[datum] of the form
+       @racket[(@#,indexed-racket[eval:error] #,(svar eval-datum))] is
+       treated like @racket[_eval-datum], but @racket[_eval-datum] is
+       expected to raise an exception, and an error is shown as the
+       evaluation's result---even if @racket[#:no-errors? #t] is
+       specified for the @racket[interactions] form.}
 
  @item{A @racket[datum] of the form 
        @racket[(@#,indexed-racket[eval:alts] #,(svar show-datum) #,(svar eval-datum))]
@@ -86,11 +99,13 @@ Certain patterns in @racket[datum] are treated specially:
        should produce a list of @tech{content} for multiple results of evaluation. As
        with @racketidfont{eval:result}, @racket[_out-expr] and @racket[_err-expr] are optional.}
 
-]
+ @item{A @racket[datum] of the form 
+       @racket[(@#,indexed-racket[eval:no-prompt] _eval-datum ...)]
+       is treated like @racket[(@#,racket[code:line] _eval-datum ...)], but no prompt is shown before
+       the group, and a blank line is added before and after
+       @(svar eval-datum) and its result.}
 
-By default, if evaluation raises an exception, an error is shown as
-the evaluation's result, but an error is also logged. Use @racket[eval:error]
-to avoid logging exceptions.
+]
 
 As an example,
 
@@ -112,27 +127,28 @@ As an example,
 
 uses an evaluator whose language is @racketmodname[typed/racket/base].
 
-@history[#:changed "1.14" @elem{Added @racket[eval:error] and added
-                                logging of exceptions from expressions
-                                that are not wrapped with
-                                @racket[eval:error].}]}
+@history[#:changed "1.14" @elem{Added @racket[#:no-errors?],
+                                @racket[eval:no-prompt], and
+                                @racket[eval:error], and changed
+                                @racket[code:line] to support multiple
+                                @racket[_datum]s.}]}
 
-@defform[(interaction0 maybe-eval maybe-escape datum ...)]{
+@defform[(interaction0 maybe-options datum ...)]{
 Like @racket[interaction], but without insetting the code via
 @racket[nested].}
 
 @defform[(interaction/no-prompt maybe-eval maybe-escape datum)]{
-  Like @racket[interaction], but does not render the output with a prompt.
+  Like @racket[interaction], but does not render each @racket[datum] with a prompt.
 }
 
-@defform[(interaction-eval maybe-eval maybe-escape datum)]{
+@defform[(interaction-eval maybe-eval datum)]{
 
 Like @racket[interaction], evaluates the @racket[quote]d form of
 @racket[datum], but returns the empty string and does not catch
 exceptions (so @racket[eval:error] has no effect).}
 
 
-@defform[(interaction-eval-show maybe-eval maybe-escape datum)]{
+@defform[(interaction-eval-show maybe-eval datum)]{
 
 Like @racket[interaction-eval], but produces an element representing
 the printed form of the evaluation result.}
@@ -153,28 +169,49 @@ Combines @racket[racketblock0] and @racket[interaction-eval].}
 Combines @racket[racketmod] and @racket[interaction-eval].}
 
 
-@defform[(def+int maybe-eval maybe-escape defn-datum expr-datum ...)]{
+@defform[(def+int maybe-options defn-datum expr-datum ...)]{
 
 Like @racket[interaction], except the @racket[defn-datum] is
 typeset as for @racket[racketblock] (i.e., no prompt) and a line of
 space is inserted before the @racket[expr-datum]s.}
 
 
-@defform[(defs+int maybe-eval maybe-escape (defn-datum ...) expr-datum ...)]{
+@defform[(defs+int maybe-options (defn-datum ...) expr-datum ...)]{
 
 Like @racket[def+int], but for multiple leading definitions.}
 
 
-@defform[(examples maybe-eval maybe-escape datum ...)]{
+@defform[(examples maybe-options datum ...)]{
 
 Like @racket[interaction], but with an ``Examples:'' label prefixed.}
 
 
-@defform[(defexamples maybe-eval maybe-escape datum ...)]{
+@defform[(examples* label-expr maybe-options datum ...)]{
+
+Like @racket[examples], but using the result of @racket[label-expr] in
+place of the default ``Examples:'' label.}
+
+
+@defform[(defexamples maybe-options datum ...)]{
 
 Like @racket[examples], but each definition using @racket[define] or
 @racket[define-struct] among the @racket[datum]s is typeset without a
 prompt, and with line of space after it.}
+
+
+@defform[(defexamples* label-expr maybe-options datum ...)]{
+
+Like @racket[defexamples], but using the result of @racket[label-expr] in
+place of the default ``Examples:'' label.}
+
+
+@defproc*[([(as-examples [b block?]) block?]
+           [(as-examples [label (or/c block? content?)]
+                         [b block?])
+            block?])]{
+
+Adds an ``examples'' label to @racket[b], using either a default label
+or the given @racket[label].}
 
 
 @defproc[(make-base-eval [#:pretty-print? pretty-print? any/c #t]

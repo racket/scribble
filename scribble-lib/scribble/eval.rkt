@@ -127,34 +127,39 @@
 
 (struct formatted-result (content))
 
-(define (interleave inset? title expr-paras val-list+outputs)
+(define (interleave inset? title expr-paras promptless?+val-list+outputs)
   (let ([lines
          (let loop ([expr-paras expr-paras]
-                    [val-list+outputs val-list+outputs]
-                    [first? #t])
+                    [promptless?+val-list+outputs promptless?+val-list+outputs]
+                    [first? #t]
+                    [after-blank? #t])
            (if (null? expr-paras)
              null
              (append
+              (if (and (caar promptless?+val-list+outputs)
+                       (not after-blank?))
+                  (list (list (list blank-line)))
+                  null)
               (list (list (let ([p (car expr-paras)])
                             (if (flow? p) p (make-flow (list p))))))
-              (format-output (cadar val-list+outputs) output-color)
-              (format-output (caddar val-list+outputs) error-color)
+              (format-output (cadr (cdar promptless?+val-list+outputs)) output-color)
+              (format-output (caddr (cdar promptless?+val-list+outputs)) error-color)
               (cond
-                [(string? (caar val-list+outputs))
+                [(string? (cadar promptless?+val-list+outputs))
                  ;; Error result case:
                  (map (lambda (s) 
                         (define p (format-output s error-color))
                         (if (null? p)
                             (list null)
                             (car p)))
-                      (string->wrapped-lines (caar val-list+outputs)))]
-                [(box? (caar val-list+outputs))
+                      (string->wrapped-lines (cadar promptless?+val-list+outputs)))]
+                [(box? (cadar promptless?+val-list+outputs))
                  ;; Output written to a port
-                 (format-output-stream (unbox (caar val-list+outputs))
+                 (format-output-stream (unbox (cadar promptless?+val-list+outputs))
                                        result-color)]
                 [else
                  ;; Normal result case:
-                 (let ([val-list (caar val-list+outputs)])
+                 (let ([val-list (cadar promptless?+val-list+outputs)])
                    (if (equal? val-list (list (void)))
                      null
                      (map (lambda (v)
@@ -166,7 +171,11 @@
                                               (to-element/no-color
                                                v #:expr? (print-as-expression))))))))
                           val-list)))])
-              (loop (cdr expr-paras) (cdr val-list+outputs) #f))))])
+              (if (and (caar promptless?+val-list+outputs)
+                       (pair? (cdr promptless?+val-list+outputs)))
+                  (list (list (list blank-line)))
+                  null)
+              (loop (cdr expr-paras) (cdr promptless?+val-list+outputs) #f (caar promptless?+val-list+outputs)))))])
     (if inset?
       (let ([p (code-inset (make-table block-color lines))])
         (if title
@@ -213,26 +222,34 @@
     (raise-argument-error 'eval:result "string?" err))
   (eval-results (list content) out err))
 
-(define (extract-to-evaluate s)
-  (let loop ([s s] [expect #f] [error-expected? #f])
-    (syntax-case s (code:line code:comment code:contract eval:alts eval:check eval:error)
+(define (extract-to-evaluate s val handle-one)
+  (let loop ([val val] [s s] [expect #f] [error-expected? #f] [promptless? #f])
+    (syntax-case s (code:line code:comment code:contract eval:no-prompt eval:alts eval:check eval:error)
       [(code:line v (code:comment . rest))
-       (loop (extract s cdr car) expect error-expected?)]
+       (loop val (extract s cdr car) expect error-expected? promptless?)]
+      [(code:line v ...)
+       (for/fold ([val val]) ([v (in-list (extract s cdr))])
+         (loop val v expect error-expected? promptless?))]
       [(code:comment . rest)
-       (values (nothing-to-eval) expect error-expected?)]
+       (handle-one val (nothing-to-eval) expect error-expected? promptless?)]
       [(code:contract . rest)
-       (values (nothing-to-eval) expect error-expected?)]
+       (handle-one val (nothing-to-eval) expect error-expected? promptless?)]
+      [(eval:no-prompt e ...)
+       (for/fold ([val val]) ([v (in-list (extract s cdr))])
+         (handle-one val v expect error-expected? #t))]
       [(eval:error e)
-       (loop (extract s cdr car) expect #t)]
+       (handle-one val (extract s cdr car) expect #t promptless?)]
       [(eval:alts p e)
-       (loop (extract s cdr cdr car) expect error-expected?)]
+       (handle-one val (extract s cdr cdr car) expect error-expected? promptless?)]
       [(eval:check e expect)
-       (loop (extract s cdr car)
-             (list (syntax->datum (datum->syntax #f (extract s cdr cdr car))))
-             error-expected?)]
-      [else (values s expect error-expected?)])))
+       (handle-one val
+                   (extract s cdr car)
+                   (list (syntax->datum (datum->syntax #f (extract s cdr cdr car))))
+                   error-expected?
+                   promptless?)]
+      [else (handle-one val s expect error-expected? promptless?)])))
 
-(define (do-eval ev who)
+(define (do-eval ev who no-errors?)
   (define (get-outputs)
     (define (get getter what)
       (define s (getter ev))
@@ -272,36 +289,42 @@
                      (close-output-port out)
                      in)))])))
   (define (do-ev/expect s expect error-expected?)
-    (define-values (val render+output)
+    (define-values (val error? render+output)
       (with-handlers ([(lambda (x) (not (exn:break? x)))
                        (lambda (e)
-                         (unless error-expected?
-                           (log-error "interaction without `eval:error` raised an exception: ~s; form: ~.s"
-                                      (if (exn? e)
-                                          (exn-message e)
-                                          e)
-                                      s))
+                         (when (and no-errors?
+                                    (not error-expected?))
+                           (error 'examples
+                                  (string-append "exception raised in example\n"
+                                                 "  error: ~s")
+                                  (if (exn? e)
+                                      (exn-message e)
+                                      e)))
                          (values e
+                                 #t
                                  (cons ((scribble-exn->string) e)
                                        (get-outputs))))])
         (define val (do-plain-eval ev s #t))
-        (when error-expected?
-          (log-error "interaction failed to raise an expected exception: ~.s" s))
-        (values val (cons (render-value val) (get-outputs)))))
+        (values val #f (cons (render-value val) (get-outputs)))))
+    (when (and error-expected? (not error?))
+      (error 'eval "interaction failed to raise an expected exception: ~.s" s))
     (when expect
       (let ([expect (do-plain-eval ev (car expect) #t)])
         (unless (equal? val expect)
-          (raise-syntax-error 'eval "example result check failed" s))))
+          (error 'eval "example result check failed: ~.s" s))))
     render+output)
   (lambda (str)
     (if (eval-results? str)
         (list (map formatted-result (eval-results-contents str))
               (eval-results-out str)
               (eval-results-err str))
-        (let-values ([(s expect error-expected?) (extract-to-evaluate str)])
+        (extract-to-evaluate
+         str
+         (list #f (list (void)) "" "")
+         (lambda (result s expect error-expected? promptless?)
           (if (nothing-to-eval? s)
-              (list (list (void)) "" "")
-              (do-ev/expect s expect error-expected?))))))
+              result
+              (cons promptless? (do-ev/expect s expect error-expected?))))))))
 
 (module+ test
   (require rackunit)
@@ -641,44 +664,60 @@
             ;;   (require syntax/strip-context)
             #'(quote e)])]))
 
-(define (do-interaction-eval ev e)
-  (let-values ([(e expect error-expected?/ignored) (extract-to-evaluate e)])
-    (unless (nothing-to-eval? e)
-      (parameterize ([current-command-line-arguments #()])
-        (do-plain-eval (or ev (make-base-eval)) e #f)))
-    ""))
+(define (do-interaction-eval ev es)
+  (for/fold ([ev ev]) ([e (in-list es)])
+    (extract-to-evaluate
+     e
+     ev
+     (lambda (ev e expect error-expected?/ignored promptless?/ignored)
+       (cond
+        [(nothing-to-eval? e) ev]
+        [else
+         (parameterize ([current-command-line-arguments #()])
+           (let ([ev (or ev (make-base-eval))])
+             (do-plain-eval ev e #f)
+             ev))]))))
+  "")
 
 (define-syntax interaction-eval
   (syntax-rules ()
-    [(_ #:eval ev e) (do-interaction-eval ev (quote-expr e))]
-    [(_ e) (do-interaction-eval #f (quote-expr e))]))
+    [(_ #:eval ev e ...) (do-interaction-eval ev (list (quote-expr e) ...))]
+    [(_ e ...) (do-interaction-eval #f (list (quote-expr e) ...))]))
 
 (define (show-val v)
   (elem #:style result-color
         (to-element/no-color v #:expr? (print-as-expression))))
 
-(define (do-interaction-eval-show ev e)
+(define (do-interaction-eval-show ev es)
   (parameterize ([current-command-line-arguments #()])
-    (show-val (car (do-plain-eval (or ev (make-base-eval)) e #f)))))
+    (let ([ev (or ev (make-base-eval))])
+      (show-val (car (for/fold ([v (list #f)]) ([e (in-list es)])
+                       (extract-to-evaluate
+                        e
+                        v
+                        (lambda (prev-v e expect error-expected?/ignored promptless?/ignored)
+                          (do-plain-eval ev e #f)))))))))
 
 (define-syntax interaction-eval-show
   (syntax-rules ()
-    [(_ #:eval ev e) (do-interaction-eval-show ev (quote-expr e))]
-    [(_ e) (do-interaction-eval-show #f (quote-expr e))]))
+    [(_ #:eval ev e ...) (do-interaction-eval-show ev (list (quote-expr e) ...))]
+    [(_ e ...) (do-interaction-eval-show #f (list (quote-expr e) ...))]))
 
 (define-syntax racketinput*
-  (syntax-rules (eval:alts code:comment eval:check eval:error)
+  (syntax-rules (eval:alts code:comment eval:check eval:no-prompt eval:error)
     [(_ #:escape id (code:comment . rest)) (racketblock0 #:escape id (code:comment . rest))]
     [(_ #:escape id (eval:alts a b)) (racketinput* #:escape id a)]
     [(_ #:escape id (eval:check a b)) (racketinput* #:escape id a)]
     [(_ #:escape id (eval:error a)) (racketinput* #:escape id a)]
+    [(_ #:escape id (eval:no-prompt a ...)) (racketblock* #:escape id (code:line a ...))]
     [(_ #:escape id e) (racketinput0 #:escape id e)]))
 
 (define-syntax racketblock*
-  (syntax-rules (eval:alts code:comment eval:check eval:error)
+  (syntax-rules (eval:alts code:comment eval:check eval:no-prompt eval:error)
     [(_ #:escape id (code:comment . rest)) (racketblock0 #:escape id (code:comment . rest))]
     [(_ #:escape id (eval:alts a b)) (racketblock #:escape id a)]
     [(_ #:escape id (eval:check a b)) (racketblock #:escape id a)]
+    [(_ #:escape id (eval:no-prompt a ...)) (racketblock #:escape id (code:line a ...))]
     [(_ #:escape id (eval:error a)) (racketblock #:escape id a)]
     [(_ #:escape id e) (racketblock0 #:escape id e)]))
 
@@ -700,23 +739,66 @@
        [(_ #:escape _ e) #'(racketblock0+line #:escape id e)])]
     [(_ #:escape id e) #'(racketinput* #:escape id e)]))
 
-(define (do-titled-interaction who inset? ev t shows evals)
-  (interleave inset? t shows (map (do-eval ev who) evals)))
+(define (do-titled-interaction who inset? no-errors? ev t shows evals)
+  (interleave inset? t shows (map (do-eval ev who no-errors?) evals)))
 
 (define-syntax titled-interaction
   (syntax-rules ()
-    [(_ who inset? t racketinput* #:eval ev #:escape unsyntax-id e ...)
+    [(_ who inset? t racketinput* 
+        #:eval ev #:escape unsyntax-id #:no-errors? no-errors?
+        e ...)
      (do-titled-interaction
-      'who inset? ev t (list (racketinput* #:escape unsyntax-id e) ...) (list (quote-expr e) ...))]
-    [(_ who inset? t racketinput* #:eval ev e ...)
+      'who inset? no-errors? ev t
+      (list (racketinput* #:escape unsyntax-id e) ...)
+      (list (quote-expr e) ...))]
+    
+    [(_ who inset? t racketinput*
+        #:eval ev #:escape unsyntax-id
+        e ...)
      (titled-interaction
-      who inset? t racketinput* #:eval ev #:escape unsyntax e ...)]
-    [(_ who inset? t racketinput* #:escape unsyntax-id e ...)
+      who inset? t racketinput*
+      #:eval ev #:escape unsyntax-id #:no-errors? #f
+      e ...)]
+    [(_ who inset? t racketinput*
+        #:eval ev #:no-errors? no-errors?
+        e ...)
      (titled-interaction
-      who inset? t racketinput* #:eval (make-base-eval) #:escape unsyntax-id e ...)]
+      who inset? t racketinput*
+      #:eval ev #:escape unsyntax #:no-errors? no-errors?
+      e ...)]
+    [(_ who inset? t racketinput*
+        #:escape unsyntax-id #:no-errors? no-errors?
+        e ...)
+     (titled-interaction
+      who inset? t racketinput*
+      #:eval (make-base-eval) #:escape unsyntax-id #:no-errors? no-errors?
+      e ...)]
+    [(_ who inset? t racketinput*
+        #:eval ev
+        e ...)
+     (titled-interaction
+      who inset? t racketinput*
+      #:eval ev #:escape unsyntax #:no-errors? #f
+      e ...)]
+    [(_ who inset? t racketinput*
+        #:escape unsyntax-id
+        e ...)
+     (titled-interaction
+      who inset? t racketinput*
+      #:eval (make-base-eval) #:escape unsyntax-id
+      e ...)]    
+    [(_ who inset? t racketinput*
+        #:no-errors? no-errors?
+        e ...)
+     (titled-interaction
+      who inset? t racketinput*
+      #:eval (make-base-eval) #:escape unsyntax #:no-errors? no-errors?
+      e ...)]
     [(_ who inset? t racketinput* e ...)
      (titled-interaction
-      who inset? t racketinput* #:eval (make-base-eval) e ...)]))
+      who inset? t racketinput*
+      #:eval (make-base-eval) #:escape unsyntax #:no-errors? #f
+      e ...)]))
 
 (define-syntax (-interaction stx)
   (syntax-case stx ()
@@ -743,7 +825,7 @@
     [(_ racketblock #:eval ev #:escape unsyntax-id e ...)
      (let ([eva ev])
        (#%expression
-        (begin (interaction-eval #:eval eva e) ...
+        (begin (interaction-eval #:eval eva e ...)
                (racketblock #:escape unsyntax-id e ...))))]
     [(_ racketblock #:eval ev e ...)
      (racketblockX+eval racketblock #:eval ev #:escape unsyntax e ...)]
@@ -767,7 +849,7 @@
     [(_ #:eval ev #:escape unsyntax-id name e ...)
      (let ([eva ev])
        (#%expression
-        (begin (interaction-eval #:eval eva e) ...
+        (begin (interaction-eval #:eval eva e ...)
                (racketmod #:escape unsyntax-id name e ...))))]
     [(_ #:eval ev name e ...)
      (racketmod+eval #:eval ev #:escape unsyntax name e ...)]
@@ -852,8 +934,12 @@
   (case-lambda
     [(t) (as-examples examples-title t)]
     [(example-title t)
-     (compound-paragraph
-      plain
-      (list
-       example-title
-       (make-table #f (list (list (make-flow (do-splice (list t))))))))]))
+     (if example-title
+         (compound-paragraph
+          plain
+          (list
+           (if (block? example-title)
+               example-title
+               (make-paragraph (list example-title)))
+           t))
+         t)]))
