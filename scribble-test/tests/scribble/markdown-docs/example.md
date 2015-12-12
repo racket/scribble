@@ -77,8 +77,9 @@ Blah blah `(or/c string? bytes?)`.
 
 Example of Scribble `examples`:
 
+Examples:
+
 ```racket
-Examples:      
 > (define x 0) 
                
 > (displayln x)

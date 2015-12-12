@@ -1,6 +1,7 @@
 Pretty-Print-Handler Bug Example
 
-Example:                                                       
+Example:
+
   > '((x "positional 1")                                       
         (rest ("positional 2" "positional 3"))                 
         (a ())                                                 
