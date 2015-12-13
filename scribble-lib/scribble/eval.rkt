@@ -705,18 +705,22 @@
     [(_ e ...) (do-interaction-eval-show #f (list (quote-expr e) ...))]))
 
 (define-syntax racketinput*
-  (syntax-rules (eval:alts code:comment eval:check eval:no-prompt eval:error)
+  (syntax-rules (eval:alts code:comment eval:check eval:no-prompt eval:error eval:result eval:results)
     [(_ #:escape id (code:comment . rest)) (racketblock0 #:escape id (code:comment . rest))]
     [(_ #:escape id (eval:alts a b)) (racketinput* #:escape id a)]
+    [(_ #:escape id (eval:result a . _)) (racketinput* #:escape id a)]
+    [(_ #:escape id (eval:results a . _)) (racketinput* #:escape id a)]
     [(_ #:escape id (eval:check a b)) (racketinput* #:escape id a)]
     [(_ #:escape id (eval:error a)) (racketinput* #:escape id a)]
     [(_ #:escape id (eval:no-prompt a ...)) (racketblock* #:escape id (code:line a ...))]
     [(_ #:escape id e) (racketinput0 #:escape id e)]))
 
 (define-syntax racketblock*
-  (syntax-rules (eval:alts code:comment eval:check eval:no-prompt eval:error)
+  (syntax-rules (eval:alts code:comment eval:check eval:no-prompt eval:error eval:result eval:results)
     [(_ #:escape id (code:comment . rest)) (racketblock0 #:escape id (code:comment . rest))]
     [(_ #:escape id (eval:alts a b)) (racketblock #:escape id a)]
+    [(_ #:escape id (eval:result a . _)) (racketinputblock #:escape id a)]
+    [(_ #:escape id (eval:results a . _)) (racketinputblock #:escape id a)]
     [(_ #:escape id (eval:check a b)) (racketblock #:escape id a)]
     [(_ #:escape id (eval:no-prompt a ...)) (racketblock #:escape id (code:line a ...))]
     [(_ #:escape id (eval:error a)) (racketblock #:escape id a)]

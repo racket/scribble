@@ -1,0 +1,100 @@
+Example:
+
+  > (+ 1 2)
+  3        
+
+Examples:
+
+  > (+ 3 4)            
+  7                    
+  > (string-append "5" 
+                   "6")
+  "56"                 
+
+  > (+ 2 3)
+  5        
+
+Another example:
+
+  > (+ 2 4)
+  6        
+
+Examples:
+
+> (+ 2 5)
+7        
+> (* 3 4)
+12       
+
+Examples:
+
+  (+ 2 6)
+  8      
+  (* 3 5)
+  15     
+
+"Just the result."
+
+Example:
+
+  > (syntax-line (quote-syntax here))
+  45                                 
+
+  "don't show the result"
+
+  #lang racket/base      
+  (define x "don't show")
+  "the result"           
+
+Example:
+
+  > (/ 1 0)          
+  /: division by zero
+
+Example:
+
+  > (+ 1 2) (* 3 4)
+  12               
+
+Example:
+
+  > (+ 1 2)
+  3        
+
+Example:
+
+  > (/ 1 0)
+  +inf.0   
+
+Example:
+
+  > "(/ 1 0)"
+  (/ 1 0)    
+
+Example:
+
+  > "(/ 1 0)"   
+  getting +inf.0
+  (/ 1 0)       
+
+Example:
+
+  > "(/ 1 0)"   
+  getting +inf.0
+  oops          
+  (/ 1 0)       
+
+Example:
+
+  > (/ 100 0)   
+  getting +inf.0
+  oops          
+  (/ 1 0)       
+
+Example:
+
+  > (/ 100 0)   
+  getting +inf.0
+  oops          
+  (/ 1 0)       
+  '=            

@@ -117,8 +117,7 @@ Certain patterns in @racket[datum] are treated specially:
        @racket[(@#,indexed-racket[eval:error] #,(svar eval-datum))] is
        treated like @racket[_eval-datum], but @racket[_eval-datum] is
        expected to raise an exception, and an error is shown as the
-       evaluation's result---even if @racket[#:no-errors? #t] is
-       specified for the @racket[interactions] form.}
+       evaluation's result.}
 
  @item{A @racket[datum] of the form 
        @racket[(@#,indexed-racket[eval:alts] #,(svar show-datum) #,(svar eval-datum))]
@@ -138,7 +137,9 @@ Certain patterns in @racket[datum] are treated specially:
        in which case they default to empty strings.
 
        Normally, @racketidfont{eval:result}
-       is used in the second part of an @racketidfont{eval:alts} combination.}
+       is used in the second part of an @racketidfont{eval:alts} combination. Otherwise,
+       @racket[_content-expr] is typeset as the input form (which rarely makes sense for
+       a reader of the example).}
 
  @item{A @racket[datum] of the form 
        @racket[(@#,indexed-racket[eval:results] _content-list-expr _out-expr _err-expr)]
