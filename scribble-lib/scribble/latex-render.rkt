@@ -849,7 +849,7 @@
                                [else (error "unexpected style for box mode")])))
                        (let ([s (style-name (nested-flow-style t))])
                          (or (and (string? s) s)
-                             (and (eq? s 'inset) "quote")
+                             (and (eq? s 'inset) "SInsetFlow")
                              (and (eq? s 'code-inset) "SCodeFlow")
                              (and (eq? s 'vertical-inset) "SVInsetFlow")))
                        "Subflow")]

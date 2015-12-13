@@ -260,7 +260,8 @@
 \listparindent=0pt\itemindent=0pt\labelwidth=0pt\leftmargin=0pt\rightmargin=0pt%
 \itemsep=0pt}\item}{\end{list}}
 
-% The 'inset nested-flow style uses the `quote' environment
+% For the 'inset nested-flow style:
+\newenvironment{SInsetFlow}{\begin{quote}}{\end{quote}}
 
 % Indent a 'code-inset nested flow:
 \newcommand{\SCodePreSkip}{\vskip\abovedisplayskip}

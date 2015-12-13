@@ -623,6 +623,21 @@ style:
        in place of @ltxd[2]{Ssection}, @ltxd[1]{Ssectionstar}, @|etc|
        for a part with the @racket['grouper] style property.}
 
+ @item{@ltxe{SInsetFlow} environment --- for a @racket[nested-flow]
+       with the @racket['inset] style name.}
+
+ @item{@ltxe{SCodeFlow} environment --- for a @racket[nested-flow]
+       with the @racket['code-inset] style name.}
+
+ @item{@ltxe{SVInsetFlow} environment --- for a @racket[nested-flow]
+       with the @racket['vertical-inset] style name.}
+
+ @item{@ltxd[1]{SCodeBox}, @ltxd[1]{SVInsetBox} --- for a
+       @racket[nested-flow] with the @racket['code-inset] or
+       @racket['vertical-inset] style name, respectively, and as the
+       content of a table cell. The content is installed into a TeX
+       box using @tt{\setbox1}.}
+
  ]
 
 @; ------------------------------------------------------------
