@@ -1,7 +1,7 @@
 #lang scribble/doc
 @(require scribble/manual
           "utils.rkt"
-          (for-label scribble/examples
+          (for-label scribble/example
                      racket/sandbox
                      racket/pretty
                      file/convertible
@@ -9,13 +9,13 @@
 
 @title[#:tag "eval"]{Evaluation and Examples}
 
-@defmodule[scribble/examples #:use-sources (scribble/eval scribble/examples)]{The
-@racket[scribble/examples] library provides
+@defmodule[scribble/example #:use-sources (scribble/eval scribble/example)]{The
+@racket[scribble/example] library provides
 utilities for evaluating code at document-build time and incorporating
 the results in the document, especially to show example uses of
 defined procedures and syntax.}
 
-@history[#:added "1.14"]
+@history[#:added "1.16"]
 
 @defform/subs[(examples option ... datum ...)
               ([option (code:line #:eval eval-expr)

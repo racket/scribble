@@ -23,4 +23,4 @@
 
 (define pkg-authors '(mflatt eli))
 
-(define version "1.15")
+(define version "1.16")

@@ -9,7 +9,7 @@
 
 @(define-syntax-rule (define-new-examples new-examples)
    (begin
-     (require (for-label scribble/examples))
+     (require (for-label scribble/example))
      (define new-examples @racket[examples])))
 @(define-new-examples new-examples)
 
@@ -17,11 +17,11 @@
 @title[#:tag "old-eval"]{Legacy Evaluation}
 
 @defmodule[scribble/eval]{The @racketmodname[scribble/eval] library provides
-an older interface to the functionality of @racketmodname[scribble/examples].
-The @racketmodname[scribble/examples] library should be used, instead.}
+an older interface to the functionality of @racketmodname[scribble/example].
+The @racketmodname[scribble/example] library should be used, instead.}
 
 In addition to the forms listed below, @racket[scribble/eval]
-re-exports several functions from @racket[scribble/examples]:
+re-exports several functions from @racket[scribble/example]:
 @racket[make-base-eval] @racket[make-base-eval-factory],
 @racket[make-eval-factory], @racket[make-log-based-eval],
 @racket[close-eval], and @racket[scribble-eval-handler].
@@ -36,7 +36,7 @@ re-exports several functions from @racket[scribble/examples]:
                [maybe-no-errors code:blank
                                 (code:line #:no-errors? no-errors?-expr)])]{
 
-Like @|new-examples| from @racketmodname[scribble/examples], except that
+Like @|new-examples| from @racketmodname[scribble/example], except that
 
 @itemlist[
 
@@ -128,7 +128,7 @@ definitions, instead.}
 
 Like @racket[interaction], but with an ``Examples:'' label prefixed.
 
-Use @|new-examples| from @racketmodname[scribble/examples], instead.}
+Use @|new-examples| from @racketmodname[scribble/example], instead.}
 
 
 @defform[(examples* label-expr maybe-options datum ...)]{
@@ -136,7 +136,7 @@ Use @|new-examples| from @racketmodname[scribble/examples], instead.}
 Like @racket[examples], but using the result of @racket[label-expr] in
 place of the default ``Examples:'' label.
 
-Use @|new-examples| from @racketmodname[scribble/examples] with the
+Use @|new-examples| from @racketmodname[scribble/example] with the
 @racket[#:label] option, instead.}
 
 
