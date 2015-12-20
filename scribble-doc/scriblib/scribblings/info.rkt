@@ -1,3 +1,3 @@
 #lang info
 
-(define scribblings '(("scriblib.scrbl" (multi-page))))
+(define scribblings '(("scriblib.scrbl" (multi-page) ("Scribble Libraries"))))
