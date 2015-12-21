@@ -1679,7 +1679,7 @@
                    (style->attribs (table-style t)
                                    (append
                                     (if starting-item?
-                                        '([style "display: inline-table; vertical-align: text-top;"])
+                                        '([style "display: inline-table; vertical-align: text-top; margin-top: 0;"])
                                         null)
                                     (if (for/or ([cell-styles (in-list cell-styless)])
                                           (for/or ([cell-style (in-list cell-styles)])
