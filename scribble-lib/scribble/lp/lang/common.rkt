@@ -101,7 +101,7 @@
                                         (begin body0 . body)))])
                               (syntax-case submod ()
                                 [(_ . rest)
-                                 (datum->syntax submod (cons #'module #'rest))])))
+                                 (datum->syntax submod (cons #'module* #'rest))])))
                            '())))]))]))
 
 (define-syntax module-begin/plain (make-module-begin #f))

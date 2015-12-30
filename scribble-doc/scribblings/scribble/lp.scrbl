@@ -62,7 +62,16 @@ submodule, which is recognized by tools such as @exec{raco scribble}.
 The content of the @racket[chunk] and @racket[CHUNK] forms is
 stitched together as the immediate content of the module.
 
-@history[#:added "1.8"]
+The @racket[chunk] and @racket[CHUNK] content is discovered by first
+@racket[expand]ing the module as written. The content is collected
+into a new module, and then the original module content is placed into
+a @racket[doc] submodule that is expanded (so that the content is
+effectively re-expanded). The @racketidfont{doc} submodule is declared
+with @racket[module*].
+
+@history[#:added "1.8"
+         #:changed "1.17" @elem{Declared the @racketidfont{doc} submodule with
+                                @racket[module*] instead of @racket[module].}]
 
 @defform[(chunk id form ...)]{
 
