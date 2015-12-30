@@ -683,18 +683,23 @@ The @tech{decode}d @racket[pre-flow]s introduce the module, but need
 not include all of the module content.}
 
 
-@defform/subs[(declare-exporting module-path ... maybe-pkgs maybe-sources)
-              ([maybe-pkgs code:blank
-                           (code:line #:packages (pkg-expr ...))]
-               [maybe-sources code:blank
-                              (code:line #:use-sources (module-path ...))])]{
+@defform[#:literals (unquote)
+         (declare-exporting module-path/escape ... maybe-pkgs maybe-sources)
+         #:grammar ([maybe-pkgs code:blank
+                                (code:line #:packages (pkg-expr ...))]
+                    [maybe-sources code:blank
+                                   (code:line #:use-sources (module-path/escape ...))]
+                    [module-path/escape module-path
+                                        ,module-path-expr])]{
 
 Associates the @racket[module-path]s to all bindings defined within the
 enclosing section, except as overridden by other
 @racket[declare-exporting] declarations in nested sub-sections.  The
 list of @racket[module-path]s before @racket[#:use-sources] is shown, for
 example, when the user hovers the mouse over one of the bindings
-defined within the section.
+defined within the section. A @racket[unquote]-escaped
+@racket[,module-path-expr] can be used in place of a
+@racket[module-path] to compute the module path dynamically.
 
 More significantly, the first @racket[module-path] before
 @racket[#:use-sources] plus the @racket[module-path]s after
@@ -767,7 +772,8 @@ per section, since the declaration applies to the entire section,
 although overriding @racket[declare-exporting] forms can appear in
 sub-sections.
 
-@history[#:changed "1.1" @elem{Added @racket[#:packages] clause.}]}
+@history[#:changed "1.1" @elem{Added @racket[#:packages] clause.}
+         #:changed "1.17" @elem{Added support for @racket[,module-path-expr].}]}
 
 @defform*[[(defmodulelang one-or-multi maybe-sources option ... pre-flow ...)
            (defmodulelang one-or-multi #:module-path module-path

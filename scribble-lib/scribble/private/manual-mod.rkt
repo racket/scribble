@@ -302,11 +302,14 @@
                                  #'#f)])
        (let ([libs (syntax->list #'(lib ... plib ...))])
          (for ([l libs])
-           (unless (module-path? (syntax->datum l))
+           (unless (or (syntax-case l (unquote)
+                         [(unquote _) #t]
+                         [_ #f])
+                       (module-path? (syntax->datum l)))
              (raise-syntax-error #f "not a module path" stx l)))
          (when (null? libs)
            (raise-syntax-error #f "need at least one module path" stx))
-         #'(*declare-exporting '(lib ...) '(plib ...) packages)))]))
+         #'(*declare-exporting `(lib ...) `(plib ...) packages)))]))
 
 (define (*declare-exporting libs source-libs in-pkgs)
   (define pkgs (or in-pkgs
