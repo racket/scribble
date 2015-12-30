@@ -29,9 +29,8 @@
 
 (define-syntax (tangle stx)
   (define chunk-mentions '())
-  (define stupid-internal-definition-sytnax
-    (unless first-id
-      (raise-syntax-error 'scribble/lp "no chunks")))
+  (unless first-id
+    (raise-syntax-error 'scribble/lp "no chunks"))
   (define orig-stx (syntax-case stx () [(_ orig) #'orig]))
   (define (restore nstx d) (datum->syntax orig-stx d nstx nstx))
   (define (shift nstx) (replace-context orig-stx nstx))
@@ -52,8 +51,8 @@
                   (if subs
                       (list (restore expr (loop subs)))
                       (list (shift expr))))))
-          block)))))
-  (with-syntax ([(body ...) body]
+          block)))))                               
+  (with-syntax ([(body ...) (strip-comments body)]
                 ;; construct arrows manually
                 [((b-use b-id) ...)
                  (append-map (lambda (m)
@@ -64,6 +63,48 @@
                              chunk-mentions)])
     #`(begin body ... (let ([b-id (void)]) b-use) ...)))
 
+(define-for-syntax (strip-comments body)
+  (cond
+   [(syntax? body)
+    (define r (strip-comments (syntax-e body)))
+    (if (eq? r (syntax-e body))
+        body
+        (datum->syntax body r body body))]
+   [(pair? body)
+    (define a (car body))
+    (define ad (syntax-e a))
+    (cond
+     [(and (pair? ad)
+           (memq (syntax-e (car ad))
+                 '(code:comment
+                   code:contract)))
+      (strip-comments (cdr body))]
+     [(eq? ad 'code:blank)
+      (strip-comments (cdr body))]
+     [(and (or (eq? ad 'code:hilite)
+               (eq? ad 'code:quote))
+           (let* ([d (cdr body)]
+                  [dd (if (syntax? d)
+                          (syntax-e d)
+                          d)])
+             (and (pair? dd)
+                  (or (null? (cdr dd))
+                      (and (syntax? (cdr dd))
+                           (null? (syntax-e (cdr dd))))))))
+      (define d (cdr body))
+      (define r
+        (strip-comments (car (if (syntax? d) (syntax-e d) d))))
+      (if (eq? ad 'code:quote)
+          `(quote ,r)
+          r)]
+     [(and (pair? ad)
+           (eq? (syntax-e (car ad))
+                'code:line))
+      (strip-comments (append (cdr ad) (cdr body)))]
+     [else (cons (strip-comments a)
+                 (strip-comments (cdr body)))])]
+   [else body]))
+      
 (define-for-syntax (extract-chunks exprs)
   (let loop ([exprs exprs])
     (syntax-case exprs ()

@@ -79,7 +79,7 @@ with @racket[module*].
   chunks. Normally, @racket[id] starts with @litchar{<} and ends with
   @litchar{>}.
 
-  When running a scribble program only the code inside the
+  When running the enclosing program, only the code inside the
   chunks is run; the rest is ignored. 
 
   If @racket[id] is @racketidfont{<*>}, then this chunk is
@@ -90,13 +90,18 @@ with @racket[module*].
   the main chunk references), then it is not included in the
   program and thus is not run.
 
-}
+  The @racket[form]s are typeset using @racket[racketblock], so
+  @racket[code:comment], etc., can be used to adjust the output.
+  Those output-adjusting forms are stripped from each @racket[form]
+  for running the program.
+
+@history[#:changed "1.17" @elem{Strip @racket[code:comment], etc., for running.}]}
 
 @defform[(CHUNK id form ...)]{
 
- Like @racket[chunk], but allows the use of @racket[unsyntax] in the
-code part. If you want to use @racket[unsyntax] to escape to Scribble,
-use @racket[UNSYNTAX].
+ Like @racket[chunk], but typesets with @racket[RACKETBLOCK], so @racket[unsyntax]
+ can be used normally in each @racket[form]. To escape,
+ use @racket[UNSYNTAX].
 
 }
 

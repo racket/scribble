@@ -1,0 +1,6 @@
+<%> ::=
+
+  ; f : number -> number
+  1 ; The number 1      
+                        
+  2 (quote 3)           
