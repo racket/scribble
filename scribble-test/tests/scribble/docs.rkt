@@ -18,7 +18,9 @@
 
 (define (build-doc render% src-file dest-file)
   (let* ([renderer (new render% [dest-dir work-dir])]
-         [docs     (list (dynamic-require src-file 'doc))]
+         [docs     (list (if (module-declared? `(submod ,src-file doc) #t)
+                             (dynamic-require `(submod ,src-file doc) 'doc)
+                             (dynamic-require src-file 'doc)))]
          [fns      (list (build-path work-dir dest-file))]
          [fp       (send renderer traverse docs fns)]
          [info     (send renderer collect  docs fns fp)]
