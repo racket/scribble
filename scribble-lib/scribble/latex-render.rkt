@@ -6,6 +6,7 @@
          racket/runtime-path
          racket/port
          racket/string
+         racket/path
          racket/list
          setup/collects
          file/convertible)
@@ -23,8 +24,11 @@
 (define-struct (toc-paragraph paragraph) ())
 
 (define-runtime-path scribble-prefix-tex "scribble-prefix.tex")
+(define-runtime-path scribble-packages-tex "scribble-packages.tex")
+(define-runtime-path scribble-load-tex "scribble-load.tex")
 (define-runtime-path scribble-tex "scribble.tex")
 (define-runtime-path scribble-style-tex "scribble-style.tex")
+(define-runtime-path scribble-load-replace-tex "scribble-load-replace.tex")
 
 (define (color->string c)
   (if (string? c)
@@ -82,6 +86,17 @@
     (define/public (render-part-depth) #f)
 
     (define/override (render-one d ri fn)
+      (define (maybe-replace file defaults)
+        (cond [(and defaults
+                    (latex-defaults+replacements? defaults)
+                    (hash-ref (latex-defaults+replacements-replacements defaults)
+                              (path->string (file-name-from-path file))
+                              #f)) =>
+               (lambda (v)
+                 (cond
+                   [(bytes? v) v]
+                   [else (collects-relative->path v)]))]
+              [else file]))
       (let* ([defaults (ormap (lambda (v) (and (latex-defaults? v) v))
                               (style-properties (part-style d)))]
              [prefix-file (or prefix-file
@@ -91,22 +106,24 @@
                                       [(bytes? v) v]
                                       [else (collects-relative->path v)])))
                               scribble-prefix-tex)]
-             [style-file (or style-file 
+             [style-file (or style-file
                              (and defaults
                                   (let ([v (latex-defaults-style defaults)])
                                     (cond
                                      [(bytes? v) v]
                                      [else (collects-relative->path v)])))
                              scribble-style-tex)]
-             [all-style-files (cons scribble-tex
-                                    (append (extract-part-style-files
-                                             d
-                                             ri
-                                             (lambda (p) #f)
-                                             tex-addition?
-                                             tex-addition-path)
-                                            (list style-file)
-                                            style-extra-files))]
+             [all-style-files (list* scribble-load-tex
+                                     (maybe-replace scribble-load-replace-tex defaults)
+                                     scribble-tex
+                                     (append (extract-part-style-files
+                                              d
+                                              ri
+                                              (lambda (p) #f)
+                                              tex-addition?
+                                              tex-addition-path)
+                                             (list style-file)
+                                             style-extra-files))]
              [whole-doc? (not (render-part-depth))])
         (if whole-doc?
             (for ([style-file (in-list (cons prefix-file all-style-files))])

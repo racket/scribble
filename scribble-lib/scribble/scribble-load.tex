@@ -1,0 +1,18 @@
+
+\newcommand{\packageGraphicx}{\usepackage{graphicx}}
+\newcommand{\packageHyperref}{\usepackage{hyperref}}
+\newcommand{\renewrmdefault}{\renewcommand{\rmdefault}{ptm}}
+\newcommand{\packageRelsize}{\usepackage{relsize}}
+\newcommand{\packageMathabx}{\usepackage{mathabx}}
+% Avoid conflicts between "mathabx" and "wasysym":
+\newcommand{\packageWasysym}{
+  \let\leftmoon\relax \let\rightmoon\relax \let\fullmoon\relax \let\newmoon\relax \let\diameter\relax
+  \usepackage{wasysym}}
+\newcommand{\packageTextcomp}{\usepackage{textcomp}}
+\newcommand{\packageFramed}{\usepackage{framed}}
+\newcommand{\packageHyphenat}{\usepackage[htt]{hyphenat}}
+\newcommand{\packageColor}{\usepackage[usenames,dvipsnames]{color}}
+\newcommand{\doHypersetup}{\hypersetup{bookmarks=true,bookmarksopen=true,bookmarksnumbered=true}}
+\newcommand{\packageTocstyle}{\IfFileExists{tocstyle.sty}{\usepackage{tocstyle}\usetocstyle{standard}}{}}
+\newcommand{\packageCJK}{\IfFileExists{CJK.sty}{\usepackage{CJK}}{}}
+
