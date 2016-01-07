@@ -1697,6 +1697,15 @@ rendering.
 
 See also @racketmodname[scribble/latex-prefix].}
 
+@defstruct[(latex-defaults+replacements latex-defaults)
+           ([replacements (hash/c string? (or/c bytes? path-string?
+                                                (cons/c 'collects (listof bytes?))))])]{
+  Like @racket[latex-defaults] but it allows for more configuration. For example if
+  the @racket[replacements] maps @racket["scribble.tex"] to @racket["my-scribble.tex"],
+  then the @racket["my-scribble.tex"] file in the current directory will we used in place
+  of the standard scribble header.
+}
+
 
 @defstruct[command-extras ([arguments (listof string?)])]{
 
