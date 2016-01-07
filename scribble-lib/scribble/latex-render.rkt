@@ -24,6 +24,7 @@
 (define-struct (toc-paragraph paragraph) ())
 
 (define-runtime-path scribble-prefix-tex "scribble-prefix.tex")
+(define-runtime-path scribble-packages-tex "scribble-packages.tex")
 (define-runtime-path scribble-tex "scribble.tex")
 (define-runtime-path scribble-style-tex "scribble-style.tex")
 
@@ -110,15 +111,16 @@
                                      [(bytes? v) v]
                                      [else (collects-relative->path v)])))
                              scribble-style-tex)]
-             [all-style-files (cons (maybe-replace scribble-tex defaults)
-                                    (append (extract-part-style-files
-                                             d
-                                             ri
-                                             (lambda (p) #f)
-                                             tex-addition?
-                                             tex-addition-path)
-                                            (list style-file)
-                                            style-extra-files))]
+             [all-style-files (list* (maybe-replace scribble-packages-tex defaults)
+                                     scribble-tex
+                                     (append (extract-part-style-files
+                                              d
+                                              ri
+                                              (lambda (p) #f)
+                                              tex-addition?
+                                              tex-addition-path)
+                                             (list style-file)
+                                             style-extra-files))]
              [whole-doc? (not (render-part-depth))])
         (if whole-doc?
             (for ([style-file (in-list (cons prefix-file all-style-files))])
