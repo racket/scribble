@@ -25,8 +25,10 @@
 
 (define-runtime-path scribble-prefix-tex "scribble-prefix.tex")
 (define-runtime-path scribble-packages-tex "scribble-packages.tex")
+(define-runtime-path scribble-load-tex "scribble-load.tex")
 (define-runtime-path scribble-tex "scribble.tex")
 (define-runtime-path scribble-style-tex "scribble-style.tex")
+(define-runtime-path scribble-load-replace-tex "scribble-load-replace.tex")
 
 (define (color->string c)
   (if (string? c)
@@ -111,7 +113,8 @@
                                      [(bytes? v) v]
                                      [else (collects-relative->path v)])))
                              scribble-style-tex)]
-             [all-style-files (list* (maybe-replace scribble-packages-tex defaults)
+             [all-style-files (list* scribble-load-tex
+                                     (maybe-replace scribble-load-replace-tex defaults)
                                      scribble-tex
                                      (append (extract-part-style-files
                                               d
