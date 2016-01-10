@@ -396,10 +396,19 @@ The recognized @tech{style properties} are as follows:
        @racket['hidden] (for consistency in non-Latex output).}
 
  @item{@racket['grouper] --- The part is numbered with a Roman
-       numeral, and its subsections continue numbering as if they
-       appeared in the preceeding part. In other words, the part acts
-       like a ``part'' in a book where chapter numbering is continuous
-       across parts.}
+       numeral, by default, and its subsections continue numbering as
+       if they appeared in the preceeding part. In other words, the
+       part acts like a ``part'' in a book where chapter numbering is
+       continuous across parts.}
+
+ @item{@tech{numberer} --- A @tech{numberer} created with
+       @racket[make-numberer] determines a representation of the
+       part's section number as an extension of it's patent's number.
+       A @tech{numberer} overrides the default representation, which
+       is a natural number or (in the case of an accompanying
+       @racket['grouper] property) a Roman numeral. If a
+       @racket['unnumbered] property is also present, a
+       @tech{numberer} property is ignored.}
 
  @item{@racket['toc] --- Sub-parts of the part are rendered on separate
        pages for multi-page HTML mode.}
@@ -1076,18 +1085,42 @@ If a @racket[render-element] instance is serialized (such as when
 saving collected info), it is reduced to a @racket[element] instance.}
 
 
-@defstruct[collected-info ([number (listof (or/c #f exact-nonnegative-integer? string?))]
+@defstruct[collected-info ([number (listof part-number-item?)]
                            [parent (or/c #f part?)]
                            [info any/c])]{
 
 Computed for each part by the @techlink{collect pass}.
 
 The length of the @racket[number] list indicates the section's nesting
-depth.  Numbers in @racket[number] correspond to the section's number,
-it's parent's number, etc. A non-empty string is used for a
-@racket['grouper] section. For an unnumbered section, @racket[#f] is
-used in place of all numbers and @racket[""] in place of all non-empty
-strings.}
+depth. Elements of @racket[number] correspond to the section's number,
+it's parent's number, and so on (that is, the section numbers are in
+reverse order):
+
+@itemlist[
+
+ @item{A number value corresponds to a normally numbered
+       section.}
+
+ @item{A non-empty string corresponds to a @racket['grouper] section,
+       which is shown as part of the combined section number only when
+       it's the first element.}
+
+ @item{A a list corresponds to a @tech{numberer}-generated section
+       string plus its separator string, where the separator is used
+       in a combined section number after the section string and
+       before a subsection's number (or, for some output modes, before
+       the title of the section).}
+
+ @item{For an unnumbered section, a @racket[#f] is used in place of
+       any number or lists element, while @racket[""] is used in place
+       of all non-empty strings.}
+
+]}
+
+@history[#:changed "6.4" @elem{Added @racket[(list/c string? string?)]
+                               number items for
+                               @tech{numberer}-generated section
+                               numbers.}]}
 
 
 @defstruct[target-url ([addr path-string?])]{
@@ -1311,6 +1344,61 @@ Returns the width in characters of the given @tech{content}.
 @defproc[(block-width (e block?)) exact-nonnegative-integer?]{
 
 Returns the width in characters of the given @tech{block}.}
+
+
+@defproc[(part-number-item? [v any/c]) boolean]{
+
+Return @racket[#t] if @racket[v] is @racket[#f], an exact non-negative
+integer, a string, or a list containing two strings. See @racket[part]
+for information on how different representations are used for numbering.
+
+@history[#:added "6.4"]}
+
+
+@deftogether[(
+@defproc[(numberer? [v any/c]) boolean?]
+@defproc[(make-numberer [step (any/c (listof part-number-item?)
+                               . -> .
+                               (values part-number-item? any/c))]
+                        [initial-value any/c])
+          numberer?]
+@defproc[(numberer-step [n numberer?]
+                        [parent-number (listof part-number-item?)]
+                        [ci collect-info?]
+                        [numberer-values hash?])
+         (values part-number-item? hash?)]
+)]{
+
+A @deftech{numberer} implements a representation of a section number
+that increment separately from the default numbering style and that
+can be rendered differently than as Arabic numerals.
+
+The @racket[numberer?] function returns @racket[#t] if @racket[v] is a
+@tech{numberer}, or @racket[#f] otherwise.
+
+The @racket[make-numberer] function creates a @tech{numberer}. The
+@racket[step] function computes both the current number's
+representation and increments the number, where the ``number'' can be
+an arbitrary value; the @racket[initial-value] argument determines the
+initial value of the ``number'', and the @racket[step] function
+receives the current value as its first argument and returns an
+incremented value as its second result. A numberer's ``number'' value
+starts fresh at each new nesting level. In addition to the numberer's
+current value, the @racket[step] function receives the parent
+section's numbering (so that its result can depend on the part's
+nesting depth).
+
+The @racket[numberer-step] function is normally used by a renderer. It
+applies a @tech{numberer}, given the parent section's number, a
+@racket[collect-info] value, and a hash table that accumulates
+@tech{numberer} values at a given nesting layer. The
+@racket[collect-info] argument is needed because a @tech{numberer}'s
+identity is based on a @racket[generated-tag]. The result of
+@racket[numberer-step] is the rendered form of the current section
+number plus an updated hash table with an incremented value for the
+@tech{numberer}.
+
+@history[#:added "6.4"]}
 
 
 @defstruct[collect-info ([fp any/c] [ht any/c] [ext-ht any/c] 

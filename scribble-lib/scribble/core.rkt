@@ -160,6 +160,57 @@
         (andmap (λ (l) (= l1 (length l)))
                 (cdr ls)))))
 
+;; ----------------------------------------
+
+(define-struct numberer (tag step-proc initial-value)
+  #:constructor-name numberer
+  #:property
+  prop:serializable
+  (make-serialize-info
+   (lambda (d)
+     (vector (numberer-tag d)
+             (numberer-initial-value d)))
+   #'deserialize-numberer
+   #f
+   (or (current-load-relative-directory) (current-directory))))
+
+(provide deserialize-numberer)
+(define deserialize-numberer
+  (make-deserialize-info (lambda (tag init-val)
+                           (numberer tag #f))
+                         (lambda (tag init-val)
+                           (error "cannot allocate numberer for cycle"))))
+
+(define (make-numberer spec-proc initial-value)
+  (numberer (generated-tag) spec-proc initial-value))
+
+(define (numberer-step n parent-numbers ci ht)
+  (define tag (generate-tag `(numberer ,(numberer-tag n)) ci))
+  (define-values (numberer-str new-val)
+    (let ([step (numberer-step-proc n)])
+      (step (hash-ref ht tag (lambda () (numberer-initial-value n)))
+            parent-numbers)))
+  (values numberer-str (hash-set ht tag new-val)))
+
+(define part-number-item?
+  (or/c #f exact-nonnegative-integer? string? (list/c string? string?)))
+
+(provide
+ part-number-item?
+ numberer?
+ (contract-out
+  [make-numberer ((any/c (listof part-number-item?)
+                         . -> . (values part-number-item? any/c))
+                  any/c
+                  . -> . numberer?)]
+  [numberer-step (numberer?
+                  (listof part-number-item?)
+                  collect-info?
+                  hash?
+                  . -> . (values part-number-item? hash?))]))
+
+;; ----------------------------------------
+
 (provide-structs
  [part ([tag-prefix (or/c false/c string?)]
         [tags (listof tag?)]
@@ -211,6 +262,7 @@
  [target-url ([addr path-string?])]
  [color-property ([color (or/c string? (list/c byte? byte? byte?))])]
  [background-color-property ([color (or/c string? (list/c byte? byte? byte?))])]
+ [numberer-property ([numberer numberer?] [argument any/c])]
 
  [table-columns ([styles (listof style?)])]
  [table-cells ([styless (listof (listof style?))])]
@@ -219,7 +271,7 @@
             [center-name string?]
             [bottom-name string?])]
 
- [collected-info ([number (listof (or/c false/c exact-nonnegative-integer? string?))]
+ [collected-info ([number (listof part-number-item?)]
                   [parent (or/c false/c part?)]
                   [info any/c])]
 

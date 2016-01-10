@@ -71,7 +71,7 @@
     (define/public (index-manual-newlines?)
       #f)
 
-    (define/public (format-number number sep)
+    (define/public (format-number number sep [keep-separator? #f])
       (if (or (null? number)
               (andmap (lambda (x) (or (not x) (equal? x "")))
                       number)
@@ -81,13 +81,25 @@
           (cons (let ([s (string-append
                           (apply
                            string-append
-                           (map (lambda (n) (if (number? n) (format "~a." n) ""))
+                           (map (lambda (n) 
+                                  (cond
+                                   [(number? n) (format "~a." n)]
+                                   [(or (not n) (string? n)) ""]
+                                   [(pair? n) (string-append (car n) (cadr n))]))
                                 (reverse (cdr number))))
                           (if (and (car number) 
                                    (not (equal? "" (car number))))
-                              (format "~a." (car number)) 
+                              (if (pair? (car number))
+                                  (if keep-separator?
+                                      (string-append (caar number)
+                                                     (cadar number))
+                                      (caar number))
+                                  (format "~a." (car number)))
                               ""))])
-                  (substring s 0 (sub1 (string-length s))))
+                  (if (or keep-separator?
+                          (pair? (car number)))
+                      s
+                      (substring s 0 (sub1 (string-length s)))))
                 sep)))
 
     (define/public (number-depth number)
@@ -501,10 +513,10 @@
         ci))
 
     (define/public (start-collect ds fns ci)
-      (map (lambda (d) (collect-part d #f ci null 1))
-           ds))
+      (for-each (lambda (d) (collect-part d #f ci null 1 #hash()))
+                ds))
 
-    (define/public (collect-part d parent ci number init-sub-number)
+    (define/public (collect-part d parent ci number init-sub-number init-sub-numberers)
       (let ([p-ci (make-collect-info
                    (collect-info-fp ci)
                    (make-hash)
@@ -524,7 +536,7 @@
                                         parent
                                         (collect-info-ht p-ci)))
         (define grouper? (and (pair? number) (part-style? d 'grouper)))
-        (define next-sub-number
+        (define-values (next-sub-number next-sub-numberers)
           (parameterize ([current-tag-prefixes
                           (extend-prefix d (fresh-tag-collect-context? d p-ci))])
             (when (part-title-content d)
@@ -534,37 +546,54 @@
             (collect-flow (part-blocks d) p-ci)
             (let loop ([parts (part-parts d)]
                        [pos init-sub-number]
-                       [sub-pos 1])
+                       [numberers init-sub-numberers]
+                       [sub-pos 1]
+                       [sub-numberers #hash()])
               (if (null? parts)
-                  pos
+                  (values pos numberers)
                   (let ([s (car parts)])
                     (define unnumbered? (part-style? s 'unnumbered))
                     (define hidden-number? (or unnumbered?
                                                (part-style? s 'hidden-number)))
                     (define sub-grouper? (part-style? s 'grouper))
-                    (define next-sub-pos
+                    (define numberer (and (not unnumbered?)
+                                          (for/or ([p (style-properties (part-style s))]
+                                                   #:when (numberer? p))
+                                            p)))
+                    (define-values (numberer-str next-numberers)
+                      (if numberer
+                          (numberer-step numberer number p-ci numberers)
+                          (values #f numberers)))
+                    (define-values (next-sub-pos next-sub-numberers)
                       (collect-part s d p-ci
                                     (cons (if hidden-number?
                                               (if sub-grouper?
                                                   ""
                                                   #f)
-                                              (if sub-grouper?
-                                                  (number->roman pos)
-                                                  pos))
+                                              (if numberer
+                                                  numberer-str
+                                                  (if sub-grouper?
+                                                      (number->roman pos)
+                                                      pos)))
                                           (if hidden-number?
                                               (for/list ([i (in-list number)])
                                                 (if (string? i)
                                                     i
                                                     #f))
                                               number))
-                                    sub-pos))
+                                    sub-pos
+                                    sub-numberers))
                     (loop (cdr parts)
-                          (if unnumbered?
+                          (if (or unnumbered? numberer)
                               pos
                               (add1 pos))
+                          next-numberers
                           (if sub-grouper?
                               next-sub-pos
-                              1)))))))
+                              1)
+                          (if sub-grouper?
+                              next-sub-numberers
+                              #hash())))))))
         (let ([prefix (part-tag-prefix d)])
           (for ([(k v) (collect-info-ht p-ci)])
             (when (cadr k)
@@ -572,7 +601,7 @@
                                    (convert-key prefix k) 
                                    k) 
                             v))))
-        next-sub-number))
+        (values next-sub-number next-sub-numberers)))
 
     (define/private (convert-key prefix k)
       (case (car k)

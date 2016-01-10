@@ -41,9 +41,9 @@
       (let ([number (collected-info-number (part-collected-info d ht))])
         (unless (part-style? d 'hidden)
           (printf (string-append (make-string (add1 (number-depth number)) #\#) " "))
-          (let ([s (format-number number '())])
+          (let ([s (format-number number '() #t)])
             (unless (null? s)
-              (printf "~a.~a" 
+              (printf "~a~a" 
                       (car s)
                       (if (part-title-content d)
                           " "
