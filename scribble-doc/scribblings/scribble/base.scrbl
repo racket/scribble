@@ -677,7 +677,18 @@ If @racket[indirect] is not @racket[#f], then the link's resolution in
 HTML can be delayed, like @racket[seclink] with @racket[#:indirect?
 #t].  The @racket[indirect] content is prefixed with ``the'' and
 suffixed with ``documentation'' to generate the rendered text of the
-link.}
+link. For example:
+
+@verbatim[#:indent 2]|{
+  @other-doc['(lib "parsack/parsack/parsack.scrbl")
+             #:indirect "Parsec implementation in Racket"]
+}|
+
+renders as a hyperlink with the text:
+
+@verbatim[#:indent 2]|{
+  the Parsec implementation in Racket documentation
+}|}
 
 
 @defproc[(elemtag [t (or/c tag? string?)] [pre-content pre-content?] ...) element?]{
