@@ -92,4 +92,4 @@
 ;; here so that the "scribble pdf" button is more 
 ;; likely to work in drracket
 (define macosx-candidate-dirs
-  '("/usr/texbin"))
+  '("/usr/texbin" "/Library/TeX/texbin"))
