@@ -462,7 +462,7 @@
                    (unless (suppress-newline-content)
                      (printf "\\hspace*{\\fill}\\\\"))]
                   [else (error 'latex-render
-                               "unrecognzied style symbol: ~s" style)])]
+                               "unrecognized style symbol: ~s" style)])]
                [(string? style-name)
                 (let* ([v (if style (style-properties style) null)]
                        [tt? (cond
