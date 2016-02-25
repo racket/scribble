@@ -1346,7 +1346,7 @@
              (if (or indirect-link? dest)
                  `((a ([href
                       ,(cond
-                        [(and ext-id external-root-url
+                        [(and ext-id external-root-url dest
                               (let* ([ref-path (relative->path (dest-path dest))]
                                      [rel (if (relative-path? ref-path)
                                               #f
