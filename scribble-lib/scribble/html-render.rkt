@@ -1378,7 +1378,7 @@
                          ;; Redirected to search:
                          (url->string*
                           (let ([u (string->url (or external-tag-path
-                                                    "http://doc.racket-lang.com/"))])
+                                                    (get-doc-search-url)))])
                             (struct-copy
                              url
                              u
