@@ -238,7 +238,7 @@ To document a @racket[my-helper] procedure that is exported by
 
 ]
 
-Adding these pieces to @filepath{"manual.scrbl"} gives us the
+Adding these pieces to @filepath{manual.scrbl} gives us the
 following:
 
 @codeblock|{
