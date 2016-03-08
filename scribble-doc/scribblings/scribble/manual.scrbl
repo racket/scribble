@@ -342,7 +342,15 @@ without insetting the code via @racket[nested].}
 )]{
 
 Like @racket[racketblock], etc., but colors the typeset text as a
-result  (i.e., a single color with no hyperlinks) instead of code.}
+result (i.e., a single color with no hyperlinks) instead of code.
+
+Unlike @racket[racketblock], @racket[racketresultblock] and
+@racket[RACKETRESULTBLOCK] implement indentation by adding an
+@racket[(hspace 2)] to the start of each line, instead of using
+@racket[nested] with the @racket['code-inset] style. To get formatting
+more like @racket[racketblock] and @racket[racketinput], use
+@racket[(nested #:style 'code-inset (racketresultblock0 datum ...))]
+instead of @racket[(racketresultblock datum ...)].}
 
 @deftogether[(
 @defform[(racketinput maybe-escape datum ...)]
