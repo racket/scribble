@@ -55,3 +55,19 @@ If different authors have different affiliations, use
 use @racket[affiliation-mark] before each different affiliation within
 a single @racket[affiliation], using @racket[(affiliation-sep)] to
 separate affiliations.}
+
+Examples:
+@codeblock|{
+#lang scribble/jfp
+
+@title{My First Love Story}
+
+@((author/short "Romeo M. and Juliet C.")
+  "ROMEO" (affiliation-mark "1")
+  " and "
+  "JULIET" (affiliation-mark "2")
+  @affiliation[
+    "House Montague" (affiliation-mark "1")
+    (affiliation-sep)
+    "House Capulet" (affiliation-mark "2")])
+}|
