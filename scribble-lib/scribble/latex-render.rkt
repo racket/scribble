@@ -3,6 +3,7 @@
          "latex-properties.rkt"
          "private/render-utils.rkt"
          racket/class
+         racket/dict
          racket/runtime-path
          racket/port
          racket/string
@@ -11,7 +12,8 @@
          setup/collects
          file/convertible)
 (provide render-mixin
-         make-render-part-mixin)
+         make-render-part-mixin
+         extra-character-conversions)
 
 (define current-table-mode (make-parameter #f))
 (define rendering-tt (make-parameter #f))
@@ -46,6 +48,8 @@
 
 (define-runtime-path skull-tex "scribble-skull.tex")
 (define skull-style (make-style #f (list (tex-addition skull-tex))))
+
+(define extra-character-conversions (make-parameter (make-hash)))
 
 (define (render-mixin % #:image-mode [image-mode #f])
   (class %
@@ -941,7 +945,8 @@
           [else ses])))
 
     (define/private (display-protected s)
-      (define rtt (rendering-tt))
+      (define rtt   (rendering-tt))
+      (define convs (extra-character-conversions))
       (cond
        [(eq? rtt 'exact)
         (display s)]
@@ -995,237 +1000,239 @@
                      [(#\uDF) "{\\ss}"]
                      [else
                       (if ((char->integer c) . > . 127)
-                          ;; latex-prefix.rkt enables utf8 input, but this does not work for
-                          ;; all the characters below (e.g. ∞). Some parts of the table
-                          ;; below are therefore necessary, but some parts probably are not.
-                          ;; Which parts are necessary may depend on the latex version,
-                          ;; though, so we keep this table around to avoid regressions.
-                          (case c
-                            [(#\╔ #\═ #\╗ #\║ #\╚ #\╝ #\╦ #\╠ #\╣ #\╬ #\╩) (box-character c)]
-                            [(#\┌ #\─ #\┐ #\│ #\└ #\┘ #\┬ #\├ #\┤ #\┼ #\┴) (box-character c)]
-                            [(#\┏ #\━ #\┓ #\┃ #\┗ #\┛ #\┳ #\┣ #\┫ #\╋ #\┻) (box-character c 2)]
-                            [(#\u2011) "\\mbox{-}"] ; non-breaking hyphen
-                            [(#\uB0) "$^{\\circ}$"] ; degree
-                            [(#\uB2) "$^2$"]
-                            [(#\u039A) "K"] ; kappa
-                            [(#\u0391) "A"] ; alpha
-                            [(#\u039F) "O"] ; omicron
-                            [(#\u03A3) "$\\Sigma$"]
-                            [(#\u03BA) "$\\kappa$"]
-                            [(#\u03B1) "$\\alpha$"]
-                            [(#\u03B2) "$\\beta$"]
-                            [(#\u03B3) "$\\gamma$"]
-                            [(#\u03BF) "o"] ; omicron
-                            [(#\u03C3) "$\\sigma$"]
-                            [(#\u03C2) "$\\varsigma$"]
-                            [(#\u03BB) "$\\lambda$"]
-                            [(#\u039B) "$\\Lambda$"]
-                            [(#\u03BC) "$\\mu$"]
-                            [(#\u03C0) "$\\pi$"]
-                            [(#\‘) "{`}"]
-                            [(#\’) "{'}"]
-                            [(#\“) "{``}"]
-                            [(#\”) "{''}"]
-                            [(#\u2013) "{--}"]
-                            [(#\u2014) "{---}"]
-                            [(#\⟨ #\〈) "$\\langle$"] ; [MATHEMATICAL] LEFT ANGLE BRACKET
-                            [(#\⟩ #\〉) "$\\rangle$"] ; [MATHEMATICAL] RIGHT ANGLE BRACKET
-                            [(#\∞) "$\\infty$"]
-                            [(#\⇓) "$\\Downarrow$"]
-                            [(#\↖) "$\\nwarrow$"]
-                            [(#\↓) "$\\downarrow$"]
-                            [(#\⇒) "$\\Rightarrow$"]
-                            [(#\→) "$\\rightarrow$"]
-                            [(#\↘) "$\\searrow$"]
-                            [(#\↙) "$\\swarrow$"]
-                            [(#\←) "$\\leftarrow$"]
-                            [(#\↑) "$\\uparrow$"]
-                            [(#\⇐) "$\\Leftarrow$"]
-                            [(#\−) "$\\longrightarrow$"]
-                            [(#\⇑) "$\\Uparrow$"]
-                            [(#\⇔) "$\\Leftrightarrow$"]
-                            [(#\↕) "$\\updownarrow$"]
-                            [(#\↔) "$\\leftrightarrow$"]
-                            [(#\↗) "$\\nearrow$"]
-                            [(#\⇕) "$\\Updownarrow$"]
-                            [(#\א) "$\\aleph$"]
-                            [(#\′) "$\\prime$"]
-                            [(#\∅) "$\\emptyset$"]
-                            [(#\∇) "$\\nabla$"]
-                            [(#\♦) "$\\diamondsuit$"]
-                            [(#\♠) "$\\spadesuit$"]
-                            [(#\♣) "$\\clubsuit$"]
-                            [(#\♥) "$\\heartsuit$"]
-                            [(#\♯) "$\\sharp$"]
-                            [(#\♭) "$\\flat$"]
-                            [(#\♮) "$\\natural$"]
-                            [(#\√) "$\\surd$"]
-                            [(#\∆) "$\\Delta$"] ; no better mapping for than \Delta for "increment"
-                            [(#\u2211) "$\\sum$"] ; better than \Sigma, right?
-                            [(#\u220F) "$\\prod$"] ; better than \Pi, right?
-                            [(#\u2210) "$\\coprod$"]
-                            [(#\u222B) "$\\int$"]
-                            [(#\u222E) "$\\oint$"]
-                            [(#\¬) "$\\neg$"]
-                            [(#\△) "$\\triangle$"]
-                            [(#\∀) "$\\forall$"]
-                            [(#\∃) "$\\exists$"]
-                            [(#\∘) "$\\circ$"]
-                            [(#\θ) "$\\theta$"]
-                            [(#\τ) "$\\tau$"]
-                            [(#\υ) "$\\upsilon$"]
-                            [(#\φ) "$\\phi$"]
-                            [(#\δ) "$\\delta$"]
-                            [(#\ρ) "$\\rho$"]
-                            [(#\ε) "$\\epsilon$"]
-                            [(#\χ) "$\\chi$"]
-                            [(#\ψ) "$\\psi$"]
-                            [(#\ζ) "$\\zeta$"]
-                            [(#\ν) "$\\nu$"]
-                            [(#\ω) "$\\omega$"]
-                            [(#\η) "$\\eta$"]
-                            [(#\ι) "$\\iota$"]
-                            [(#\ξ) "$\\xi$"]
-                            [(#\Γ) "$\\Gamma$"]
-                            [(#\Ψ) "$\\Psi$"]
-                            [(#\Δ) "$\\Delta$"]
-                            [(#\Ξ) "$\\Xi$"]
-                            [(#\Υ) "$\\Upsilon$"]
-                            [(#\Ω) "$\\Omega$"]
-                            [(#\Θ) "$\\Theta$"]
-                            [(#\Π) "$\\Pi$"]
-                            [(#\Φ) "$\\Phi$"]
-                            [(#\±) "$\\pm$"]
-                            [(#\∩) "$\\cap$"]
-                            [(#\◇) "$\\diamond$"]
-                            [(#\⊕) "$\\oplus$"]
-                            [(#\∓) "$\\mp$"]
-                            [(#\∪) "$\\cup$"]
-                            [(#\△) "$\\bigtriangleup$"]
-                            [(#\⊖) "$\\ominus$"]
-                            [(#\×) "$\\times$"]
-                            [(#\⊎) "$\\uplus$"]
-                            [(#\▽) "$\\bigtriangledown$"]
-                            [(#\⊗) "$\\otimes$"]
-                            [(#\÷) "$\\div$"]
-                            [(#\⊓) "$\\sqcap$"]
-                            [(#\▹) "$\\triangleleft$"]
-                            [(#\⊘) "$\\oslash$"]
-                            [(#\∗) "$\\ast$"]
-                            [(#\⊔) "$\\sqcup$"]
-                            [(#\∨) "$\\vee$"]
-                            [(#\∧) "$\\wedge$"]
-                            [(#\◃) "$\\triangleright$"]
-                            [(#\⊙) "$\\odot$"]
-                            [(#\★) "$\\star$"]
-                            [(#\†) "$\\dagger$"]
-                            [(#\•) "$\\bullet$"]
-                            [(#\‡) "$\\ddagger$"]
-                            [(#\≀) "$\\wr$"]
-                            [(#\⨿) "$\\amalg$"]
-                            [(#\≤) "$\\leq$"]
-                            [(#\≥) "$\\geq$"]
-                            [(#\≡) "$\\equiv$"]
-                            [(#\⊨) "$\\models$"]
-                            [(#\≺) "$\\prec$"]
-                            [(#\≻) "$\\succ$"]
-                            [(#\∼) "$\\sim$"]
-                            [(#\⊥) "$\\perp$"]
-                            [(#\≼) "$\\preceq$"]
-                            [(#\≽) "$\\succeq$"]
-                            [(#\≃) "$\\simeq$"]
-                            [(#\≪) "$\\ll$"]
-                            [(#\≫) "$\\gg$"]
-                            [(#\≍) "$\\asymp$"]
-                            [(#\∥) "$\\parallel$"]
-                            [(#\⊂) "$\\subset$"]
-                            [(#\⊃) "$\\supset$"]
-                            [(#\≈) "$\\approx$"]
-                            [(#\⋈) "$\\bowtie$"]
-                            [(#\⊆) "$\\subseteq$"]
-                            [(#\⊇) "$\\supseteq$"]
-                            [(#\≌) "$\\cong$"]
-                            [(#\⊏) "$\\sqsubset$"]
-                            [(#\⊐) "$\\sqsupset$"]
-                            [(#\≠) "$\\neq$"]
-                            [(#\⌣) "$\\smile$"]
-                            [(#\⊑) "$\\sqsubseteq$"]
-                            [(#\⊒) "$\\sqsupseteq$"]
-                            [(#\≐) "$\\doteq$"]
-                            [(#\⌢) "$\\frown$"]
-                            [(#\∈) "$\\in$"]
-                            [(#\∉) "$\\not\\in$"]
-                            [(#\∋) "$\\ni$"]
-                            [(#\∝) "$\\propto$"]
-                            [(#\⊢) "$\\vdash$"]
-                            [(#\⊣) "$\\dashv$"]    
-                            [(#\☠) "$\\skull$"]
-                            [(#\☺) "$\\smiley$"]
-                            [(#\☻) "$\\blacksmiley$"]
-                            [(#\☹) "$\\frownie$"]
-                            [(#\ø) "{\\o}"]
-                            [(#\Ø) "{\\O}"]
-                            [(#\ł) "{\\l}"]
-                            [(#\Ł) "{\\L}"]
-                            [(#\uA7) "{\\S}"]
-                            [(#\⟦ #\〚) "$[\\![$"]
-                            [(#\⟧ #\〛) "$]\\!]$"]
-                            [(#\↦) "$\\mapsto$"]
-                            [(#\⊤) "$\\top$"]
-                            [(#\¥) "{\\textyen}"]
-                            [(#\™) "{\\texttrademark}"]
-                            [(#\®) "{\\textregistered}"]
-                            [(#\©) "{\\textcopyright}"]
-                            [(#\u2070) "$^0$"]
-                            [(#\u00b9) "$^1$"]
-                            [(#\u00b2) "$^2$"]
-                            [(#\u00b3) "$^3$"]
-                            [(#\u2074) "$^4$"]
-                            [(#\u2075) "$^5$"]
-                            [(#\u2076) "$^6$"]
-                            [(#\u2077) "$^7$"]
-                            [(#\u2078) "$^8$"]
-                            [(#\u2079) "$^9$"]
-                            [(#\u207a) "$^+$"]
-                            [(#\u207b) "$^-$"]
-                            [(#\⋖) "$\\precdot$"]
-                            [(#\⋗) "$\\succdot$"]
-                            [(#\⋮) "\\vdots"]
-                            [(#\⋱) "$\\ddots$"]
-                            [(#\⋯) "$\\cdots$"]
-                            [(#\⋯) "\\hdots"]
-                            [else
-                             (cond
-                              [(char<=? #\uAC00 c #\uD7AF) ; Korean Hangul
-                               (format "\\begin{CJK}{UTF8}{mj}~a\\end{CJK}" c)]
-                              [else
-                               ;; Detect characters that can be formed with combining characters
-                               ;; and translate them to Latex combinations:
-                               (define s (string-normalize-nfd (string c)))
-                               (define len (string-length s))
-                               (cond
-                                [(len . > . 1)
-                                 (define combiner (case (string-ref s (sub1 len))
-                                                    [(#\u300) "\\`{~a}"]
-                                                    [(#\u301) "\\'{~a}"]
-                                                    [(#\u302) "\\^{~a}"]
-                                                    [(#\u303) "\\~~{~a}"]
-                                                    [(#\u304) "\\={~a}"]
-                                                    [(#\u306) "\\u{~a}"]
-                                                    [(#\u307) "\\.{~a}"]
-                                                    [(#\u308) "\\\"{~a}"]
-                                                    [(#\u30a) "\\r{~a}"]
-                                                    [(#\u30b) "\\H{~a}"]
-                                                    [(#\u30c) "\\v{~a}"]
-                                                    [(#\u327) "\\c{~a}"]
-                                                    [(#\u328) "\\k{~a}"]
-                                                    [else #f]))
-                                 (define base (string-normalize-nfc (substring s 0 (sub1 len))))
-                                 (if (and combiner
-                                          (= 1 (string-length base)))
-                                     (format combiner (char-loop (string-ref base 0)))
-                                     c)]
-                                [else c])])])
+                          ;; first, try user-defined conversions
+                          (or (dict-ref convs c #f)
+                              ;; latex-prefix.rkt enables utf8 input, but this does not work for
+                              ;; all the characters below (e.g. ∞). Some parts of the table
+                              ;; below are therefore necessary, but some parts probably are not.
+                              ;; Which parts are necessary may depend on the latex version,
+                              ;; though, so we keep this table around to avoid regressions.
+                              (case c
+                                [(#\╔ #\═ #\╗ #\║ #\╚ #\╝ #\╦ #\╠ #\╣ #\╬ #\╩) (box-character c)]
+                                [(#\┌ #\─ #\┐ #\│ #\└ #\┘ #\┬ #\├ #\┤ #\┼ #\┴) (box-character c)]
+                                [(#\┏ #\━ #\┓ #\┃ #\┗ #\┛ #\┳ #\┣ #\┫ #\╋ #\┻) (box-character c 2)]
+                                [(#\u2011) "\\mbox{-}"] ; non-breaking hyphen
+                                [(#\uB0) "$^{\\circ}$"] ; degree
+                                [(#\uB2) "$^2$"]
+                                [(#\u039A) "K"] ; kappa
+                                [(#\u0391) "A"] ; alpha
+                                [(#\u039F) "O"] ; omicron
+                                [(#\u03A3) "$\\Sigma$"]
+                                [(#\u03BA) "$\\kappa$"]
+                                [(#\u03B1) "$\\alpha$"]
+                                [(#\u03B2) "$\\beta$"]
+                                [(#\u03B3) "$\\gamma$"]
+                                [(#\u03BF) "o"] ; omicron
+                                [(#\u03C3) "$\\sigma$"]
+                                [(#\u03C2) "$\\varsigma$"]
+                                [(#\u03BB) "$\\lambda$"]
+                                [(#\u039B) "$\\Lambda$"]
+                                [(#\u03BC) "$\\mu$"]
+                                [(#\u03C0) "$\\pi$"]
+                                [(#\‘) "{`}"]
+                                [(#\’) "{'}"]
+                                [(#\“) "{``}"]
+                                [(#\”) "{''}"]
+                                [(#\u2013) "{--}"]
+                                [(#\u2014) "{---}"]
+                                [(#\⟨ #\〈) "$\\langle$"] ; [MATHEMATICAL] LEFT ANGLE BRACKET
+                                [(#\⟩ #\〉) "$\\rangle$"] ; [MATHEMATICAL] RIGHT ANGLE BRACKET
+                                [(#\∞) "$\\infty$"]
+                                [(#\⇓) "$\\Downarrow$"]
+                                [(#\↖) "$\\nwarrow$"]
+                                [(#\↓) "$\\downarrow$"]
+                                [(#\⇒) "$\\Rightarrow$"]
+                                [(#\→) "$\\rightarrow$"]
+                                [(#\↘) "$\\searrow$"]
+                                [(#\↙) "$\\swarrow$"]
+                                [(#\←) "$\\leftarrow$"]
+                                [(#\↑) "$\\uparrow$"]
+                                [(#\⇐) "$\\Leftarrow$"]
+                                [(#\−) "$\\longrightarrow$"]
+                                [(#\⇑) "$\\Uparrow$"]
+                                [(#\⇔) "$\\Leftrightarrow$"]
+                                [(#\↕) "$\\updownarrow$"]
+                                [(#\↔) "$\\leftrightarrow$"]
+                                [(#\↗) "$\\nearrow$"]
+                                [(#\⇕) "$\\Updownarrow$"]
+                                [(#\א) "$\\aleph$"]
+                                [(#\′) "$\\prime$"]
+                                [(#\∅) "$\\emptyset$"]
+                                [(#\∇) "$\\nabla$"]
+                                [(#\♦) "$\\diamondsuit$"]
+                                [(#\♠) "$\\spadesuit$"]
+                                [(#\♣) "$\\clubsuit$"]
+                                [(#\♥) "$\\heartsuit$"]
+                                [(#\♯) "$\\sharp$"]
+                                [(#\♭) "$\\flat$"]
+                                [(#\♮) "$\\natural$"]
+                                [(#\√) "$\\surd$"]
+                                [(#\∆) "$\\Delta$"] ; no better mapping for than \Delta for "increment"
+                                [(#\u2211) "$\\sum$"] ; better than \Sigma, right?
+                                [(#\u220F) "$\\prod$"] ; better than \Pi, right?
+                                [(#\u2210) "$\\coprod$"]
+                                [(#\u222B) "$\\int$"]
+                                [(#\u222E) "$\\oint$"]
+                                [(#\¬) "$\\neg$"]
+                                [(#\△) "$\\triangle$"]
+                                [(#\∀) "$\\forall$"]
+                                [(#\∃) "$\\exists$"]
+                                [(#\∘) "$\\circ$"]
+                                [(#\θ) "$\\theta$"]
+                                [(#\τ) "$\\tau$"]
+                                [(#\υ) "$\\upsilon$"]
+                                [(#\φ) "$\\phi$"]
+                                [(#\δ) "$\\delta$"]
+                                [(#\ρ) "$\\rho$"]
+                                [(#\ε) "$\\epsilon$"]
+                                [(#\χ) "$\\chi$"]
+                                [(#\ψ) "$\\psi$"]
+                                [(#\ζ) "$\\zeta$"]
+                                [(#\ν) "$\\nu$"]
+                                [(#\ω) "$\\omega$"]
+                                [(#\η) "$\\eta$"]
+                                [(#\ι) "$\\iota$"]
+                                [(#\ξ) "$\\xi$"]
+                                [(#\Γ) "$\\Gamma$"]
+                                [(#\Ψ) "$\\Psi$"]
+                                [(#\Δ) "$\\Delta$"]
+                                [(#\Ξ) "$\\Xi$"]
+                                [(#\Υ) "$\\Upsilon$"]
+                                [(#\Ω) "$\\Omega$"]
+                                [(#\Θ) "$\\Theta$"]
+                                [(#\Π) "$\\Pi$"]
+                                [(#\Φ) "$\\Phi$"]
+                                [(#\±) "$\\pm$"]
+                                [(#\∩) "$\\cap$"]
+                                [(#\◇) "$\\diamond$"]
+                                [(#\⊕) "$\\oplus$"]
+                                [(#\∓) "$\\mp$"]
+                                [(#\∪) "$\\cup$"]
+                                [(#\△) "$\\bigtriangleup$"]
+                                [(#\⊖) "$\\ominus$"]
+                                [(#\×) "$\\times$"]
+                                [(#\⊎) "$\\uplus$"]
+                                [(#\▽) "$\\bigtriangledown$"]
+                                [(#\⊗) "$\\otimes$"]
+                                [(#\÷) "$\\div$"]
+                                [(#\⊓) "$\\sqcap$"]
+                                [(#\▹) "$\\triangleleft$"]
+                                [(#\⊘) "$\\oslash$"]
+                                [(#\∗) "$\\ast$"]
+                                [(#\⊔) "$\\sqcup$"]
+                                [(#\∨) "$\\vee$"]
+                                [(#\∧) "$\\wedge$"]
+                                [(#\◃) "$\\triangleright$"]
+                                [(#\⊙) "$\\odot$"]
+                                [(#\★) "$\\star$"]
+                                [(#\†) "$\\dagger$"]
+                                [(#\•) "$\\bullet$"]
+                                [(#\‡) "$\\ddagger$"]
+                                [(#\≀) "$\\wr$"]
+                                [(#\⨿) "$\\amalg$"]
+                                [(#\≤) "$\\leq$"]
+                                [(#\≥) "$\\geq$"]
+                                [(#\≡) "$\\equiv$"]
+                                [(#\⊨) "$\\models$"]
+                                [(#\≺) "$\\prec$"]
+                                [(#\≻) "$\\succ$"]
+                                [(#\∼) "$\\sim$"]
+                                [(#\⊥) "$\\perp$"]
+                                [(#\≼) "$\\preceq$"]
+                                [(#\≽) "$\\succeq$"]
+                                [(#\≃) "$\\simeq$"]
+                                [(#\≪) "$\\ll$"]
+                                [(#\≫) "$\\gg$"]
+                                [(#\≍) "$\\asymp$"]
+                                [(#\∥) "$\\parallel$"]
+                                [(#\⊂) "$\\subset$"]
+                                [(#\⊃) "$\\supset$"]
+                                [(#\≈) "$\\approx$"]
+                                [(#\⋈) "$\\bowtie$"]
+                                [(#\⊆) "$\\subseteq$"]
+                                [(#\⊇) "$\\supseteq$"]
+                                [(#\≌) "$\\cong$"]
+                                [(#\⊏) "$\\sqsubset$"]
+                                [(#\⊐) "$\\sqsupset$"]
+                                [(#\≠) "$\\neq$"]
+                                [(#\⌣) "$\\smile$"]
+                                [(#\⊑) "$\\sqsubseteq$"]
+                                [(#\⊒) "$\\sqsupseteq$"]
+                                [(#\≐) "$\\doteq$"]
+                                [(#\⌢) "$\\frown$"]
+                                [(#\∈) "$\\in$"]
+                                [(#\∉) "$\\not\\in$"]
+                                [(#\∋) "$\\ni$"]
+                                [(#\∝) "$\\propto$"]
+                                [(#\⊢) "$\\vdash$"]
+                                [(#\⊣) "$\\dashv$"]    
+                                [(#\☠) "$\\skull$"]
+                                [(#\☺) "$\\smiley$"]
+                                [(#\☻) "$\\blacksmiley$"]
+                                [(#\☹) "$\\frownie$"]
+                                [(#\ø) "{\\o}"]
+                                [(#\Ø) "{\\O}"]
+                                [(#\ł) "{\\l}"]
+                                [(#\Ł) "{\\L}"]
+                                [(#\uA7) "{\\S}"]
+                                [(#\⟦ #\〚) "$[\\![$"]
+                                [(#\⟧ #\〛) "$]\\!]$"]
+                                [(#\↦) "$\\mapsto$"]
+                                [(#\⊤) "$\\top$"]
+                                [(#\¥) "{\\textyen}"]
+                                [(#\™) "{\\texttrademark}"]
+                                [(#\®) "{\\textregistered}"]
+                                [(#\©) "{\\textcopyright}"]
+                                [(#\u2070) "$^0$"]
+                                [(#\u00b9) "$^1$"]
+                                [(#\u00b2) "$^2$"]
+                                [(#\u00b3) "$^3$"]
+                                [(#\u2074) "$^4$"]
+                                [(#\u2075) "$^5$"]
+                                [(#\u2076) "$^6$"]
+                                [(#\u2077) "$^7$"]
+                                [(#\u2078) "$^8$"]
+                                [(#\u2079) "$^9$"]
+                                [(#\u207a) "$^+$"]
+                                [(#\u207b) "$^-$"]
+                                [(#\⋖) "$\\precdot$"]
+                                [(#\⋗) "$\\succdot$"]
+                                [(#\⋮) "\\vdots"]
+                                [(#\⋱) "$\\ddots$"]
+                                [(#\⋯) "$\\cdots$"]
+                                [(#\⋯) "\\hdots"]
+                                [else
+                                 (cond
+                                  [(char<=? #\uAC00 c #\uD7AF) ; Korean Hangul
+                                   (format "\\begin{CJK}{UTF8}{mj}~a\\end{CJK}" c)]
+                                  [else
+                                   ;; Detect characters that can be formed with combining characters
+                                   ;; and translate them to Latex combinations:
+                                   (define s (string-normalize-nfd (string c)))
+                                   (define len (string-length s))
+                                   (cond
+                                    [(len . > . 1)
+                                     (define combiner (case (string-ref s (sub1 len))
+                                                        [(#\u300) "\\`{~a}"]
+                                                        [(#\u301) "\\'{~a}"]
+                                                        [(#\u302) "\\^{~a}"]
+                                                        [(#\u303) "\\~~{~a}"]
+                                                        [(#\u304) "\\={~a}"]
+                                                        [(#\u306) "\\u{~a}"]
+                                                        [(#\u307) "\\.{~a}"]
+                                                        [(#\u308) "\\\"{~a}"]
+                                                        [(#\u30a) "\\r{~a}"]
+                                                        [(#\u30b) "\\H{~a}"]
+                                                        [(#\u30c) "\\v{~a}"]
+                                                        [(#\u327) "\\c{~a}"]
+                                                        [(#\u328) "\\k{~a}"]
+                                                        [else #f]))
+                                     (define base (string-normalize-nfc (substring s 0 (sub1 len))))
+                                     (if (and combiner
+                                              (= 1 (string-length base)))
+                                         (format combiner (char-loop (string-ref base 0)))
+                                         c)]
+                                    [else c])])]))
                           c)])))
                 (loop (add1 i))))))]))
     

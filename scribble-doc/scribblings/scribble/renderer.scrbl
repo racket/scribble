@@ -2,6 +2,7 @@
 @(require scribble/manual 
           "utils.rkt" 
           (for-label racket/class
+                     racket/dict
                      scribble/render
                      scribble/xref))
 
@@ -382,6 +383,13 @@ are own their own pages. A value of @racket[0] is treated the same as
 @defmixin[render-mixin (render<%>) ()]{
 
 Specializes a @racket[render<%>] class for generating Latex input.}}
+
+@defparam[extra-character-conversions convs (dictof char? string?)]{
+Maps (special) characters to strings corresponding to the Latex code that
+should be used to render them. Scribble already converts many special
+characters to the proper Latex commands. This parameter should be used in case
+you need characters it does not support yet.
+}
 
 @; ----------------------------------------
 
