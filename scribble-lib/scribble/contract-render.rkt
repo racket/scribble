@@ -76,7 +76,9 @@
     [(table style cells)
      (check-and-continue style block mode index-table r-blockss+cont cells)]
     [(delayed-block resolve) 
-     (r-block (delayed-block-blocks block (the-ri)) mode index-table)]))
+     (r-block (delayed-block-blocks block (the-ri)) mode index-table)]
+    [(traverse-block _)
+     (r-block (traverse-block-block block (the-ri)) mode index-table)]))
 
 (define (check-and-continue style block mode index-table sub-f sub-p)
   (cond
