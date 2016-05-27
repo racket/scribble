@@ -21,7 +21,8 @@
 
 (define (add-defaults doc pfx styl extras version?
                       #:html [html #f]
-                      #:properties [properties null])
+                      #:properties [properties null]
+                      #:replacements [replacements #F])
   (struct-copy part doc [style (make-style (style-name (part-style doc))
                                            ((if version? add-property (lambda (x y z) x))
                                             (add-property
@@ -32,9 +33,15 @@
                                               html-defaults?
                                               html)
                                              latex-defaults?
-                                             (make-latex-defaults
-                                              pfx
-                                              styl
-                                              extras))
+                                             (if replacements
+                                                 (make-latex-defaults+replacements
+                                                  pfx
+                                                  styl
+                                                  extras
+                                                  replacements)
+                                                 (make-latex-defaults
+                                                  pfx
+                                                  styl
+                                                  extras)))
                                             document-version?
                                             (make-document-version (version))))]))

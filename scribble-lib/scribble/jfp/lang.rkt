@@ -41,7 +41,9 @@
                          "\\let\\amalg\\relax\n"))
                 (scribble-file "jfp/style.tex")
                 (list cls-file)
-                #f))
+                #f
+                #:replacements
+                (hash "scribble-load-replace.tex" (scribble-file "jfp/replacements.tex"))))
 
 (unless (or (not (path? cls-file))
             (file-exists? cls-file))
