@@ -136,7 +136,7 @@
             [else
              (raise-argument-error 'xref-binding-definition->tag
                                    "(list/c (or/c module-path? module-path-index?) any/c)"
-                                   src)]))]
+                                   id/binding)]))]
         [else (raise-argument-error 'xref-binding-definition->tag
                                     (string-append
                                      "(or/c identifier? (lambda (l)\n"
