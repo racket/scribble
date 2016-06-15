@@ -333,7 +333,20 @@ formatted as Racket code.}}
 
 @defmixin[render-mixin (render<%>) ()]{
 
-Specializes a @racket[render<%>] class for generating HTML output.
+  @defconstructor/auto-super[([search-box? boolean? #f])]{
+   Specializes a @racket[render<%>] class for generating
+   HTML output. The arguments are the same as 
+   @racket[render<%>], except for the addition of 
+   @racket[search-box].
+
+   If @racket[search-box?] is @racket[#t] and the document
+   is created with @racket[scribble/manual], then it will be
+   rendered with a search box, similar to this page. Note
+   that the @racket[search-box?] argument does not create
+   the search page itself. Rather, it passes the search
+   query to whatever page is located at
+   @tt{search/index.html}. The query is passed as an HTTP
+   query string in the @tt{q} field.}
 
 @defmethod[(set-external-tag-path [url string?]) void?]{
 
