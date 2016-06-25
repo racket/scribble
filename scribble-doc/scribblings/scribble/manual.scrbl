@@ -2049,6 +2049,11 @@ rendered document.}
 Indicates that the index entry corresponds to a module definition via
 @racket[defmodule] and company.}
 
+@defstruct[(language-index-desc module-path-index-desc) ()]{
+
+Indicates that the index entry corresponds to a module definition via
+@racket[defmodulelang], etc.}
+
 @defstruct[exported-index-desc ([name symbol?]
                                [from-libs (listof module-path?)])]{
 

@@ -224,7 +224,7 @@
       (map
        (lambda (name modpath)
          (define modname (if link-target?
-                             (make-defracketmodname name modpath)
+                             (make-defracketmodname name modpath (and lang #t))
                              name))
          (list
           (make-flow
@@ -278,8 +278,9 @@
               (flow-paragraphs (decode-flow content)))))))
 
 (define the-module-path-index-desc (make-module-path-index-desc))
+(define the-language-index-desc (make-language-index-desc))
 
-(define (make-defracketmodname mn mp)
+(define (make-defracketmodname mn mp [lang? #f])
   (let ([name-str (datum-intern-literal (element->string mn))]
         [path-str (datum-intern-literal (element->string mp))])
     (make-index-element #f
@@ -287,7 +288,9 @@
                         (intern-taglet `(mod-path ,path-str))
                         (list name-str)
                         (list mn)
-                        the-module-path-index-desc)))
+                        (if lang?
+                            the-language-index-desc
+                            the-module-path-index-desc))))
 
 (define-syntax (declare-exporting stx)
   (syntax-parse stx
