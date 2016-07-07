@@ -2049,10 +2049,15 @@ rendered document.}
 Indicates that the index entry corresponds to a module definition via
 @racket[defmodule] and company.}
 
-@defstruct[(language-index-desc module-path-index-desc) ()]{
-
+@deftogether[(
+@defstruct[(language-index-desc module-path-index-desc)]{}
+@defstruct[(reader-index-desc module-path-index-desc)]{}
+)]{
 Indicates that the index entry corresponds to a module definition via
-@racket[defmodulelang], etc.}
+@racket[defmodule] with the @racket[#:lang] or @racket[#:reader] option.
+For example, a module definition via @racket[defmodulelang] has a
+@racket[language-index-desc] index entry and a module definition via
+@racket[defmodulereader] has a @racket[reader-index-desc] index entry.}
 
 @defstruct[exported-index-desc ([name symbol?]
                                [from-libs (listof module-path?)])]{

@@ -221,30 +221,36 @@
                                    (add-between (map tt pkgs) ", "))))))))))
     (define (flow-width f) (apply max (map block-width f)))
     (define libs-specs
+      ;; make-desc  : element -> flow
+      ;; index-desc : module-path-index-desc
+      (let-values ([(make-desc index-desc)
+                    (case lang
+                      [(#f)
+                       (values (lambda (modname) (list (racket (#,req #,modname))))
+                               the-module-path-index-desc)]
+                      [(#t)
+                       (values (lambda (modname) (list (hash-lang) spacer modname))
+                               the-language-index-desc)]
+                      [(reader)
+                       (values (lambda (modname) (list (racketmetafont "#reader") spacer modname))
+                               the-reader-index-desc)]
+                      [(just-lang)
+                       (values (lambda (modname) (list (hash-lang) spacer modname))
+                               the-language-index-desc)]
+                      [else (error 'defmodule "unknown mode: ~e" lang)])])
       (map
        (lambda (name modpath)
          (define modname (if link-target?
-                             (make-defracketmodname name modpath (and lang #t))
+                             (make-defracketmodname name modpath index-desc)
                              name))
          (list
           (make-flow
            (list
             (make-omitable-paragraph
-             (cons
-              spacer
-              (case lang
-                [(#f)
-                 (list (racket (#,req #,modname)))]
-                [(#t)
-                 (list (hash-lang) spacer modname)]
-                [(reader)
-                 (list (racketmetafont "#reader") spacer modname)]
-                [(just-lang)
-                 (list (hash-lang) spacer modname)]
-                [else (error 'defmodule "unknown mode: ~e" lang)])))))
+             (cons spacer (make-desc modname)))))
           'cont))
        names
-       modpaths))
+       modpaths)))
 
     (make-splice
      (cons
@@ -279,8 +285,9 @@
 
 (define the-module-path-index-desc (make-module-path-index-desc))
 (define the-language-index-desc (make-language-index-desc))
+(define the-reader-index-desc (make-reader-index-desc))
 
-(define (make-defracketmodname mn mp [lang? #f])
+(define (make-defracketmodname mn mp index-desc)
   (let ([name-str (datum-intern-literal (element->string mn))]
         [path-str (datum-intern-literal (element->string mp))])
     (make-index-element #f
@@ -288,9 +295,7 @@
                         (intern-taglet `(mod-path ,path-str))
                         (list name-str)
                         (list mn)
-                        (if lang?
-                            the-language-index-desc
-                            the-module-path-index-desc))))
+                        index-desc)))
 
 (define-syntax (declare-exporting stx)
   (syntax-parse stx

@@ -6,6 +6,7 @@
 (provide-structs
  [module-path-index-desc ()]
  [(language-index-desc module-path-index-desc) ()]
+ [(reader-index-desc module-path-index-desc) ()]
  [exported-index-desc ([name symbol?]
                        [from-libs (listof module-path?)])]
  [(method-index-desc exported-index-desc) ([method-name symbol?]
