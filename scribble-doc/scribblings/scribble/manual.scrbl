@@ -2050,8 +2050,8 @@ Indicates that the index entry corresponds to a module definition via
 @racket[defmodule] and company.}
 
 @deftogether[(
-@defstruct[(language-index-desc module-path-index-desc)]{}
-@defstruct[(reader-index-desc module-path-index-desc)]{}
+@defstruct[(language-index-desc module-path-index-desc) ()]{}
+@defstruct[(reader-index-desc module-path-index-desc) ()]{}
 )]{
 Indicates that the index entry corresponds to a module definition via
 @racket[defmodule] with the @racket[#:lang] or @racket[#:reader] option.
