@@ -1949,6 +1949,28 @@ produced by @racket[content-expr] should normally start with a capital
 letter and end with a period, but it can be a sentence fragment such
 as ``Added a @racket[#:changed] form.''
 
+Examples:
+@codeblock[#:keep-lang-line? #f]|{
+#lang scribble/manual
+@defthing[tasty-burrito burrito?]{
+  Compatible with the API of a sandwich, but not legally a
+  sandwich in Massachusetts.
+
+  @history[#:added "1.0"
+           #:changed "1.1" "Refactored tortilla."
+           #:changed "1.2" @elem{Now includes @emph{guacamole}.}]
+}
+}|
+@doc-render-examples[
+  @defthing[tasty-burrito burrito?]{
+    Compatible with the API of a sandwich, but not legally a
+    sandwich in Massachusetts.
+
+    @history[#:added "1.0"
+             #:changed "1.1" "Refactored tortilla."
+             #:changed "1.2" @elem{Now includes @emph{guacamole}.}]
+}]
+
 @history[#:added "1.1"]}
 
 @; ------------------------------------------------------------------------
