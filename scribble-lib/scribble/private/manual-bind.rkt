@@ -114,7 +114,15 @@
                                 (let ([ns-id 
                                        (let ([ns (make-base-empty-namespace)])
                                          (parameterize ([current-namespace ns])
-                                           (namespace-require `(for-label ,lib))
+                                           ;; A `(namespace-require `(for-label ,lib))` can
+                                           ;; fail if `lib` provides different bindings of the
+                                           ;; same name at different phases. We can require phases
+                                           ;; 1 and 0 separately, in which case the phase-0
+                                           ;; binding shadows the phase-1 one in that case.
+                                           ;; This strategy only works for documenting bindings
+                                           ;; at phases 0 and 1, though.
+                                           (namespace-require `(just-meta 1 (for-label ,lib)))
+                                           (namespace-require `(just-meta 0 (for-label ,lib)))
                                            (namespace-syntax-introduce (datum->syntax #f 'x))))])
                                   (let ([checker
                                          (lambda (id)
