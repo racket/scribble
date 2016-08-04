@@ -92,7 +92,8 @@
                                 (let ([v (resolve-get/tentative part ri `(form ,eb))])
                                   (or (and v `(form ,eb))
                                       `(def ,eb))))]
-                          [need-result? (and need-result? (not here-result))])
+                          [need-result? (and need-result? (not here-result))]
+                          [rmp-name (resolved-module-path-name rmp)])
                      ;; Even if we've found `here-result', look deeper so that we have 
                      ;; consistent `dep' results.
                      (let ([nest-result
@@ -102,7 +103,9 @@
                                 ;; Not defined through this path, so keep looking
                                 (loop queue rqueue need-result?)
                                 ;; Check parents, if we can get the source:
-                                (if (and (path? (resolved-module-path-name rmp))
+                                (if (and (or (path? rmp-name)
+                                             (and (list? rmp-name)
+                                                  (path? (car rmp-name))))
                                          (not (hash-ref seen (cons export-phase rmp) #f)))
                                     (let ([exports
                                            (hash-ref
@@ -114,7 +117,12 @@
                                                              (lambda ()
                                                                ;; First, try using bytecode:
                                                                (module-compiled-exports 
-                                                                (get-module-code (resolved-module-path-name rmp)
+                                                                (get-module-code (if (list? rmp-name)
+                                                                                     (car rmp-name)
+                                                                                     rmp-name)
+                                                                                 #:submodule-path (if (list? rmp-name)
+                                                                                                      (cdr rmp-name)
+                                                                                                      '())
                                                                                  #:choose (lambda (src zo so) 'zo))))
                                                              (lambda ()
                                                                (try
