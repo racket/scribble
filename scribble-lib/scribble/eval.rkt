@@ -99,13 +99,15 @@
         [(eof-object? v)
          (let* ([line-accum (add-string string-accum line-accum)]
                 [flow-accum (add-line line-accum flow-accum)])
-           (list
-            (list.flow.list
-             (if (= 1 (length flow-accum))
-               (car flow-accum)
-               (make-table
-                #f
-                (map list.flow.list (reverse flow-accum)))))))]
+           (if (null? flow-accum)
+               null
+               (list
+                (list.flow.list
+                 (if (= 1 (length flow-accum))
+                     (car flow-accum)
+                     (make-table
+                      #f
+                      (map list.flow.list (reverse flow-accum))))))))]
         [(equal? #\newline v)
          (loop #f #f (add-line (add-string string-accum line-accum)
                                flow-accum))]
