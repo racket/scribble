@@ -1772,7 +1772,7 @@ The @racket[path] field can be a result of
 Used as a @tech{style property} on the main @racket[part] of a document
 to set a default prefix file, style file, and extra files (see
 @secref["config-style"]).  The defaults are used by the
-@exec{scribble} command-line tool for and @DFlag{latex} or @DFlag{pdf}
+@exec{scribble} command-line tool for @DFlag{latex} or @DFlag{pdf}
 mode if none are supplied via @DFlag{prefix} and @DFlag{style} (where
 @racket[extra-files] are used only when @racket[prefix] is used). A
 byte-string value is used directly like file content, and a path can
