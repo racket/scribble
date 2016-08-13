@@ -97,7 +97,8 @@
                                   (format "~a." (car number)))
                               ""))])
                   (if (or keep-separator?
-                          (pair? (car number)))
+                          (pair? (car number))
+                          (equal? s ""))
                       s
                       (substring s 0 (sub1 (string-length s)))))
                 sep)))
