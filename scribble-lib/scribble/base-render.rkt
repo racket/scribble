@@ -72,36 +72,41 @@
       #f)
 
     (define/public (format-number number sep [keep-separator? #f])
-      (if (or (null? number)
-              (andmap (lambda (x) (or (not x) (equal? x "")))
-                      number)
-              (and (not (car number))
-                   (not (ormap number? number))))
-          null
-          (cons (let ([s (string-append
-                          (apply
-                           string-append
-                           (map (lambda (n) 
-                                  (cond
-                                   [(number? n) (format "~a." n)]
-                                   [(or (not n) (string? n)) ""]
-                                   [(pair? n) (string-append (car n) (cadr n))]))
-                                (reverse (cdr number))))
-                          (if (and (car number) 
-                                   (not (equal? "" (car number))))
-                              (if (pair? (car number))
-                                  (if keep-separator?
-                                      (string-append (caar number)
-                                                     (cadar number))
-                                      (caar number))
-                                  (format "~a." (car number)))
-                              ""))])
-                  (if (or keep-separator?
-                          (pair? (car number))
-                          (equal? s ""))
-                      s
-                      (substring s 0 (sub1 (string-length s)))))
-                sep)))
+      (cond
+       [(or (null? number)
+            (andmap (lambda (x) (or (not x) (equal? x "")))
+                    number)
+            (and (not (car number))
+                 (not (ormap number? number))))
+        null]
+       [else
+        (define result-s
+          (let ([s (string-append
+                    (apply
+                     string-append
+                     (map (lambda (n) 
+                            (cond
+                             [(number? n) (format "~a." n)]
+                             [(or (not n) (string? n)) ""]
+                             [(pair? n) (string-append (car n) (cadr n))]))
+                          (reverse (cdr number))))
+                    (if (and (car number) 
+                             (not (equal? "" (car number))))
+                        (if (pair? (car number))
+                            (if keep-separator?
+                                (string-append (caar number)
+                                               (cadar number))
+                                (caar number))
+                            (format "~a." (car number)))
+                        ""))])
+            (if (or keep-separator?
+                    (pair? (car number))
+                    (equal? s ""))
+                s
+                (substring s 0 (sub1 (string-length s))))))
+        (if (equal? result-s "")
+            null
+            (cons result-s sep))]))
 
     (define/public (number-depth number)
       (if (null? number)
