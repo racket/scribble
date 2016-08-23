@@ -81,17 +81,14 @@ Examples:
 
 ```racket
 > (define x 0) 
-               
 > (displayln x)
 0              
-               
 ```
 
 Example of Scribble `interaction`:
 
 ```racket
 > (define x 0)
-              
 > x           
 0             
 ```
