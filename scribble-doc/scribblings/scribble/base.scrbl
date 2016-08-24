@@ -605,7 +605,7 @@ Inserts a reference to the section tagged @racket[tag].
 
 If @racket[#:doc module-path] is provided, the @racket[tag] refers to
 a tag with a prefix determined by @racket[module-path]. When
-@exec{setup-plt} renders documentation, it automatically adds a tag
+@exec{raco setup} renders documentation, it automatically adds a tag
 prefix to the document based on the source module. Thus, for example,
 to refer to a section of the Racket reference,
 @racket[module-path] would be @racket['(lib

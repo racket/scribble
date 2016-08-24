@@ -463,7 +463,7 @@ The recognized @tech{style properties} are as follows:
         be set separately for parts that start different HTML pages,
         otherwise it is effectively inherited by sub-parts; the
         default is @racket["scribble-racket-lang.org"], but
-        @exec{setup-plt} installs @racket["doc-racket-lang.org"] as the
+        @exec{raco setup} installs @racket["doc-racket-lang.org"] as the
         @tt{id} for any document that it builds.}
 
  @item{@racket[attributes] structure --- Provides additional HTML

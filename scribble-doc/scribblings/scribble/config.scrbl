@@ -172,7 +172,7 @@ configurable in the former way, since a document class determines a
 set of page-layout and font properties that are used by other
 commands. The style-replacement kind of configuration corresponds to
 re-defining Latex macros or overriding CSS class attributes.  When
-@exec{setup-plt} builds PDF documentation, it uses both kinds of
+@exec{raco setup} builds PDF documentation, it uses both kinds of
 configuration to produce a standard layout for Racket manuals;
 that is, it selects a particular page layout, and it replaces some
 @racketmodname[racket/base] styles.
