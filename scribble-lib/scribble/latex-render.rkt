@@ -3,7 +3,6 @@
          "latex-properties.rkt"
          "private/render-utils.rkt"
          racket/class
-         racket/dict
          racket/runtime-path
          racket/port
          racket/string
@@ -49,7 +48,7 @@
 (define-runtime-path skull-tex "scribble-skull.tex")
 (define skull-style (make-style #f (list (tex-addition skull-tex))))
 
-(define extra-character-conversions (make-parameter (make-hash)))
+(define extra-character-conversions (make-parameter (λ (c) #f)))
 
 (define (render-mixin % #:image-mode [image-mode #f])
   (class %
@@ -1001,7 +1000,7 @@
                      [else
                       (if ((char->integer c) . > . 127)
                           ;; first, try user-defined conversions
-                          (or (dict-ref convs c #f)
+                          (or (convs c)
                               ;; latex-prefix.rkt enables utf8 input, but this does not work for
                               ;; all the characters below (e.g. ∞). Some parts of the table
                               ;; below are therefore necessary, but some parts probably are not.
