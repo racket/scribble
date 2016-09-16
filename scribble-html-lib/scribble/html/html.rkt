@@ -65,8 +65,14 @@
   iframe ; inline subwindow
   noframes ; alternate content container for non frame-based rendering
   ;; ========== Document Body
+  article ; HTML5, contains an article / essay / blog post / etc.
+  aside ; HTML5, off-topic info / margin notes
   body
   div ; generic language/style container
+  footer ;  HTML5, closing content (copyright, author info) for nearest ancestor
+  header ; HTML5, introductory content for nearest ancestor
+  nav ; HTML5, a section with links
+  section ; HTML5, generic grouping
   ;; ========== Paragraphs
   p
   ;; ========== Headings

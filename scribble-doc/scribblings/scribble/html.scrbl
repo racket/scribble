@@ -98,8 +98,14 @@ as XHTML.
   frame ; tiled window within frameset
   iframe ; inline subwindow
   noframes ; alternate content container for non frame-based rendering
+  article
+  aside
   body
   div ; generic language/style container
+  footer
+  header
+  nav
+  section
   p
   h1
   h2
