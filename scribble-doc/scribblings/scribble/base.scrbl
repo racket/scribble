@@ -691,13 +691,13 @@ renders as a hyperlink with the text:
 }|}
 
 
-@defproc[(elemtag [t (or/c tag? string?)] [pre-content pre-content?] ...) element?]{
+@defproc[(elemtag [t (or/c taglet? generated-tag?)] [pre-content pre-content?] ...) element?]{
 
 The tag @racket[t] refers to the content form of
 @racket[pre-content].}
 
 
-@defproc[(elemref [t (or/c tag? string?)] [pre-content pre-content?] ... 
+@defproc[(elemref [t (or/c taglet? generated-tag?)] [pre-content pre-content?] ... 
                   [#:underline? underline? any/c #t]) element?]{
 
 The @tech{decode}d @racket[pre-content] is hyperlinked to @racket[t],

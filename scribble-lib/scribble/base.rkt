@@ -572,11 +572,11 @@
 ;; ----------------------------------------
 
 (provide/contract
- [elemtag (->* ((or/c tag? string?))
+ [elemtag (->* ((or/c taglet? generated-tag?))
                ()
                #:rest (listof pre-content?)
                element?)]
- [elemref (->* ((or/c tag? string?))
+ [elemref (->* ((or/c taglet? generated-tag?))
                (#:underline? any/c)
                #:rest (listof pre-content?)
                element?)]

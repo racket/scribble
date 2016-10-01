@@ -731,24 +731,25 @@
                   (if (or (nearly-top? d) 
                           (part-style? d 'toc-hidden))
                       null 
-                      (list (cons d prefixes)))
+                      (list (vector d prefixes d)))
                   ;; get internal targets:
-                  (map (lambda (v) (cons v prefixes)) (append-map block-targets (part-blocks d)))
+                  (map (lambda (v) (vector v prefixes d)) (append-map block-targets (part-blocks d)))
                   (map (lambda (p) (if (or (part-whole-page? p ri) 
                                            (and (part-style? p 'toc-hidden)
                                                 (all-toc-hidden? p)))
                                        null
                                        (flatten p prefixes #f)))
                        (part-parts d)))))))
-          (define any-parts? (ormap (compose part? car) ps))
+          (define any-parts? (ormap (compose part? (lambda (p) (vector-ref p 0))) ps))
           (if (null? ps)
             null
             `((div ([class ,box-class])
                 ,@(get-onthispage-label)
                 (table ([class "tocsublist"] [cellspacing "0"])
                   ,@(map (lambda (p)
-                           (let ([p (car p)]
-                                 [prefixes (cdr p)]
+                           (let ([p (vector-ref p 0)]
+                                 [prefixes (vector-ref p 1)]
+                                 [from-d (vector-ref p 2)]
                                  [add-tag-prefixes
                                   (lambda (t prefixes)
                                     (if (null? prefixes)
@@ -765,7 +766,7 @@
                                       '(""))
                                 ,@(if (toc-element? p)
                                       (render-content (toc-element-toc-content p)
-                                                      d ri)
+                                                      from-d ri)
                                       (parameterize ([current-no-links #t]
                                                      [extra-breaking? #t])
                                         `((a ([href
@@ -793,7 +794,7 @@
                                                     (if (toc-target2-element? p)
                                                         (toc-target2-element-toc-content p)
                                                         (element-content p)))
-                                                d ri)))))))))
+                                                from-d ri)))))))))
                          ps)))))))
 
     (define/private (extract-inherited d ri pred extract)
