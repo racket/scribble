@@ -52,8 +52,8 @@ includes a citation to section 8 of the Racket reference.
               ([option (code:line #:style style-expr)
                        (code:line #:disambiguate disambiguator-expr)
                        (code:line #:spaces spaces-expr)
-                       (code:line #:render-date-bib render-date-expr)
-                       (code:line #:render-date-cite render-date-expr)
+                       (code:line #:render-date-in-bib render-date-expr)
+                       (code:line #:render-date-in-cite render-date-expr)
                        (code:line #:date<? date-compare-expr)
                        (code:line #:date=? date-compare-expr)])
               #:contracts ([style-expr (or/c author+date-style number-style)]
