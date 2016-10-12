@@ -92,16 +92,17 @@
     [(_ #:file filename #:escape unsyntax-id lang rest ...)
      (with-syntax ([modtag (datum->syntax
                             #'here
-                            `(unsyntax (make-element
-                                        #f
-                                        (list (hash-lang)
-                                              spacer
-                                              ,(if (identifier? #'lang)
-                                                   `(as-modname-link
-                                                     ',#'lang
-                                                     (to-element ',#'lang)
-                                                     #f)
-                                                   #'(racket lang)))))
+                            (list #'unsyntax-id
+                                  `(make-element
+                                    #f
+                                    (list (hash-lang)
+                                          spacer
+                                          ,(if (identifier? #'lang)
+                                               `(as-modname-link
+                                                 ',#'lang
+                                                 (to-element ',#'lang)
+                                                 #f)
+                                               #'(racket lang)))))
                             #'lang)])
        (if (syntax-e #'filename)
            (quasisyntax/loc stx
