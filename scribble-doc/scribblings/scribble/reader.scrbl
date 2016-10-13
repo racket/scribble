@@ -148,6 +148,7 @@ application, but it also useful when quoted with the usual Racket
   '@{foo
      bar
      baz}
+  @"@"
 }===|
 
 Finally, we can also drop the datum and text parts, which leaves us with
