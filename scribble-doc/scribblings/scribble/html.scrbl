@@ -94,6 +94,7 @@ as XHTML.
   style ; style info, which may include CDATA sections
   script ; script statements, which may include CDATA sections
   noscript ; alternate content container for non script-based rendering
+  slot
   frameset ; only one noframes element permitted per document
   frame ; tiled window within frameset
   iframe ; inline subwindow
@@ -107,6 +108,7 @@ as XHTML.
   h4
   h5
   h6
+  hgroup
   ul ; Unordered list
   ol ; Ordered (numbered) list
   menu ; single column list (DEPRECATED)
@@ -165,7 +167,10 @@ as XHTML.
   colgroup ; column group, olds col
   tr ; holds th or td
   th ; header cell
-  td)
+  td
+  details
+  dialog
+  menuitem)
 
 @(define-syntax-rule (def-tags/empty tag ...)
    @deftogether[(
@@ -179,7 +184,8 @@ as XHTML.
     (output-xml (hr))]})
 
 @(def-tags/empty
-  base meta link hr br basefont param img area input isindex col)
+  base meta link hr br basefont param img area input isindex col
+  embed keygen wbr)
 
 @(define-syntax-rule (def-entities ent ...)
    @deftogether[(
@@ -211,6 +217,52 @@ Procedures a value that renders as an inline style sheet.
 @examples[#:eval html-eval
 (output-xml (style/inline type: "text/css"
                           ".racket { font-size: xx-large; }"))]}
+
+
+@subsection[#:tag "extra-html"]{Other HTML elements}
+
+@defmodule[scribble/html/extra]
+
+Provides renderers for
+@hyperlink["https://html.spec.whatwg.org/multipage/#toc-semantics"]{HTML
+elements} that are not provided by @racket[scribble/html/html].
+
+@(def-tags
+  article
+  aside
+  audio
+  bdi
+  canvas
+  data
+  datalist
+  figcaption
+  figure
+  footer
+  header
+  main
+  map
+  mark
+  math
+  meter
+  nav
+  output
+  picture
+  progress
+  rb
+  rp
+  rt
+  rtc
+  ruby
+  section
+  summary
+  svg
+  template
+  time
+  video)
+
+@(def-tags/empty
+  source
+  track)
 
 
 @; ----------------------------------------

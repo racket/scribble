@@ -1,6 +1,9 @@
 #lang racket/base
 
 ;; (X)HTML elements etc.
+;; Keep this file up to date with:
+;;    https://html.spec.whatwg.org/multipage/#toc-semantics
+;; Put esoteric elements in scribble/html/extra
 
 (require "xml.rkt" scribble/text)
 
@@ -59,6 +62,7 @@
   style ; style info, which may include CDATA sections
   script ; script statements, which may include CDATA sections
   noscript ; alternate content container for non script-based rendering
+  slot
   ;; ========== Frames
   frameset ; only one noframes element permitted per document
   frame ; tiled window within frameset
@@ -76,6 +80,7 @@
   h4
   h5
   h6
+  hgroup
   ;; ========== Lists
   ul ; Unordered list
   ol ; Ordered (numbered) list
@@ -163,11 +168,16 @@
   tr ; holds th or td
   th ; header cell
   td ; table cell
+  ;; ========== Interactive Elements
+  details
+  dialog
+  menuitem
   )
 
 ;; [*] empty elements, these are listed with an `EMPTY' content in
 ;; http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd
 (define/provide-elements/empty
+  embed keygen wbr
   base meta link hr br basefont param img area input isindex col)
 
 ;; [*] elements with a cdata/comment body
