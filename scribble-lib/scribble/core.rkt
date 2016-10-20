@@ -640,6 +640,7 @@
                         [(rarr) "->"]
                         [(lang) "<"]
                         [(rang) ">"]
+                        [(nbsp) "\xA0"]
                         [else (format "~s" c)])
                       op)])]
     [(op c renderer sec ri)
