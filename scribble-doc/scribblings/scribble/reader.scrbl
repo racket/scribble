@@ -148,7 +148,6 @@ application, but it also useful when quoted with the usual Racket
   '@{foo
      bar
      baz}
-  @"@"
 }===|
 
 Finally, we can also drop the datum and text parts, which leaves us with
@@ -173,6 +172,7 @@ expression.
 @scribble-examples|==={
   @foo{(+ 1 2) -> @(+ 1 2)!}
   @foo{A @"string" escape}
+  @"@"
 }===|
 
 Note that an escaped Racket string is merged with the surrounding text
