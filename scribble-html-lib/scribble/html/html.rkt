@@ -163,12 +163,50 @@
   tr ; holds th or td
   th ; header cell
   td ; table cell
+  ;; =========== HTML 5
+  rb          ; Ruby base
+  nav         ; Section with navigational links
+  meter       ; Gauge
+  data        ; Machine-readable equivalent
+  footer      ; Footer for a page or section
+  figure      ; Figure with optional caption
+  template    ; Template  
+  figcaption  ; Caption for figure
+  progress    ; Progress bar
+  datalist    ; Container for options for combo box control
+  bdi         ; Text directionality isolation
+  audio       ; Audio player
+  aside       ; Sidebar for tangentially related content
+  article     ; Contact information for a page or article element
+  ruby        ; Ruby annotation(s)
+  main        ;
+  rt          ; Ruby annotation text
+  header      ; Introductory or navigational aids for a page or section
+  canvas      ; Scriptable bitmap canvas
+  mark        ; Highlight
+  video       ; Video player
+  rtc         ; Ruby annotation text container 
+  rp          ; Parenthesis for ruby annotation text
+  section     ; Generic document or application section
+  ;; =========== HTML 5 (omitted)
+  ; output      ; Calculated output value
+  ; time        ; Machine-readable equivalent of date- or time-related data
+  ; map         ; Image map
+  ;;=========== Other
+  svg         ; Scalable Vector Graphics
   )
 
 ;; [*] empty elements, these are listed with an `EMPTY' content in
 ;; http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd
 (define/provide-elements/empty
-  base meta link hr br basefont param img area input isindex col)
+  base meta link hr br basefont param img area input isindex col
+  ;; ==== html 5
+  keygen ; Cryptographic key-pair generator form control
+  track  ; Timed text track
+  wbr    ; Line breaking opportunity
+  source ; Media source for video or audio
+  embed ; Plugin
+  )
 
 ;; [*] elements with a cdata/comment body
 (provide script/inline)
