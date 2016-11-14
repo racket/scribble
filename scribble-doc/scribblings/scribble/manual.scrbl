@@ -1399,10 +1399,12 @@ definition. The @racket[defstruct*] form corresponds to @racket[struct],
 while @racket[defstruct] corresponds to @racket[define-struct].
 
 Examples:
+
+An example using @racket[defstruct]:
 @codeblock[#:keep-lang-line? #f]|{
 #lang scribble/manual
 @defstruct[sandwich ([protein ingredient?] [sauce ingredient?])]{
-  A strucure type for sandwiches. Sandwiches are a pan-human foodstuff
+  A structure type for sandwiches. Sandwiches are a pan-human foodstuff
   composed of a partially-enclosing bread material and various
   ingredients.
 }
@@ -1410,11 +1412,28 @@ Examples:
 @doc-render-examples[
   @defstruct[#:link-target? #f
              sandwich ([protein ingredient?] [sauce ingredient?])]{
-    A strucure type for sandwiches. Sandwiches are a pan-human foodstuff
+    A structure type for sandwiches. Sandwiches are a pan-human foodstuff
     composed of a partially-enclosing bread material and various
     ingredients.
   }]
+
+Additionally, an example using @racket[defstruct*]:
+@codeblock[#:keep-lang-line? #f]|{
+#lang scribble/manual
+@defstruct*[burrito ([salsa ingredient?] [tortilla ingredient?])]{
+  A structure type for burritos. Burritos are a pan-human foodstuff
+  composed of a @emph{fully}-encolosed bread material and various
+  ingredients.
 }
+}|
+}
+@doc-render-examples[
+ @defstruct*[#:link-target? #f
+             burrito ([salsa ingredient?] [tortilla ingredient?])]{
+    A structure type for burritos. Burritos are a pan-human foodstuff
+    composed of a @emph{fully}-encolosed bread material and various
+    ingredients.
+  }]
 
 
 @defform[(deftogether [def-expr ...] pre-flow ...)]{
