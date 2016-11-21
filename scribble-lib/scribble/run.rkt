@@ -40,6 +40,7 @@
         (and (eof-object? (read i)) v)))))
 
 (define (run)
+  (define doc-binding 'doc)
   (command-line
    #:program (short-program+command-name)
    #:once-any
@@ -136,15 +137,19 @@
    #:once-each
    [("--quiet") "suppress output-file and undefined-tag reporting"
     (current-quiet #t)]
+   [("--doc-binding") new-doc-binding
+    "look for document in new-doc-binding rather than 'doc"
+    (set! doc-binding (string->symbol new-doc-binding))]
    #:args (file . another-file)
    (let ([files (cons file another-file)])
      (parameterize ([current-command-line-arguments
                      (list->vector (reverse (doc-command-line-arguments)))])
        (build-docs (map (lambda (file) 
                           ;; Try `doc' submodule, first:
-                          (if (module-declared? `(submod (file ,file) doc) #t)
-                              (dynamic-require `(submod (file ,file) doc) 'doc)
-                              (dynamic-require `(file ,file) 'doc)))
+                          (if (module-declared? `(submod (file ,file) ,doc-binding) #t)
+                            (dynamic-require `(submod (file ,file) ,doc-binding)
+                                             doc-binding)
+                            (dynamic-require `(file ,file) doc-binding)))
                         files)
                    files)))))
 
