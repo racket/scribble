@@ -16,7 +16,6 @@ relevant libraries and APIs in detail.
 @local-table-of-contents[]
 
 @include-section["how-to.scrbl"]
-@include-section["style.scrbl"]
 @include-section["manual.scrbl"]
 @include-section["scheme.scrbl"]
 @include-section["examples.scrbl"]
