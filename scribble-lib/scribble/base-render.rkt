@@ -680,6 +680,8 @@
         (begin (when (target-element? i) (collect-target-element i ci))
                (when (index-element? i) (collect-index-element i ci))
                (when (collect-element? i) ((collect-element-collect i) ci))
+               (when (traverse-element? i)
+                 (collect-content (traverse-element-content i ci) ci))
                (when (element? i)
                  (collect-content (element-content i) ci))
                (when (multiarg-element? i)
