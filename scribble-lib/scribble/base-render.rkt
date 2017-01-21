@@ -494,8 +494,8 @@
                                  (current-render-mode)
                                  (let* ([alll (hash-ref fp 'scribble:local #hasheq())]
                                         [lp (hash-ref alll (current-part) #hasheq())])
-                                   (hash-ref fp key
-                                             (lambda () (hash-ref lp key default))))))
+                                   (hash-ref lp key
+                                             (lambda () (hash-ref fp key default))))))
                            (lambda (key #:local [local #f] val)
                              (if (or (eq? key 'scribble:current-render-mode)
                                      (eq? key 'scribble:local))
