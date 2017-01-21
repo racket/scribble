@@ -498,9 +498,7 @@
                                              (lambda () (hash-ref lp key default))))))
                            (lambda (key #:local [local #f] val)
                              (if (or (eq? key 'scribble:current-render-mode)
-                                     (and (list? key)
-                                          (not (empty? key))
-                                          (eq? (first key) 'scribble:local)))
+                                     (eq? key 'scribble:local))
                                  (raise-mismatch-error
                                   'traverse-info-set! 
                                   "cannot set value for built-in key: "
