@@ -2,16 +2,16 @@
 
 (require scheme/system scheme/port)
 
-(provide run-pdflatex run-dvipdf-latex)
+(provide run-xelatex run-dvipdf-latex)
 
-(define (run-pdflatex file [notify void]) (run file notify #f))
+(define (run-xelatex file [notify void]) (run file notify #f))
 (define (run-dvipdf-latex file [notify void]) 
   (parameterize ([function-name 'run-dvipdf-latex])
     (run file notify #t)))
 
 (define max-runs 5)
 (define (run file notify via-dvipdf?)
-  (define latex-cmd-name (if via-dvipdf? "latex" "pdflatex"))
+  (define latex-cmd-name (if via-dvipdf? "latex" "xelatex"))
   (define cmd
     (list (get-latex-binary latex-cmd-name)
           "-interaction=batchmode"
@@ -41,7 +41,7 @@
              (lambda (log) (regexp-match? #px#"changed\\.\\s+Rerun" log)))
            (loop (add1 n))]
           [(zero? n)
-           (notify "WARNING: no \"Rerun\" found in first run of pdflatex for ~a"
+           (notify "WARNING: no \"Rerun\" found in first run of xelatex for ~a"
                    file)]))
   (when via-dvipdf?
     (define dvi-file (path-replace-suffix file #".dvi"))
@@ -83,12 +83,12 @@
     (err (format "could not find a `~a' executable" name)))
   ans)
 
-(define function-name (make-parameter 'run-pdflatex))
+(define function-name (make-parameter 'run-xelatex))
 (define (err fmt . args) (apply error (function-name) fmt args))
 
 ;; under mac os x, gui apps do not get started with
 ;; a good path environment, so put likely candidates
-;; for directories holding latex/pdflatex binaries
+;; for directories holding latex/xelatex binaries
 ;; here so that the "scribble pdf" button is more 
 ;; likely to work in drracket
 (define macosx-candidate-dirs
