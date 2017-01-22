@@ -7,7 +7,8 @@
          (prefix-in markdown: "markdown-render.rkt")
          (prefix-in html:     "html-render.rkt")
          (prefix-in latex:    "latex-render.rkt")
-         (prefix-in pdf:      "pdf-render.rkt"))
+         (prefix-in pdf:      "pdf-render.rkt")
+         (prefix-in xelatex:  "xelatex-render.rkt"))
 
 (module test racket/base)
 
@@ -64,9 +65,12 @@
    [("--latex") "generate LaTeX-format output"
     (current-html #f)
     (current-render-mixin latex:render-mixin)]
-   [("--pdf") "generate PDF-format output (via XeLaTeX)"
+   [("--pdf") "generate PDF-format output (via PdfLaTeX)"
     (current-html #f)
     (current-render-mixin pdf:render-mixin)]
+   [("--xelatex") "generate PDF-format output (via XeLatex"
+    (current-html #f)
+    (current-render-mixin xelatex:render-mixin)]
    [("--dvipdf") "generate PDF-format output (via LaTeX, dvips, and pstopdf)"
     (current-html #f)
     (current-render-mixin pdf:dvi-render-mixin)]
