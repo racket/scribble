@@ -65,7 +65,7 @@
    [("--latex") "generate LaTeX-format output"
     (current-html #f)
     (current-render-mixin latex:render-mixin)]
-   [("--pdf") "generate PDF-format output (via PdfLaTeX)"
+   [("--pdf") "generate PDF-format output (via PDFLaTeX)"
     (current-html #f)
     (current-render-mixin pdf:render-mixin)]
    [("--xelatex") "generate PDF-format output (via XeLatex"
