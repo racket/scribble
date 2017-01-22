@@ -2,16 +2,22 @@
 
 (require scheme/system scheme/port)
 
-(provide run-pdflatex run-dvipdf-latex)
+(provide run-pdflatex run-dvipdf-latex run-xelatex)
 
-(define (run-pdflatex file [notify void]) (run file notify #f))
+(define (run-pdflatex file [notify void]) (run file notify 'pdflatex))
 (define (run-dvipdf-latex file [notify void]) 
   (parameterize ([function-name 'run-dvipdf-latex])
-    (run file notify #t)))
+    (run file notify 'dvipdf)))
+(define (run-xelatex file [notify void])
+  (parameterize ([function-name 'run-xelatex])
+    (run file notify 'xelatex)))
 
 (define max-runs 5)
-(define (run file notify via-dvipdf?)
-  (define latex-cmd-name (if via-dvipdf? "latex" "pdflatex"))
+(define (run file notify type)
+  (define latex-cmd-name (cond [(equal? type 'pdflatex) "pdflatex"]
+                               [(equal? type 'dvipdf) "latex"]
+                               [(equal? type 'xelatex) "xelatex"]
+                               [else (err "unknown run type ~a" type)]))
   (define cmd
     (list (get-latex-binary latex-cmd-name)
           "-interaction=batchmode"
@@ -43,7 +49,7 @@
           [(zero? n)
            (notify "WARNING: no \"Rerun\" found in first run of pdflatex for ~a"
                    file)]))
-  (when via-dvipdf?
+  (when (equal? type 'dvipdf)
     (define dvi-file (path-replace-suffix file #".dvi"))
     (define ps-file (path-replace-suffix file #".ps"))
     (unless (file-exists? dvi-file) (err "didn't find .dvi file"))
