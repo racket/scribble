@@ -16,7 +16,8 @@
 (define (run file notify type)
   (define latex-cmd-name (cond [(equal? type 'pdflatex) "pdflatex"]
                                [(equal? type 'dvipdf) "latex"]
-                               [(equal? type 'xelatex) "xelatex"]))
+                               [(equal? type 'xelatex) "xelatex"]
+                               [else (err "unknown run type ~a" type)]))
   (define cmd
     (list (get-latex-binary latex-cmd-name)
           "-interaction=batchmode"
