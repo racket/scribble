@@ -44,7 +44,12 @@
 
 (define (gen-tag content)
   (datum-intern-literal
-   (regexp-replace* "[^-a-zA-Z0-9_=]" (content->string content) "_")))
+   ;; Generate tag from ASCII plus CJK characters. Constraining to
+   ;; ASCII for most purposes helps avoid encoding issues for
+   ;; uncooperative environments, but constraining to ASCII is too
+   ;; uncooperative in another direction for CJK text (i.e., creates
+   ;; too many conflicting tags).
+   (regexp-replace* #px"[^-a-zA-Z0-9_=\u4e00-\u9fff\u3040-\u309F\u30A0-\u30FF]" (content->string content) "_")))
 
 (define (prefix->string p)
   (and p (if (string? p) 
