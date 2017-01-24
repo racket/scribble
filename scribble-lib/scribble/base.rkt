@@ -44,7 +44,7 @@
 
 (define (gen-tag content)
   (datum-intern-literal
-   (regexp-replace* "[^-a-zA-Z0-9_=]" (content->string content) "_")))
+   (regexp-replace* #px"[^-a-zA-Z0-9_=\u4e00-\u9fa5\u3040-\u309F\u30A0-\u30FF]" (content->string content) "_")))
 
 (define (prefix->string p)
   (and p (if (string? p) 
