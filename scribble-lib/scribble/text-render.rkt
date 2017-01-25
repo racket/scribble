@@ -259,14 +259,19 @@
       null)
 
     (define/override (render-content i part ri)
-      (if (and (element? i)
-               (let ([s (element-style i)])
-                 (or (eq? 'hspace s)
-                     (and (style? s)
-                          (eq? 'hspace (style-name s))))))
-          (parameterize ([current-preserve-spaces #t])
-            (super render-content i part ri))
-          (super render-content i part ri)))
+      (cond
+        [(and (element? i) (eq? (element-style i) 'hidden))
+         (super render-content "" part ri)]
+
+        [(and (element? i)
+              (let ([s (element-style i)])
+                (or (eq? 'hspace s)
+                    (and (style? s)
+                         (eq? 'hspace (style-name s))))))
+         (parameterize ([current-preserve-spaces #t])
+           (super render-content i part ri))]
+
+        [else (super render-content i part ri)]))
 
     (define/override (render-nested-flow i part ri starting-item?)
       (define s (nested-flow-style i))

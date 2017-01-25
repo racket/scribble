@@ -452,6 +452,9 @@
                   [(superscript) (wrap e "textsuper" #f)]
                   [(smaller) (wrap e "Smaller" #f)]
                   [(larger) (wrap e "Larger" #f)]
+                  [(hidden)
+                   (check-render)
+                   (void)]
                   [(hspace)
                    (check-render)
                    (let ([s (content->string e)])

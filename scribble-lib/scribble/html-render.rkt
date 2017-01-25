@@ -1592,6 +1592,7 @@
            [(smaller) '([class "Smaller"])]
            [(larger) '([class "Larger"])]
            [(hspace) '([class "hspace"])]
+           [(hidden) '([style "display: none"])]
            [(newline) '()]
            [else (error 'html-render "unrecognized style symbol: ~e" name)])]
         [(string? name) (if style null `([class ,name]))]

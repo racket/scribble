@@ -227,6 +227,9 @@
           (display str)))
 
       (cond
+        [(and (element? i) (eq? (element-style i) 'hidden))
+         (super render-content "" part ri)]
+
         [(and (code? i) (not (in-code?)))
           (recurse-wrapped "`" in-code?)]
 
