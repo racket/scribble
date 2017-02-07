@@ -80,9 +80,15 @@ get all cross-reference information for installed documentation.
                                                       (list/c (or/c module-path?
                                                                     module-path-index?)
                                                               symbol?)
-                                                      (listof module-path-index?
+                                                      (list/c module-path-index?
                                                               symbol?
                                                               module-path-index?
+                                                              symbol?
+                                                              (one-of/c 0 1)
+                                                              (or/c exact-integer? false/c)
+                                                              (or/c exact-integer? false/c))
+                                                      (list/c (or/c module-path?
+                                                                    module-path-index?)
                                                               symbol?
                                                               (one-of/c 0 1)
                                                               (or/c exact-integer? false/c)
