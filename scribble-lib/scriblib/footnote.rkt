@@ -71,7 +71,7 @@
    #f
    (list `(part ,(generated-tag)))
    #f
-   (make-style #f '(hidden toc-hidden))
+   (make-style #f '(unnumbered hidden toc-hidden))
    null
    (list
     (make-traverse-block
