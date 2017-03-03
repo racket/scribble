@@ -140,9 +140,9 @@
    #:once-each
    [("--quiet") "suppress output-file and undefined-tag reporting"
     (current-quiet #t)]
-   [("--doc-binding") new-doc-binding
-    "look for document in new-doc-binding rather than 'doc"
-    (set! doc-binding (string->symbol new-doc-binding))]
+   [("--doc-binding") id
+    "render document provided as <id> instead of `doc`"
+    (set! doc-binding (string->symbol id))]
    #:args (file . another-file)
    (let ([files (cons file another-file)])
      (parameterize ([current-command-line-arguments

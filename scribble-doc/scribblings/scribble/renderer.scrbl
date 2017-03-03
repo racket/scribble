@@ -415,7 +415,20 @@ support yet.
 @defmixin[render-mixin (render<%>) ()]{
 
 Specializes a @racket[render<%>] class for generating PDF output via
-Latex, building on @|latex:render-mixin| from @racketmodname[scribble/latex-render].}}
+Latex, building on @|latex:render-mixin| from @racketmodname[scribble/latex-render].}
+
+@defmixin[dvi-render-mixin (render<%>) ()]{
+
+Like @racket[render-mixin], but generates PDF output via @exec{latex},
+@exec{dvips}, and @exec{pstopdf}.
+
+@history[#:added "1.4"]}}
+
+@defmixin[xelatex-render-mixin (render<%>) ()]{
+
+Like @racket[render-mixin], but generates PDF output via @exec{xelatex}.
+
+@history[#:added "1.19"]}
 
 @; ----------------------------------------
 

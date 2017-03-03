@@ -35,6 +35,9 @@ its file suffix:
  @item{@DFlag{pdf} --- PDF @filepath{@|fn|.pdf} that is generated
        via @exec{pdflatex}}
 
+ @item{@DFlag{xelatex} --- PDF @filepath{@|fn|.pdf} that is generated
+       via @exec{xelatex}}
+
  @item{@DFlag{dvipdf} --- PDF @filepath{@|fn|.pdf} that is generated
        via @exec{latex}, @exec{dvips}, and @exec{pstopdf}}
 
@@ -65,16 +68,17 @@ source declares a module. The module should either have a @racket[doc]
 that exports @racket[doc] as a @racket[part], or it should directly
 export @racket[doc] as a @racket[part]. (The submodule is tried first,
 and the main module is not directly loaded or evaluated if the
-submodule can be loaded on its own.) (Use @DFlag{doc-binding} to
-change @racket[doc] to another symbol.)
+submodule can be loaded on its own.) Use @DFlag{doc-binding} to
+access an alternate exported name in place of @racket[doc].
 
 When multiple documents are rendered at the same time, cross-reference
 information in one document is visible to the other documents. See
 @secref["xref-flags"] for information on references that cross
 documents that are built separately.
 
-@history[#:changed "1.18" @elem{Added @DFlag{doc-binding}.}]
-@history[#:changed "1.4" @elem{Added @DFlag{dvipdf}.}]
+@history[#:changed "1.4" @elem{Added @DFlag{dvipdf}.}
+         #:changed "1.18" @elem{Added @DFlag{doc-binding}.}
+         #:changed "1.19" @elem{Added @DFlag{xelatex}.}]
 
 @section{Extra and Format-Specific Files}
 
