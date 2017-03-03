@@ -56,7 +56,7 @@ use @racket[affiliation-mark] before each different affiliation within
 a single @racket[affiliation], using @racket[(affiliation-sep)] to
 separate affiliations.}
 
-Examples:
+Example:
 @codeblock|{
 #lang scribble/jfp
 
