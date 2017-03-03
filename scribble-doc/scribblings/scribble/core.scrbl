@@ -121,7 +121,7 @@ A @deftech{block} is either a @techlink{table}, an
              @item{An @deftech{content} can be a string, one of a few
                    symbols, an instance of @racket[element] (possibly
                    @racket[link-element], etc.), a @racket[multiarg-element], a
-                   a @techlink{traverse element}, @techlink{part-relative element}, a
+                   @techlink{traverse element}, a @techlink{part-relative element}, a
                    @techlink{delayed element}, or a list of content.
 
                    @itemize[
