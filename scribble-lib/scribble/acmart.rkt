@@ -20,7 +20,7 @@
  [grantsponsor 
   (-> string? string? string? content?)]
  [grantnum 
-  (-> string? string? content?)]
+  (->* (string? string?) (#:url string?) content?)]
  [acmBadgeR (->* (string?) (#:url string?) content?)]
  [acmBadgeL (->* (string?) (#:url string?) content?)]
  [citestyle (-> content? content?)]
@@ -56,6 +56,19 @@
       (define (name . str)
         (make-nested-flow (make-style (symbol->string 'name) '())
                           (decode-flow str))))
+    ...))
+
+; comment environments ensure the \begin and \end are on their own lines
+(define-syntax-rule (define-comment-environments name ...)
+  (begin
+    (begin
+      (provide/contract [name (->* () () #:rest (listof pre-content?)
+                                   block?)])
+      (define (name . str)
+        (make-nested-flow (make-style (symbol->string 'name) '())
+                          (append (list (make-paragraph (style #f '()) '("")))
+                                  (decode-flow str)
+                                  (list (make-paragraph (style #f '()) '("")))))))
     ...))
 
 ; format options
@@ -115,10 +128,15 @@
                                (decode-string name)
                                (decode-string url))))
 
-(define (grantnum id num) ; FIXME: opt url
-  (make-multiarg-element (make-style "grantnum" '(multicommand))
-                         (list (decode-string id)
-                               (decode-string num))))
+(define (grantnum #:url [url #f] id num)
+  (if url
+      (make-multiarg-element (make-style "SgrantnumURL" '(multicommand))
+                             (list (decode-string url)
+                                   (decode-string id)
+                                   (decode-string num)))
+      (make-multiarg-element (make-style "grantnum" '(multicommand))
+                             (list (decode-string id)
+                                   (decode-string num)))))
 
 (define (acmBadgeR #:url [url #f] str)
   (if url
@@ -156,9 +174,8 @@
   (make-nested-flow (make-style "CCSXML" '(exact-chars))
                     (decode-flow str)))
 
-(define-environments teaserfigure sidebar marginfigure margintable
-  printonly screenonly anonsuppress
-  acks)
+(define-environments teaserfigure sidebar marginfigure margintable)
+(define-comment-environments printonly screenonly anonsuppress acks)
 
 ; FIXME: theorem styles
 

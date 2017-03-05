@@ -94,8 +94,8 @@ abstract and several other top-matter commands.  (See the
 Declares information that is collected into the front-matter region of the paper.}
 
 @deftogether[(
-@defproc[(acmBadgeL [#:url url string?] [graphics string?]) content?]
-@defproc[(acmBadgeR [#:url url string?] [graphics string?]) content?]
+@defproc[(acmBadgeL [#:url url string? #f] [graphics string?]) content?]
+@defproc[(acmBadgeR [#:url url string? #f] [graphics string?]) content?]
 )]{
 
 Display a special badge, such as an artifact evaluation badge, on the
@@ -196,4 +196,28 @@ editions, or excluded from anonymous editions.}
 
 @defproc[(acks [content pre-content?] ...) block?]{
 
-Creates an acknowledgments section.}
+Creates an unnumbered section ``Acknowledgments'' section, unless the
+@racket[anonymous] mode is selected.}
+
+@deftogether[(
+@defproc[(grantsponsor [sponsorID string?] [name string?] [url string?]) content?]
+@defproc[(grantnum [#:url url string? #f] [sponsorID string?] [num string?]) content?]
+)]{
+
+All financial support @emph{must} be listed using the
+@racket[grantsponsor] and @racket[grantnum] commands inside of
+@racket[acks].
+
+Here @racket[sponsorID] is the unique ID used to match grants to
+sponsors, @racket[name] is the name of the sponsor.  The
+@racket[sponsorID] of a @racket[grantnum] must match some
+@racket[sponsorID] of a @racket[grantsponsor] command.
+
+@codeblock[#:keep-lang-line? #f]|{
+  #lang scribble/acmart
+  @acks{
+    The author thanks Benjamin Greenman for helpful comments on this
+    code. Financial support provided by the @grantsponsor["NSF7000"
+    "National Scribble Foundation"]{http://racket-lang.org} under
+    grant No.: @grantnum["NSF7000"]{867-5309}.}
+}|}
