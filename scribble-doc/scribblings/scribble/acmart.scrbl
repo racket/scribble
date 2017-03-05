@@ -154,7 +154,7 @@ Declares CCS description.}
 
 Sets the date the paper was received.}
 
-@defproc[(citestyle [content pre-content?] ...) content?]{
+@defproc[(citestyle [content pre-content?]) content?]{
 
 Sets the citation style for the paper.}
 

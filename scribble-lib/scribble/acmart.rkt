@@ -23,6 +23,7 @@
   (-> string? string? content?)]
  [acmBadgeR (-> string? content?)]
  [acmBadgeL (-> string? content?)]
+ [citestyle (-> content? content?)]
  [CCSXML 
   (->* () () #:rest (listof pre-content?)
        any/c)])
@@ -128,6 +129,10 @@
   (make-element (make-style "acmBadgeL" '(command))
                 (decode-string str)))
 
+(define (citestyle str)
+  (make-element (make-style "citestyle" '(command))
+                (decode-string str)))
+
 (define-commands title subtitle orcid author affiliation email
   position institution department streetaddress city state postcode country
   thanks titlenote subtitlenote authornote acmVolume acmNumber acmArticle acmYear acmMonth
@@ -138,7 +143,7 @@
   settopmatter ; could be "Rackety"
   received ; FIXME: opt stage
   shortauthors
-  citestyle setcitstyle)
+  setcitstyle)
 
 (define (CCSXML . str) ; FIXME: doesn't actual do exact-chars
   (make-nested-flow (make-style "CCSXML" '(exact-chars))
