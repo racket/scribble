@@ -6,7 +6,7 @@
 
 @defmodulelang[scribble/acmart]{The @racketmodname[scribble/acmart]
 language is like @racketmodname[scribble/base], but configured with
-Latex style defaults to use the @filepath{acmart.cls} class
+LaTeX style defaults to use the @filepath{acmart.cls} class
 file that is included with Scribble.}
 
 @(define-syntax-rule (defacmartid name)

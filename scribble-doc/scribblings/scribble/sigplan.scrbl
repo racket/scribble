@@ -5,7 +5,7 @@
 
 @defmodulelang[scribble/sigplan]{The @racketmodname[scribble/sigplan]
 language is like @racketmodname[scribble/base], but configured with
-Latex style defaults to use the @filepath{sigplanconf.cls} class
+LaTeX style defaults to use the @filepath{sigplanconf.cls} class
 file that is included with Scribble.}
 
 @defidform[preprint]{
