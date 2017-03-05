@@ -21,6 +21,8 @@
   (-> string? string? string? content?)]
  [grantnum 
   (-> string? string? content?)]
+ [acmBadgeR (-> string? content?)]
+ [acmBadgeL (-> string? content?)]
  [CCSXML 
   (->* () () #:rest (listof pre-content?)
        any/c)])
@@ -117,11 +119,19 @@
                          (list (decode-string id)
                                (decode-string num))))
 
+;; FIXME: add support URL optional argument
+(define (acmBadgeR str)
+  (make-element (make-style "acmBadgeR" '(command))
+                (decode-string str)))
+
+(define (acmBadgeL str)
+  (make-element (make-style "acmBadgeL" '(command))
+                (decode-string str)))
+
 (define-commands title subtitle orcid author affiliation email
   position institution department streetaddress city state postcode country
   thanks titlenote subtitlenote authornote acmVolume acmNumber acmArticle acmYear acmMonth
   acmArticleSeq acmPrice acmISBN acmDOI
-  acmBadgeR acmBadgeL ; FIXME: add support URL optional argument
   startPage terms keywords
   ccsdesc ; FIXME: add support for number opt arg
   setcopyright copyrightyear

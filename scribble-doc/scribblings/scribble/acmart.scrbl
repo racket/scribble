@@ -69,8 +69,10 @@ Use as the last argument to @racket[title] to specify a subtitle.}
 
 @defproc[(maketitle) block?]{
 
-Issues the @tt{\maketitle} command.  This must appear after the abstract
-any several other top-matter commands.  (See the acmart latex documentation.)}
+Issues the @tt{\maketitle} command.  This must appear after the
+abstract and several other top-matter commands.  (See the
+@hyperlink["http://mirrors.concertpass.com/tex-archive/macros/latex/contrib/acmart/acmart.pdf"]{@tt{acmart}}
+documentation.)}
 
 
 @deftogether[(
@@ -85,8 +87,8 @@ any several other top-matter commands.  (See the acmart latex documentation.)}
 @defproc[(acmPrice [content pre-content?] ...) content?]
 @defproc[(acmISBN [content pre-content?] ...) content?]
 @defproc[(acmDOI [content pre-content?] ...) content?]
-@defproc[(acmBadgeL [content pre-content?] ...) content?]
-@defproc[(acmBadgeR [content pre-content?] ...) content?]
+@defproc[(acmBadgeL [graphics string?]) content?]
+@defproc[(acmBadgeR [graphics string?]) content?]
 )]{
 
 Declares information that is collected into the front-matter region of the paper.}
@@ -108,6 +110,22 @@ Declares information about the affiliation of an author.}
 
 Declares information that is collected for each author.  These commands should
  only be used within an @racket[affiliation] command.}
+
+@codeblock|{
+  #lang scribble/acmart
+  @title{Some Title}
+  @author{David Van Horn}
+  @email|{dvanhorn@cs.umd.edu}|
+  @affiliation{
+    @department{Department of Computer Science and UMIACS}
+    @institution{University of Maryland}
+    @city{College Park}
+    @state{Maryland}}
+
+  @abstract{This is an abstract.}
+  @maketitle{}
+}|
+
 
 @deftogether[(
 @defproc[(terms [content pre-content?] ...) content?]
