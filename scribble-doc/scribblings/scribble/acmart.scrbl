@@ -143,7 +143,7 @@ For @racket[keywords], capitalize only the first letter of the first
 word, separate phrases by commas, and do not include ``and'' before
 the last one. Keywords should be noun phrases, not adjectives.}
 
-@defproc[(startpage [content pre-content?] ...) content?]{
+@defproc[(startPage [content pre-content?] ...) content?]{
 Sets the start page for the paper.}
 
 @defproc[(ccsdesc [content pre-content?] ...) content?]{
