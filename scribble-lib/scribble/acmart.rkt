@@ -21,8 +21,8 @@
   (-> string? string? string? content?)]
  [grantnum 
   (-> string? string? content?)]
- [acmBadgeR (-> string? content?)]
- [acmBadgeL (-> string? content?)]
+ [acmBadgeR (->* (string?) (#:url string?) content?)]
+ [acmBadgeL (->* (string?) (#:url string?) content?)]
  [citestyle (-> content? content?)]
  [CCSXML 
   (->* () () #:rest (listof pre-content?)
@@ -120,14 +120,21 @@
                          (list (decode-string id)
                                (decode-string num))))
 
-;; FIXME: add support URL optional argument
-(define (acmBadgeR str)
-  (make-element (make-style "acmBadgeR" '(command))
-                (decode-string str)))
+(define (acmBadgeR #:url [url #f] str)
+  (if url
+      (make-multiarg-element (make-style "SacmBadgeRURL" '(multicommand))
+                             (list (decode-string url)
+                                   (decode-string str)))
+      (make-element (make-style "acmBadgeR" '(command))
+                    (decode-string str))))
 
-(define (acmBadgeL str)
-  (make-element (make-style "acmBadgeL" '(command))
-                (decode-string str)))
+(define (acmBadgeL #:url [url #f] str)
+  (if url
+      (make-multiarg-element (make-style "SacmBadgeLURL" '(multicommand))
+                             (list (decode-string url)
+                                   (decode-string str)))
+      (make-element (make-style "acmBadgeL" '(command))
+                    (decode-string str))))
 
 (define (citestyle str)
   (make-element (make-style "citestyle" '(command))

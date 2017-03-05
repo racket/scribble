@@ -1,13 +1,16 @@
 #lang scribble/manual
 @(require "utils.rkt" (for-label (except-in scribble/acmart title author)))
 
+@(define acmart-url
+   "http://mirrors.concertpass.com/tex-archive/macros/latex/contrib/acmart/acmart.pdf")
 
 @title{ACM Paper Format}
 
 @defmodulelang[scribble/acmart]{The @racketmodname[scribble/acmart]
 language is like @racketmodname[scribble/base], but configured with
-LaTeX style defaults to use the @filepath{acmart.cls} class
-file that is included with Scribble.}
+LaTeX style defaults to use the @hyperlink[acmart-url]{@tt{acmart}}
+class for typesetting publications for the Association of Computing
+Machinery.}
 
 @deftogether[(
 @defidform[manuscript]
@@ -71,8 +74,7 @@ Use as the last argument to @racket[title] to specify a subtitle.}
 
 Issues the @tt{\maketitle} command.  This must appear after the
 abstract and several other top-matter commands.  (See the
-@hyperlink["http://mirrors.concertpass.com/tex-archive/macros/latex/contrib/acmart/acmart.pdf"]{@tt{acmart}}
-documentation.)}
+@hyperlink[acmart-url]{@tt{acmart}} documentation.)}
 
 
 @deftogether[(
@@ -87,11 +89,20 @@ documentation.)}
 @defproc[(acmPrice [content pre-content?] ...) content?]
 @defproc[(acmISBN [content pre-content?] ...) content?]
 @defproc[(acmDOI [content pre-content?] ...) content?]
-@defproc[(acmBadgeL [graphics string?]) content?]
-@defproc[(acmBadgeR [graphics string?]) content?]
 )]{
 
 Declares information that is collected into the front-matter region of the paper.}
+
+@deftogether[(
+@defproc[(acmBadgeL [#:url url string?] [graphics string?]) content?]
+@defproc[(acmBadgeR [#:url url string?] [graphics string?]) content?]
+)]{
+
+Display a special badge, such as an artifact evaluation badge, on the
+left or right of the first page.  If @racket[url] is provided, the
+screen version of the image links to the badge authority.
+
+}
 
 @defproc[(affiliation [content pre-content?] ...) content?]{
 
