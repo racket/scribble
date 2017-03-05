@@ -9,36 +9,49 @@ language is like @racketmodname[scribble/base], but configured with
 LaTeX style defaults to use the @filepath{acmart.cls} class
 file that is included with Scribble.}
 
-@(define-syntax-rule (defacmartid name)
-   @defidform[name]{
-Enables the @tt[(symbol->string 'name)] option. Use @racket[name] only on the
-same line as @hash-lang[], with only whitespace (or other options) between
-@racketmodname[scribble/acmart] and @racket[name]:
-@verbatim[#:indent 2]{
-  #lang scribble/acmart @"@"@(symbol->string 'name)
-}})
+@deftogether[(
+@defidform[manuscript]
+@defidform[acmsmall]
+@defidform[acmlarge]
+@defidform[acmtog]
+@defidform[sigconf]
+@defidform[siggraph]
+@defidform[sigplan]
+@defidform[sigchi]
+@defidform[sigchi-a]
+)]{
 
-@defacmartid[manuscript]
-@defacmartid[acmsmall]
-@defacmartid[acmlarge]
-@defacmartid[acmtog]
-@defacmartid[sigconf]
-@defacmartid[siggraph]
-@defacmartid[sigplan]
-@defacmartid[sigchi]
-@defacmartid[sigchi-a]
-@defacmartid[review]
-@defacmartid[screen]
-@defacmartid[natbib]
-@defacmartid[anonymous]
-@defacmartid[authorversion]
+Enables the given document format. Use the format only on the same
+line as @hash-lang[], with only whitespace (or other options) between
+@racketmodname[scribble/acmart] and the format name:
 
-The @racket[manuscript], @racket[acmsmall], @racket[acmlarge], 
-@racket[acmtog], @racket[sigconf], @racket[siggraph], @racket[sigplan],
-@racket[sigchi], and @racket[sigchi-a] options are all mutually exclusive,
-but may each be used in combination of @racket[review], @racket[screen], @racket[natbib],
-@racket[anonymous], and @racket[authorversion].
+@verbatim[#:indent 2]|{
+  #lang scribble/acmart @acmsmall
+}|
 
+The @racket[manuscript], @racket[acmsmall], @racket[acmlarge],
+@racket[acmtog], @racket[sigconf], @racket[siggraph],
+@racket[sigplan], @racket[sigchi], and @racket[sigchi-a] formats are
+all mutually exclusive.}
+
+@deftogether[(
+@defidform[review]
+@defidform[screen]
+@defidform[natbib]
+@defidform[anonymous]
+@defidform[authorversion]
+)]{
+
+Enables the given document format option. Use the option only on the
+same line as @hash-lang[], with only whitespace (or other options)
+between @racketmodname[scribble/acmart] and the format option.  Any
+number of options may be used:
+
+@verbatim[#:indent 2]|{
+  #lang scribble/acmart @acmsmall @review @anonymous @natbib
+}|
+
+}
 
 @defproc[(abstract [pre-content pre-content?] ...) block?]{
 
