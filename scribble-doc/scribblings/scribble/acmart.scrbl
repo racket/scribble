@@ -161,9 +161,18 @@ Sets the start page for the paper.}
 
 Declares CCS description.}
 
-@defproc[(received [content pre-content?] ...) content?]{
+@defproc[(received [#:stage stage string? #f] [date string?]) content?]{
 
-Sets the date the paper was received.}
+Sets the history of the publication.  If @racket[stage] is omitted, it
+defaults to @racket{Received} for the first occurrence and
+@racket{revised} in subsequent uses.
+
+@codeblock[#:keep-lang-line? #f]|{
+  #lang scribble/acmart
+  @received{February 2007}
+  @received[#:stage "revised"]{March 2009}
+  @received[#:stage "accepted"]{June 2009}
+}|}
 
 @defproc[(citestyle [content pre-content?]) content?]{
 

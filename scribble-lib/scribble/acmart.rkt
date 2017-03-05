@@ -23,6 +23,7 @@
   (->* (string? string?) (#:url string?) content?)]
  [acmBadgeR (->* (string?) (#:url string?) content?)]
  [acmBadgeL (->* (string?) (#:url string?) content?)]
+ [received (->* (string?) (#:stage string?) content?)]
  [citestyle (-> content? content?)]
  [CCSXML 
   (->* () () #:rest (listof pre-content?)
@@ -154,6 +155,14 @@
       (make-element (make-style "acmBadgeL" '(command))
                     (decode-string str))))
 
+(define (received #:stage [s #f] str)
+  (if s
+      (make-multiarg-element (make-style "SreceivedStage" '(multicommand))
+                             (list (decode-string s)
+                                   (decode-string str)))
+      (make-element (make-style "received" '(command))
+                    (decode-string str))))
+
 (define (citestyle str)
   (make-element (make-style "citestyle" '(command))
                 (decode-string str)))
@@ -166,7 +175,6 @@
   ccsdesc ; FIXME: add support for number opt arg
   setcopyright copyrightyear
   settopmatter ; could be "Rackety"
-  received ; FIXME: opt stage
   shortauthors
   setcitstyle)
 
