@@ -167,20 +167,29 @@
   (make-element (make-style "citestyle" '(command))
                 (decode-string str)))
 
+(define (ccsdesc #:number [n #f] str)
+  (if n
+      (make-multiarg-element (make-style "SccsdescNumber" '(multicommand))
+                             (list (number->string n)
+                                   (decode-string str)))
+      (make-element (make-style "ccsdesc" '(command))
+                    (decode-string str))))
+
 (define-commands title subtitle orcid author affiliation email
   position institution department streetaddress city state postcode country
   thanks titlenote subtitlenote authornote acmVolume acmNumber acmArticle acmYear acmMonth
   acmArticleSeq acmPrice acmISBN acmDOI
   startPage terms keywords
-  ccsdesc ; FIXME: add support for number opt arg
   setcopyright copyrightyear
   settopmatter ; could be "Rackety"
   shortauthors
   setcitstyle)
 
-(define (CCSXML . str) ; FIXME: doesn't actual do exact-chars
-  (make-nested-flow (make-style "CCSXML" '(exact-chars))
-                    (decode-flow str)))
+(define (CCSXML . strs)
+  (make-nested-flow (make-style "CCSXML" '())
+                    (list (make-paragraph (make-style #f '())
+                                          (make-element (make-style #f '(exact-chars))
+                                                        (apply string-append strs))))))
 
 (define-environments teaserfigure sidebar marginfigure margintable)
 (define-comment-environments printonly screenonly anonsuppress acks)
