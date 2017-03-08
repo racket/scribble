@@ -157,9 +157,9 @@ the last one. Keywords should be noun phrases, not adjectives.}
 @defproc[(startPage [content pre-content?] ...) content?]{
 Sets the start page for the paper.}
 
-@defproc[(ccsdesc [content pre-content?] ...) content?]{
+@defproc[(ccsdesc [#:number number? #f] [content pre-content?] ...) content?]{
 
-Declares CCS description.}
+Declares CCS description with optional numeric code.}
 
 @defproc[(received [#:stage stage string? #f] [date string?]) content?]{
 
