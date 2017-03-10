@@ -1,5 +1,6 @@
 #lang scribble/manual
-@(require "utils.rkt" (for-label (except-in scribble/acmart title author)))
+@(require (except-in "utils.rkt" title)
+          (for-label (except-in scribble/acmart author)))
 
 @(define acmart-url
    "http://mirrors.concertpass.com/tex-archive/macros/latex/contrib/acmart/acmart.pdf")
@@ -66,9 +67,13 @@ Similar to @racket[include-section], but incorporates the document in the
 specified module as an abstract. The document must have no title or
 sub-parts.}
 
+@defproc[(title [#:short short-title pre-content? #f] [title pre-content?]) content?]{
+
+Specifies the title of the document, optionally with a short version of the title for running heads.}
+
 @defproc[(subtitle [pre-content pre-content?] ...) content?]{
 
-Use as the last argument to @racket[title] to specify a subtitle.}
+Specifies a subtitle.}
 
 @defproc[(maketitle) block?]{
 

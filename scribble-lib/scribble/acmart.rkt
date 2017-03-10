@@ -9,6 +9,7 @@
          (for-syntax racket/base))
 
 (provide/contract
+ [title (->* (pre-content?) (#:short pre-content?) content?)]
  [abstract 
   (->* () () #:rest (listof pre-content?)
        block?)]
@@ -175,7 +176,16 @@
       (make-element (make-style "ccsdesc" '(command))
                     (decode-string str))))
 
-(define-commands title subtitle orcid author affiliation email
+(define (title #:short [st #f] str)
+  (if st
+      (make-multiarg-element (make-style "StitleShort" '(multicommand))
+                             (list (decode-string st)
+                                   (decode-string str)))
+      (make-element (make-style "title" '(command))
+                    (decode-string str))))
+      
+
+(define-commands subtitle orcid author affiliation email
   position institution department streetaddress city state postcode country
   thanks titlenote subtitlenote authornote acmVolume acmNumber acmArticle acmYear acmMonth
   acmArticleSeq acmPrice acmISBN acmDOI
