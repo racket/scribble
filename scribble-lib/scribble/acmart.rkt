@@ -46,7 +46,7 @@
       (provide/contract [name (->* () () #:rest (listof pre-content?)
                                    content?)])
       (define (name . str)
-        (make-element (make-style (symbol->string 'name) '(command))
+        (make-element (make-style (symbol->string 'name) command-props)
                       (decode-content str))))
     ...))
 
@@ -56,7 +56,7 @@
       (provide/contract [name (->* () () #:rest (listof pre-content?)
                                    block?)])
       (define (name . str)
-        (make-nested-flow (make-style (symbol->string 'name) '())
+        (make-nested-flow (make-style (symbol->string 'name) acmart-extras)
                           (decode-flow str))))
     ...))
 
@@ -67,7 +67,7 @@
       (provide/contract [name (->* () () #:rest (listof pre-content?)
                                    block?)])
       (define (name . str)
-        (make-nested-flow (make-style (symbol->string 'name) '())
+        (make-nested-flow (make-style (symbol->string 'name) acmart-extras)
                           (append (list (make-paragraph (style #f '()) '("")))
                                   (decode-flow str)
                                   (list (make-paragraph (style #f '()) '("")))))))
@@ -91,13 +91,16 @@
 
 (define abstract-style (make-style "abstract" acmart-extras))
 
+(define command-props (cons 'command acmart-extras))
+(define multicommand-props (cons 'multicommand acmart-extras))
+
 (define (abstract . strs)
   (make-nested-flow
    abstract-style
    (decode-flow strs)))
 
 (define (maketitle)
-  (make-nested-flow (make-style "maketitle" '(command)) '()))
+  (make-nested-flow (make-style "maketitle" command-props) '()))
 
 (define (extract-abstract p)
   (unless (part? p)
@@ -115,73 +118,73 @@
 
 
 (define (acmJournal . str)
-  (make-element (make-style "acmJournal" '(command))
+  (make-element (make-style "acmJournal" command-props)
                 (decode-content str)))
 
 (define (acmConference name date venue)
-  (make-multiarg-element (make-style "acmConference" '(multicommand))
+  (make-multiarg-element (make-style "acmConference" multicommand-props)
                          (list (decode-string name)
                                (decode-string date)
                                (decode-string venue))))
 
 (define (grantsponsor id name url)
-  (make-multiarg-element (make-style "grantsponsor" '(multicommand))
+  (make-multiarg-element (make-style "grantsponsor" multicommand-props)
                          (list (decode-string id)
                                (decode-string name)
                                (decode-string url))))
 
 (define (grantnum #:url [url #f] id num)
   (if url
-      (make-multiarg-element (make-style "SgrantnumURL" '(multicommand))
+      (make-multiarg-element (make-style "SgrantnumURL" multicommand-props)
                              (list (decode-string url)
                                    (decode-string id)
                                    (decode-string num)))
-      (make-multiarg-element (make-style "grantnum" '(multicommand))
+      (make-multiarg-element (make-style "grantnum" multicommand-props)
                              (list (decode-string id)
                                    (decode-string num)))))
 
 (define (acmBadgeR #:url [url #f] str)
   (if url
-      (make-multiarg-element (make-style "SacmBadgeRURL" '(multicommand))
+      (make-multiarg-element (make-style "SacmBadgeRURL" multicommand-props)
                              (list (decode-string url)
                                    (decode-string str)))
-      (make-element (make-style "acmBadgeR" '(command))
+      (make-element (make-style "acmBadgeR" command-props)
                     (decode-string str))))
 
 (define (acmBadgeL #:url [url #f] str)
   (if url
-      (make-multiarg-element (make-style "SacmBadgeLURL" '(multicommand))
+      (make-multiarg-element (make-style "SacmBadgeLURL" multicommand-props)
                              (list (decode-string url)
                                    (decode-string str)))
-      (make-element (make-style "acmBadgeL" '(command))
+      (make-element (make-style "acmBadgeL" command-props)
                     (decode-string str))))
 
 (define (received #:stage [s #f] str)
   (if s
-      (make-multiarg-element (make-style "SreceivedStage" '(multicommand))
+      (make-multiarg-element (make-style "SreceivedStage" multicommand-props)
                              (list (decode-string s)
                                    (decode-string str)))
-      (make-element (make-style "received" '(command))
+      (make-element (make-style "received" command-props)
                     (decode-string str))))
 
 (define (citestyle str)
-  (make-element (make-style "citestyle" '(command))
+  (make-element (make-style "citestyle" command-props)
                 (decode-string str)))
 
 (define (ccsdesc #:number [n #f] str)
   (if n
-      (make-multiarg-element (make-style "SccsdescNumber" '(multicommand))
+      (make-multiarg-element (make-style "SccsdescNumber" multicommand-props)
                              (list (number->string n)
                                    (decode-string str)))
-      (make-element (make-style "ccsdesc" '(command))
+      (make-element (make-style "ccsdesc" command-props)
                     (decode-string str))))
 
 (define (title #:short [st #f] str)
   (if st
-      (make-multiarg-element (make-style "StitleShort" '(multicommand))
+      (make-multiarg-element (make-style "StitleShort" multicommand-props)
                              (list (decode-string st)
                                    (decode-string str)))
-      (make-element (make-style "title" '(command))
+      (make-element (make-style "title" command-props)
                     (decode-string str))))
       
 
