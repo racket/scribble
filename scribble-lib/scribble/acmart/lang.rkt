@@ -126,7 +126,7 @@
                    (scribble-file "acmart/style.tex")
                    (list (scribble-file "acmart/acmart.cls"))
                    #f
-		   #:replacements (hash "scribble-load-replace.tex" "acmart-load.tex")))))
+		   #:replacements (hash "scribble-load-replace.tex" (scribble-file "acmart/acmart-load.tex"))))))
 
 (define (add-acmart-styles doc)
   ;; Ensure that "acmart.tex" is used, since "style.tex"
