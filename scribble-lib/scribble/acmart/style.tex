@@ -1,0 +1,42 @@
+
+% Define \SXtitle to lift \SSubtitle out:
+\def\SXtitle#1{\title{\let\SSubtitle\SSubtitleDrop#1}\SExtractSubtitle#1\SExtractSubtitleDone}
+\def\SSubtitleDrop#1{}
+\def\SExtractSubtitleDone {}
+\def\SExtractSubtitle{\futurelet\next\SExtractSubtitleX}
+\def\SExtractSubtitleX#1{\ifx#1\SSubtitle \let\Snext\SWithSubtitle \else \let\Snext\SExtractSubtitleY \fi \Snext}
+\def\SExtractSubtitleY{\ifx\next\SExtractSubtitleDone \let\Snext\relax \else \let\Snext\SExtractSubtitle \fi \Snext}
+\def\SWithSubtitle#1{\subtitle{#1}\SExtractSubtitle}
+
+\renewcommand{\titleAndVersionAndAuthors}[3]{\SXtitle{#1}#3}
+\renewcommand{\titleAndEmptyVersionAndAuthors}[3]{\titleAndVersionAndAuthors{#1}{#2}{#3}}
+\renewcommand{\titleAndVersionAndEmptyAuthors}[3]{\SXtitle{#1}\author{Anonymous Author(s)}}
+\renewcommand{\titleAndEmptyVersionAndEmptyAuthors}[3]{\titleAndVersionAndEmptyAuthors{#1}{#2}{#3}}
+
+% Support plain `author' while enabling `authorinfo': for each
+% use of \SAuthor, check whether it contains an \SAuthorinfo form:
+\def\SAuthor#1{\author{#1}}
+
+\renewcommand{\SAuthorSep}[1]{}
+
+\renewcommand{\SConferenceInfo}[2]{\conferenceinfo{#1}{#2}}
+\renewcommand{\SCopyrightYear}[1]{\copyrightyear{#1}}
+\renewcommand{\SCopyrightData}[1]{\copyrightdata{#1}}
+%\renewcommand{\Sdoi}[1]{\doi{#1}}
+\renewcommand{\SPexclusivelicense}[0]{\exclusivelicense}
+
+\renewcommand{\SCategory}[3]{\category{#1}{#2}{#3}}
+\renewcommand{\SCategoryPlus}[4]{\category{#1}{#2}{#3}[#4]}
+\renewcommand{\STerms}[1]{\terms{#1}}
+\renewcommand{\SKeywords}[1]{\keywords{#1}}
+
+\newcommand{\StitleShort}[2]{\title[#1]{#2}}
+
+\newcommand{\SacmBadgeRURL}[2]{\acmBadgeR[#1]{#2}}
+\newcommand{\SacmBadgeLURL}[2]{\acmBadgeL[#1]{#2}}
+
+\newcommand{\SgrantnumURL}[3]{\grantnum[#1]{#2}{#3}}
+
+\newcommand{\SreceivedStage}[2]{\received[#1]{#2}}
+
+\newcommand{\SccsdescNumber}[2]{\ccsdesc[#1]{#2}}

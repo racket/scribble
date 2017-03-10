@@ -10,5 +10,6 @@
 @include-section["book.scrbl"]
 @include-section["report.scrbl"]
 @include-section["sigplan.scrbl"]
+@include-section["acmart.scrbl"]
 @include-section["jfp.scrbl"]
 @include-section["lncs.scrbl"]

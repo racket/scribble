@@ -105,7 +105,7 @@ removed.}
 
 
 @def-section-like[section part-start?]{ Like @racket[title], but
- generates a @racket[part-start] of depth @racket[0] to be by
+ generates a @racket[part-start] of depth @racket[0] to be picked up by
  @racket[decode] or @racket[decode-part].}
 
 @def-section-like[subsection part-start?]{ Like @racket[section], but

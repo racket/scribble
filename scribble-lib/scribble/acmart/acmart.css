@@ -1,0 +1,13 @@
+/* Support for styles in scribble/sigplan */
+
+.SAuthorPlace, .SAuthorEmail,
+.SConferenceInfo, .SCopyrightYear, .SCopyrightData,
+.Sdoi, .SPexclusivelicense,
+.SCategory, .SCategoryPlus, .STerms, .SKeywords {
+  display: none;
+}
+
+.SSubtitle {
+  display: block;
+  font-size: smaller;
+}
