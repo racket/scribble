@@ -1,6 +1,6 @@
 #lang scribble/manual
-@(require (except-in "utils.rkt" title)
-          (for-label (except-in scribble/acmart author)))
+@(require (except-in "utils.rkt" title author)
+          (for-label scribble/acmart))
 
 @(define acmart-url
    "http://mirrors.concertpass.com/tex-archive/macros/latex/contrib/acmart/acmart.pdf")
@@ -74,6 +74,14 @@ Specifies the title of the document, optionally with a short version of the titl
 @defproc[(subtitle [pre-content pre-content?] ...) content?]{
 
 Specifies a subtitle.}
+
+@defproc[(author [pre-content pre-conent?] ...) content?]{
+
+Specifies an author.}
+
+@defproc[(email [pre-content pre-conent?] ...) content?]{
+
+Specifies an author's email address.}
 
 @defproc[(maketitle) block?]{
 
