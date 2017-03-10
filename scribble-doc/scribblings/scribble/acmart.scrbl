@@ -57,6 +57,19 @@ number of options may be used:
 
 }
 
+@defproc[(maketitle) block?]{
+
+Issues the @tt{maketitle} command.  This @emph{must} be included in
+the document and should occur after the title, authors, and several
+other top-matter commands. (See the
+@hyperlink[acmart-url]{@tt{acmart}} documentation.)
+
+@codeblock|{
+  #lang scribble/acmart
+  @title{Example}
+  @maketitle{}
+}|}
+
 @defproc[(abstract [pre-content pre-content?] ...) block?]{
 
 Generates a @tech{nested flow} for a paper abstract.}
@@ -82,13 +95,6 @@ Specifies an author.}
 @defproc[(email [pre-content pre-conent?] ...) content?]{
 
 Specifies an author's email address.}
-
-@defproc[(maketitle) block?]{
-
-Issues the @tt{\maketitle} command.  This must appear after the
-abstract and several other top-matter commands.  (See the
-@hyperlink[acmart-url]{@tt{acmart}} documentation.)}
-
 
 @deftogether[(
 @defproc[(acmJournal [journal pre-content?] ...) content?]
