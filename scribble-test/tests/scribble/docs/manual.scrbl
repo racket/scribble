@@ -90,6 +90,8 @@ A function, again, not a link target, documented to return @racket[10] using a d
 
 @defstruct[#:link-target? #f pt ([x real?] [y real?]) #:mutable]{A mutable structure type with extra name, again.}
 
+@defstruct[a-struct-with-an-extremely-long-name-and-no-fields ()]{Used to raise error, taking car of empty fields list. Reported by Carlos Lopez, 2017-03-11.}
+
 
 @defmodule["manual-ex0.rkt" #:no-declare #:link-target? #f #:packages ()]
 @defmodule["manual-ex0.rkt" #:lang #:no-declare #:link-target? #f #:packages ()]
