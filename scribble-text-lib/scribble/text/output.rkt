@@ -250,6 +250,7 @@
 
 ;; special constructs
 
+(provide (struct-out special))
 (define-struct special (flag contents))
 
 (define-syntax define/provide-special
