@@ -1,6 +1,7 @@
 #lang racket/base
 (require setup/collects
          racket/contract/base
+         racket/list
          scribble/core
          scribble/base
          scribble/decode
@@ -9,7 +10,7 @@
          (for-syntax racket/base))
 
 (provide/contract
- [title (->* (pre-content?) (#:short pre-content?) content?)]
+ [title (->* (pre-content?) #;(#:short pre-content?) title-decl? #;content?)]
  [abstract 
   (->* () () #:rest (listof pre-content?)
        block?)]
@@ -29,8 +30,6 @@
  [CCSXML 
   (->* () () #:rest (listof pre-content?)
        any/c)])
-
-(provide maketitle)
 
 (define-syntax-rule (defopts name ...)
   (begin (define-syntax (name stx)
@@ -98,9 +97,6 @@
   (make-nested-flow
    abstract-style
    (decode-flow strs)))
-
-(define (maketitle)
-  (make-nested-flow (make-style "maketitle" command-props) '()))
 
 (define (extract-abstract p)
   (unless (part? p)
@@ -179,16 +175,57 @@
       (make-element (make-style "ccsdesc" command-props)
                     (decode-string str))))
 
-(define (title #:short [st #f] str)
-  (if st
-      (make-multiarg-element (make-style "StitleShort" multicommand-props)
-                             (list (decode-string st)
-                                   (decode-string str)))
-      (make-element (make-style "title" command-props)
-                    (decode-string str))))
-      
+(define (prefix->string p)
+  (and p (if (string? p) 
+             (datum-intern-literal p)
+             (module-path-prefix->string p))))
 
-(define-commands subtitle orcid author affiliation email
+(define (gen-tag content)
+  (datum-intern-literal
+   ;; Generate tag from ASCII plus CJK characters. Constraining to
+   ;; ASCII for most purposes helps avoid encoding issues for
+   ;; uncooperative environments, but constraining to ASCII is too
+   ;; uncooperative in another direction for CJK text (i.e., creates
+   ;; too many conflicting tags).
+   (regexp-replace* #px"[^-a-zA-Z0-9_=\u4e00-\u9fff\u3040-\u309F\u30A0-\u30FF]"
+                    (content->string content) "_")))
+
+(define (convert-tag tag content)
+  (if (list? tag)
+    (append-map (lambda (t) (convert-tag t content)) tag)
+    `((part ,(or tag (gen-tag content))))))
+
+(define (convert-part-style who s)
+  (cond
+   [(style? s) s]
+   [(not s) plain]
+   [(string? s) (make-style s null)]
+   [(symbol? s) (make-style #f (list s))]
+   [(and (list? s) (andmap symbol? s)) (make-style #f s)]
+   [else (raise-argument-error who "(or/c style? string? symbol? (listof symbol?) #f)" s)]))
+
+(define (title #:tag [tag #f] #:tag-prefix [prefix #f] #:style [style plain]
+               #:version [version #f] #:date [date #f]
+               . str)
+  (let ([content (decode-content str)])
+    (make-title-decl (prefix->string prefix)
+                     (convert-tag tag content)
+                     version
+                     (let ([s (convert-part-style 'title style)])
+                       (if date
+                           (make-style (style-name s)
+                                       (cons (make-document-date date)
+                                             (style-properties s)))
+                           s))
+                     content)))
+
+(provide/contract [author (->* () () #:rest (listof pre-content?)
+                               paragraph?)])
+(define (author . auths)
+  (make-paragraph (make-style 'author command-props)
+                  (decode-content auths)))
+
+(define-commands subtitle orcid affiliation email
   position institution department streetaddress city state postcode country
   thanks titlenote subtitlenote authornote acmVolume acmNumber acmArticle acmYear acmMonth
   acmArticleSeq acmPrice acmISBN acmDOI
