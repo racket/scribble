@@ -857,17 +857,16 @@
                             (short-width . < . max-proto-width))]
                        [split-field-line?
                         ;; start fields on the line after "struct"?
-                        (max-proto-width . < . (+ 8
-                                                  (if (pair? name)
-                                                      (+ (sym-length (car name))
-                                                         1
-                                                         (sym-length (cadr name)))
-                                                      (sym-length name))
-                                                  1
-                                                  (if (pair? fields)
-                                                      (sym-length (field-name (car fields)))
-                                                      0)
-                                                  1))])
+                        (and (pair? fields)
+                             (max-proto-width . < . (+ 8
+                                                       (if (pair? name)
+                                                           (+ (sym-length (car name))
+                                                              1
+                                                              (sym-length (cadr name)))
+                                                           (sym-length name))
+                                                       1
+                                                       (sym-length (field-name (car fields)))
+                                                       1)))])
                   (make-table
                    #f
                    ;; First four columns: "(struct" <space> <name><space> (
