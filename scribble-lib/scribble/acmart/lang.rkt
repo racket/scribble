@@ -20,10 +20,11 @@
            [screen? #f]
            [natbib? #f]
            [anonymous? #f]
-           [authorversion? #f])
+           [authorversion? #f]
+           [font-size #f])
        (let loop ([stuff #'body])
          (syntax-case* stuff (manuscript acmsmall acmlarge acmtog sigconf siggraph sigplan sigchi sigchi-a
-					 review screen natbib anonymous authorversion)
+					 review screen natbib anonymous authorversion 9pt 10pt 11pt 12pt)
 		       (lambda (a b) (eq? (syntax-e a) (syntax-e b)))
            [(ws . body)
             ;; Skip intraline whitespace to find options:
@@ -78,6 +79,18 @@
 	   [(authorversion . body)
 	    (set! authorversion? "authorversion=true")
 	    (loop #'body)]
+	   [(9pt . body)
+	    (set! font-size "9pt")
+	    (loop #'body)]
+	   [(10pt . body)
+	    (set! font-size "10pt")
+	    (loop #'body)]
+	   [(11pt . body)
+	    (set! font-size "11pt")
+	    (loop #'body)]
+	   [(12pt . body)
+	    (set! font-size "12pt")
+	    (loop #'body)]
 	   
 	   
            ; format options
@@ -110,7 +123,7 @@
             (loop #'body)]
 	    
 	   [body
-            #`(#%module-begin id (post-process #,review? #,screen? #,natbib? #,anonymous? #,authorversion? #,format?) () . body)])))]))
+            #`(#%module-begin id (post-process #,review? #,screen? #,natbib? #,anonymous? #,authorversion? #,font-size #,format?) () . body)])))]))
 
 (define ((post-process . opts) doc)  
   (let ([options
