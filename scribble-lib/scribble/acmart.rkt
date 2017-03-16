@@ -272,15 +272,14 @@
                                                  (make-style "SAuthorEmail" multicommand-props)
                                                  (decode-content (list e)))))))))
 
-(define-commands subtitle orcid affiliation email
+(define-commands subtitle
   position institution department streetaddress city state postcode country
   thanks titlenote subtitlenote authornote acmVolume acmNumber acmArticle acmYear acmMonth
   acmArticleSeq acmPrice acmISBN acmDOI
   startPage terms keywords
   setcopyright copyrightyear
   settopmatter ; could be "Rackety"
-  shortauthors
-  setcitstyle)
+  shortauthors)
 
 (define (CCSXML . strs)
   (make-nested-flow (make-style "CCSXML" '())
