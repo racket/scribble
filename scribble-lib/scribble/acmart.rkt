@@ -17,7 +17,14 @@
               #:style (or/c style? string? symbol? #f)
               #:version (or/c string? #f)
               #:date (or/c string? #f))
-             title-decl? #;content?)]
+             title-decl?)]
+ [author (->* () () #:rest (listof pre-content?)
+              paragraph?)]
+ [authorinfo (->* (string?)
+                  ((or/c string? (listof string?))
+                   (or/c string? (listof string?))
+                   #:orcid (or/c string? #f))
+                  paragraph?)]
  [abstract 
   (->* () () #:rest (listof pre-content?)
        block?)]
@@ -233,11 +240,37 @@
                        s)
                      content)))
 
-(provide/contract [author (->* () () #:rest (listof pre-content?)
-                               paragraph?)])
 (define (author . auths)
   (make-paragraph (make-style 'author command-props)
                   (decode-content auths)))
+
+(define (authorinfo name
+                    #:orcid [orcid #f]
+                    [affiliation '()]
+                    [email '()])
+  (author
+   (make-multiarg-element (make-style "SAuthorinfo" multicommand-props)
+                          (list (make-element #f (decode-content (list name)))
+                                (make-element #f
+                                              (if orcid
+                                                  (make-element
+                                                   (make-style "SAuthorOrcid" multicommand-props)
+                                                   (decode-content (list orcid)))
+                                                  '()))
+                                (make-element #f
+                                              (for/list ([a (in-list (if (list? affiliation)
+                                                                         affiliation
+                                                                         (list affiliation)))])
+                                                (make-element
+                                                 (make-style "SAuthorPlace" multicommand-props)
+                                                 (decode-content (list a)))))
+                                (make-element #f
+                                              (for/list ([e (in-list (if (list? email)
+                                                                         email
+                                                                         (list email)))])
+                                                (make-element
+                                                 (make-style "SAuthorEmail" multicommand-props)
+                                                 (decode-content (list e)))))))))
 
 (define-commands subtitle orcid affiliation email
   position institution department streetaddress city state postcode country

@@ -19,9 +19,19 @@
 
 % Support plain `author' while enabling `authorinfo': for each
 % use of \SAuthor, check whether it contains an \SAuthorinfo form:
-\def\SAuthor#1{\author{#1}}
+\def\SAuthor#1{\SAutoAuthor#1\SAutoAuthorDone{#1}}
+\def\SAutoAuthorDone#1{}
+\def\SAutoAuthor{\futurelet\next\SAutoAuthorX}
+\def\SAutoAuthorX{\ifx\next\SAuthorinfo \let\Snext\relax \else \let\Snext\SToAuthorDone \fi \Snext}
+\def\SToAuthorDone{\futurelet\next\SToAuthorDoneX}
+\def\SToAuthorDoneX#1{\ifx\next\SAutoAuthorDone \let\Snext\SAddAuthorInfo \else \let\Snext\SToAuthorDone \fi \Snext}
+\newcommand{\SAddAuthorInfo}[1]{\SAuthorinfo{#1}{}{}}
 
+\renewcommand{\SAuthorinfo}[4]{\author{#1}{#2}{#3}{#4}}
 \renewcommand{\SAuthorSep}[1]{}
+\renewcommand{\SAuthorOrcid}[1]{\orcid{#1}}
+\renewcommand{\SAuthorPlace}[1]{\affiliation{#1}}
+\renewcommand{\SAuthorEmail}[1]{\email{#1}}
 
 \renewcommand{\SConferenceInfo}[2]{\conferenceinfo{#1}{#2}}
 \renewcommand{\SCopyrightYear}[1]{\copyrightyear{#1}}
