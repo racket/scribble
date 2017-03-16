@@ -10,7 +10,14 @@
          (for-syntax racket/base))
 
 (provide/contract
- [title (->* (pre-content?) #;(#:short pre-content?) title-decl? #;content?)]
+ [title (->* (pre-content?)
+             (#:short pre-content?
+              #:tag (or/c string? (listof string?) #f)
+              #:tag-prefix (or/c string? module-path? #f)
+              #:style (or/c style? string? symbol? #f)
+              #:version (or/c string? #f)
+              #:date (or/c string? #f))
+             title-decl? #;content?)]
  [abstract 
   (->* () () #:rest (listof pre-content?)
        block?)]
@@ -206,17 +213,24 @@
 
 (define (title #:tag [tag #f] #:tag-prefix [prefix #f] #:style [style plain]
                #:version [version #f] #:date [date #f]
+               #:short [short #f]
                . str)
   (let ([content (decode-content str)])
     (make-title-decl (prefix->string prefix)
                      (convert-tag tag content)
                      version
-                     (let ([s (convert-part-style 'title style)])
-                       (if date
-                           (make-style (style-name s)
-                                       (cons (make-document-date date)
-                                             (style-properties s)))
-                           s))
+                     (let* ([s (convert-part-style 'title style)]
+                            [s (if date
+                                   (make-style (style-name s)
+                                               (cons (make-document-date date)
+                                                     (style-properties s)))
+                                   s)]
+                            [s (if short
+                                   (make-style (style-name s)
+                                               (cons (short-title short)
+                                                     (style-properties s)))
+                                   s)])
+                       s)
                      content)))
 
 (provide/contract [author (->* () () #:rest (listof pre-content?)

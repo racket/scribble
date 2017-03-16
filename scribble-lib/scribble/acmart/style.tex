@@ -1,6 +1,6 @@
 
 % Define \SXtitle to lift \SSubtitle out:
-\def\SXtitle#1{\title{\let\SSubtitle\SSubtitleDrop#1}\SExtractSubtitle#1\SExtractSubtitleDone}
+\newcommand{\SXtitle}[2][]{\title#1{\let\SSubtitle\SSubtitleDrop#2}\SExtractSubtitle#2\SExtractSubtitleDone}
 \def\SSubtitleDrop#1{}
 \def\SExtractSubtitleDone {}
 \def\SExtractSubtitle{\futurelet\next\SExtractSubtitleX}
@@ -12,6 +12,10 @@
 \renewcommand{\titleAndEmptyVersionAndAuthors}[3]{\titleAndVersionAndAuthors{#1}{#2}{#3}}
 \renewcommand{\titleAndVersionAndEmptyAuthors}[3]{\SXtitle{#1}\author{Anonymous Author(s)}\maketitle}
 \renewcommand{\titleAndEmptyVersionAndEmptyAuthors}[3]{\titleAndVersionAndEmptyAuthors{#1}{#2}{#3}}
+\renewcommand{\titleAndVersionAndAuthorsAndShort}[4]{\SXtitle[[#4]]{#1}#3\maketitle}
+\renewcommand{\titleAndEmptyVersionAndAuthorsAndShort}[4]{\titleAndVersionAndAuthorsAndShort{#1}{#2}{#3}{#4}}
+\renewcommand{\titleAndVersionAndEmptyAuthorsAndShort}[4]{\SXtitle[[#4]]{#1}\author{Anonymous Author(s)}\maketitle}
+\renewcommand{\titleAndEmptyVersionAndEmptyAuthorsAndShort}[4]{\titleAndVersionAndEmptyAuthorsAndShort{#1}{#2}{#3}{#4}}
 
 % Support plain `author' while enabling `authorinfo': for each
 % use of \SAuthor, check whether it contains an \SAuthorinfo form:

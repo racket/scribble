@@ -83,6 +83,12 @@
              extract-authors
              extract-pretitle)
 
+    (define/public (extract-short-title d)
+      (ormap (lambda (v)
+               (and (short-title? v)
+                    (short-title-text v)))
+             (style-properties (part-style d))))
+
     (define/override (auto-extra-files? v) (latex-defaults? v))
     (define/override (auto-extra-files-paths v) (latex-defaults-extra-files v))
 
@@ -145,14 +151,16 @@
             (let ([vers (extract-version d)]
                   [date (extract-date d)]
                   [pres (extract-pretitle d)]
-                  [auths (extract-authors d)])
+                  [auths (extract-authors d)]
+                  [short (extract-short-title d)])
               (for ([pre (in-list pres)])
                 (printf "\n\n")
                 (do-render-paragraph pre d ri #t #f))
               (when date (printf "\\date{~a}\n" date))
-              (printf "\\titleAnd~aVersionAnd~aAuthors{" 
+              (printf "\\titleAnd~aVersionAnd~aAuthors~a{" 
                       (if (equal? vers "") "Empty" "")
-                      (if (null? auths) "Empty" ""))
+                      (if (null? auths) "Empty" "")
+                      (if short "AndShort" ""))
               (render-content (part-title-content d) d ri)
               (printf "}{~a}{" vers)
               (unless (null? auths)
@@ -161,7 +169,9 @@
                 (unless first? (printf "\\SAuthorSep{}"))
                 (do-render-paragraph auth d ri #t #f)
                 #f)
-              (printf "}\n"))))
+              (if short
+                  (printf "}{~a}\n" short)
+                  (printf "}\n")))))
         (render-part d ri)
         (when whole-doc?
           (printf "\n\n\\postDoc\n\\end{document}\n"))))
