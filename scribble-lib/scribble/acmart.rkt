@@ -21,10 +21,20 @@
  [author (->* () () #:rest (listof pre-content?)
               paragraph?)]
  [authorinfo (->* (string?)
-                  ((or/c string? (listof string?))
+                  ((or/c string? multiarg-element? (listof string?) (listof multiarg-element?))
                    (or/c string? (listof string?))
                    #:orcid (or/c string? #f))
                   paragraph?)]
+ [affiliation (->* ()
+                   (#:position (or/c string? #f)
+                    #:institution (or/c string? #f)
+                    #:department (or/c string? #f)
+                    #:street-address (or/c string? #f)
+                    #:city (or/c string? #f)
+                    #:state (or/c string? #f)
+                    #:postcode (or/c string? #f)
+                    #:country (or/c string? #f))
+                   multiarg-element?)]
  [abstract 
   (->* () () #:rest (listof pre-content?)
        block?)]
@@ -261,9 +271,11 @@
                                               (for/list ([a (in-list (if (list? affiliation)
                                                                          affiliation
                                                                          (list affiliation)))])
-                                                (make-element
-                                                 (make-style "SAuthorPlace" multicommand-props)
-                                                 (decode-content (list a)))))
+                                                (if (multiarg-element? a)
+                                                    a 
+                                                    (make-element
+                                                     (make-style "SAuthorPlace" multicommand-props)
+                                                     (decode-content (list a))))))
                                 (make-element #f
                                               (for/list ([e (in-list (if (list? email)
                                                                          email
@@ -272,8 +284,29 @@
                                                  (make-style "SAuthorEmail" multicommand-props)
                                                  (decode-content (list e)))))))))
 
+(define (affiliation #:position [position #f]
+                     #:institution [institution #f]
+                     #:department [department #f]
+                     #:street-address [street-address #f]
+                     #:city [city #f]
+                     #:state [state #f]
+                     #:postcode [postcode #f]
+                     #:country [country #f])
+  (define (maybe-element str content)
+    (and content (make-element str (decode-content (list content)))))
+  (make-multiarg-element
+   (make-style "SAuthorPlace" multicommand-props)
+   (filter values
+           (list (maybe-element "position" position)
+                 (maybe-element "institution" institution)
+                 (maybe-element "department" department)
+                 (maybe-element "streetaddress" street-address)
+                 (maybe-element "city" city)
+                 (maybe-element "state" state)
+                 (maybe-element "postcode" postcode)
+                 (maybe-element "country" country)))))
+
 (define-commands subtitle
-  position institution department streetaddress city state postcode country
   thanks titlenote subtitlenote authornote acmVolume acmNumber acmArticle acmYear acmMonth
   acmArticleSeq acmPrice acmISBN acmDOI
   startPage terms keywords

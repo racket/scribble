@@ -149,18 +149,16 @@ Declares information that is collected for each author.  These commands should
 @codeblock|{
   #lang scribble/acmart
   @title{Some Title}
-  @author{David Van Horn}
-  @email|{dvanhorn@cs.umd.edu}|
-  @affiliation{
-    @department{Department of Computer Science and UMIACS}
-    @institution{University of Maryland}
-    @city{College Park}
-    @state{Maryland}}
+  @authorinfo["David Van Horn"
+              @affiliation[
+               #:department "Department of Computer Science and UMIACS"
+               #:institution "University of Maryland"
+               #:city "College Park"
+               #:state "Maryland"]
+              "dvanhorn@cs.umd.edu"]}
 
   @abstract{This is an abstract.}
-  @maketitle{}
 }|
-
 
 @deftogether[(
 @defproc[(terms [content pre-content?] ...) content?]
