@@ -9,22 +9,31 @@
          scribble/latex-properties
          (for-syntax racket/base))
 
+(struct affiliation (position institution department street-address city state postcode country)
+  #:constructor-name author-affiliation
+  #:name author-affiliation
+  #:transparent)
+
 (provide/contract
- [title (->* (pre-content?)
+ [title (->* ()
              (#:short pre-content?
               #:tag (or/c string? (listof string?) #f)
               #:tag-prefix (or/c string? module-path? #f)
               #:style (or/c style? string? symbol? #f)
               #:version (or/c string? #f)
               #:date (or/c string? #f))
+             #:rest (listof pre-content?)
              title-decl?)]
- [author (->* () () #:rest (listof pre-content?)
-              paragraph?)]
- [authorinfo (->* (string?)
-                  ((or/c string? multiarg-element? (listof string?) (listof multiarg-element?))
-                   (or/c string? (listof string?))
-                   #:orcid (or/c string? #f))
-                  paragraph?)]
+ [author (->* ()
+              (#:orcid (or/c string? #f)
+               #:affiliation (or/c pre-content?
+                                   affiliation?
+                                   (listof pre-content?)
+                                   (listof affiliation?)
+                                   #f)
+               #:email (or/c pre-content? (listof pre-content?) #f))
+              #:rest (listof pre-content?)
+              block?)]
  [affiliation (->* ()
                    (#:position (or/c string? #f)
                     #:institution (or/c string? #f)
@@ -34,7 +43,8 @@
                     #:state (or/c string? #f)
                     #:postcode (or/c string? #f)
                     #:country (or/c string? #f))
-                   multiarg-element?)]
+                   affiliation?)]
+ [affiliation? (-> any/c boolean?)]
  [abstract 
   (->* () () #:rest (listof pre-content?)
        block?)]
@@ -250,40 +260,38 @@
                        s)
                      content)))
 
-(define (author . auths)
-  (make-paragraph (make-style 'author command-props)
-                  (decode-content auths)))
-
-(define (authorinfo name
-                    #:orcid [orcid #f]
-                    [affiliation '()]
-                    [email '()])
-  (author
-   (make-multiarg-element (make-style "SAuthorinfo" multicommand-props)
-                          (list (make-element #f (decode-content (list name)))
-                                (make-element #f
-                                              (if orcid
-                                                  (make-element
-                                                   (make-style "SAuthorOrcid" multicommand-props)
-                                                   (decode-content (list orcid)))
-                                                  '()))
-                                (make-element #f
-                                              (for/list ([a (in-list (if (list? affiliation)
-                                                                         affiliation
-                                                                         (list affiliation)))])
-                                                (if (multiarg-element? a)
-                                                    a 
-                                                    (make-element
-                                                     (make-style "SAuthorPlace" multicommand-props)
-                                                     (decode-content (list a))))))
-                                (make-element #f
-                                              (for/list ([e (in-list (if (list? email)
-                                                                         email
-                                                                         (list email)))])
-                                                (make-element
-                                                 (make-style "SAuthorEmail" multicommand-props)
-                                                 (decode-content (list e)))))))))
-
+(define (author #:orcid [orcid #f]
+                #:affiliation [affiliation '()]
+                #:email [email '()]
+                . name)
+  (make-paragraph
+   (make-style 'author command-props)
+   (decode-content
+    (make-multiarg-element (make-style "SAuthorinfo" multicommand-props)
+                           (list (make-element #f (decode-content name))
+                                 (make-element #f
+                                               (if orcid
+                                                   (make-element
+                                                    (make-style "SAuthorOrcid" multicommand-props)
+                                                    (decode-content (list orcid)))
+                                                   '()))
+                                 (make-element #f
+                                               (for/list ([a (in-list (if (pair? affiliation)
+                                                                          affiliation
+                                                                          (list affiliation)))])
+                                                 (if (affiliation? a)
+                                                     (convert-affiliation a)
+                                                     (make-element
+                                                      (make-style "SAuthorPlace" multicommand-props)
+                                                      (decode-content (list a))))))
+                                 (make-element #f
+                                               (for/list ([e (in-list (if (pair? email)
+                                                                          email
+                                                                          (list email)))])
+                                                 (make-element
+                                                  (make-style "SAuthorEmail" multicommand-props)
+                                                  (decode-content (list e))))))))))
+  
 (define (affiliation #:position [position #f]
                      #:institution [institution #f]
                      #:department [department #f]
@@ -292,20 +300,22 @@
                      #:state [state #f]
                      #:postcode [postcode #f]
                      #:country [country #f])
+  (author-affiliation position institution department street-address city state postcode country))
+
+(define (convert-affiliation aff)
   (define (maybe-element str content)
-    (and content (make-element str (decode-content (list content)))))
+    (and (content aff) (make-element str (decode-content (list (content aff))))))
   (make-multiarg-element
    (make-style "SAuthorPlace" multicommand-props)
    (filter values
-           (list (maybe-element "position" position)
-                 (maybe-element "institution" institution)
-                 (maybe-element "department" department)
-                 (maybe-element "streetaddress" street-address)
-                 (maybe-element "city" city)
-                 (maybe-element "state" state)
-                 (maybe-element "postcode" postcode)
-                 (maybe-element "country" country)))))
-
+           (list (maybe-element "position" affiliation-position)
+                 (maybe-element "institution" affiliation-institution)
+                 (maybe-element "department" affiliation-department)
+                 (maybe-element "streetaddress" affiliation-street-address)
+                 (maybe-element "city" affiliation-city)
+                 (maybe-element "state" affiliation-state)
+                 (maybe-element "postcode" affiliation-postcode)
+                 (maybe-element "country" affiliation-country))))) 
 (define-commands subtitle
   thanks titlenote subtitlenote authornote acmVolume acmNumber acmArticle acmYear acmMonth
   acmArticleSeq acmPrice acmISBN acmDOI
