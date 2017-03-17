@@ -44,6 +44,10 @@ all mutually exclusive.}
 @defidform[natbib]
 @defidform[anonymous]
 @defidform[authorversion]
+@defidform[9pt]
+@defidform[10pt]
+@defidform[11pt]
+@defidform[12pt]
 )]{
 
 Enables the given document format option. Use the option only on the
@@ -55,6 +59,7 @@ number of options may be used:
   #lang scribble/acmart @acmsmall @review @anonymous @natbib
 }|
 
+If multiple font size options are used, all but the last are ignored.
 }
 
 @defproc[(maketitle) block?]{

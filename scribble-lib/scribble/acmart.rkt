@@ -76,7 +76,7 @@
 ; format options
 (defopts manuscript acmsmall acmlarge acmtog sigconf siggraph sigplan sigchi sigchi-a)
 ; boolean options
-(defopts review screen natbib anonymous authorversion)
+(defopts review screen natbib anonymous authorversion 9pt 10pt 11pt 12pt)
 
 (define acmart-extras
   (let ([abs (lambda (s)
