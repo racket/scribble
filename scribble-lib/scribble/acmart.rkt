@@ -211,8 +211,11 @@
       (make-element (make-style "ccsdesc" command-props)
                     (decode-string str))))
 
-(define (title #:tag [tag #f] #:tag-prefix [prefix #f] #:style [style plain]
-               #:version [version #f] #:date [date #f]
+(define (title #:tag [tag #f]
+               #:tag-prefix [prefix #f]
+               #:style [style plain]
+               #:version [version #f]
+               #:date [date #f]
                #:short [short #f]
                . str)
   (let ([content (decode-content str)])

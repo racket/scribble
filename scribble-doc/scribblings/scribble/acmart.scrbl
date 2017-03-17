@@ -159,9 +159,10 @@ screen version of the image links to the badge authority.
   @abstract{This is an abstract.}
 }|
 
-@defproc[(affiliation? [aff any/c]) boolean?]{ Returns
- @racket[#t] if @racket[aff] is an @racket[affiliation],
- @racket[#f] otherwise.
+@defproc[(affiliation? [aff any/c]) boolean?]{
+                                              
+ Returns @racket[#t] if @racket[aff] is an
+ @racket[affiliation], @racket[#f] otherwise.
 }
 
 @deftogether[(

@@ -2,12 +2,13 @@
 
 ;; It might make sense to make these functions public, but since they weren't originally,
 ;; I am going to keep them in the private folder for now.
+;; -- With Love, Leif
+
+(provide (all-defined-out))
 
 (require racket/list
          scribble/core
          "../tag.rkt")
-
-(provide (all-defined-out))
 
 (define (gen-tag content)
   (datum-intern-literal
