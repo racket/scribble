@@ -1799,3 +1799,10 @@ See also @racketmodname[scribble/latex-prefix].}
 
 Used as a @tech{style property} on an @racket[element] to add extra
 arguments to the element's command in Latex output.}
+
+@defstruct[short-tile ([text (or/c string? #f)])]{
+                                                  
+ Used as a @tech{style property} on a @racket[title-decl].
+ Attaches a short title to the title for a @racket[part] if
+ the Latex class file uses a short title.
+}
