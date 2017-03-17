@@ -1,4 +1,5 @@
 #lang racket/base
+
 (require setup/collects
          racket/contract/base
          racket/list
@@ -7,6 +8,7 @@
          scribble/decode
          scribble/html-properties
          scribble/latex-properties
+         scribble/private/tag
          (for-syntax racket/base))
 
 (struct affiliation (position institution department street-address city state postcode country)
@@ -208,35 +210,6 @@
                                    (decode-string str)))
       (make-element (make-style "ccsdesc" command-props)
                     (decode-string str))))
-
-(define (prefix->string p)
-  (and p (if (string? p) 
-             (datum-intern-literal p)
-             (module-path-prefix->string p))))
-
-(define (gen-tag content)
-  (datum-intern-literal
-   ;; Generate tag from ASCII plus CJK characters. Constraining to
-   ;; ASCII for most purposes helps avoid encoding issues for
-   ;; uncooperative environments, but constraining to ASCII is too
-   ;; uncooperative in another direction for CJK text (i.e., creates
-   ;; too many conflicting tags).
-   (regexp-replace* #px"[^-a-zA-Z0-9_=\u4e00-\u9fff\u3040-\u309F\u30A0-\u30FF]"
-                    (content->string content) "_")))
-
-(define (convert-tag tag content)
-  (if (list? tag)
-    (append-map (lambda (t) (convert-tag t content)) tag)
-    `((part ,(or tag (gen-tag content))))))
-
-(define (convert-part-style who s)
-  (cond
-   [(style? s) s]
-   [(not s) plain]
-   [(string? s) (make-style s null)]
-   [(symbol? s) (make-style #f (list s))]
-   [(and (list? s) (andmap symbol? s)) (make-style #f s)]
-   [else (raise-argument-error who "(or/c style? string? symbol? (listof symbol?) #f)" s)]))
 
 (define (title #:tag [tag #f] #:tag-prefix [prefix #f] #:style [style plain]
                #:version [version #f] #:date [date #f]
