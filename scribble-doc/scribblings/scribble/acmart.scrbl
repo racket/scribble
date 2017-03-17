@@ -132,17 +132,47 @@ screen version of the image links to the badge authority.
 
 }
 
+@defproc[(email [text pre-content?] ...)
+         email?]{
+ Creates an @racket[email?] object for use with @racket[author].
+}
+
+@defproc[(email? [email any/c]) boolean?]{
+                                          
+ Returns @racket[#t] if @racket[email] is an @racket[email],
+ @racket[#f] otherwise.
+}
+         
+
 @defproc[(affiliation
-          [#:position position (or/c string? #f) #f]
-          [#:institution institution (or/c string? #f) #f]
-          [#:department department (or/c string? #f) #f]
-          [#:street-address street-address (or/c string? #f) #f]
-          [#:city city (or/c string? #f) #f]
-          [#:state state (or/c string? #f) #f]
-          [#:postcode postcode (or/c string? #f) #f]
-          [#:country country (or/c string? #f) #f])
+          [#:position position (or/c pre-content? #f) #f]
+          [#:institution institution (or/c pre-content? institution? #f) #f]
+          [#:street-address street-address (or/c pre-content? #f) #f]
+          [#:city city (or/c pre-content? #f) #f]
+          [#:state state (or/c pre-content? #f) #f]
+          [#:postcode postcode (or/c pre-content? #f) #f]
+          [#:country country (or/c pre-content? #f) #f])
          affiliation?]{
- Creates an affiliation object for use with @racket[author].
+                       
+ Creates an @racket[affiliation?] object for use with @racket[author].
+}
+
+@defproc[(affiliation? [aff any/c]) boolean?]{
+                                              
+ Returns @racket[#t] if @racket[aff] is an
+ @racket[affiliation], @racket[#f] otherwise.
+}
+
+@defproc[(institution [#:departments departments (or/c pre-content? institution? (listof institution)) '()]
+                      [inst institution?] ...)
+         institution?]{
+
+ Creates an @racket[institution?] object for use in @racket[author].}
+
+@defproc[(institution? [inst any/c]) boolean]{
+                                              
+ Returns @racket[#t] if @racket[inst] is an
+ @racket[institution], @racket[#f] otherwise.
 }
 
 @codeblock|{
@@ -150,20 +180,15 @@ screen version of the image links to the badge authority.
   @title{Some Title}
   @author["David Van Horn"
           #:affiliation @affiliation[
-                         #:department "Department of Computer Science and UMIACS"
-                         #:institution "University of Maryland"
+                         #:institution
+                         @institution[#:departments '("Department of Computer Science and UMIACS")]{
+                           University of Maryland}
                          #:city "College Park"
                          #:state "Maryland"]
           #:email "dvanhorn@cs.umd.edu"]}
 
   @abstract{This is an abstract.}
 }|
-
-@defproc[(affiliation? [aff any/c]) boolean?]{
-                                              
- Returns @racket[#t] if @racket[aff] is an
- @racket[affiliation], @racket[#f] otherwise.
-}
 
 @deftogether[(
 @defproc[(terms [content pre-content?] ...) content?]

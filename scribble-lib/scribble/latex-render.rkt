@@ -486,6 +486,8 @@
                    [(multiarg-element? e)
                     (check-render)
                     (printf "\\~a" style-name)
+                    (define maybe-optional (findf command-optional? (style-properties style)))
+                    (and maybe-optional (printf "[~a]" maybe-optional))
                     (if (null? (multiarg-element-contents e))
                         (printf "{}")
                         (for ([i (in-list (multiarg-element-contents e))])
@@ -494,7 +496,12 @@
                             (render-content i part ri))
                           (printf "}")))]
                    [else
-                    (wrap e style-name tt?)]))]
+                    (define maybe-optional (findf command-optional? (style-properties style)))
+                    (wrap e
+                          (if maybe-optional
+                              (format "~a[~a]" style-name maybe-optional)
+                              style-name)
+                          tt?)]))]
                [(and (not style-name)
                      style
                      (memq 'exact-chars (style-properties style)))

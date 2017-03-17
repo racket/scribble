@@ -11,9 +11,19 @@
          scribble/private/tag
          (for-syntax racket/base))
 
-(struct affiliation (position institution department street-address city state postcode country)
+(struct affiliation (position institution street-address city state postcode country)
   #:constructor-name author-affiliation
   #:name author-affiliation
+  #:transparent)
+
+(struct email (text)
+  #:constructor-name author-email
+  #:name author-email
+  #:transparent)
+
+(struct institution (name departments)
+  #:constructor-name author-institution
+  #:name author-institution
   #:transparent)
 
 (provide/contract
@@ -27,24 +37,31 @@
              #:rest (listof pre-content?)
              title-decl?)]
  [author (->* ()
-              (#:orcid (or/c string? #f)
+              (#:orcid (or/c pre-content? #f)
                #:affiliation (or/c pre-content?
                                    affiliation?
-                                   (listof pre-content?)
                                    (listof affiliation?)
                                    #f)
-               #:email (or/c pre-content? (listof pre-content?) #f))
+               #:email (or/c pre-content? email? (listof email?) #f))
               #:rest (listof pre-content?)
               block?)]
+ [institution (->* ()
+                   (#:departments (listof (or/c pre-content? institution?)))
+                   #:rest pre-content?
+                   institution?)]
+ [institution? (-> any/c boolean?)]
+ [email (->* ()
+             #:rest (listof pre-content?)
+             email?)]
+ [email? (-> any/c boolean?)]
  [affiliation (->* ()
-                   (#:position (or/c string? #f)
-                    #:institution (or/c string? #f)
-                    #:department (or/c string? #f)
-                    #:street-address (or/c string? #f)
-                    #:city (or/c string? #f)
-                    #:state (or/c string? #f)
-                    #:postcode (or/c string? #f)
-                    #:country (or/c string? #f))
+                   (#:position (or/c pre-content? #f)
+                    #:institution (or/c pre-content? institution? (listof institution) #f)
+                    #:street-address (or/c pre-content? #f)
+                    #:city (or/c pre-content? #f)
+                    #:state (or/c pre-content? #f)
+                    #:postcode (or/c pre-content? #f)
+                    #:country (or/c pre-content? #f))
                    affiliation?)]
  [affiliation? (-> any/c boolean?)]
  [abstract 
@@ -252,46 +269,91 @@
                                                     (decode-content (list orcid)))
                                                    '()))
                                  (make-element #f
-                                               (for/list ([a (in-list (if (pair? affiliation)
-                                                                          affiliation
-                                                                          (list affiliation)))])
-                                                 (if (affiliation? a)
-                                                     (convert-affiliation a)
-                                                     (make-element
-                                                      (make-style "SAuthorPlace" multicommand-props)
-                                                      (decode-content (list a))))))
+                                               (cond
+                                                 [(affiliation? affiliation)
+                                                  (convert-affiliation affiliation)]
+                                                 [(pre-content? affiliation)
+                                                  (make-element
+                                                   (make-style "SAuthorPlace" multicommand-props)
+                                                   (decode-content (list affiliation)))]
+                                                 [else
+                                                  (for/list ([a (in-list affiliation)])
+                                                    (convert-affiliation a))]))
                                  (make-element #f
-                                               (for/list ([e (in-list (if (pair? email)
-                                                                          email
-                                                                          (list email)))])
-                                                 (make-element
-                                                  (make-style "SAuthorEmail" multicommand-props)
-                                                  (decode-content (list e))))))))))
-  
+                                               (cond
+                                                 [(email? email)
+                                                  (convert-email email)]
+                                                 [(pre-content? email)
+                                                  (make-element
+                                                   (make-style "SAuthorEmail" multicommand-props)
+                                                   (decode-content (list email)))]
+                                                 [else
+                                                  (for/list ([e (in-list email)])
+                                                    (convert-email e))])))))))
+
+(define (institution #:departments [departments '()]
+                     . name)
+  (author-institution name departments))
+
+(define (convert-institution inst
+                             #:department? [department? #f])
+  (define level 0)
+  (append
+   (for/list ([i (in-list (institution-departments inst))])
+     (define-values (content new-level) (convert-institution inst
+                                                             #:department? (or (and department? 'sub)
+                                                                               #t)))
+     (set! level (max level (+ 1 new-level)))
+     content)
+   (list
+    (case department?
+      [(#f) (make-element (make-style "institution")
+                         (decode-content (institution-name inst)))]
+      [(sub) (values (make-element (make-style "department"
+                                       (list (command-optional (number->string level))))
+                           (decode-content (institution-name inst)))
+                     level)]
+      [else (values (make-element (make-style "department"
+                                              (if (> level 0)
+                                                  (list (command-optional (number->string level)))
+                                                  (list))))
+                    level)]))))
+
+(define (email . text)
+  (author-email text))
+
+(define (convert-email email)
+  (make-element
+   (make-style "SAuthorEmail" command-props)
+   (decode-content (email-text email))))
+
 (define (affiliation #:position [position #f]
                      #:institution [institution #f]
-                     #:department [department #f]
                      #:street-address [street-address #f]
                      #:city [city #f]
                      #:state [state #f]
                      #:postcode [postcode #f]
                      #:country [country #f])
-  (author-affiliation position institution department street-address city state postcode country))
+  (author-affiliation position institution street-address city state postcode country))
 
 (define (convert-affiliation aff)
   (define (maybe-element str content)
     (and (content aff) (make-element str (decode-content (list (content aff))))))
-  (make-multiarg-element
-   (make-style "SAuthorPlace" multicommand-props)
-   (filter values
-           (list (maybe-element "position" affiliation-position)
-                 (maybe-element "institution" affiliation-institution)
-                 (maybe-element "department" affiliation-department)
-                 (maybe-element "streetaddress" affiliation-street-address)
-                 (maybe-element "city" affiliation-city)
-                 (maybe-element "state" affiliation-state)
-                 (maybe-element "postcode" affiliation-postcode)
-                 (maybe-element "country" affiliation-country))))) 
+  (make-element
+   (make-style "SAuthorPlace" command-props)
+   (make-multiarg-element
+    (make-style #f multicommand-props)
+    (filter values
+            (append (list (maybe-element "position" affiliation-position))
+                    (if (institution? (affiliation-institution aff))
+                        (convert-institution (affiliation-institution aff))
+                        (list (maybe-element "institution" affiliation-institution)))
+                    (list (maybe-element "streetaddress" affiliation-street-address)
+                          (maybe-element "city" affiliation-city)
+                          (maybe-element "state" affiliation-state)
+                          (maybe-element "postcode" affiliation-postcode)
+                          (maybe-element "country" affiliation-country)))))))
+  
 (define-commands subtitle
   thanks titlenote subtitlenote authornote acmVolume acmNumber acmArticle acmYear acmMonth
   acmArticleSeq acmPrice acmISBN acmDOI
