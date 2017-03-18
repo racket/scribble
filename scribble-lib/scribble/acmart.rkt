@@ -56,7 +56,7 @@
  [email? (-> any/c boolean?)]
  [affiliation (->* ()
                    (#:position (or/c pre-content? #f)
-                    #:institution (or/c pre-content? institution? (listof institution) #f)
+                    #:institution (or/c pre-content? institution? (listof institution?) #f)
                     #:street-address (or/c pre-content? #f)
                     #:city (or/c pre-content? #f)
                     #:state (or/c pre-content? #f)
@@ -260,37 +260,38 @@
   (make-paragraph
    (make-style 'author command-props)
    (decode-content
-    (make-multiarg-element (make-style "SAuthorinfo" multicommand-props)
-                           (list (make-element #f (decode-content name))
-                                 (make-element #f
-                                               (if orcid
+    (list
+     (make-multiarg-element (make-style "SAuthorinfo" multicommand-props)
+                            (list (make-element #f (decode-content name))
+                                  (make-element #f
+                                                (if orcid
+                                                    (make-element
+                                                     (make-style "SAuthorOrcid" multicommand-props)
+                                                     (decode-content (list orcid)))
+                                                    '()))
+                                  (make-element #f
+                                                (cond
+                                                  [(affiliation? affiliation)
+                                                   (convert-affiliation affiliation)]
+                                                  [(pre-content? affiliation)
                                                    (make-element
-                                                    (make-style "SAuthorOrcid" multicommand-props)
-                                                    (decode-content (list orcid)))
-                                                   '()))
-                                 (make-element #f
-                                               (cond
-                                                 [(affiliation? affiliation)
-                                                  (convert-affiliation affiliation)]
-                                                 [(pre-content? affiliation)
-                                                  (make-element
-                                                   (make-style "SAuthorPlace" multicommand-props)
-                                                   (decode-content (list affiliation)))]
-                                                 [else
-                                                  (for/list ([a (in-list affiliation)])
-                                                    (convert-affiliation a))]))
-                                 (make-element #f
-                                               (cond
-                                                 [(email? email)
-                                                  (convert-email email)]
-                                                 [(pre-content? email)
-                                                  (make-element
-                                                   (make-style "SAuthorEmail" multicommand-props)
-                                                   (decode-content (list email)))]
-                                                 [else
-                                                  (for/list ([e (in-list email)])
-                                                    (convert-email e))])))))))
-
+                                                    (make-style "SAuthorPlace" multicommand-props)
+                                                    (decode-content (list affiliation)))]
+                                                  [else
+                                                   (for/list ([a (in-list affiliation)])
+                                                     (convert-affiliation a))]))
+                                  (make-element #f
+                                                (cond
+                                                  [(email? email)
+                                                   (convert-email email)]
+                                                  [(pre-content? email)
+                                                   (make-element
+                                                    (make-style "SAuthorEmail" multicommand-props)
+                                                    (decode-content (list email)))]
+                                                  [else
+                                                   (for/list ([e (in-list email)])
+                                                     (convert-email e))]))))))))
+  
 (define (institution #:departments [departments '()]
                      . name)
   (author-institution name departments))
@@ -298,26 +299,45 @@
 (define (convert-institution inst
                              #:department? [department? #f])
   (define level 0)
-  (append
-   (for/list ([i (in-list (institution-departments inst))])
-     (define-values (content new-level) (convert-institution inst
-                                                             #:department? (or (and department? 'sub)
-                                                                               #t)))
-     (set! level (max level (+ 1 new-level)))
-     content)
-   (list
+  (define (mk-inst name
+                   #:department? [department? department?]
+                   #:level [level level])
+    (displayln department?)
     (case department?
-      [(#f) (make-element (make-style "institution")
-                         (decode-content (institution-name inst)))]
-      [(sub) (values (make-element (make-style "department"
-                                       (list (command-optional (number->string level))))
-                           (decode-content (institution-name inst)))
-                     level)]
-      [else (values (make-element (make-style "department"
-                                              (if (> level 0)
-                                                  (list (command-optional (number->string level)))
-                                                  (list))))
-                    level)]))))
+      [(#f) (make-element (make-style "institution" command-props)
+                          (decode-content name))]
+      [(sub) (make-element (make-style "department"
+                                       (cons (command-optional (number->string level))
+                                             command-props))
+                           (decode-content name))]
+      [else (make-element (make-style "department"
+                                      (append
+                                       (if (> level 0)
+                                           (list (command-optional (number->string level)))
+                                           (list))
+                                       command-props))
+                          (decode-content name))]))
+  (define lst
+    (append
+     (for/list ([i (in-list (institution-departments inst))])
+       (cond
+         [(institution? i)
+          (define-values (content new-level)
+            (convert-institution i
+                                 #:department? (or (and department? 'sub)
+                                                   #t)))
+          (set! level (max level (+ 1 new-level)))
+          content]
+         [else
+          (set! level 1)
+          (mk-inst (list i)
+                   #:department? (or (and department? 'sub)
+                                     #t)
+                   #:level 0)]))
+     (list (mk-inst (institution-name inst)))))
+  (if department?
+      (values lst level)
+      lst))
 
 (define (email . text)
   (author-email text))

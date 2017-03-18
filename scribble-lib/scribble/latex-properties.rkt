@@ -13,5 +13,3 @@
  [command-extras ([arguments (listof string?)])]
  [command-optional ([argument string?])]
  [short-title ([text (or/c string? #f)])])
-
-

@@ -486,7 +486,8 @@
                    [(multiarg-element? e)
                     (check-render)
                     (printf "\\~a" style-name)
-                    (define maybe-optional (findf command-optional? (style-properties style)))
+                    (define maybe-optional
+                      (findf command-optional? (if style (style-properties style) '())))
                     (and maybe-optional (printf "[~a]" maybe-optional))
                     (if (null? (multiarg-element-contents e))
                         (printf "{}")
@@ -496,10 +497,11 @@
                             (render-content i part ri))
                           (printf "}")))]
                    [else
-                    (define maybe-optional (findf command-optional? (style-properties style)))
+                    (define maybe-optional
+                      (findf command-optional? (if style (style-properties style) '())))
                     (wrap e
                           (if maybe-optional
-                              (format "~a[~a]" style-name maybe-optional)
+                              (format "~a[~a]" style-name (command-optional-argument maybe-optional))
                               style-name)
                           tt?)]))]
                [(and (not style-name)
