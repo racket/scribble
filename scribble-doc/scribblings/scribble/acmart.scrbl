@@ -274,3 +274,5 @@ sponsors, @racket[name] is the name of the sponsor.  The
     "National Scribble Foundation"]{http://racket-lang.org} under
     grant No.: @grantnum["NSF7000"]{867-5309}.}
 }|}
+
+@history[#:added "1.20"]

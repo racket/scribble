@@ -1803,11 +1803,16 @@ arguments to the element's command in Latex output.}
 @defstruct[command-optional ([argument string?])]{
                                                   
  Used as a @tech{style property} on a @racket[element] to add
- an optional argument to the element's command in Latex output.}
+ an optional argument to the element's command in Latex output.
+
+ @history[#:added "1.20"]
+}
 
 @defstruct[short-tile ([text (or/c string? #f)])]{
                                                   
  Used as a @tech{style property} on a @racket[title-decl].
  Attaches a short title to the title for a @racket[part] if
  the Latex class file uses a short title.
+
+ @history[#:added "1.20"]
 }
