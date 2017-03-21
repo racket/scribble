@@ -181,7 +181,9 @@ screen version of the image links to the badge authority.
   @author["David Van Horn"
           #:affiliation @affiliation[
                          #:institution
-                         @institution[#:departments '("Department of Computer Science and UMIACS")]{
+                         @institution[
+                          #:departments (list @institution{Department of Computer Science}
+                                              @institution{UMIACS})]{
                            University of Maryland}
                          #:city "College Park"
                          #:state "Maryland"]
