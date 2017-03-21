@@ -62,19 +62,6 @@ number of options may be used:
 If multiple font size options are used, all but the last are ignored.
 }
 
-@defproc[(maketitle) block?]{
-
-Issues the @tt{maketitle} command.  This @emph{must} be included in
-the document and should occur after the title, authors, and several
-other top-matter commands. (See the
-@hyperlink[acmart-url]{@tt{acmart}} documentation.)
-
-@codeblock|{
-  #lang scribble/acmart
-  @title{Example}
-  @maketitle{}
-}|}
-
 @defproc[(abstract [pre-content pre-content?] ...) block?]{
 
 Generates a @tech{nested flow} for a paper abstract.}
@@ -85,7 +72,14 @@ Similar to @racket[include-section], but incorporates the document in the
 specified module as an abstract. The document must have no title or
 sub-parts.}
 
-@defproc[(title [#:short short-title pre-content? #f] [title pre-content?]) content?]{
+@defproc[(title [#:short short-title pre-content? #f]
+                [#:tag tag (or/c string? (listof string?) #f) #f]
+                [#:tag-prefix prefix (or/c string? module-path? #f) #f]
+                [#:style style (or/c style? string? symbol? #f) #f]
+                [#:version version (or/c string? #f) #f]
+                [#:date date (or/c string? #f) #f]
+                [title pre-content?] ...)
+         title-decl?]{
 
 Specifies the title of the document, optionally with a short version of the title for running heads.}
 
@@ -93,13 +87,23 @@ Specifies the title of the document, optionally with a short version of the titl
 
 Specifies a subtitle.}
 
-@defproc[(author [pre-content pre-conent?] ...) content?]{
+@defproc[(author [#:orcid orcid (or/c pre-content? #f) #f]
+                 [#:affiliation affiliation
+                  (or/c pre-content?
+                        affiliation?
+                        (listof pre-content?)
+                        (listof affiliation?)
+                        #f)
+                  #f]
+                 [#:email email
+                  (or/c pre-content? (listof pre-content?) #f)
+                  #f]
+                 [name pre-content?] ...)
+         block?]{
 
-Specifies an author.}
-
-@defproc[(email [pre-content pre-conent?] ...) content?]{
-
-Specifies an author's email address.}
+ Specifies an author with an optional email address, affiliation, and/or orcid.
+ 
+}
 
 @deftogether[(
 @defproc[(acmJournal [journal pre-content?] ...) content?]
@@ -128,39 +132,65 @@ screen version of the image links to the badge authority.
 
 }
 
-@defproc[(affiliation [content pre-content?] ...) content?]{
+@defproc[(email [text pre-content?] ...)
+         email?]{
+ Creates an @racket[email?] object for use with @racket[author].
+}
 
-Declares information about the affiliation of an author.}
+@defproc[(email? [email any/c]) boolean?]{
+                                          
+ Returns @racket[#t] if @racket[email] is an @racket[email],
+ @racket[#f] otherwise.
+}
+         
 
-@deftogether[(
-@defproc[(position [content pre-content?] ...) content?]
-@defproc[(institution [content pre-content?] ...) content?]
-@defproc[(department [content pre-content?] ...) content?]
-@defproc[(streetaddress [content pre-content?] ...) content?]
-@defproc[(city [content pre-content?] ...) content?]
-@defproc[(state [content pre-content?] ...) content?]
-@defproc[(postcode [content pre-content?] ...) content?]
-@defproc[(country [content pre-content?] ...) content?]
-)]{
+@defproc[(affiliation
+          [#:position position (or/c pre-content? #f) #f]
+          [#:institution institution (or/c pre-content? institution? #f) #f]
+          [#:street-address street-address (or/c pre-content? #f) #f]
+          [#:city city (or/c pre-content? #f) #f]
+          [#:state state (or/c pre-content? #f) #f]
+          [#:postcode postcode (or/c pre-content? #f) #f]
+          [#:country country (or/c pre-content? #f) #f])
+         affiliation?]{
+                       
+ Creates an @racket[affiliation?] object for use with @racket[author].
+}
 
-Declares information that is collected for each author.  These commands should
- only be used within an @racket[affiliation] command.}
+@defproc[(affiliation? [aff any/c]) boolean?]{
+                                              
+ Returns @racket[#t] if @racket[aff] is an
+ @racket[affiliation], @racket[#f] otherwise.
+}
+
+@defproc[(institution [#:departments departments (or/c pre-content? institution? (listof institution)) '()]
+                      [inst institution?] ...)
+         institution?]{
+
+ Creates an @racket[institution?] object for use in @racket[author].}
+
+@defproc[(institution? [inst any/c]) boolean]{
+                                              
+ Returns @racket[#t] if @racket[inst] is an
+ @racket[institution], @racket[#f] otherwise.
+}
 
 @codeblock|{
   #lang scribble/acmart
   @title{Some Title}
-  @author{David Van Horn}
-  @email|{dvanhorn@cs.umd.edu}|
-  @affiliation{
-    @department{Department of Computer Science and UMIACS}
-    @institution{University of Maryland}
-    @city{College Park}
-    @state{Maryland}}
+  @author["David Van Horn"
+          #:affiliation @affiliation[
+                         #:institution
+                         @institution[
+                          #:departments (list @institution{Department of Computer Science}
+                                              @institution{UMIACS})]{
+                           University of Maryland}
+                         #:city "College Park"
+                         #:state "Maryland"]
+          #:email "dvanhorn@cs.umd.edu"]}
 
   @abstract{This is an abstract.}
-  @maketitle{}
 }|
-
 
 @deftogether[(
 @defproc[(terms [content pre-content?] ...) content?]
@@ -197,14 +227,6 @@ defaults to @racket{Received} for the first occurrence and
   @received[#:stage "revised"]{March 2009}
   @received[#:stage "accepted"]{June 2009}
 }|}
-
-@defproc[(citestyle [content pre-content?]) content?]{
-
-Sets the citation style for the paper.}
-
-@defproc[(setcitestyle [content pre-content?] ...) content?]{
-
-Sets customization options for the citation style for the paper.}
 
 @defproc[(teaserfigure [content pre-content?] ...) block?]{
 
@@ -254,3 +276,5 @@ sponsors, @racket[name] is the name of the sponsor.  The
     "National Scribble Foundation"]{http://racket-lang.org} under
     grant No.: @grantnum["NSF7000"]{867-5309}.}
 }|}
+
+@history[#:added "1.20"]

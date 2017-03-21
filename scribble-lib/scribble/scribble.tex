@@ -301,6 +301,10 @@
 \newcommand{\titleAndVersionAndEmptyAuthors}[3]{\title{#1\\{\normalsize \SVersionBefore{}#2}}#3\maketitle}
 \newcommand{\titleAndEmptyVersionAndAuthors}[3]{\title{#1}\author{#3}\maketitle}
 \newcommand{\titleAndEmptyVersionAndEmptyAuthors}[3]{\title{#1}\maketitle}
+\newcommand{\titleAndVersionAndAuthorsAndShort}[4]{\title[#4]{#1\\{\normalsize \SVersionBefore{}#2}}\author{#3}\maketitle}
+\newcommand{\titleAndVersionAndEmptyAuthorsAndShort}[4]{\title[#4]{#1\\{\normalsize \SVersionBefore{}#2}}#3\maketitle}
+\newcommand{\titleAndEmptyVersionAndAuthorsAndShort}[4]{\title[#4]{#1}\author{#3}\maketitle}
+\newcommand{\titleAndEmptyVersionAndEmptyAuthorsAndShort}[4]{\title[#4]{#1}\maketitle}
 \newcommand{\SAuthor}[1]{#1}
 \newcommand{\SAuthorSep}[1]{\qquad}
 \newcommand{\SVersionBefore}[1]{Version }
