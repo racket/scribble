@@ -1,7 +1,8 @@
 #lang at-exp racket/base
 (require racket/function
          racket/match
-         racket/list)
+         racket/list
+         racket/string)
 
 (struct bibdb (raw bibs))
 
@@ -217,13 +218,23 @@
   (and as
       (apply authors
          (for/list ([a (in-list (regexp-split #rx" +and *" as))])
-           (match (regexp-split #rx" +" a)
-             [(list one) (org-author-name one)]
-             [(list one two) (author-name one two)]
-             [(list-rest first rest) 
-              (author-name (apply string-append (add-between (cons first (drop-right rest 1))
-                                                             " "))
-                           (last rest))])))))
+           (define (trim s)
+             (string-trim (regexp-replace #rx" +" s " ")))
+           (match a
+             [(pregexp #px"^(.*),(.*),(.*)$" (list _ two suffix one))
+              (author-name (trim one) (trim two) #:suffix (trim suffix))]
+             [(pregexp #px"^(.*),(.*)$" (list _ two one))
+              (author-name (string-trim one) (string-trim two))]
+             [(pregexp #px"^(.*) (von|de la|van der) (.*)$" (list _ one von-like two))
+              (author-name (string-trim one) (string-append von-like " " (string-trim two)))]
+             [space-separated
+              (match (regexp-split #rx" +" space-separated)
+                [(list one) (org-author-name one)]
+                [(list one two) (author-name one two)]
+                [(list-rest first rest)
+                 (author-name (apply string-append (add-between (cons first (drop-right rest 1))
+                                                                " "))
+                              (last rest))])])))))
 
 (module+ test
   (require rackunit)
@@ -235,8 +246,8 @@
     (equal? (format "~s" a)
             (format "~s" b)))
   
-  (check 
-   print-as-equal-string? 
+  (check
+   print-as-equal-string?
    (parse-author "James Earl Jones")
    (authors
     (author-name "James Earl" "Jones")))
@@ -248,12 +259,74 @@
             (author-name "Morgan" "Freeman")))
   
   (check
-   print-as-equal-string? 
+   print-as-equal-string?
    (parse-author "Edward L. Deci and Robert J. Vallerand and Luc G. Pelletier and Richard M. Ryan")
    (authors (author-name "Edward L." "Deci")
             (author-name "Robert J." "Vallerand")
             (author-name "Luc G." "Pelletier")
-            (author-name "Richard M." "Ryan"))))
+            (author-name "Richard M." "Ryan")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "Lst, Fst")
+   (authors
+    (author-name "Fst" "Lst")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "James, Earl Jones")
+   (authors
+    (author-name "Earl Jones" "James")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "LstA LstB, Fst")
+   (authors
+    (author-name "Fst" "LstA LstB")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "LstA LstB, FstA FstB")
+   (authors
+    (author-name "FstA FstB" "LstA LstB")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "James, Jr, Earl Jones")
+   (authors
+    (author-name "Earl Jones" "James" #:suffix "Jr")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "James, III, Earl Jones")
+   (authors
+    (author-name "Earl Jones" "James" #:suffix "III")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "James Jack von Earl Jones")
+   (authors
+    (author-name "James Jack" "von Earl Jones")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "James Jack de la Earl Jones")
+   (authors
+    (author-name "James Jack" "de la Earl Jones")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "James Jack van der Earl Jones")
+   (authors
+    (author-name "James Jack" "van der Earl Jones")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "Deci, Edward L. and Robert J. Vallerand and Pelletier, Luc G. and Ryan, Jr, Richard M.")
+   (authors (author-name "Edward L." "Deci")
+            (author-name "Robert J." "Vallerand")
+            (author-name "Luc G." "Pelletier")
+            (author-name "Richard M." "Ryan" #:suffix "Jr"))))
 
 (define (parse-pages ps)
   (match ps
