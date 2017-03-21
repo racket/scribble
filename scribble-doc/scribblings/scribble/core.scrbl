@@ -118,7 +118,7 @@ A @deftech{block} is either a @techlink{table}, an
 
              @itemize[
 
-             @item{An @deftech{content} can be a string, one of a few
+             @item{A @deftech{content} can be a string, one of a few
                    symbols, an instance of @racket[element] (possibly
                    @racket[link-element], etc.), a @racket[multiarg-element], a
                    @techlink{traverse element}, a @techlink{part-relative element}, a
@@ -1808,7 +1808,7 @@ arguments to the element's command in Latex output.}
  @history[#:added "1.20"]
 }
 
-@defstruct[short-tile ([text (or/c string? #f)])]{
+@defstruct[short-title ([text (or/c string? #f)])]{
                                                   
  Used as a @tech{style property} on a @racket[title-decl].
  Attaches a short title to the title for a @racket[part] if

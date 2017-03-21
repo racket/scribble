@@ -145,5 +145,5 @@
   ;; Ensure that "acmart.tex" is used, since "style.tex"
   ;; re-defines commands.
   (struct-copy part doc [to-collect
-                         (cons '(terms) ; FIXME
+                         (cons (terms) ; FIXME
                                (part-to-collect doc))]))
