@@ -307,13 +307,13 @@
       [(#f) (make-element (make-style "institution" command-props)
                           (decode-content name))]
       [(sub) (make-element (make-style "department"
-                                       (cons (command-optional (number->string level))
+                                       (cons (command-optional (list (number->string level)))
                                              command-props))
                            (decode-content name))]
       [else (make-element (make-style "department"
                                       (append
                                        (if (> level 0)
-                                           (list (command-optional (number->string level)))
+                                           (list (command-optional (list (number->string level))))
                                            (list))
                                        command-props))
                           (decode-content name))]))

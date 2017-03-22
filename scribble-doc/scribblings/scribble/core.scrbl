@@ -1800,10 +1800,10 @@ See also @racketmodname[scribble/latex-prefix].}
 Used as a @tech{style property} on an @racket[element] to add extra
 arguments to the element's command in Latex output.}
 
-@defstruct[command-optional ([argument string?])]{
+@defstruct[command-optional ([arguments (listof string?)])]{
                                                   
  Used as a @tech{style property} on a @racket[element] to add
- an optional argument to the element's command in Latex output.
+ a optional arguments to the element's command in Latex output.
 
  @history[#:added "1.20"]
 }
