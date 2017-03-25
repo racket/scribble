@@ -729,6 +729,8 @@ The following @tech{style properties} are currently recognized:
  @item{@racket[alt-tag] structure --- Generates the indicated HTML tag
        instead of @tt{<blockquote>}.}
 
+ @item{@racket['pretitle] --- For Latex, raises the contents
+   of the flow to above the title.}
 ]}
 
 
