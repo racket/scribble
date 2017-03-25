@@ -81,8 +81,7 @@
              extract-version
              extract-date
              extract-authors
-             extract-pretitle
-             extract-pretitle-flows)
+             extract-pretitle-content)
 
     (define/public (extract-short-title d)
       (ormap (lambda (v)
@@ -151,16 +150,16 @@
           (when (part-title-content d)
             (let ([vers (extract-version d)]
                   [date (extract-date d)]
-                  [pres (extract-pretitle d)]
-                  [pre-flows (extract-pretitle-flows d)]
+                  [pres (extract-pretitle-content d)]
                   [auths (extract-authors d)]
                   [short (extract-short-title d)])
               (for ([pre (in-list pres)])
                 (printf "\n\n")
-                (do-render-paragraph pre d ri #t #f))
-              (for ([pre (in-list pre-flows)])
-                (printf "\n\n")
-                (do-render-nested-flow pre d ri #t #f #t))
+                (cond
+                  [(paragraph? pre)
+                   (do-render-paragraph pre d ri #t #f)]
+                  [(nested-flow? pre)
+                   (do-render-nested-flow pre d ri #t #f #t)]))
               (when date (printf "\\date{~a}\n" date))
               (printf "\\titleAnd~aVersionAnd~aAuthors~a{"
                       
@@ -193,7 +192,7 @@
                          (and d (positive? d)))))
           (when (eq? (style-name (part-style d)) 'index)
             (printf "\\twocolumn\n\\parskip=0pt\n\\addcontentsline{toc}{section}{Index}\n"))
-          (let ([pres (extract-pretitle d)])
+          (let ([pres (extract-pretitle-content d)])
             (for ([pre (in-list pres)])
               (printf "\n\n")
               (do-render-paragraph pre d ri #t #f)))

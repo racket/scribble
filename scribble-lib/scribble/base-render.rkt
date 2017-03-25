@@ -251,48 +251,42 @@
                     (document-date-text v)))
              (style-properties (part-style d))))
 
-    (define/private (extract-pre-paras d sym)
+    (define/private (extract-content d lift-proc)
       (let loop ([l (part-blocks d)])
+        (apply append
+               (for/list ([b (in-list l)])
+                 (define lifted (lift-proc b loop))
+                 lifted))))
+
+    (define/private (extract-pre-paras-proc sym)
+      (λ (v loop)
         (cond
-         [(null? l) null]
-         [else (let ([v (car l)])
-                 (cond
-                  [(and (paragraph? v)
-                        (eq? sym (style-name (paragraph-style v))))
-                   (cons v (loop (cdr l)))]
-                  [(compound-paragraph? v)
-                   (append (loop (compound-paragraph-blocks v))
-                           (loop (cdr l)))]
-                  [else (loop (cdr l))]))])))
+          [(and (paragraph? v)
+                (eq? sym (style-name (paragraph-style v))))
+           (list v)]
+          [(compound-paragraph? v)
+           (loop (compound-paragraph-blocks v))]
+          [else '()])))
+  
+    (define/private (extract-pre-content-proc sym)
+      (λ (v loop)
+        (define pre-para ((extract-pre-paras-proc sym) v loop))
+        (cond
+          [(not (null? pre-para)) pre-para]
+          [(and (nested-flow? v)
+                (member sym (style-properties (nested-flow-style v))))
+           (list v)]
+          [else '()])))
+
 
     (define/public (extract-authors d)
-      (extract-pre-paras d 'author))
-
+      (extract-content d (extract-pre-paras-proc 'author)))
+    
     (define/public (extract-pretitle d)
-      (extract-pre-paras d 'pretitle))
+      (extract-content d (extract-pre-paras-proc 'pretitle)))
 
-    (define/private (extract-pre-flows d sym)
-      (let loop ([l (part-blocks d)])
-        (cond
-          [(null? l) null]
-          [else (let ([v (car l)])
-                  (cond
-                    [(and (nested-flow? v)
-                          (member sym (style-properties (nested-flow-style v))))
-                     (cons v (loop (cdr l)))]
-                    [(compound-paragraph? v)
-                     (append (loop (compound-paragraph-blocks v))
-                             (loop (cdr l)))]
-                    [(itemization? v)
-                     (append (apply append (map loop (itemization-blockss v)))
-                             (loop (cdr l)))]
-                    [(table? v)
-                     (append (apply append (map loop (table-blockss v)))
-                             (loop (cdr l)))]
-                    [else (loop (cdr l))]))])))
-
-    (define/public (extract-pretitle-flows d)
-      (extract-pre-flows d 'pretitle))
+    (define/public (extract-pretitle-content d)
+      (extract-content d (extract-pre-content-proc 'pretitle)))
     
     ;; ----------------------------------------
 
