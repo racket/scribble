@@ -141,7 +141,7 @@
 ;; ----------------------------------------
 ;; Abstracts:
 
-(define abstract-style (make-style "abstract" acmart-extras))
+(define abstract-style (make-style "abstract" (cons 'pretitle acmart-extras)))
 
 (define command-props (cons 'command acmart-extras))
 (define multicommand-props (cons 'multicommand acmart-extras))

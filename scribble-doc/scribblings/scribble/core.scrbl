@@ -729,6 +729,8 @@ The following @tech{style properties} are currently recognized:
  @item{@racket[alt-tag] structure --- Generates the indicated HTML tag
        instead of @tt{<blockquote>}.}
 
+ @item{@racket['pretitle] --- For Latex, raises the contents
+   of the flow to above the title.}
 ]}
 
 
@@ -1115,7 +1117,7 @@ reverse order):
        any number or lists element, while @racket[""] is used in place
        of all non-empty strings.}
 
-]}
+]
 
 @history[#:changed "6.4" @elem{Added @racket[(list/c string? string?)]
                                number items for

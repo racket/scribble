@@ -81,7 +81,7 @@
              extract-version
              extract-date
              extract-authors
-             extract-pretitle)
+             extract-pretitle-content)
 
     (define/public (extract-short-title d)
       (ormap (lambda (v)
@@ -150,14 +150,19 @@
           (when (part-title-content d)
             (let ([vers (extract-version d)]
                   [date (extract-date d)]
-                  [pres (extract-pretitle d)]
+                  [pres (extract-pretitle-content d)]
                   [auths (extract-authors d)]
                   [short (extract-short-title d)])
               (for ([pre (in-list pres)])
                 (printf "\n\n")
-                (do-render-paragraph pre d ri #t #f))
+                (cond
+                  [(paragraph? pre)
+                   (do-render-paragraph pre d ri #t #f)]
+                  [(nested-flow? pre)
+                   (do-render-nested-flow pre d ri #t #f #t)]))
               (when date (printf "\\date{~a}\n" date))
-              (printf "\\titleAnd~aVersionAnd~aAuthors~a{" 
+              (printf "\\titleAnd~aVersionAnd~aAuthors~a{"
+                      
                       (if (equal? vers "") "Empty" "")
                       (if (null? auths) "Empty" "")
                       (if short "AndShort" ""))
@@ -187,7 +192,7 @@
                          (and d (positive? d)))))
           (when (eq? (style-name (part-style d)) 'index)
             (printf "\\twocolumn\n\\parskip=0pt\n\\addcontentsline{toc}{section}{Index}\n"))
-          (let ([pres (extract-pretitle d)])
+          (let ([pres (extract-pretitle-content d)])
             (for ([pre (in-list pres)])
               (printf "\n\n")
               (do-render-paragraph pre d ri #t #f)))
@@ -645,6 +650,7 @@
                part 
                ri
                #t
+               #f
                #f)
               (when (string? s-name)
                 (printf "\\end{~a}" s-name)))
@@ -848,7 +854,7 @@
        [(table? p)
         (render-table* p part ri #f (format "[~a]" mode))]
        [(nested-flow? p)
-        (do-render-nested-flow p part ri #f mode)]
+        (do-render-nested-flow p part ri #f mode #f)]
        [(paragraph? p)
         (do-render-paragraph p part ri #f mode)]))
 
@@ -879,7 +885,7 @@
         (printf "\\end{~a}" mode)
         null))
 
-    (define/private (do-render-nested-flow t part ri single-column? as-box-mode)
+    (define/private (do-render-nested-flow t part ri single-column? as-box-mode show-pre?)
       (let* ([props (style-properties (nested-flow-style t))]
              [kind (or (and as-box-mode
                             (or
@@ -900,29 +906,31 @@
              [multicommand? (memq 'multicommand props)]
              [command? (or (and as-box-mode (not multicommand?))
                            (memq 'command props))])
-        (cond
-         [command? (printf "\\~a{" kind)]
-         [multicommand? (printf "\\~a" kind)]
-         [else (printf "\\begin{~a}" kind)])
-        (parameterize ([current-table-mode (if (or single-column?
-                                                   (not (current-table-mode)))
-                                               (current-table-mode)
-                                               (list "nested-flow" t))])
-          (if as-box-mode
-              (for-each (lambda (p) 
-                          (when multicommand? (printf "{"))
-                          (render-boxable-block p part ri as-box-mode)
-                          (when multicommand? (printf "}")))
-                        (nested-flow-blocks t))
-              (render-flow (nested-flow-blocks t) part ri #f multicommand?)))
-        (cond
-         [command? (printf "}")]
-         [multicommand? (void)]
-         [else (printf "\\end{~a}" kind)])
-        null))
+        (unless (and (not show-pre?)
+                     (member 'pretitle props))
+          (cond
+            [command? (printf "\\~a{" kind)]
+            [multicommand? (printf "\\~a" kind)]
+            [else (printf "\\begin{~a}" kind)])
+          (parameterize ([current-table-mode (if (or single-column?
+                                                     (not (current-table-mode)))
+                                                 (current-table-mode)
+                                                 (list "nested-flow" t))])
+            (if as-box-mode
+                (for-each (lambda (p) 
+                            (when multicommand? (printf "{"))
+                            (render-boxable-block p part ri as-box-mode)
+                            (when multicommand? (printf "}")))
+                          (nested-flow-blocks t))
+                (render-flow (nested-flow-blocks t) part ri #f multicommand?)))
+          (cond
+            [command? (printf "}")]
+            [multicommand? (void)]
+            [else (printf "\\end{~a}" kind)])
+          null)))
 
     (define/override (render-nested-flow t part ri starting-item?)
-      (do-render-nested-flow t part ri #f #f))
+      (do-render-nested-flow t part ri #f #f #f))
 
     (define/override (render-compound-paragraph t part ri starting-item?)
       (let ([kind (style-name (compound-paragraph-style t))]
