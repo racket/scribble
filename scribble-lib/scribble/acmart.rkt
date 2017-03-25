@@ -141,7 +141,7 @@
 ;; ----------------------------------------
 ;; Abstracts:
 
-(define abstract-style (make-style "abstract" acmart-extras))
+(define abstract-style (make-style "abstract" (cons 'pretitle acmart-extras)))
 
 (define command-props (cons 'command acmart-extras))
 (define multicommand-props (cons 'multicommand acmart-extras))
@@ -149,7 +149,9 @@
 (define (abstract . strs)
   (make-nested-flow
    abstract-style
-   (decode-flow strs)))
+   (list "\\begin{abstract}"
+         (decode-flow strs)
+         "\\end{abstract}")))
 
 (define (extract-abstract p)
   (unless (part? p)

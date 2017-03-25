@@ -1115,7 +1115,7 @@ reverse order):
        any number or lists element, while @racket[""] is used in place
        of all non-empty strings.}
 
-]}
+]
 
 @history[#:changed "6.4" @elem{Added @racket[(list/c string? string?)]
                                number items for

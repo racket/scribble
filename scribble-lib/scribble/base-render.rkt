@@ -270,6 +270,29 @@
 
     (define/public (extract-pretitle d)
       (extract-pre-paras d 'pretitle))
+
+    (define/private (extract-pre-flows d sym)
+      (let loop ([l (part-blocks d)])
+        (cond
+          [(null? l) null]
+          [else (let ([v (car l)])
+                  (cond
+                    [(and (nested-flow? v)
+                          (member sym (style-properties (nested-flow-style v))))
+                     (cons v (loop (cdr l)))]
+                    [(compound-paragraph? v)
+                     (append (loop (compound-paragraph-blocks v))
+                             (loop (cdr l)))]
+                    [(itemization? v)
+                     (append (apply append (map loop (itemization-blockss v)))
+                             (loop (cdr l)))]
+                    [(table? v)
+                     (append (apply append (map loop (table-blockss v)))
+                             (loop (cdr l)))]
+                    [else (loop (cdr l))]))])))
+
+    (define/public (extract-pretitle-flows d)
+      (extract-pre-flows d 'pretitle))
     
     ;; ----------------------------------------
 
