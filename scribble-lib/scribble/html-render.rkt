@@ -2018,6 +2018,7 @@
   (define e-d (and d (explode (path->complete-path d))))
   (define p-in? (in-plt? e-p))
   (define d-in? (and d (in-plt? e-d)))
+  (define (normalize p) (normal-case-path p))
   ;; use an absolute link if the link is from outside the plt tree
   ;; going in (or if d is #f)
   (if (not (and d (cond
@@ -2025,7 +2026,10 @@
                     [d-in? (error 'from-root
                                   "got a link from the PLT tree going out; ~e"
                                   p)]
-                    [else #f])))
+                    [else #f])
+		  ;; On Windows, need to be on the same drive, at least:
+		  (equal? (normalize (car e-d))
+		          (normalize (car e-p)))))
     (path->url-string c-p)
     (let loop ([e-d e-d] [e-p e-p])
       (cond
@@ -2033,11 +2037,11 @@
          (string-append*
           (let loop ([e-p e-p])
             (cond [(null? e-p) '("/")]
-                  [(null? (cdr e-p)) (list (path->string (car e-p)))]
+                  [(null? (cdr e-p)) (list (path-element->string (car e-p)))]
                   [(eq? 'same (car e-p)) (loop (cdr e-p))]
                   [(eq? 'up (car e-p)) (cons "../" (loop (cdr e-p)))]
-                  [else (cons (path->string (car e-p)) (cons "/" (loop (cdr e-p))))])))]
-        [(equal? (car e-d) (car e-p)) (loop (cdr e-d) (cdr e-p))]
+                  [else (cons (path-element->string (car e-p)) (cons "/" (loop (cdr e-p))))])))]
+        [(equal? (normalize (car e-d)) (normalize (car e-p))) (loop (cdr e-d) (cdr e-p))]
         [(eq? 'same (car e-d)) (loop (cdr e-d) e-p)]
         [(eq? 'same (car e-p)) (loop e-d (cdr e-p))]
         [else (string-append (string-append* (map (lambda (x) "../") e-d))
