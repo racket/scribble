@@ -149,9 +149,7 @@
 (define (abstract . strs)
   (make-nested-flow
    abstract-style
-   (list "\\begin{abstract}"
-         (decode-flow strs)
-         "\\end{abstract}")))
+   (decode-flow strs)))
 
 (define (extract-abstract p)
   (unless (part? p)
