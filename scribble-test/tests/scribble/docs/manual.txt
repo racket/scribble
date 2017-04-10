@@ -217,6 +217,13 @@ A structure type with extra name, again.
 
 A mutable structure type with extra name, again.
 
+(struct a-struct-with-an-extremely-long-name-and-no-fields ()
+    #:extra-constructor-name                                 
+    make-a-struct-with-an-extremely-long-name-and-no-fields) 
+
+Used to raise error, taking car of empty fields list. Reported by Carlos
+Lopez, 2017-03-11.
+
  (require "manual-ex0.rkt")
 
  #lang "manual-ex0.rkt"
