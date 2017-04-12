@@ -647,12 +647,17 @@ output style of Racket code:
 @itemlist[
  @item{@ltxd[2]{SColorize} --- Sets the color scheme of
   Racket code. Can be redefined to create black and white
-  code.}
+  code. The first argument is the requested color, and the
+  second argument is the text for that color.}
  @item{@ltxd[1]{SHyphen} --- Enables or Disables the ability
   for identifiers and keywords in Racket code from being
   hyphenated. Defaults to enabled (for compatibility).
-  Redefine to disable, for example:
-  @tt["\\renewcommand{\\SHyphen}[1]{\\mbox{#1}}"]}]
+  Redefine to disable or change the hyphenation behavior. For
+  example, to cause the text to overfill rather than hyphen,
+  it can be redefined to:
+  @tt["\\renewcommand{\\SHyphen}[1]{\\mbox{#1}}"]. The first
+  argument is an identifier or keyword inside of a code
+  block.}]
 
 @; ------------------------------------------------------------
 
