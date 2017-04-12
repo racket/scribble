@@ -2,7 +2,10 @@
 % Redefine \SColorize to produce B&W Scheme text
 \newcommand{\SColorize}[2]{\color{#1}{#2}}
 
-\newcommand{\inColor}[2]{{\Scribtexttt{\SColorize{#1}{#2}}}}
+% Redefine SHyphen to allow identifiers to be hyphenated
+\newcommand{\SHyphen}[1]{#1}
+
+\newcommand{\inColor}[2]{{\SHyphen{\Scribtexttt{\SColorize{#1}{#2}}}}}
 \definecolor{PaleBlue}{rgb}{0.90,0.90,1.0}
 \definecolor{LightGray}{rgb}{0.90,0.90,0.90}
 \definecolor{CommentColor}{rgb}{0.76,0.45,0.12}
