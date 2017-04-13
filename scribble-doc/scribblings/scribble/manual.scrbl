@@ -1813,9 +1813,9 @@ key; in either case, if @racket[normalize?] is true, the key is normalized in th
 arguments support cross-document and section-specific references, like
 in @racket[secref].
 For example:
-@racketblock[@tech[#:doc '(lib "scribblings/guide/guide.scrbl")]{blame object}]
+@racketblock[@tech[#:doc '(lib "scribblings/reference/reference.scrbl")]{blame object}]
 
-creates a link to @tech[#:doc '(lib "scribblings/guide/guide.scrbl")]{blame object} in
+creates a link to @tech[#:doc '(lib "scribblings/reference/reference.scrbl")]{blame object} in
 @other-doc['(lib "scribblings/guide/guide.scrbl")].
 
 With the default style files, the hyperlink created by @racket[tech]
