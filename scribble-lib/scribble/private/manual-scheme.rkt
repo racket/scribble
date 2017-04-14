@@ -122,6 +122,8 @@
   (make-element result-color (list (to-element/no-color s))))
 (define (to-element/id s)
   (make-element symbol-color (list (to-element/no-color s))))
+(define (to-element/no-escapes s)
+  (to-element s #:escapes? #f))
 
 (define-syntax (keep-s-expr stx)
   (syntax-case stx (quote)
@@ -160,7 +162,7 @@
 (define-code RACKET to-element UNSYNTAX keep-s-expr add-sq-prop)
 (define-code racketresult to-element/result unsyntax keep-s-expr add-sq-prop)
 (define-code racketid to-element/id unsyntax keep-s-expr add-sq-prop)
-(define-code *racketmodname to-element unsyntax keep-s-expr add-sq-prop)
+(define-code *racketmodname to-element/no-escapes unsyntax keep-s-expr add-sq-prop)
 
 (define-syntax (**racketmodname stx)
   (syntax-case stx ()
