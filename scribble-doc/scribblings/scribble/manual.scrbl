@@ -494,18 +494,22 @@ generates
           #:grammar ([maybe-indirect code:blank
                                     #:indirect])]{
 
-Like @racket[racket], but typeset as a module path. If @racket[datum]
-is an identifier or @racket[expr] produces a symbol, then it is
-hyperlinked to the module path's definition as created by
-@racket[defmodule].
+Like @racket[racket], but typeset as a module path and without special
+treatment of identifiers (such as @racketidfont{code:blank} or identifiers
+that start with @litchar{_}). If @racket[datum] is an identifier or
+@racket[expr] produces a symbol, then it is hyperlinked to the module
+path's definition as created by @racket[defmodule].
 
 If @racket[#:indirect] is specified, then the hyperlink is given the
 @racket['indirect-link] @tech{style property}, which makes the
 hyperlink's resolution in HTML potentially delayed; see
-@racket['indirect-link] for @racket[link-element].}
+@racket['indirect-link] for @racket[link-element].
+
+@history[#:changed "1.21" @elem{Disabled @racket[racket]-style special
+                                treatment of identifiers.}]}
 
 @defform[(racketmodlink datum pre-content-expr ...)]{
-Like @racket[racketmod], but separating the module path to link
+Like @racket[racketmodname], but separating the module path to link
 from the content to be linked. The @racket[datum] module path is always
 linked, even if it is not an identifier.}
 
