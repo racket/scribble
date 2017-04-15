@@ -483,3 +483,19 @@ ol ol ol ol { list-style-type: upper-alpha; }
     margin-left: 0;
   }
 }
+
+@media (max-width: 480px) {
+  .tocset,
+  .navsettop,
+  .navsetbottom {
+      display: block;
+      width: 100%;
+    }
+  .maincolumn {
+    width: 100%;
+    margin-right: 0px;
+    margin-left: 0px;
+    padding-top: 10px;
+    text-align: justify;
+  }
+}
