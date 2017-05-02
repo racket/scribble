@@ -4,7 +4,7 @@
 \def\SSubtitleDrop#1{}
 \def\SExtractSubtitleDone {}
 \def\SExtractSubtitle{\futurelet\next\SExtractSubtitleX}
-\def\SExtractSubtitleX#1{\ifx#1\SSubtitle \let\Snext\SWithSubtitle \else \let\Snext\SExtractSubtitleY \fi \Snext}
+\def\SExtractSubtitleX#1{\ifx{#1}\SSubtitle \let\Snext\SWithSubtitle \else \let\Snext\SExtractSubtitleY \fi \Snext}
 \def\SExtractSubtitleY{\ifx\next\SExtractSubtitleDone \let\Snext\relax \else \let\Snext\SExtractSubtitle \fi \Snext}
 \def\SWithSubtitle#1{\subtitle{#1}\SExtractSubtitle}
 
