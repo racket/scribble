@@ -6,11 +6,20 @@
          scribble/latex-prefix
          racket/list
          "../private/defaults.rkt"
-         (for-syntax racket/base))
+         (for-syntax racket/base)
+         (only-in net/url call/input-url get-pure-port string->url)
+         (only-in setup/collects path->collects-relative collects-relative->path)
+         (only-in racket/port copy-port))
 (provide (except-out (all-from-out scribble/doclang) #%module-begin)
          (all-from-out scribble/acmart)
          (all-from-out scribble/base)
          (rename-out [module-begin #%module-begin]))
+
+(define ACMART.CLS
+  "acmart.cls")
+
+(define SIGPLAN-ACMART
+  "http://www.sigplan.org/sites/default/files/acmart/current/acmart.cls")
 
 (define-syntax (module-begin stx)
   (syntax-case stx ()
@@ -137,7 +146,7 @@
                             options
                             unicode-encoding-packages))
                    (scribble-file "acmart/style.tex")
-                   (list (scribble-file "acmart/acmart.cls"))
+                   (list (acmart.cls))
                    #f
 		   #:replacements (hash "scribble-load-replace.tex" (scribble-file "acmart/acmart-load.tex"))))))
 
@@ -147,3 +156,18 @@
   (struct-copy part doc [to-collect
                          (cons (terms) ; FIXME
                                (part-to-collect doc))]))
+
+(define (acmart.cls)
+  (define full-path (collection-file-path ACMART.CLS "scribble" "acmart"))
+  (define collects-path (path->collects-relative full-path))
+  (begin0
+    collects-path
+    (unless (file-exists? full-path)
+      (log-error (format "File not found: ~a" full-path))
+      (log-error (format "Downloading via: ~a" SIGPLAN-ACMART))
+      (call-with-output-file full-path
+        (λ (out-port)
+          (call/input-url (string->url SIGPLAN-ACMART) get-pure-port
+            (λ (in-port)
+              (copy-port in-port out-port))))))))
+

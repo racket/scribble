@@ -1,5 +1,6 @@
 #lang scribble/manual
 @(require (except-in "utils.rkt" title author)
+          scribble/example
           (for-label scribble/acmart))
 
 @(define acmart-url
@@ -278,3 +279,38 @@ sponsors, @racket[name] is the name of the sponsor.  The
 }|}
 
 @history[#:added "1.20"]
+
+
+@section{Updating @filepath{acmart.cls}}
+
+The first time your installation of @racketmodname[scribble/acmart] renders
+a document, it downloads a copy of @filepath{acmart.cls} from @url{www.sigplan.org}.
+Over time, you may need to update this local copy.
+
+@itemlist[
+@item{
+  If SIGPLAN issues a new release, delete your @filepath{acmart.cls}.
+  The next time @racketmodname[scribble/acmart] runs, it will download a new local copy from @url{www.sigplan.org}.
+}
+@item{
+  If you wish to use the development version of @filepath{acmart.cls}:
+  @itemlist[#:style 'ordered
+  @item{
+    clone the @tt{acmart} repository @url{https://github.com/borisveytsman/acmart},
+  }
+  @item{
+    build @filepath{acmart.cls} from @filepath{acmart.dtx} and @filepath{acmart.ins}, and
+  }
+  @item{
+    replace the local copy with the newly-generated file.
+  }
+  ]
+}
+]
+
+The local copy of @filepath{acmart.cls} is stored in the
+@racketmodname[scribble/acmart] collection.
+
+@examples[
+  (collection-file-path "acmart.cls" "scribble" "acmart")
+]
