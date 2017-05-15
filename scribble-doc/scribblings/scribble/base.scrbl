@@ -260,6 +260,7 @@ used for a new cell. A @racket['cont] must not appear as the first
 cell in a row.
 
 The @racket[style] argument is handled the same as @racket[para].
+See @racket[table] for a list of recognized @tech{style names} and @tech{style properties}.
 
 If @racket[sep] is not @racket[#f], it is inserted as a new column
 between every column in the table; note that any
