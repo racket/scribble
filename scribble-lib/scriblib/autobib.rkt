@@ -372,8 +372,10 @@
              (~optional (~seq #:spaces spaces) #:defaults ([spaces #'1]))
              (~optional (~seq #:render-date-in-cite render-date-cite) #:defaults ([render-date-cite #'#f]))
              (~optional (~seq #:date<? date<?) #:defaults ([date<? #'#f]))
-             (~optional (~seq #:date=? date=?) #:defaults ([date=? #'#f]))) ...)
-     (syntax/loc stx
+             (~optional (~seq #:date=? date=?) #:defaults ([date=? #'#f]))
+             (~optional (~seq #:cite-author cite-author) #:defaults ([cite-author #'#f]))
+             (~optional (~seq #:cite-year cite-year) #:defaults ([cite-year #'#f]))) ...)
+     (quasisyntax/loc stx
        (begin
          (define group (make-bib-group (make-hasheq)))
          (define the-style style)
@@ -382,7 +384,15 @@
          (define (citet bib-entry . bib-entries)
            (add-inline-cite group (cons bib-entry bib-entries) the-style date<? date=?))
          (define (generate-bibliography #:tag [tag "doc-bibliography"] #:sec-title [sec-title "Bibliography"])
-           (gen-bib tag group sec-title the-style fn render-date-bib render-date-cite date<? date=? spaces))))]))
+           (gen-bib tag group sec-title the-style fn render-date-bib render-date-cite date<? date=? spaces))
+         #,(when (identifier? #'cite-author)
+             #'(define (cite-author bib-entry)
+                 (add-cite group bib-entry 'autobib-author #f #f the-style)))
+         #,(when (identifier? #'cite-year)
+             #'(define (cite-year bib-entry . bib-enteries)
+                 (add-date-cites group (cons bib-entry bib-enteries)
+                                 (send the-style get-group-sep)
+                                 the-style #t date<? date=?)))))]))
 
 (define (ends-in-punc? e)
   (regexp-match? #rx"[.!?,]$" (content->string e)))
