@@ -218,9 +218,16 @@
       (apply authors
          (for/list ([a (in-list (regexp-split #rx" +and *" as))])
            (match (regexp-split #rx" +" a)
-             [(list one) (org-author-name one)]
-             [(list one two) (author-name one two)]
-             [(list-rest first rest) 
+             [(list one)
+              (org-author-name one)]
+             [(list (pregexp #px"(.*)," (list _ lst)) fst)
+              (author-name fst lst)]
+             [(list one two)
+              (author-name one two)]
+             [(list-rest (pregexp #px"(.*[^,])" (list _ lstpre)) ... (pregexp #px"(.*)," (list _ lst)) fsts)
+              (author-name (apply string-append (add-between fsts " "))
+                           (apply string-append (add-between (append lstpre (list lst)) " ")))]
+             [(list-rest first rest)
               (author-name (apply string-append (add-between (cons first (drop-right rest 1))
                                                              " "))
                            (last rest))])))))
