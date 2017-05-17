@@ -86,7 +86,7 @@ or more bibliography entries which have the same authors. It has the contract
 ]
 
 The function bound to @racket[generate-bibliography-id] generates the
-sect ion for the bibliography. It has the contract
+section for the bibliography. It has the contract
 
 @racketblock[
 (->* () (#:tag string? #:sec-title string?) part?)
