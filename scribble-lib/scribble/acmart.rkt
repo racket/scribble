@@ -67,19 +67,16 @@
  [abstract 
   (->* () () #:rest (listof pre-content?)
        block?)]
- [acmJournal 
-  (->* () () #:rest (listof pre-content?)
-       content?)]
  [acmConference 
-  (-> string? string? string? content?)]
+  (-> string? string? string? block?)]
  [grantsponsor 
-  (-> string? string? string? content?)]
+  (-> string? string? string? block?)]
  [grantnum 
-  (->* (string? string?) (#:url string?) content?)]
- [acmBadgeR (->* (string?) (#:url string?) content?)]
- [acmBadgeL (->* (string?) (#:url string?) content?)]
- [received (->* (string?) (#:stage string?) content?)]
- [citestyle (-> content? content?)]
+  (->* (string? string?) (#:url string?) block?)]
+ [acmBadgeR (->* (string?) (#:url string?) block?)]
+ [acmBadgeL (->* (string?) (#:url string?) block?)]
+ [received (->* (string?) (#:stage string?) block?)]
+ [citestyle (-> content? block?)]
  [CCSXML 
   (->* () () #:rest (listof pre-content?)
        any/c)])
@@ -96,10 +93,11 @@
   (begin
     (begin
       (provide/contract [name (->* () () #:rest (listof pre-content?)
-                                   content?)])
+                                   block?)])
       (define (name . str)
-        (make-element (make-style (symbol->string 'name) command-props)
-                      (decode-content str))))
+        (make-paragraph (make-style 'pretitle '())
+                        (make-element (make-style (symbol->string 'name) command-props)
+                                      (decode-content str)))))
     ...))
 
 (define-syntax-rule (define-environments name ...)
@@ -151,82 +149,71 @@
    abstract-style
    (decode-flow strs)))
 
-(define (extract-abstract p)
-  (unless (part? p)
-    (error 'include-abstract "doc binding is not a part: ~e" p))
-  (unless (null? (part-parts p))
-    (error 'include-abstract "abstract part has sub-parts: ~e" (part-parts p)))
-  (when (part-title-content p)
-    (error 'include-abstract "abstract part has title content: ~e" (part-title-content p)))
-  (part-blocks p))
-
-(define-syntax-rule (include-abstract mp)
-  (begin
-    (require (only-in mp [doc abstract-doc]))
-    (make-nested-flow abstract-style (extract-abstract abstract-doc))))
-
-
-(define (acmJournal . str)
-  (make-element (make-style "acmJournal" command-props)
-                (decode-content str)))
-
 (define (acmConference name date venue)
-  (make-multiarg-element (make-style "acmConference" multicommand-props)
-                         (list (decode-string name)
-                               (decode-string date)
-                               (decode-string venue))))
+  (make-paragraph (make-style 'pretitle '())
+                  (make-multiarg-element (make-style "acmConference" multicommand-props)
+                                         (list (decode-string name)
+                                               (decode-string date)
+                                               (decode-string venue)))))
 
 (define (grantsponsor id name url)
-  (make-multiarg-element (make-style "grantsponsor" multicommand-props)
-                         (list (decode-string id)
-                               (decode-string name)
-                               (decode-string url))))
+  (make-paragraph (make-style 'pretitle '())
+                  (make-multiarg-element (make-style "grantsponsor" multicommand-props)
+                                         (list (decode-string id)
+                                               (decode-string name)
+                                               (decode-string url)))))
 
 (define (grantnum #:url [url #f] id num)
-  (if url
-      (make-multiarg-element (make-style "SgrantnumURL" multicommand-props)
-                             (list (decode-string url)
-                                   (decode-string id)
-                                   (decode-string num)))
-      (make-multiarg-element (make-style "grantnum" multicommand-props)
-                             (list (decode-string id)
-                                   (decode-string num)))))
+  (make-paragraph (make-style 'pretitle '())
+                  (if url
+                      (make-multiarg-element (make-style "SgrantnumURL" multicommand-props)
+                                             (list (decode-string url)
+                                                   (decode-string id)
+                                                   (decode-string num)))
+                      (make-multiarg-element (make-style "grantnum" multicommand-props)
+                                             (list (decode-string id)
+                                                   (decode-string num))))))
 
 (define (acmBadgeR #:url [url #f] str)
-  (if url
-      (make-multiarg-element (make-style "SacmBadgeRURL" multicommand-props)
-                             (list (decode-string url)
-                                   (decode-string str)))
-      (make-element (make-style "acmBadgeR" command-props)
-                    (decode-string str))))
-
+  (make-paragraph (make-style 'pretitle '())
+                  (if url
+                      (make-multiarg-element (make-style "SacmBadgeRURL" multicommand-props)
+                                             (list (decode-string url)
+                                                   (decode-string str)))
+                      (make-element (make-style "acmBadgeR" command-props)
+                                    (decode-string str)))))
+  
 (define (acmBadgeL #:url [url #f] str)
-  (if url
-      (make-multiarg-element (make-style "SacmBadgeLURL" multicommand-props)
-                             (list (decode-string url)
-                                   (decode-string str)))
-      (make-element (make-style "acmBadgeL" command-props)
-                    (decode-string str))))
+  (make-paragraph (make-style 'pretitle '())
+                  (if url
+                      (make-multiarg-element (make-style "SacmBadgeLURL" multicommand-props)
+                                             (list (decode-string url)
+                                                   (decode-string str)))
+                      (make-element (make-style "acmBadgeL" command-props)
+                                    (decode-string str)))))
 
 (define (received #:stage [s #f] str)
-  (if s
-      (make-multiarg-element (make-style "SreceivedStage" multicommand-props)
-                             (list (decode-string s)
-                                   (decode-string str)))
-      (make-element (make-style "received" command-props)
-                    (decode-string str))))
+  (make-paragraph (make-style 'pretitle '())
+                  (if s
+                      (make-multiarg-element (make-style "SreceivedStage" multicommand-props)
+                                             (list (decode-string s)
+                                                   (decode-string str)))
+                      (make-element (make-style "received" command-props)
+                                    (decode-string str)))))
 
 (define (citestyle str)
-  (make-element (make-style "citestyle" command-props)
-                (decode-string str)))
+  (make-paragraph (make-style 'pretitle '())
+                  (make-element (make-style "citestyle" command-props)
+                                (decode-string str))))
 
 (define (ccsdesc #:number [n #f] str)
-  (if n
-      (make-multiarg-element (make-style "SccsdescNumber" multicommand-props)
-                             (list (number->string n)
-                                   (decode-string str)))
-      (make-element (make-style "ccsdesc" command-props)
-                    (decode-string str))))
+  (make-paragraph (make-style 'pretitle '())
+                  (if n
+                      (make-multiarg-element (make-style "SccsdescNumber" multicommand-props)
+                                             (list (number->string n)
+                                                   (decode-string str)))
+                      (make-element (make-style "ccsdesc" command-props)
+                                    (decode-string str)))))
 
 (define (title #:tag [tag #f]
                #:tag-prefix [prefix #f]
@@ -374,13 +361,12 @@
                           (maybe-element "postcode" affiliation-postcode)
                           (maybe-element "country" affiliation-country)))))))
   
-(define-commands subtitle
+(define-commands subtitle acmJournal
   thanks titlenote subtitlenote authornote acmVolume acmNumber acmArticle acmYear acmMonth
   acmArticleSeq acmPrice acmISBN acmDOI
   startPage terms keywords
   setcopyright copyrightyear
-  settopmatter ; could be "Rackety"
-  shortauthors)
+  settopmatter hortauthors)
 
 (define (CCSXML . strs)
   (make-nested-flow (make-style "CCSXML" '())

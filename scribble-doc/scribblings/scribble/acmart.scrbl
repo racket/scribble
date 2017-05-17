@@ -106,24 +106,24 @@ Specifies a subtitle.}
 }
 
 @deftogether[(
-@defproc[(acmJournal [journal pre-content?] ...) content?]
-@defproc[(acmConference [name pre-content?] [date pre-content?] [venue pre-content?]) content?]
-@defproc[(acmVolume [content pre-content?] ...) content?]
-@defproc[(acmNumber [content pre-content?] ...) content?]
-@defproc[(acmArticle [content pre-content?] ...) content?]
-@defproc[(acmYear [content pre-content?] ...) content?]
-@defproc[(acmMonth [content pre-content?] ...) content?]
-@defproc[(acmArticleSeq [content pre-content?] ...) content?]
-@defproc[(acmPrice [content pre-content?] ...) content?]
-@defproc[(acmISBN [content pre-content?] ...) content?]
-@defproc[(acmDOI [content pre-content?] ...) content?]
+@defproc[(acmJournal [journal pre-content?] ...) block?]
+@defproc[(acmConference [name pre-content?] [date pre-content?] [venue pre-content?]) block?]
+@defproc[(acmVolume [content pre-content?] ...) block?]
+@defproc[(acmNumber [content pre-content?] ...) block?]
+@defproc[(acmArticle [content pre-content?] ...) block?]
+@defproc[(acmYear [content pre-content?] ...) block?]
+@defproc[(acmMonth [content pre-content?] ...) block?]
+@defproc[(acmArticleSeq [content pre-content?] ...) block?]
+@defproc[(acmPrice [content pre-content?] ...) block?]
+@defproc[(acmISBN [content pre-content?] ...) block?]
+@defproc[(acmDOI [content pre-content?] ...) block?]
 )]{
 
 Declares information that is collected into the front-matter region of the paper.}
 
 @deftogether[(
-@defproc[(acmBadgeL [#:url url string? #f] [graphics string?]) content?]
-@defproc[(acmBadgeR [#:url url string? #f] [graphics string?]) content?]
+@defproc[(acmBadgeL [#:url url string? #f] [graphics string?]) block?]
+@defproc[(acmBadgeR [#:url url string? #f] [graphics string?]) block?]
 )]{
 
 Display a special badge, such as an artifact evaluation badge, on the
