@@ -16,11 +16,19 @@
 (provide define-cite
          author+date-style number-style
          make-bib in-bib (rename-out [auto-bib? bib?])
-         proceedings-location journal-location book-location
-         techrpt-location dissertation-location
          author-name org-author-name 
          (contract-out
-          [authors (->* (content?) #:rest (listof content?) element?)])
+          [authors (->* (content?) #:rest (listof content?) element?)]
+          [proceedings-location
+           (->* [any/c] [#:pages (or/c (list/c any/c any/c) #f) #:series any/c #:volume any/c] element?)]
+          [journal-location
+           (->* [any/c] [#:pages (or/c (list/c any/c any/c) #f) #:number any/c #:volume any/c] element?)]
+          [book-location
+           (->* [] [#:edition any/c #:publisher any/c] element?)]
+          [techrpt-location
+           (-> #:institution any/c #:number any/c element?)]
+          [dissertation-location
+           (->* [#:institution any/c] [#:degree any/c] element?)])
          other-authors
          editor
          abbreviate-given-names)
@@ -485,12 +493,12 @@
          #:pages [pages #f]
          #:series [series #f]
          #:volume [volume #f])
-  (let* ([s @elem{In @italic{@elem{Proc. @|location|}}}]
+  (let* ([s @elem{In @italic{@elem{Proc. @to-string[location]}}}]
          [s (if series
-                @elem{@|s|, @(format "~a" series)}
+                @elem{@|s|, @to-string[series]}
                 s)]
          [s (if volume
-                @elem{@|s| volume @(format "~a" volume)}
+                @elem{@|s| volume @to-string[volume]}
                 s)]
          [s (if pages
                 @elem{@|s|, pp. @(to-string (car pages))--@(to-string (cadr pages))}
@@ -502,7 +510,7 @@
          #:pages [pages #f]
          #:number [number #f]
          #:volume [volume #f])
-  (let* ([s @italic{@|location|}]
+  (let* ([s @italic{@to-string[location]}]
          [s (if volume
                 @elem{@|s| @(to-string volume)}
                 s)]
@@ -518,12 +526,12 @@
          #:edition [edition #f]
          #:publisher [publisher #f])
   (let* ([s (if edition
-                @elem{@(string-titlecase edition) edition}
+                @elem{@(string-titlecase (to-string edition)) edition}
                 #f)]
          [s (if publisher
                 (if s
-                   @elem{@|s|. @|publisher|}
-                   publisher)
+                   @elem{@|s|. @to-string[publisher]}
+                   @elem{@to-string[publisher]})
                 s)])
     (unless s
       (error 'book-location "no arguments"))
@@ -532,12 +540,12 @@
 (define (techrpt-location
          #:institution org
          #:number num)
-  @elem{@|org|, @|num|})
+  @elem{@to-string[org], @to-string[num]})
 
 (define (dissertation-location
          #:institution org
          #:degree [degree "PhD"])
-  @elem{@|degree| dissertation, @|org|})
+  @elem{@to-string[degree] dissertation, @to-string[org]})
 
 ;; ----------------------------------------
 
