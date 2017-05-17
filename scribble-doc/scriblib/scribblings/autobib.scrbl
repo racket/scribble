@@ -55,7 +55,9 @@ includes a citation to section 8 of the Racket reference.
                        (code:line #:render-date-in-bib render-date-expr)
                        (code:line #:render-date-in-cite render-date-expr)
                        (code:line #:date<? date-compare-expr)
-                       (code:line #:date=? date-compare-expr)])
+                       (code:line #:date=? date-compare-expr)
+                       (code:line #:cite-author cite-author-id)
+                       (code:line #:cite-year cite-year-id)])
               #:contracts ([style-expr (or/c author+date-style number-style)]
                            [spaces-expr number]
                            [disambiguator-expr (or/c #f (-> exact-nonnegative-integer? element?))]
@@ -84,11 +86,34 @@ or more bibliography entries which have the same authors. It has the contract
 ]
 
 The function bound to @racket[generate-bibliography-id] generates the
-section for the bibliography. It has the contract
+sect ion for the bibliography. It has the contract
 
 @racketblock[
 (->* () (#:tag string? #:sec-title string?) part?)
 ]
+
+If provided, the function bound to @racket[cite-author]
+generates an element containing the authors of a paper.
+
+@racketblock[
+ (->* (bib?) element?)
+]
+
+If provided, the function bound to @racket[cite-year]
+generates an element containing the years the paper was
+published in.
+
+@racketblock[
+ (->* (bib?) #:rest (listof? bib?) element?)
+]
+
+The functions bound to @racket[cite-author] and
+@racket[cite-year] make it possible to create possessive textual citations.
+
+@codeblock[#:keep-lang-line? #f]|{
+ #lang scribble/base
+ @citeauthor[scribble-cite]'s (@citeyear[scribble-cite])  autobib library is pretty nifty.
+}|
 
 The default value for the @racket[#:tag] argument is @racket["doc-bibliography"]
 and for @racket[#:sec-title] is @racket["Bibliography"].

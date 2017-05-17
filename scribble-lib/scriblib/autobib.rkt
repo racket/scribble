@@ -389,8 +389,8 @@
              #'(define (cite-author bib-entry)
                  (add-cite group bib-entry 'autobib-author #f #f the-style)))
          #,(when (identifier? #'cite-year)
-             #'(define (cite-year bib-entry . bib-enteries)
-                 (add-date-cites group (cons bib-entry bib-enteries)
+             #'(define (cite-year bib-entry . bib-entries)
+                 (add-date-cites group (cons bib-entry bib-entries)
                                  (send the-style get-group-sep)
                                  the-style #t date<? date=?)))))]))
 
