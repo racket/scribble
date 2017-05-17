@@ -365,7 +365,7 @@
 
 (define-syntax (define-cite stx)
   (syntax-parse stx
-    [(_ (~var ~cite) citet generate-bibliography
+    [(_ (~var ~cite id) citet:id generate-bibliography:id
         (~or (~optional (~seq #:style style) #:defaults ([style #'author+date-style]))
              (~optional (~seq #:disambiguate fn) #:defaults ([fn #'#f]))
              (~optional (~seq #:render-date-in-bib render-date-bib) #:defaults ([render-date-bib #'#f]))
@@ -373,8 +373,8 @@
              (~optional (~seq #:render-date-in-cite render-date-cite) #:defaults ([render-date-cite #'#f]))
              (~optional (~seq #:date<? date<?) #:defaults ([date<? #'#f]))
              (~optional (~seq #:date=? date=?) #:defaults ([date=? #'#f]))
-             (~optional (~seq #:cite-author cite-author) #:defaults ([cite-author #'#f]))
-             (~optional (~seq #:cite-year cite-year) #:defaults ([cite-year #'#f]))) ...)
+             (~optional (~seq #:cite-author cite-author:id) #:defaults ([cite-author #'#f]))
+             (~optional (~seq #:cite-year cite-year:id) #:defaults ([cite-year #'#f]))) ...)
      (quasisyntax/loc stx
        (begin
          (define group (make-bib-group (make-hasheq)))
