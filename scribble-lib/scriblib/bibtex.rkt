@@ -209,7 +209,7 @@
               (λ (key)
                 (and (not (string=? "\n" key))
                      (generate-bib bibtex-db key)))
-              (append-map (curry regexp-split #rx" +")
+              (append-map (curry regexp-split #px"\\s+")
                           (cons f r)))))
     (define ~cite-id (make-citer autobib-cite))
     (define citet-id (make-citer autobib-citet))))
@@ -217,9 +217,9 @@
 (define (parse-author as)
   (and as
       (apply authors
-         (for/list ([a (in-list (regexp-split #rx" +and *" as))])
+         (for/list ([a (in-list (regexp-split #px"\\s+and\\s+" as))])
            (define (trim s)
-             (string-trim (regexp-replace #rx" +" s " ")))
+             (string-trim (regexp-replace #px"\\s+" s " ")))
            (match a
              [(pregexp #px"^(.*),(.*),(.*)$" (list _ two suffix one))
               (author-name (trim one) (trim two) #:suffix (trim suffix))]
@@ -228,7 +228,7 @@
              [(pregexp #px"^(.*) (von|de la|van der) (.*)$" (list _ one von-like two))
               (author-name (string-trim one) (string-append von-like " " (string-trim two)))]
              [space-separated
-              (match (regexp-split #rx" +" space-separated)
+              (match (regexp-split #px"\\s+" space-separated)
                 [(list one) (org-author-name one)]
                 [(list one two) (author-name one two)]
                 [(list-rest first rest)
@@ -274,7 +274,19 @@
 
   (check
    print-as-equal-string?
+   (parse-author "Lst,Fst")
+   (authors
+    (author-name "Fst" "Lst")))
+
+  (check
+   print-as-equal-string?
    (parse-author "James, Earl Jones")
+   (authors
+    (author-name "Earl Jones" "James")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "James,Earl Jones")
    (authors
     (author-name "Earl Jones" "James")))
 
@@ -286,7 +298,19 @@
 
   (check
    print-as-equal-string?
+   (parse-author "LstA LstB,Fst")
+   (authors
+    (author-name "Fst" "LstA LstB")))
+
+  (check
+   print-as-equal-string?
    (parse-author "LstA LstB, FstA FstB")
+   (authors
+    (author-name "FstA FstB" "LstA LstB")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "LstA LstB,FstA FstB")
    (authors
     (author-name "FstA FstB" "LstA LstB")))
 
@@ -298,7 +322,43 @@
 
   (check
    print-as-equal-string?
+   (parse-author "James,Jr, Earl Jones")
+   (authors
+    (author-name "Earl Jones" "James" #:suffix "Jr")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "James, Jr,Earl Jones")
+   (authors
+    (author-name "Earl Jones" "James" #:suffix "Jr")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "James,Jr,Earl Jones")
+   (authors
+    (author-name "Earl Jones" "James" #:suffix "Jr")))
+
+  (check
+   print-as-equal-string?
    (parse-author "James, III, Earl Jones")
+   (authors
+    (author-name "Earl Jones" "James" #:suffix "III")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "James,III, Earl Jones")
+   (authors
+    (author-name "Earl Jones" "James" #:suffix "III")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "James, III,Earl Jones")
+   (authors
+    (author-name "Earl Jones" "James" #:suffix "III")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "James,III,Earl Jones")
    (authors
     (author-name "Earl Jones" "James" #:suffix "III")))
 
@@ -326,7 +386,13 @@
    (authors (author-name "Edward L." "Deci")
             (author-name "Robert J." "Vallerand")
             (author-name "Luc G." "Pelletier")
-            (author-name "Richard M." "Ryan" #:suffix "Jr"))))
+            (author-name "Richard M." "Ryan" #:suffix "Jr")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "Foo anderson") ;; Should not be parsed as the two authors "Foo" & "erson"
+   (authors
+    (author-name "Foo" "anderson"))))
 
 (define (parse-pages ps)
   (match ps
