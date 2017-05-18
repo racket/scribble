@@ -59,14 +59,15 @@ includes a citation to section 8 of the Racket reference.
                        (code:line #:cite-author cite-author-id)
                        (code:line #:cite-year cite-year-id)])
               #:contracts ([style-expr (or/c author+date-style number-style)]
-                           [spaces-expr number]
+                           [spaces-expr number?]
                            [disambiguator-expr (or/c #f (-> exact-nonnegative-integer? element?))]
                            [render-date-expr (or/c #f (-> date? element?))]
                            [date-compare-expr (or/c #f (-> date? date? boolean?))])]{
 
-Binds @racket[~cite-id], @racket[citet-id], and
-@racket[generate-bibliography-id], which share state to accumulate and
-render citations.
+Binds @racket[~cite-id], @racket[citet-id],
+@racket[generate-bibliography-id], (optionally)
+@racket[cite-author-id], and (optionally) @racket[cite-year-id] which
+share state to accumulate and render citations.
 
 The function bound to @racket[~cite-id] produces a citation referring
 to one or more bibliography entries with a preceding non-breaking
@@ -92,23 +93,24 @@ section for the bibliography. It has the contract
 (->* () (#:tag string? #:sec-title string?) part?)
 ]
 
-If provided, the function bound to @racket[cite-author]
+If provided, the function bound to @racket[cite-author-id]
 generates an element containing the authors of a paper.
 
 @racketblock[
  (->* (bib?) element?)
 ]
 
-If provided, the function bound to @racket[cite-year]
-generates an element containing the years the paper was
-published in.
+If provided, the function bound to @racket[cite-year-id]
+generates an element containing the year the paper was
+published in, or possibly multiple years if multiple papers
+are provided.
 
 @racketblock[
  (->* (bib?) #:rest (listof? bib?) element?)
 ]
 
-The functions bound to @racket[cite-author] and
-@racket[cite-year] make it possible to create possessive textual citations.
+The functions bound to @racket[cite-author-id] and
+@racket[cite-year-id] make it possible to create possessive textual citations.
 
 @codeblock[#:keep-lang-line? #f]|{
  #lang scribble/base
