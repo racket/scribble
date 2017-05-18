@@ -137,7 +137,10 @@ to add an extra element after the date; the default disambiguator adds
 ambiguous raises an exception. Date comparison is controlled by
 @racket[date-compare-expr]s. Dates in citations and dates in the
 bibliography may be rendered differently, as specified by the
-optionally given @racket[render-date-expr] functions.}
+optionally given @racket[render-date-expr] functions.
+
+@history[#:changed "1.22" "Add optional ids for author-name and author-year"]
+}
 
 @deftogether[(
 @defthing[author+date-style any/c]
