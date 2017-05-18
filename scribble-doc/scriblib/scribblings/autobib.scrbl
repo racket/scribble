@@ -55,16 +55,19 @@ includes a citation to section 8 of the Racket reference.
                        (code:line #:render-date-in-bib render-date-expr)
                        (code:line #:render-date-in-cite render-date-expr)
                        (code:line #:date<? date-compare-expr)
-                       (code:line #:date=? date-compare-expr)])
+                       (code:line #:date=? date-compare-expr)
+                       (code:line #:cite-author cite-author-id)
+                       (code:line #:cite-year cite-year-id)])
               #:contracts ([style-expr (or/c author+date-style number-style)]
-                           [spaces-expr number]
+                           [spaces-expr number?]
                            [disambiguator-expr (or/c #f (-> exact-nonnegative-integer? element?))]
                            [render-date-expr (or/c #f (-> date? element?))]
                            [date-compare-expr (or/c #f (-> date? date? boolean?))])]{
 
-Binds @racket[~cite-id], @racket[citet-id], and
-@racket[generate-bibliography-id], which share state to accumulate and
-render citations.
+Binds @racket[~cite-id], @racket[citet-id],
+@racket[generate-bibliography-id], (optionally)
+@racket[cite-author-id], and (optionally) @racket[cite-year-id] which
+share state to accumulate and render citations.
 
 The function bound to @racket[~cite-id] produces a citation referring
 to one or more bibliography entries with a preceding non-breaking
@@ -90,6 +93,30 @@ section for the bibliography. It has the contract
 (->* () (#:tag string? #:sec-title string?) part?)
 ]
 
+If provided, the function bound to @racket[cite-author-id]
+generates an element containing the authors of a paper.
+
+@racketblock[
+ (->* (bib?) element?)
+]
+
+If provided, the function bound to @racket[cite-year-id]
+generates an element containing the year the paper was
+published in, or possibly multiple years if multiple papers
+are provided.
+
+@racketblock[
+ (->* (bib?) #:rest (listof? bib?) element?)
+]
+
+The functions bound to @racket[cite-author-id] and
+@racket[cite-year-id] make it possible to create possessive textual citations.
+
+@codeblock[#:keep-lang-line? #f]|{
+ #lang scribble/base
+ @citeauthor[scribble-cite]'s (@citeyear[scribble-cite])  autobib library is pretty nifty.
+}|
+
 The default value for the @racket[#:tag] argument is @racket["doc-bibliography"]
 and for @racket[#:sec-title] is @racket["Bibliography"].
 
@@ -110,7 +137,10 @@ to add an extra element after the date; the default disambiguator adds
 ambiguous raises an exception. Date comparison is controlled by
 @racket[date-compare-expr]s. Dates in citations and dates in the
 bibliography may be rendered differently, as specified by the
-optionally given @racket[render-date-expr] functions.}
+optionally given @racket[render-date-expr] functions.
+
+@history[#:changed "1.22" "Add optional ids for author-name and author-year"]
+}
 
 @deftogether[(
 @defthing[author+date-style any/c]
