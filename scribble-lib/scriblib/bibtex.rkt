@@ -225,8 +225,9 @@
               (author-name (trim one) (trim two) #:suffix (trim suffix))]
              [(pregexp #px"^(.*),(.*)$" (list _ two one))
               (author-name (string-trim one) (string-trim two))]
-             [(pregexp #px"^(.*) (von|de la|van der) (.*)$" (list _ one von-like two))
-              (author-name (string-trim one) (string-append von-like " " (string-trim two)))]
+             [(pregexp #px"^(.*?)\\s+(\\p{Ll}[^\\s]*(\\s+\\p{Ll}[^\\s]*)*)\\s+(.*)$" (list _ one von-like _ two))
+              (author-name (string-trim one)
+                           (string-append (string-trim von-like) " " (string-trim two)))]
              [space-separated
               (match (regexp-split #px"\\s+" space-separated)
                 [(list one) (org-author-name one)]
@@ -379,6 +380,24 @@
    (parse-author "James Jack van der Earl Jones")
    (authors
     (author-name "James Jack" "van der Earl Jones")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "James Jack von de la Earl Jones")
+   (authors
+    (author-name "James Jack" "von de la Earl Jones")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "James Jack di Earl Jones")
+   (authors
+    (author-name "James Jack" "di Earl Jones")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "First fOn bER Last")
+   (authors
+    (author-name "First" "fOn bER Last")))
 
   (check
    print-as-equal-string?
