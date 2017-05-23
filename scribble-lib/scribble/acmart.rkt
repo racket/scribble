@@ -289,7 +289,6 @@
   (define (mk-inst name
                    #:department? [department? department?]
                    #:level [level level])
-    (displayln department?)
     (case department?
       [(#f) (make-element (make-style "institution" command-props)
                           (decode-content name))]
