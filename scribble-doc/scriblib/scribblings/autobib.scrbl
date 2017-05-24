@@ -212,9 +212,10 @@ describing a paper's location within a journal.}
          element?]{
 
 Combines elements to generate an element that is suitable for
-describing a book's location.}
+describing a book's location.
+Both arguments are optional, but at least one must be supplied.}
 
-@defproc[(techrpt-location [#:institution institution edition any/c]
+@defproc[(techrpt-location [#:institution institution any/c]
                            [#:number number any/c])
          element?]{
 
