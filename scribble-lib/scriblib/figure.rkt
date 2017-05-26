@@ -92,16 +92,19 @@
 (define (figure-helper figure-style content-style tag caption content continue?)
   (make-nested-flow 
    figure-style 
-   (list
+   (list*
     (make-nested-flow
      content-style
      (list (make-nested-flow figureinside-style (decode-flow content))))
-    (make-paragraph
-     centertext-style
-     (list (make-element (if continue?
-                             legend-continued-style
-                             legend-style)
-                         (list (Figure-target tag #:continue? continue?) caption)))))))
+    (if caption
+        (list
+         (make-paragraph
+          centertext-style
+          (list (make-element (if continue?
+                                  legend-continued-style
+                                  legend-style)
+                              (list (Figure-target tag #:continue? continue?) caption)))))
+        (list)))))
 
 (define figures (new-counter "figure" 
                              #:target-wrap make-figure-target
