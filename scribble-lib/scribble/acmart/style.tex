@@ -1,12 +1,20 @@
-\newcommand{\SXtitle}[2][]{\title[#1]{#2}}
 
+\makeatletter
+\def\ifemptyarg#1{% https://tex.stackexchange.com/questions/308/different-command-definitions-with-and-without-optional-argument#58638
+  \if\relax\detokenize{#1}\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi}
+\makeatother
+\newcommand{\SXtitle}[2][]{\ifemptyarg{#1}{\title{#2}}{\title[#1]{#2}}}
 \renewcommand{\titleAndVersionAndAuthors}[3]{\SXtitle{#1}#3\maketitle}
 \renewcommand{\titleAndEmptyVersionAndAuthors}[3]{\titleAndVersionAndAuthors{#1}{#2}{#3}}
 \renewcommand{\titleAndVersionAndEmptyAuthors}[3]{\SXtitle{#1}\author{Anonymous Author(s)}\maketitle}
 \renewcommand{\titleAndEmptyVersionAndEmptyAuthors}[3]{\titleAndVersionAndEmptyAuthors{#1}{#2}{#3}}
-\renewcommand{\titleAndVersionAndAuthorsAndShort}[4]{\SXtitle[[#4]]{#1}#3\maketitle}
+\renewcommand{\titleAndVersionAndAuthorsAndShort}[4]{\SXtitle[#4]{#1}#3\maketitle}
 \renewcommand{\titleAndEmptyVersionAndAuthorsAndShort}[4]{\titleAndVersionAndAuthorsAndShort{#1}{#2}{#3}{#4}}
-\renewcommand{\titleAndVersionAndEmptyAuthorsAndShort}[4]{\SXtitle[[#4]]{#1}\author{Anonymous Author(s)}\maketitle}
+\renewcommand{\titleAndVersionAndEmptyAuthorsAndShort}[4]{\SXtitle[#4]{#1}\author{Anonymous Author(s)}\maketitle}
 \renewcommand{\titleAndEmptyVersionAndEmptyAuthorsAndShort}[4]{\titleAndVersionAndEmptyAuthorsAndShort{#1}{#2}{#3}{#4}}
 
 % Support plain `author' while enabling `authorinfo': for each
