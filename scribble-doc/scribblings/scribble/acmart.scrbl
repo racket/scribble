@@ -13,6 +13,17 @@ LaTeX style defaults to use the @hyperlink[acmart-url]{@tt{acmart}}
 class for typesetting publications for the Association of Computing
 Machinery.}
 
+@bold{Note:} a @racketmodname[scribble/acmart] document must include a
+@racket[title] and @racket[author].
+
+Example:
+
+@verbatim[#:indent 2]|{
+  #lang scribble/acmart
+  @title{Surreal Numbers}
+  @author{Ursula N. Owens}
+}|
+
 @deftogether[(
 @defidform[manuscript]
 @defidform[acmsmall]

@@ -80,6 +80,8 @@
  [CCSXML 
   (->* () () #:rest (listof pre-content?)
        any/c)])
+(provide
+  invisible-element-to-collect-for-acmart-extras)
 
 (define-syntax-rule (defopts name ...)
   (begin (define-syntax (name stx)
@@ -135,6 +137,9 @@
     (list
      (make-css-addition (abs "acmart.css"))
      (make-tex-addition (abs "acmart.tex")))))
+
+(define invisible-element-to-collect-for-acmart-extras
+  (make-element (make-style "invisible-element-to-collect-for-acmart-extras" acmart-extras) '()))
 
 ;; ----------------------------------------
 ;; Abstracts:
