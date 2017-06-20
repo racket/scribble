@@ -1,36 +1,22 @@
 #lang racket/base
 
 (require "eval.rkt"
-         racket/contract
          (only-in "struct.rkt" make-paragraph)
          (for-syntax racket/base
                      syntax/parse))
 
-(define lang-option/c
-  (or/c module-path? (list/c 'special symbol?) (cons/c 'begin list?)))
-
-(define eval-factory/c
-  (->* [(listof module-path?)] [#:pretty-print? any/c #:lang lang-option/c] any))
-
 (provide examples
 
          ;; Re-exports:
-         (contract-out
-           [make-base-eval
-            (->* [] [#:pretty-print? any/c #:lang lang-option/c] #:rest any/c any)]
-           [make-base-eval-factory
-            eval-factory/c]
-           [make-eval-factory
-            eval-factory/c]
-           [close-eval
-            (-> any/c any)]
+         make-base-eval
+         make-base-eval-factory
+         make-eval-factory
+         close-eval
 
-           [scribble-exn->string
-            (-> any/c string?)]
-           [scribble-eval-handler
-            (parameter/c (-> (-> any/c any) boolean? any/c any))]
-           [make-log-based-eval
-            (-> path-string? (or/c 'record 'replay) any)]))
+         make-log-based-eval
+         scribble-exn->string
+         scribble-eval-handler
+         make-log-based-eval)
 
 (define example-title
   (make-paragraph (list "Example:")))
