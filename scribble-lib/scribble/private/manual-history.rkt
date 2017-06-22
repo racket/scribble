@@ -49,8 +49,7 @@
         (define vers (history-entry-vers e))
         (list (if (zero? i)
                   null
-                  (list null ; needed to avoid " " dropped as whitespace
-                        " "))
+                  (list (linebreak)))
               (history-entry-what e)
               " in version "
               vers
