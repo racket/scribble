@@ -80,8 +80,6 @@
  [CCSXML 
   (->* () () #:rest (listof pre-content?)
        any/c)])
-(provide
-  invisible-element-to-collect-for-acmart-extras)
 
 (define-syntax-rule (defopts name ...)
   (begin (define-syntax (name stx)
@@ -138,9 +136,6 @@
      (make-css-addition (abs "acmart.css"))
      (make-tex-addition (abs "acmart.tex")))))
 
-(define invisible-element-to-collect-for-acmart-extras
-  (make-element (make-style "invisible-element-to-collect-for-acmart-extras" acmart-extras) '()))
-
 ;; ----------------------------------------
 ;; Abstracts:
 
@@ -182,19 +177,19 @@
 (define (acmBadgeR #:url [url #f] str)
   (make-paragraph (make-style 'pretitle '())
                   (if url
-                      (make-multiarg-element (make-style "SacmBadgeRURL" multicommand-props)
+                      (make-multiarg-element (make-style "SacmBadgeRURL" (cons 'exact-chars multicommand-props))
                                              (list (decode-string url)
                                                    (decode-string str)))
-                      (make-element (make-style "acmBadgeR" command-props)
+                      (make-element (make-style "acmBadgeR" (cons 'exact-chars command-props))
                                     (decode-string str)))))
   
 (define (acmBadgeL #:url [url #f] str)
   (make-paragraph (make-style 'pretitle '())
                   (if url
-                      (make-multiarg-element (make-style "SacmBadgeLURL" multicommand-props)
+                      (make-multiarg-element (make-style "SacmBadgeLURL" (cons 'exact-chars multicommand-props))
                                              (list (decode-string url)
                                                    (decode-string str)))
-                      (make-element (make-style "acmBadgeL" command-props)
+                      (make-element (make-style "acmBadgeL" (cons 'exact-chars command-props))
                                     (decode-string str)))))
 
 (define (received #:stage [s #f] str)
