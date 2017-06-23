@@ -471,6 +471,13 @@
                             #:date (raw-attr "year")
                             #:location (raw-attr "school")
                             #:url (raw-attr "url"))]
+                 ["phdthesis"
+                  (make-bib #:title (raw-attr "title")
+                            #:author (parse-author (raw-attr "author"))
+                            #:date (raw-attr "year")
+                            #:location (dissertation-location #:institution (raw-attr "school")
+                                                              #:degree "PhD")
+                            #:url (raw-attr "url"))]
                  ["techreport"
                   (make-bib #:title (raw-attr "title")
                             #:author (parse-author (raw-attr "author"))
