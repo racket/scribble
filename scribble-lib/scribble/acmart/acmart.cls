@@ -37,7 +37,7 @@
 %%   Right brace   \}     Tilde         \~}
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesClass{acmart}
-[2017/05/14 v1.39 Typesetting articles for Association of
+[2017/07/02 v1.42 Typesetting articles for Association of
 Computing Machinery]
 \def\@classname{acmart}
 \InputIfFileExists{acmart-preload-hook.tex}{%
@@ -196,6 +196,7 @@ Computing Machinery]
 \RequirePackage{setspace}
 \onehalfspacing
 \fi
+\RequirePackage{textcase}
 \if@ACM@natbib
   \RequirePackage{natbib}
   \renewcommand{\bibsection}{%
@@ -395,6 +396,7 @@ Computing Machinery]
   \global\@nobreakfalse \endgroup
   \addvspace{32\p@\@plus14\p@}%
 }
+\def\l@section{\@tocline{1}{0pt}{1pc}{2pc}{}}
 \def\l@subsection{\@tocline{2}{0pt}{1pc}{3pc}{}}
 \def\l@subsubsection{\@tocline{2}{0pt}{1pc}{5pc}{}}
 \let\@footnotemark@nolink\@footnotemark
@@ -429,6 +431,7 @@ Computing Machinery]
 \else
   \hypersetup{hidelinks}
 \fi
+\RequirePackage{cleveref}
 \if@ACM@natbib
   \let\citeN\cite
   \let\cite\citep
@@ -476,55 +479,55 @@ Computing Machinery]
 \ifcase\ACM@format@nr
 \relax % manuscript
    \geometry{letterpaper,head=13pt,
-   marginparwidth=6pc}%
+   marginparwidth=6pc,heightrounded}%
 \or % acmsmall
    \geometry{twoside=true,
      includeheadfoot, head=13pt, foot=2pc,
      paperwidth=6.75in, paperheight=10in,
      top=58pt, bottom=44pt, inner=46pt, outer=46pt,
-     marginparwidth=2pc
+     marginparwidth=2pc,heightrounded
    }%
 \or % acmlarge
    \geometry{twoside=true, head=13pt, foot=2pc,
      paperwidth=8.5in, paperheight=11in,
      includeheadfoot,
      top=78pt, bottom=114pt, inner=81pt, outer=81pt,
-     marginparwidth=4pc
+     marginparwidth=4pc,heightrounded
      }%
 \or % acmtog
    \geometry{twoside=true, head=13pt, foot=2pc,
      paperwidth=8.5in, paperheight=11in,
      includeheadfoot, columnsep=24pt,
      top=52pt, bottom=75pt, inner=52pt, outer=52pt,
-     marginparwidth=2pc
+     marginparwidth=2pc,heightrounded
      }%
 \or % sigconf
    \geometry{twoside=true, head=13pt,
      paperwidth=8.5in, paperheight=11in,
      includeheadfoot, columnsep=2pc,
      top=57pt, bottom=73pt, inner=54pt, outer=54pt,
-     marginparwidth=2pc
+     marginparwidth=2pc,heightrounded
      }%
 \or % siggraph
    \geometry{twoside=true, head=13pt,
      paperwidth=8.5in, paperheight=11in,
      includeheadfoot, columnsep=2pc,
      top=57pt, bottom=73pt, inner=54pt, outer=54pt,
-     marginparwidth=2pc
+     marginparwidth=2pc,heightrounded
      }%
 \or % sigplan
    \geometry{twoside=true, head=13pt,
      paperwidth=8.5in, paperheight=11in,
      includeheadfoot=false, columnsep=2pc,
      top=1in, bottom=1in, inner=0.75in, outer=0.75in,
-     marginparwidth=2pc
+     marginparwidth=2pc,heightrounded
      }%
 \or % sigchi
    \geometry{twoside=true, head=13pt,
      paperwidth=8.5in, paperheight=11in,
      includeheadfoot, columnsep=2pc,
      top=66pt, bottom=73pt, inner=54pt, outer=54pt,
-     marginparwidth=2pc
+     marginparwidth=2pc,heightrounded
      }%
 \or % sigchi-a
    \geometry{twoside=false, head=13pt,
@@ -601,6 +604,13 @@ Computing Machinery]
 \RequirePackage{iftex}
 \ifPDFTeX
 \input{glyphtounicode}
+\pdfglyphtounicode{f_f}{FB00}
+\pdfglyphtounicode{f_f_i}{FB03}
+\pdfglyphtounicode{f_f_l}{FB04}
+\pdfglyphtounicode{f_i}{FB01}
+\pdfglyphtounicode{t_t}{00740074}
+\pdfglyphtounicode{f_t}{00660074}
+\pdfglyphtounicode{T_h}{00540068}
 \pdfgentounicode=1
 \fi
 \RequirePackage{cmap}
@@ -1087,7 +1097,7 @@ Computing Machinery]
   \if@ACM@anonymous\else
     \g@addto@macro\addresses{\email{#1}{#2}}%
   \fi}
-\let\orcid\@gobble
+\def\orcid#1{\unskip\ignorespaces}
 \def\@titlenotes{}
 \def\titlenote#1{%
   \g@addto@macro\@title{\footnotemark}%
@@ -1228,16 +1238,28 @@ Computing Machinery]
 \excludecomment{CCSXML}
 \let\@concepts\@empty
 \newcommand\ccsdesc[2][100]{%
-  \ccsdesc@parse#1~#2~}
+  \ccsdesc@parse#1~#2~~\ccsdesc@parse@end}
 \RequirePackage{textcomp}
 \def\ccsdesc@parse#1~#2~#3~{%
-  \expandafter\ifx\csname CCS@#2\endcsname\relax
-    \expandafter\gdef\csname CCS@#2\endcsname{\textbullet\ \textbf{#2} \textrightarrow\ }%
-  \g@addto@macro{\@concepts}{\csname CCS@#2\endcsname}\fi
-  \expandafter\g@addto@macro\expandafter{\csname CCS@#2\endcsname}{%
-    \ifnum#1>499\textbf{#3}; \else
-    \ifnum#1>299\textit{#3}; \else
-    #3; \fi\fi}}
+  \expandafter\ifx\csname CCS@General@#2\endcsname\relax
+    \expandafter\gdef\csname CCS@General@#2\endcsname{\textbullet\
+      \textbf{#2}}%
+    \expandafter\gdef\csname CCS@Punctuation@#2\endcsname{; }%
+    \expandafter\gdef\csname CCS@Specific@#2\endcsname{}%
+  \g@addto@macro{\@concepts}{\csname CCS@General@#2\endcsname
+    \csname CCS@Punctuation@#2\endcsname
+    \csname CCS@Specific@#2\endcsname}%
+  \fi
+  \ifx#3\relax\relax\else
+    \expandafter\gdef\csname CCS@Punctuation@#2\endcsname{
+      \textrightarrow\ }%
+    \expandafter\g@addto@macro\expandafter{\csname CCS@Specific@#2\endcsname}{%
+     \ifnum#1>499\textbf{#3}; \else
+     \ifnum#1>299\textit{#3}; \else
+     #3; \fi\fi}%
+  \fi
+\ccsdesc@parse@finish}
+\def\ccsdesc@parse@finish#1\ccsdesc@parse@end{}
 \newif\if@printcopyright
 \@printcopyrighttrue
 \newif\if@printpermission
@@ -1245,9 +1267,11 @@ Computing Machinery]
 \newif\if@acmowned
 \@acmownedtrue
 \define@choicekey*{ACM@}{acmcopyrightmode}[%
-  \acm@copyrightinput\acm@copyrightmode]{none,acmcopyright,acmlicensed,%
-  rightsretained,usgov,usgovmixed,cagov,cagovmixed,%
-  licensedusgovmixed,licensedcagovmixed,othergov,licensedothergov}{%
+  \acm@copyrightinput\acm@copyrightmode]{none,%
+    acmcopyright,acmlicensed,rightsretained,%
+    usgov,usgovmixed,cagov,cagovmixed,%
+    licensedusgovmixed,%
+    licensedcagov,licensedcagovmixed,othergov,licensedothergov}{%
   \@printpermissiontrue
   \@printcopyrighttrue
   \@acmownedtrue
@@ -1275,13 +1299,16 @@ Computing Machinery]
   \ifnum\acm@copyrightmode=8\relax % licensedusgovmixed
    \@acmownedfalse
   \fi
-  \ifnum\acm@copyrightmode=9\relax % licensedcagovmixed
+  \ifnum\acm@copyrightmode=9\relax % licensedcagov
    \@acmownedfalse
   \fi
-  \ifnum\acm@copyrightmode=10\relax % othergov
+  \ifnum\acm@copyrightmode=10\relax % licensedcagovmixed
+   \@acmownedfalse
+  \fi
+  \ifnum\acm@copyrightmode=11\relax % othergov
    \@acmownedtrue
   \fi
-  \ifnum\acm@copyrightmode=11\relax % licensedothergov
+  \ifnum\acm@copyrightmode=12\relax % licensedothergov
    \@acmownedfalse
   \fi}
 \def\setcopyright#1{\setkeys{ACM@}{acmcopyrightmode=#1}}
@@ -1304,6 +1331,9 @@ Computing Machinery]
   Association for Computing Machinery.
   \or %licensedusgovmixed
   Copyright held by the owner/author(s). Publication rights licensed to
+  Association for Computing Machinery.
+  \or % licensedcagov
+  Crown in Right of Canada. Publication rights licensed to
   Association for Computing Machinery.
   \or %licensedcagovmixed
   Copyright held by the owner/author(s). Publication rights licensed to
@@ -1375,7 +1405,7 @@ Computing Machinery]
    Permission to make digital or hard copies for personal or classroom
    use is granted. Copies must bear this notice and the full citation
    on the first page.  Copyrights for components of this work owned by
-   others than the Canadain Government must be honored. To copy
+   others than the Canadian Government must be honored. To copy
    otherwise, distribute, republish, or post, requires prior specific
    permission and\hspace*{.5pt}/or a fee. Request permissions from
    permissions@acm.org.
@@ -1398,6 +1428,20 @@ Computing Machinery]
    Government retains a nonexclusive, royalty-free right to publish or
    reproduce this article, or to allow others to do so, for Government
    purposes only.
+  \or % licensedcagov
+   This article was authored by employees of the Government of Canada.
+   As such, the Canadian government retains all interest in the
+   copyright to this work and grants to ACM a nonexclusive,
+   royalty-free right to publish or reproduce this article, or to allow
+   others to do so, provided that clear attribution is given both to
+   the authors and the Canadian government agency employing them.
+   Permission to make digital or hard copies for personal or classroom
+   use is granted. Copies must bear this notice and the full citation
+   on the first page.  Copyrights for components of this work owned by
+   others than the Canadian Government must be honored. To copy
+   otherwise, distribute, republish, or post, requires prior specific
+   permission and\hspace*{.5pt}/or a fee. Request permissions from
+   permissions@acm.org.
   \or % licensedcagovmixed
    Publication rights licensed to ACM\@. ACM acknowledges that this
    contribution was authored or co-authored by an employee, contractor
@@ -1535,7 +1579,9 @@ Computing Machinery]
      \@mkbibcitation
   \fi
   \hypersetup{pdfauthor={\authors},
-    pdftitle={\@title}, pdfkeywords={\@concepts}}%
+    pdftitle={\@title},
+    pdfsubject={\@concepts},
+    pdfkeywords={\@keywords}}%
   \@printendtopmatter
   \@afterindentfalse
   \@afterheading
@@ -1741,24 +1787,22 @@ Computing Machinery]
     \unskip\cleaders\copy\@ACM@commabox\hskip\wd\@ACM@commabox
   \fi\fi
   #1}
+\def\streetaddress#1{\unskip\ignorespaces}
+\def\postcode#1{\unskip\ignorespaces}
 \if@ACM@journal
-  \let\position\@gobble
-  \def\institution#1{#1\ignorespaces}%
-  \newcommand\department[2][0]{}%
-  \let\streetaddress\@gobble
-  \let\city\@gobble
-  \let\state\@gobble
-  \let\postcode\@gobble
-  \let\country\@gobble
+  \def\position#1{\unskip\ignorespaces}
+  \def\institution#1{#1\ignorespaces}
+  \def\city#1{\unskip\ignorespaces}
+  \def\state#1{\unskip\ignorespaces}
+  \newcommand\department[2][0]{}
+  \def\country#1{\unskip\ignorespaces}
 \else
   \def\position#1{\if@ACM@affiliation@obeypunctuation#1\else#1\par\fi}%
   \def\institution#1{\if@ACM@affiliation@obeypunctuation#1\else#1\par\fi}%
   \newcommand\department[2][0]{\if@ACM@affiliation@obeypunctuation
     #2\else#2\par\fi}%
-  \def\streetaddress#1{\if@ACM@affiliation@obeypunctuation#1\else#1\par\fi}%
   \let\city\@ACM@addtoaddress
   \let\state\@ACM@addtoaddress
-  \def\postcode#1{\if@ACM@affiliation@obeypunctuation#1\else\unskip\space#1\fi}%
   \let\country\@ACM@addtoaddress
 \fi
 \def\@mkauthors{\begingroup
@@ -1826,9 +1870,9 @@ Computing Machinery]
   \global\let\and\@typeset@author@line
   \def\@author##1{%
     \ifx\@currentauthors\@empty
-      \gdef\@currentauthors{\@authorfont\MakeUppercase{##1}}%
+      \gdef\@currentauthors{\@authorfont\MakeTextUppercase{##1}}%
     \else
-       \g@addto@macro{\@currentauthors}{\and\MakeUppercase{##1}}%
+       \g@addto@macro{\@currentauthors}{\and\MakeTextUppercase{##1}}%
     \fi
     \gdef\and{}}%
   \def\email##1##2{}%
@@ -2023,7 +2067,7 @@ Computing Machinery]
   \def\ACM@mk@linecount{%
     \savebox{\ACM@linecount@bx}[4em][t]{\parbox[t]{4em}{%
         \setlength{\ACM@linecount@bxht}{-\baselineskip}%
-        \loop{\color{ACMRed}\scriptsize\the\ACM@linecount}\\
+        \loop{\color{red}\scriptsize\the\ACM@linecount}\\
         \global\advance\ACM@linecount by \@ne
         \addtolength{\ACM@linecount@bxht}{\baselineskip}%
         \ifdim\ACM@linecount@bxht<\textheight\repeat}}}
@@ -2241,7 +2285,7 @@ Computing Machinery]
   \rightskip\@rightskip
   \leftskip\z@skip
   \parindent\z@}
-\def\@secfont{\sffamily\bfseries\section@raggedright\MakeUppercase}
+\def\@secfont{\sffamily\bfseries\section@raggedright\MakeTextUppercase}
 \def\@subsecfont{\sffamily\bfseries\section@raggedright}
 \def\@subsubsecfont{\sffamily\itshape}
 \def\@parfont{\itshape}
@@ -2250,16 +2294,16 @@ Computing Machinery]
 \relax % manuscript
 \or % acmsmall
 \or % acmlarge
- \def\@secfont{\sffamily\large\section@raggedright\MakeUppercase}
+ \def\@secfont{\sffamily\large\section@raggedright\MakeTextUppercase}
  \def\@subsecfont{\sffamily\large\section@raggedright}
 \or % acmtog
- \def\@secfont{\sffamily\large\section@raggedright\MakeUppercase}
+ \def\@secfont{\sffamily\large\section@raggedright\MakeTextUppercase}
  \def\@subsecfont{\sffamily\large\section@raggedright}
 \or % sigconf
- \def\@secfont{\bfseries\Large\section@raggedright\MakeUppercase}
+ \def\@secfont{\bfseries\Large\section@raggedright\MakeTextUppercase}
  \def\@subsecfont{\bfseries\Large\section@raggedright}
 \or % siggraph
- \def\@secfont{\bfseries\sffamily\Large\section@raggedright\MakeUppercase}
+ \def\@secfont{\bfseries\sffamily\Large\section@raggedright\MakeTextUppercase}
  \def\@subsecfont{\bfseries\sffamily\Large\section@raggedright}
 \or % sigplan
  \def\@secfont{\bfseries\Large\section@raggedright}
@@ -2281,11 +2325,11 @@ Computing Machinery]
  \def\@subparfont{\itshape}
 \or % sigchi
  \setcounter{secnumdepth}{1}
- \def\@secfont{\bfseries\sffamily\section@raggedright\MakeUppercase}
+ \def\@secfont{\bfseries\sffamily\section@raggedright\MakeTextUppercase}
  \def\@subsecfont{\bfseries\sffamily\section@raggedright}
 \or % sigchi-a
  \setcounter{secnumdepth}{0}
- \def\@secfont{\bfseries\sffamily\section@raggedright\MakeUppercase}
+ \def\@secfont{\bfseries\sffamily\section@raggedright\MakeTextUppercase}
  \def\@subsecfont{\bfseries\sffamily\section@raggedright}
 \fi
 \def\@adddotafter#1{#1\@addpunct{.}}
