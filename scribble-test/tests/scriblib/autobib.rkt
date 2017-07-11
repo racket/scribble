@@ -1,6 +1,6 @@
 #lang racket/base
 
-(require rackunit scriblib/autobib)
+(require rackunit scriblib/autobib scribble/base scribble/core)
 
 (test-case "define-cite"
   ;; Check that `define-cite` binds the expected identifiers
@@ -38,6 +38,23 @@
     (λ () (book-location #:edition 'B #:publisher 'Elsiver)))
   (check-exn exn:fail?
     (λ () (book-location))))
+
+(define (mk-bookloc-elem/ed ed) (element (style #f '()) (list ed " edition")))
+
+(test-case "book-location-edition-capitalization"
+  (check-equal? (book-location #:edition 'a)
+                (mk-bookloc-elem/ed "A"))
+  (check-equal? (book-location #:edition "first")
+                (mk-bookloc-elem/ed "First"))
+  (check-equal? (book-location #:edition 'Third)
+                (mk-bookloc-elem/ed "Third"))
+  (check-equal? (book-location #:edition 1)
+                (mk-bookloc-elem/ed "1"))
+  (check-equal? (book-location #:edition "1st")
+                (mk-bookloc-elem/ed "1st"))
+  (check-equal? (book-location #:edition "4th")
+                (mk-bookloc-elem/ed "4th")))
+
 
 (test-case "techrpt-location"
   (check-not-exn
