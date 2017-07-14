@@ -77,6 +77,7 @@
  [acmBadgeL (->* (string?) (#:url string?) block?)]
  [received (->* (string?) (#:stage string?) block?)]
  [citestyle (-> content? block?)]
+ [ccsdesc (->* (string?) (#:number exact-integer?) block?)]
  [CCSXML 
   (->* () () #:rest (listof pre-content?)
        any/c)])
@@ -214,10 +215,10 @@
 (define (ccsdesc #:number [n #f] str)
   (make-paragraph (make-style 'pretitle '())
                   (if n
-                      (make-multiarg-element (make-style "SccsdescNumber" multicommand-props)
+                      (make-multiarg-element (make-style "SccsdescNumber" (cons 'exact-chars multicommand-props))
                                              (list (number->string n)
                                                    (decode-string str)))
-                      (make-element (make-style "ccsdesc" command-props)
+                      (make-element (make-style "ccsdesc" (cons 'exact-chars command-props))
                                     (decode-string str)))))
 
 (define (title #:tag [tag #f]
