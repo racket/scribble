@@ -37,7 +37,7 @@
 %%   Right brace   \}     Tilde         \~}
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesClass{acmart}
-[2017/07/02 v1.42 Typesetting articles for Association of
+[2017/07/09 v1.43 Typesetting articles for Association of
 Computing Machinery]
 \def\@classname{acmart}
 \InputIfFileExists{acmart-preload-hook.tex}{%
@@ -383,7 +383,7 @@ Computing Machinery]
     \def\@svsechd{#4{\hskip #1\relax #5}}%
   \fi
   \@xsect{#3}}
-\def\@starttoc#1#2{\begingroup
+\def\@starttoc#1#2{\begingroup\makeatletter
   \setTrue{#1}%
   \par\removelastskip\vskip\z@skip
   \@startsection{section}\@M\z@{\linespacing\@plus\linespacing}%
@@ -1385,16 +1385,10 @@ Computing Machinery]
    source.
   \or % usgovmixed
    ACM acknowledges that this contribution was authored or co-authored
-   by an employee, or contractor of the national government. As such,
-   the Government retains a nonexclusive, royalty-free right to
+   by an employee, contractor, or affiliate of the United States government. As such,
+   the United States government retains a nonexclusive, royalty-free right to
    publish or reproduce this article, or to allow others to do so, for
-   Government purposes only. Permission to make digital or hard copies
-   for personal or classroom use is granted. Copies must bear this
-   notice and the full citation on the first page. Copyrights for
-   components of this work owned by others than ACM must be
-   honored. To copy otherwise, distribute, republish, or post,
-   requires prior specific permission and\hspace*{.5pt}/or a
-   fee. Request permissions from permissions@acm.org.
+   government purposes only.
   \or % cagov
    This article was authored by employees of the Government of Canada.
    As such, the Canadian government retains all interest in the
@@ -1795,7 +1789,7 @@ Computing Machinery]
   \def\city#1{\unskip\ignorespaces}
   \def\state#1{\unskip\ignorespaces}
   \newcommand\department[2][0]{}
-  \def\country#1{\unskip\ignorespaces}
+  \def\country#1{\if@ACM@affiliation@obeypunctuation\else, \fi#1\ignorespaces}
 \else
   \def\position#1{\if@ACM@affiliation@obeypunctuation#1\else#1\par\fi}%
   \def\institution#1{\if@ACM@affiliation@obeypunctuation#1\else#1\par\fi}%
@@ -2021,7 +2015,7 @@ Computing Machinery]
   \def\footnote{\ClassError{\@classname}{Please do note use footnotes
       inside \string\title{} or \string\author{} command! Use
       \string\titlenote{} or \string\authornote{} instead!}}%
-  \par\medskip\small\noindent{\bfseries ACM Reference format:}\par\nobreak
+  \par\medskip\small\noindent{\bfseries ACM Reference Format:}\par\nobreak
   \noindent\authors. \@acmYear. \@title.
   \if@ACM@journal
      \textit{\@journalNameShort}
