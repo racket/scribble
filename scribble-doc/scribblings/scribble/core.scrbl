@@ -370,7 +370,7 @@ names are as follows:
 
 @itemize[
 
- @item{@racket['index] --- The part represents an index.}
+ @item{@indexed-racket['index] --- The part represents an index.}
 
 ]
 
@@ -378,24 +378,24 @@ The recognized @tech{style properties} are as follows:
 
 @itemize[
 
- @item{@racket['unnumbered] --- A section number is not computed or
+ @item{@indexed-racket['unnumbered] --- A section number is not computed or
        rendered for the section.}
 
- @item{@racket['hidden-number] --- A section number is computed for
+ @item{@indexed-racket['hidden-number] --- A section number is computed for
        the section, but it is not rendered as part of the section name.}
 
- @item{@racket['toc-hidden] --- The part title is not shown in tables
+ @item{@indexed-racket['toc-hidden] --- The part title is not shown in tables
        of contents, including in ``on this page'' boxes. For Latex
        rendering, the part title is omitted only if it is unnumbered
        or has a hidden number.}
 
- @item{@racket['hidden] --- The part title is not shown; for Latex
+ @item{@indexed-racket['hidden] --- The part title is not shown; for Latex
        output, the part title is not shown only if its is empty, and
        in that case, it is also excluded from tables of contents.  The
        @racket['toc-hidden] @tech{style property} usually should be included with
        @racket['hidden] (for consistency in non-Latex output).}
 
- @item{@racket['grouper] --- The part is numbered with a Roman
+ @item{@indexed-racket['grouper] --- The part is numbered with a Roman
        numeral, by default, and its subsections continue numbering as
        if they appeared in the preceeding part. In other words, the
        part acts like a ``part'' in a book where chapter numbering is
@@ -410,24 +410,24 @@ The recognized @tech{style properties} are as follows:
        @racket['unnumbered] property is also present, a
        @tech{numberer} property is ignored.}
 
- @item{@racket['toc] --- Sub-parts of the part are rendered on separate
+ @item{@indexed-racket['toc] --- Sub-parts of the part are rendered on separate
        pages for multi-page HTML mode.}
 
- @item{@racket['non-toc] --- Initial sub-parts of the part are
+ @item{@indexed-racket['non-toc] --- Initial sub-parts of the part are
        @emph{not} rendered on separate pages for multi-page HTML
        mode; this @tech{style property} applies only to the main part.}
 
- @item{@racket['reveal] --- Shows sub-parts when this part is
+ @item{@indexed-racket['reveal] --- Shows sub-parts when this part is
        displayed in a table-of-contents panel in HTML output (which
        normally shows only the top-level sections).}
 
- @item{@racket['quiet] --- In HTML output and most other output modes,
+ @item{@indexed-racket['quiet] --- In HTML output and most other output modes,
        hides entries for sub-parts of this part in a
        @racket[table-of-contents] or @racket[local-table-of-contents]
        listing except when those sub-parts are top-level entries in
        the listing.}
 
- @item{@racket['no-toc] --- As a @tech{style property} for the main part of a
+ @item{@indexed-racket['no-toc] --- As a @tech{style property} for the main part of a
        rendered page, causes the HTML output to not include a margin box
        for the main table of contents; the ``on this page'' box that
        contains @racket[toc-element] and @racket[toc-target-element]
@@ -435,7 +435,7 @@ The recognized @tech{style properties} are as follows:
        multi-page documents) takes on the location and color of the
        main table of contents, instead.}
 
- @item{@racket['no-sidebar] --- As a @tech{style property} for the main part of a
+ @item{@indexed-racket['no-sidebar] --- As a @tech{style property} for the main part of a
        document, causes the HTML output to not include an ``on this 
        page'' margin box.}
 
@@ -519,16 +519,16 @@ recognized:
 
 @itemize[
 
- @item{@racket['author] --- Typeset as the author of a document.  Such
+ @item{@indexed-racket['author] --- Typeset as the author of a document.  Such
        paragraphs normally should appear only in the initial flow of a
        @racket[part] for a document, where they are treated specially
        by the Latex renderer by moving the author information to the
        title.}
 
- @item{@racket['pretitle] --- Typeset before the title of the
+ @item{@indexed-racket['pretitle] --- Typeset before the title of the
        enclosing part.}
 
- @item{@racket['wraps] --- Like a @racket[#f] @tech{style name}, but not
+ @item{@indexed-racket['wraps] --- Like a @racket[#f] @tech{style name}, but not
        @tech{boxable} in the sense of @racket[box-mode] for Latex output.}
 
 ]
@@ -540,12 +540,12 @@ The currently recognized @tech{style properties} are as follows:
 
 @itemize[
 
- @item{@racket['omitable] --- When a table cell contains a single
+ @item{@indexed-racket['omitable] --- When a table cell contains a single
        @racket[paragraph] with the @racket['omitable] @tech{style property},
        then when rendering to HTML, no @tt{<p>} tag wraps the cell
        content.}
 
- @item{@racket['div] --- Generates @tt{<div>} HTML output instead of
+ @item{@indexed-racket['div] --- Generates @tt{<div>} HTML output instead of
        @tt{<p>} (unless a @racket[alt-tag] property is provided).}
 
  @item{@racket[alt-tag] structure --- Generates the indicated HTML tag
@@ -558,7 +558,7 @@ The currently recognized @tech{style properties} are as follows:
        as an @tt{id} attribute of the @tt{<p>}, @tt{<div>}, or
        alternate tag.}
 
- @item{@racket['never-indents] --- For Latex and @tech{compound
+ @item{@indexed-racket['never-indents] --- For Latex and @tech{compound
        paragraphs}; see @racket[compound-paragraph].}
 
  @item{@racket[box-mode] structure --- For Latex output, uses an alternate
@@ -585,14 +585,14 @@ recognized:
 
 @itemize[
 
- @item{@racket['boxed] --- Renders as a definition.
+ @item{@indexed-racket['boxed] --- Renders as a definition.
        This style name is not intended for use on a table that is
        nested within a @racket['boxed] table; nested uses may look
        right for some renders of the style but not others.}
 
- @item{@racket['centered] --- Centers HTML output horizontally.}
+ @item{@indexed-racket['centered] --- Centers HTML output horizontally.}
 
- @item{@racket['block] --- Prevents pages breaks in Latex output.}
+ @item{@indexed-racket['block] --- Prevents pages breaks in Latex output.}
 
 ]
 
@@ -616,10 +616,10 @@ The following @tech{style properties} are currently recognized:
  @item{@racket[body-id] structure --- For HTML, uses the given string
        as an @tt{id} attribute of the @tt{<table>} tag.}
 
- @item{@racket['aux] --- For HTML, include the table in the
+ @item{@indexed-racket['aux] --- For HTML, include the table in the
        table-of-contents display for the enclosing part.}
 
- @item{@racket['never-indents] --- For Latex and @tech{compound
+ @item{@indexed-racket['never-indents] --- For Latex and @tech{compound
        paragraphs}; see @racket[compound-paragraph].}
 
 ]
@@ -648,9 +648,9 @@ names are recognized:
 
 @itemize[
 
- @item{@racket['compact] --- Reduces space between items.}
+ @item{@indexed-racket['compact] --- Reduces space between items.}
 
- @item{@racket['ordered] --- Generates @tt{<ol>} HTML output instead
+ @item{@indexed-racket['ordered] --- Generates @tt{<ol>} HTML output instead
        of @tt{<ul>} or an Latex enumeration instead of an
        itemization.}
 ]
@@ -665,7 +665,7 @@ The following @tech{style properties} are currently recognized:
  @item{@racket[body-id] structure --- For HTML, uses the given string
        as an @tt{id} attribute of the @tt{<ul>} or @tt{<ol>} tag.}
 
- @item{@racket['never-indents] --- For Latex and @tech{compound
+ @item{@indexed-racket['never-indents] --- For Latex and @tech{compound
        paragraphs}; see @racket[compound-paragraph].}
 
 ]}
@@ -683,15 +683,15 @@ names are recognized:
 
 @itemize[
 
- @item{@racket['inset] --- Insets the nested flow relative to
+ @item{@indexed-racket['inset] --- Insets the nested flow relative to
        surrounding text.}
 
- @item{@racket['code-inset] --- Insets the nested flow relative to
+ @item{@indexed-racket['code-inset] --- Insets the nested flow relative to
        surrounding text in a way suitable for code. If the nested flow
        has a single block, then it is @tech{boxable} in the sense of
        @racket[box-mode] for Latex output.}
 
- @item{@racket['vertical-inset] --- Insets the nested flow vertically
+ @item{@indexed-racket['vertical-inset] --- Insets the nested flow vertically
        relative to surrounding text, but not horizontally. If the
        nested flow has a single block, then it is @tech{boxable} in the sense
        of @racket[box-mode] for Latex output.}
@@ -702,11 +702,11 @@ The following @tech{style properties} are currently recognized:
 
 @itemize[
 
- @item{@racket['command] --- For Latex output, a string @tech{style
+ @item{@indexed-racket['command] --- For Latex output, a string @tech{style
        name} is used as a command name instead of an environment
        name.}
 
- @item{@racket['multicommand] --- For Latex output, a string
+ @item{@indexed-racket['multicommand] --- For Latex output, a string
        @tech{style name} is used as a command name with a separate
        argument for each block in @racket[blocks].}
 
@@ -716,20 +716,20 @@ The following @tech{style properties} are currently recognized:
  @item{@racket[body-id] structure --- For HTML, uses the given string
        as an @tt{id} attribute of the @tt{<blockquote>} tag.}
 
- @item{@racket['never-indents] --- For Latex and @tech{compound
+ @item{@indexed-racket['never-indents] --- For Latex and @tech{compound
        paragraphs}; see @racket[compound-paragraph].}
 
  @item{@racket[box-mode] structure --- For Latex output, uses an alternate
        rendering form for @tech{boxing contexts} (such as a table cell); see
        @racket[box-mode].}
 
- @item{@racket['decorative] --- The content of the nested flow is intended
+ @item{@indexed-racket['decorative] --- The content of the nested flow is intended
        for decoration. Text output skips a decorative nested flow.}
 
  @item{@racket[alt-tag] structure --- Generates the indicated HTML tag
        instead of @tt{<blockquote>}.}
 
- @item{@racket['pretitle] --- For Latex, raises the contents
+ @item{@indexed-racket['pretitle] --- For Latex, raises the contents
    of the flow to above the title.}
 ]}
 
@@ -756,7 +756,7 @@ for Latex output (see @secref["extra-style"]). The following
 
 @itemize[
 
- @item{@racket['command] --- For Latex output, a string @tech{style
+ @item{@indexed-racket['command] --- For Latex output, a string @tech{style
        name} is used as a command name instead of an environment
        name.}
 
@@ -769,7 +769,7 @@ for Latex output (see @secref["extra-style"]). The following
  @item{@racket[body-id] structure --- For HTML, uses the given string
        as an @tt{id} attribute of the @tt{<p>} or alternate tag.}
 
- @item{@racket['never-indents] --- For Latex within another
+ @item{@indexed-racket['never-indents] --- For Latex within another
        @tech{compound paragraph}; see above.}
 
 ]}
@@ -831,18 +831,18 @@ recognized:
 
 @itemize[
 
- @item{@racket['tt], @racket['italic], @racket['bold], @racket['roman], @racket['sf],
+ @item{@indexed-racket['tt], @racket['italic], @racket['bold], @racket['roman], @racket['sf],
        @racket['url], @racket['subscript], @racket['superscript], 
        @racket['smaller], @racket['larger] ---
        Basic styles recognized by all renders.}
 
- @item{@racket['hspace] --- Renders its @racket[content] as monospace
+ @item{@indexed-racket['hspace] --- Renders its @racket[content] as monospace
        blanks.}
  
- @item{@racket['newline] --- Renders a line break independent of
+ @item{@indexed-racket['newline] --- Renders a line break independent of
        the @racket[content].}
 
- @item{@racket['no-break] --- Prevents line breaks when rendering
+ @item{@indexed-racket['no-break] --- Prevents line breaks when rendering
        @racket[content].}
 
 ]
@@ -878,15 +878,15 @@ The following @tech{style properties} are currently recognized:
   @item{@racket[body-id] structure --- For HTML uses the given
         string as an @tt{id} attribute of the @tt{<span>} tag.}
 
-  @item{@racket['aux] --- Intended for use in titles, where the
+  @item{@indexed-racket['aux] --- Intended for use in titles, where the
         auxiliary part of the title can be omitted in hyperlinks. See,
         for example, @racket[secref].}
 
-  @item{@racket['tt-chars] --- For Latex output, when the @tech{style
+  @item{@indexed-racket['tt-chars] --- For Latex output, when the @tech{style
         name} is a string, render the element's content with escapes
         suitable for Latex @tt{tt} mode.}
 
-  @item{@racket['exact-chars] --- For Latex output, when the @tech{style
+  @item{@indexed-racket['exact-chars] --- For Latex output, when the @tech{style
         name} is a string or @racket[#f], render the elements content exactly
         (without escapes).}
 
@@ -974,7 +974,7 @@ The following symbol is recognized as a @tech{style property}:
 
 @itemize[
 
- @item{@racket['indirect-link] --- For HTML output, treats the link as
+ @item{@indexed-racket['indirect-link] --- For HTML output, treats the link as
        ``external''. When rendering to HTML and the
        @method[render-mixin set-external-tag-path] method is called to
        provide an external-link URL, then the resolution of the
@@ -1176,26 +1176,26 @@ The following are recognized as cell-@tech{style properties}:
 
 @itemize[
 
- @item{@racket['left] --- Left-align the cell content.}
+ @item{@indexed-racket['left] --- Left-align the cell content.}
 
- @item{@racket['right] --- Right-align the cell content top baselines.}
+ @item{@indexed-racket['right] --- Right-align the cell content top baselines.}
 
- @item{@racket['center] --- Center the cell content horizontally.}
+ @item{@indexed-racket['center] --- Center the cell content horizontally.}
 
- @item{@racket['top] --- Top-align the cell content.}
+ @item{@indexed-racket['top] --- Top-align the cell content.}
 
- @item{@racket['baseline] --- Align the cell content top baselines.}
+ @item{@indexed-racket['baseline] --- Align the cell content top baselines.}
 
- @item{@racket['bottom] --- bottom-align the cell content.}
+ @item{@indexed-racket['bottom] --- bottom-align the cell content.}
 
- @item{@racket['vcenter] --- Center the cell content vertically.}
+ @item{@indexed-racket['vcenter] --- Center the cell content vertically.}
 
- @item{@racket['border] --- Draw a line around all sides of the
+ @item{@indexed-racket['border] --- Draw a line around all sides of the
        cell. Borders along a shared edge of adjacent cells are
        collapsed into a single line.}
 
- @item{@racket['left-border], @racket['right-border],
-       @racket['top-border], or @racket['bottom-border] --- Draw a
+ @item{@indexed-racket['left-border], @indexed-racket['right-border],
+       @indexed-racket['top-border], or @indexed-racket['bottom-border] --- Draw a
        line along the corresponding side of the cell (with the same
        border collapsing as for @racket['border]).}
 
