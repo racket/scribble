@@ -606,17 +606,28 @@
                                               number))
                                     sub-pos
                                     sub-numberers))
+                    (define unnumbered-and-unnumbered-subsections?
+                      (and (not sub-grouper?)
+                           ;; If this section wasn't marked with
+                           ;; 'grouper but is unnumbered and doesn't
+                           ;; have numbered subsections, then didn't
+                           ;; reset counters, so propagate the old
+                           ;; position
+                           (and unnumbered?
+                                (= next-sub-pos sub-pos))))
                     (loop (cdr parts)
                           (if (or unnumbered? numberer)
                               pos
                               (add1 pos))
                           next-numberers
-                          (if sub-grouper?
-                              next-sub-pos
-                              1)
-                          (if sub-grouper?
-                              next-sub-numberers
-                              #hash())))))))
+                          (cond
+                            [sub-grouper? next-sub-pos]
+                            [unnumbered-and-unnumbered-subsections? sub-pos]
+                            [else 1])
+                          (cond
+                            [sub-grouper? next-sub-numberers]
+                            [unnumbered-and-unnumbered-subsections? sub-numberers]
+                            [else #hash()])))))))
         (let ([prefix (part-tag-prefix d)])
           (for ([(k v) (collect-info-ht p-ci)])
             (when (cadr k)

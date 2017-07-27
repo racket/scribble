@@ -1,0 +1,28 @@
+Example
+
+    I Arbitrarily Small Data 
+      1 A                    
+                             
+    Intermezzo               
+      More                   
+                             
+    II Arbitrarily Large Data
+      2 B                    
+
+I. Arbitrarily Small Data
+
+1. A
+
+See A and B.
+
+Intermezzo
+
+More
+
+Nothing here.
+
+II. Arbitrarily Large Data
+
+2. B
+
+See A and B.
