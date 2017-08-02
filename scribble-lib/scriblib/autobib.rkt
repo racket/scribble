@@ -522,11 +522,17 @@
                 s)])
     s))
 
+(define (string-capitalize str)
+  (if (non-empty-string? str)
+      (let ([chars (string->list str)])
+        (list->string (cons (char-upcase (car chars)) (cdr chars))))
+      str))
+  
 (define (book-location
          #:edition [edition #f]
          #:publisher [publisher #f])
   (let* ([s (if edition
-                @elem{@(string-titlecase (to-string edition)) edition}
+                @elem{@(string-capitalize (to-string edition)) edition}
                 #f)]
          [s (if publisher
                 (if s
