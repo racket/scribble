@@ -44,7 +44,7 @@
             (-> any/c any)]
 
            [scribble-exn->string
-            (-> any/c string?)]
+            (parameter/c (-> any/c string?))]
            [scribble-eval-handler
             (parameter/c (-> (-> any/c any) boolean? any/c any))]
            [make-log-based-eval

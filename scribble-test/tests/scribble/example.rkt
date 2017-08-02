@@ -33,9 +33,26 @@
     (λ () (make-eval-factory '() #:lang '(+ 2 2))))
 
   (check-exn blames-this-module?
+    (λ () (scribble-exn->string #f)))
+  (check-exn blames-this-module?
+    (λ () (scribble-exn->string (λ (a b c) a))))
+  (check-not-exn
+    (λ () (scribble-exn->string)))
+  (check-not-exn
+    (λ ()
+      (parameterize ((scribble-exn->string (λ (a) "hello")))
+        ((scribble-exn->string) "error"))))
+
+  (check-exn blames-this-module?
     (λ () (scribble-eval-handler #f)))
   (check-exn blames-this-module?
     (λ () (scribble-eval-handler (λ (ev t) t))))
+  (check-not-exn
+    (λ () (scribble-eval-handler)))
+  (check-not-exn
+    (λ ()
+      (parameterize ((scribble-eval-handler (λ (a b c) c)))
+        ((scribble-eval-handler) (λ (x) x) #f #true))))
 
   (check-exn blames-this-module?
     (λ () (make-log-based-eval #f 'record)))
