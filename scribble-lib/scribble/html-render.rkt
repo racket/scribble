@@ -2013,9 +2013,9 @@
                    (loop (cdr path) (cdr root)))))))))
 
 (define (from-root p d)
-  (define c-p (path->complete-path p))
+  (define c-p (simplify-path (path->complete-path p)))
   (define e-p (explode c-p))
-  (define e-d (and d (explode (path->complete-path d))))
+  (define e-d (and d (explode (simplify-path (path->complete-path d)))))
   (define p-in? (in-plt? e-p))
   (define d-in? (and d (in-plt? e-d)))
   (define (normalize p) (normal-case-path p))
