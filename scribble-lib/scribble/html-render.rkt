@@ -2018,7 +2018,8 @@
   (define e-d (and d (explode (simplify-path (path->complete-path d)))))
   (define p-in? (in-plt? e-p))
   (define d-in? (and d (in-plt? e-d)))
-  (define (normalize p) (normal-case-path p))
+  (define (normalize p)
+    (if (memq p '(up same)) p (normal-case-path p)))
   ;; use an absolute link if the link is from outside the plt tree
   ;; going in (or if d is #f)
   (if (not (and d (cond
