@@ -144,10 +144,16 @@ optionally given @racket[render-date-expr] functions.
 
 @deftogether[(
 @defthing[author+date-style any/c]
+@defthing[author+date-square-bracket-style any/c]
 @defthing[number-style any/c]
 )]{
 
-Styles for use with @racket[define-cite].}
+Styles for use with @racket[define-cite].
+
+The @racket[author+date-square-bracket-style] definition is the same
+as @racket[author+date-style], except that references to citations
+are enclosed in @litchar["[]"] instead of @litchar["()"].
+}
 
 
 @defproc[(bib? [v any/c]) boolean?]{
