@@ -138,7 +138,7 @@
     (error 'citet "citet must be used with identical authors, given ~a"
            (map (compose author-element-names* auto-bib-author) bib-entries)))
   (make-element
-   #f
+   (make-style "Autobibref" '())
    (list (add-cite group (car bib-entries) 'autobib-author #f #f style)
          'nbsp
          (send style get-cite-open)
@@ -155,7 +155,7 @@
         (values (hash-update h k (lambda (cur) (cons b cur)) null)
                 (cons k (remove k ks))))))
   (make-element
-   #f
+   (make-style "Autobibref" '())
    (append
     (list 'nbsp (send style get-cite-open))
     (add-between
