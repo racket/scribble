@@ -973,7 +973,11 @@
          (render-content (traverse-element-content i ri) part ri)]
         [(part-relative-element? i)
          (render-content (part-relative-element-content i ri) part ri)]
-        [(convertible? i) (list "???")]
+        [(convertible? i)
+         (define s (convert i 'text))
+         (if (string? s)
+             (render-other s part ri)
+             (render-other (format "~s" i) part ri))]
         [else (render-other i part ri)]))
 
     (define/public (render-other i part ri)

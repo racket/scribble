@@ -119,7 +119,8 @@ A @deftech{block} is either a @techlink{table}, an
              @itemize[
 
              @item{A @deftech{content} can be a string, one of a few
-                   symbols, an instance of @racket[element] (possibly
+                   symbols, a convertible value in the sense of @racket[convertible?],
+                   an instance of @racket[element] (possibly
                    @racket[link-element], etc.), a @racket[multiarg-element], a
                    @techlink{traverse element}, a @techlink{part-relative element}, a
                    @techlink{delayed element}, or a list of content.
@@ -143,6 +144,13 @@ A @deftech{block} is either a @techlink{table}, an
                          @racket['rarr], or @racket['prime]; it is
                          rendered as the corresponding HTML entity
                          (even for Latex output).}
+
+                   @item{A convertible value in the sense of @racket[convertible?]
+                         is used in a renderer-specific way, but values convertible
+                         to @racket['text] renders the same as the resulting
+                         string. If a renderer is not able to convert the value
+                         to a known format, the value is converted to a string
+                         using @racket[write].}
 
                    @item{An instance of @racket[element] has a
                          @techlink{content} plus a @tech{style}. The style's
@@ -229,6 +237,10 @@ A @deftech{block} is either a @techlink{table}, an
              processing to obtain a @defterm{block}.}
 
 ]
+
+@history[#:changed "1.23" @elem{Changed the handling of @racket[convertible?]
+                                values to recognize a @racket['text] conversion
+                                and otherwise use @racket[write].}]
 
 @; ------------------------------------------------------------------------
 
