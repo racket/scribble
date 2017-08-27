@@ -7,8 +7,6 @@
 (define valid-blueboxes-info?
   (hash/c
    tag?
-   (listof (cons/dc [hd exact-nonnegative-integer?]
-                    [tl (hd) (and/c exact-nonnegative-integer?
-                                    (>/c hd))]
-                    #:flat))
+   (listof (cons/c exact-nonnegative-integer?
+                   exact-nonnegative-integer?))
    #:flat? #t))
