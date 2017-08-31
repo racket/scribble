@@ -177,10 +177,11 @@ As an example,
 @codeblock|{
 #lang scribble/manual
 @(require racket/sandbox
-          scribble/eval)
+          scribble/example)
 @(define my-evaluator
    (parameterize ([sandbox-output 'string]
-                  [sandbox-error-output 'string])
+                  [sandbox-error-output 'string]
+                  [sandbox-memory-limit 50])
      (make-evaluator 'typed/racket/base)))
 
 @examples[#:eval my-evaluator
