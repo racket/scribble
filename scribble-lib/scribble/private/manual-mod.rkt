@@ -11,6 +11,7 @@
          setup/main-collects
          pkg/path
          racket/list
+         scribble/html-properties
          (for-syntax scheme/base
                      syntax/parse)
          (for-label scheme/base))
@@ -201,6 +202,21 @@
         (list pkg)
         null)))
 
+;; mflatt thinks this should not be exposed
+(define (racketpkgname pkg)
+  (link
+   ;; XXX Look at (pkg-info-orig-pkg (hash-ref (read-pkgs-db scope)
+   ;; pkg)) and only show link if catalog? Or did mflatt have
+   ;; something else in mind? But I'd have to know the scope and pass
+   ;; that down from compute-packages
+   (format "https://pkgs.racket-lang.org/package/~a" pkg)
+   (tt pkg)
+   #:style (make-style #f
+                       (list "plainlink"
+                             (hover-property
+                              (format "Install this package using `raco pkg install ~a`"
+                                      pkg))))))
+
 (define (*defmodule names modpaths module-path packages link-target? lang content req)
   (let ([modpaths (or modpaths names)])
     (define pkg-spec
@@ -218,7 +234,8 @@
                                                         ""
                                                         "s")))
                                    " "
-                                   (add-between (map tt pkgs) ", "))))))))))
+                                   (add-between (map racketpkgname pkgs)
+                                                ", "))))))))))
     (define (flow-width f) (apply max (map block-width f)))
     (define libs-specs
       ;; make-desc  : element -> flow
