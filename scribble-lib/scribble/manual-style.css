@@ -263,6 +263,10 @@ a:hover {
     font-size: 0.8rem;
 }
 
+/* Default to local view. Global will specialize */
+.plt_global_only { display: none; }
+.plt_local_only { display: block; }
+
 /* ---------------------------------------- */
 /* Version */
 
