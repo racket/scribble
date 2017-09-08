@@ -130,7 +130,14 @@ Generates a @racket[paragraph] with style name @racket['author] to
 show the author(s) of a document, where each author is represented by
 @tech{content}. Normally, this function is used after
 @racket[title] for the beginning of a document. See also
-@racket[author+email].}
+@racket[author+email].
+
+Examples:
+
+@codeblock[#:keep-lang-line? #f]|{
+  #lang scribble/base
+  @author{Alice P. Racketeer}
+}|}
 
 @defproc[(author+email [author-name content?]
                        [email string?] 
@@ -143,7 +150,14 @@ address-harvesting robots.
 
 Note that @racket[author+email] is not a replacement for
 @racket[author].  The @racket[author+email] function is often used in
-combination with @racket[author].}
+combination with @racket[author].
+
+Examples:
+
+@codeblock[#:keep-lang-line? #f]|{
+  #lang scribble/base
+  @author[(author+email "Bob T. Scribbler" "bob@racket-lang.org")]
+}|}
 
 @; ------------------------------------------------------------------------
 
