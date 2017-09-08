@@ -70,9 +70,9 @@
  [acmConference 
   (-> string? string? string? block?)]
  [grantsponsor 
-  (-> string? string? string? block?)]
+  (-> string? string? string? content?)]
  [grantnum 
-  (->* (string? string?) (#:url string?) block?)]
+  (->* (string? string?) (#:url string?) content?)]
  [acmBadgeR (->* (string?) (#:url string?) block?)]
  [acmBadgeL (->* (string?) (#:url string?) block?)]
  [received (->* (string?) (#:stage string?) block?)]
@@ -163,22 +163,20 @@
                                                (decode-string venue)))))
 
 (define (grantsponsor id name url)
-  (make-paragraph (make-style 'pretitle '())
-                  (make-multiarg-element (make-style "grantsponsor" multicommand-props)
-                                         (list (decode-string id)
-                                               (decode-string name)
-                                               (decode-string url)))))
+  (make-multiarg-element (make-style "grantsponsor" multicommand-props)
+                         (list (decode-string id)
+                               (decode-string name)
+                               (decode-string url))))
 
 (define (grantnum #:url [url #f] id num)
-  (make-paragraph (make-style 'pretitle '())
-                  (if url
-                      (make-multiarg-element (make-style "SgrantnumURL" multicommand-props)
-                                             (list (decode-string url)
-                                                   (decode-string id)
-                                                   (decode-string num)))
-                      (make-multiarg-element (make-style "grantnum" multicommand-props)
-                                             (list (decode-string id)
-                                                   (decode-string num))))))
+  (if url
+      (make-multiarg-element (make-style "SgrantnumURL" multicommand-props)
+                             (list (decode-string url)
+                                   (decode-string id)
+                                   (decode-string num)))
+      (make-multiarg-element (make-style "grantnum" multicommand-props)
+                             (list (decode-string id)
+                                   (decode-string num)))))
 
 (define (acmBadgeR #:url [url #f] str)
   (make-paragraph (make-style 'pretitle '())
