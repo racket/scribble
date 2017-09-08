@@ -239,28 +239,28 @@ defaults to @racket{Received} for the first occurrence and
   @received[#:stage "accepted"]{June 2009}
 }|}
 
-@defproc[(teaserfigure [content pre-content?] ...) block?]{
+@defproc[(teaserfigure [content pre-flow?] ...) block?]{
 
 Creates a teaser figure to appear before main text.}
 
 @deftogether[(
-@defproc[(sidebar [content pre-content?] ...) block?]
-@defproc[(marginfigure [content pre-content?] ...) block?]
-@defproc[(margintable [content pre-content?] ...) block?]
+@defproc[(sidebar [content pre-flow?] ...) block?]
+@defproc[(marginfigure [content pre-flow?] ...) block?]
+@defproc[(margintable [content pre-flow?] ...) block?]
 )]{
 
 In the @racket[sigchi-a] format, special sidebars,
  tables and figures on the margin.}
 
 @deftogether[(
-@defproc[(printonly [content pre-content?] ...) block?]
-@defproc[(screenonly [content pre-content?] ...) block?]
-@defproc[(anonsuppress [content pre-content?] ...) block?]
+@defproc[(printonly [content pre-flow?] ...) block?]
+@defproc[(screenonly [content pre-flow?] ...) block?]
+@defproc[(anonsuppress [content pre-flow?] ...) block?]
 )]{
 Marks content to be included only for print or screen
 editions, or excluded from anonymous editions.}
 
-@defproc[(acks [content pre-content?] ...) block?]{
+@defproc[(acks [content pre-flow?] ...) block?]{
 
 Creates an unnumbered section ``Acknowledgments'' section, unless the
 @racket[anonymous] mode is selected.}

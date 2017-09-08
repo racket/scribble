@@ -106,7 +106,7 @@
 (define-syntax-rule (define-environments name ...)
   (begin
     (begin
-      (provide/contract [name (->* () () #:rest (listof pre-content?)
+      (provide/contract [name (->* () () #:rest (listof pre-flow?)
                                    block?)])
       (define (name . str)
         (make-nested-flow (make-style (symbol->string 'name) acmart-extras)
@@ -117,7 +117,7 @@
 (define-syntax-rule (define-comment-environments name ...)
   (begin
     (begin
-      (provide/contract [name (->* () () #:rest (listof pre-content?)
+      (provide/contract [name (->* () () #:rest (listof pre-flow?)
                                    block?)])
       (define (name . str)
         (make-nested-flow (make-style (symbol->string 'name) acmart-extras)
