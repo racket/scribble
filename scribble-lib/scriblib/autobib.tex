@@ -8,3 +8,7 @@
 \newcommand{\Autocolbibentry}[1]{\setlength{\ABcollength}{\linewidth-5ex}\parbox[t]{\ABcollength}{#1\vspace{1.0ex}}}
 
 \newcommand{\Autobibref}[1]{#1}
+
+% Wrapper around `\hyperref` to swap the order of arguments,
+%  because Scribble's `command-extras` puts extra arguments after the text to render.
+\newcommand{\Autobibhyperref}[2]{\hyperref[#2]{#1}}
