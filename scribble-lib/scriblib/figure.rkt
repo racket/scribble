@@ -66,30 +66,40 @@
                                        figure-style-extras))
     c))
 
+(define default-label-sep ": ")
+
 (define (figure tag caption 
                 #:style [style center-figure-style]
+                #:label-sep [label-sep default-label-sep]
+                #:label-style [label-style #f]
                 #:continue? [continue? #f]
                 . content)
-  (figure-helper figure-style style tag caption content continue?))
+  (figure-helper figure-style style label-sep label-style tag caption content continue?))
 
 (define (figure-here tag caption 
-                     #:style [style center-figure-style] 
+                     #:style [style center-figure-style]
+                     #:label-sep [label-sep default-label-sep]
+                     #:label-style [label-style #f]
                      #:continue? [continue? #f]
                      . content)
-  (figure-helper herefigure-style style tag caption content continue?))
+  (figure-helper herefigure-style style label-sep label-style tag caption content continue?))
 
 (define (figure* tag caption 
                  #:style [style center-figure-style]
+                 #:label-sep [label-sep default-label-sep]
+                 #:label-style [label-style #f]
                  #:continue? [continue? #f]
                  . content)
-  (figure-helper figuremulti-style style tag caption content continue?))
+  (figure-helper figuremulti-style style label-sep label-style tag caption content continue?))
 (define (figure** tag caption 
-                  #:style [style center-figure-style] 
+                  #:style [style center-figure-style]
+                  #:label-sep [label-sep default-label-sep]
+                  #:label-style [label-style #f]
                   #:continue? [continue? #f]
                   . content)
-  (figure-helper figuremultiwide-style style tag caption content continue?))
+  (figure-helper figuremultiwide-style style label-sep label-style tag caption content continue?))
 
-(define (figure-helper figure-style content-style tag caption content continue?)
+(define (figure-helper figure-style content-style label-sep label-style tag caption content continue?)
   (make-nested-flow 
    figure-style 
    (list
@@ -101,15 +111,23 @@
      (list (make-element (if continue?
                              legend-continued-style
                              legend-style)
-                         (list (Figure-target tag #:continue? continue?) caption)))))))
+                         (list (Figure-target tag
+                                              #:label-sep label-sep
+                                              #:label-style label-style
+                                              #:continue? continue?)
+                               caption)))))))
 
 (define figures (new-counter "figure" 
                              #:target-wrap make-figure-target
                              #:ref-wrap make-figure-ref))
-(define (Figure-target tag #:continue? [continue? #f])
+(define (Figure-target tag
+                       #:continue? [continue? #f]
+                       #:label-sep [label-sep ": "]
+                       #:label-style [label-style #f])
   (counter-target figures tag 
                   "Figure" 
-                  (if continue? " (continued): " ": ")
+                  #:label-suffix (list (if continue? " (continued)" "") label-sep)
+                  #:label-style label-style
                   #:target-style figure-target-style
                   #:continue? continue?))
 

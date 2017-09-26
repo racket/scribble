@@ -21,6 +21,8 @@
 
 (define (counter-target counter tag label
                         #:target-style [target-style #f]
+                        #:label-style [label-style #f]
+                        #:label-suffix [label-suffix '()]
                         #:continue? [continue? #f]
                         . content)
   (let ([content (decode-content content)])
@@ -34,10 +36,13 @@
           (make-delayed-element
            (lambda (renderer part ri)
              (let ([n (resolve-get part ri (tag->counter-tag counter tag "value"))])
-               (let ([l (cons (format "~a" n) content)])
-                 (if label
-                     (list* label 'nbsp l)
-                     l))))
+               (cons
+                (make-element label-style
+                              (let ([l (cons (format "~a" n) (decode-content (list label-suffix)))])
+                                (if label
+                                    (list* label 'nbsp l)
+                                    l)))
+                content)))
            (lambda () (if label
                           (list* label 'nbsp "N" content)
                           (cons "N" content)))

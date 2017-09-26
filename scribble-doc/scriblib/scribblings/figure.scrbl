@@ -15,21 +15,29 @@
 @defproc[(figure [tag string?] [caption content?] 
                  [p pre-flow?] ...
                  [#:style style style? center-figure-style]
+                 [#:label-sep label-sep pre-content? ": "]
+                 [#:label-style label-style element-style? #f]
                  [#:continue? continue? any/c #f]) 
          block?]
 @defproc[(figure* [tag string?] [caption content?]
                   [p pre-flow?] ...
                   [#:style style style? center-figure-style]
-                 [#:continue? continue? any/c #f])
+                  [#:label-sep label-sep pre-content? ": "]
+                  [#:label-style label-style element-style? #f]
+                  [#:continue? continue? any/c #f])
          block?]
 @defproc[(figure** [tag string?] [caption content?]
                    [p pre-flow?] ...
                    [#:style style style? center-figure-style]
+                   [#:label-sep label-sep pre-content? ": "]
+                   [#:label-style label-style element-style? #f]
                    [#:continue? continue? any/c #f])
          block?]
 @defproc[(figure-here [tag string?] [caption content?]
                       [pre-flow pre-flow?] ...
                       [#:style style style? center-figure-style]
+                      [#:label-sep label-sep pre-content? ": "]
+                      [#:label-style label-style element-style? #f]
                       [#:continue? continue? any/c #f])
          block?]
 )]{
@@ -52,8 +60,18 @@ By default, @racket[style] is set so that the content of the figure is
 centered.  Use @racket[left-figure-style], @racket[center-figure-style],
 or @racket[right-figure-style] to specify the alignment.
 
+The @racket[label-sep] and @racket[label-style] arguments adjust the
+way that the caption's label is shown. By default, the label is the
+word ``Figure'' followed by a space, the figure number, ``:'', and a
+space, but @racket[label-sep] can specify an alternative to the ``:''
+and ending space. The composed label is given the style specified by
+@racket[label-style].
+
 If @racket[continue?] is a true value, then the figure counter is not
-incremented.}
+incremented.
+
+@history[#:changed "1.24" @elem{Added the @racket[#:label-sep] and
+                                @racket[#:label-style] arguments.}]}
 
 @deftogether[(
 @defthing[left-figure-style style?]
