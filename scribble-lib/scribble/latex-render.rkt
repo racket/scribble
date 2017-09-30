@@ -82,7 +82,8 @@
              extract-version
              extract-date
              extract-authors
-             extract-pretitle-content)
+             extract-pretitle-content
+             link-render-style-at-element)
 
     (define/public (extract-short-title d)
       (ormap (lambda (v)
@@ -347,13 +348,15 @@
                                           (format-number number null))]
                    [lbl? (and dest 
                               (not ext?)
-                              (not (show-link-page-numbers)))])
+                              (not (show-link-page-numbers)))]
+                   [link-number? (and lbl?
+                                      (eq? 'number (link-render-style-at-element e)))])
               (printf "\\~aRef~a~a~a{"
                       (case (and dest (number-depth number))
                         [(0) "Book"]
                         [(1) (if (string? (car number)) "Part" "Chap")]
                         [else "Sec"])
-                      (if lbl?
+                      (if (and lbl? (not link-number?))
                           "Local"
                           "")
                       (if (let ([s (element-style e)])
@@ -363,9 +366,10 @@
                       (if (null? formatted-number)
                           "UN"
                           ""))
-              (when lbl?
+              (when (and lbl? (not link-number?))
                 (printf "t:~a}{" (t-encode (vector-ref dest 1))))
               (unless (null? formatted-number)
+                (when link-number? (printf "\\SectionNumberLink{t:~a}{" (t-encode (vector-ref dest 1))))
                 (render-content
                  (if dest
                      (if (list? number)
@@ -376,6 +380,7 @@
                                 '("!!!")))
                      (list "???"))
                  part ri)
+                (when link-number? (printf "}"))
                 (printf "}{"))))
           (let* ([es (cond
                       [(element? e) (element-style e)]
@@ -385,7 +390,8 @@
                                  (style-name es)
                                  es)]
                  [style (and (style? es) es)]
-                 [hyperref? (and (link-element? e)
+                 [hyperref? (and (not part-label?)
+                                 (link-element? e)
                                  (not (disable-hyperref))
                                  (let-values ([(dest ext?) (resolve-get/ext? part ri (link-element-tag e))])
                                    (and dest (not ext?))))]

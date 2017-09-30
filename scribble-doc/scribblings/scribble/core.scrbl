@@ -9,6 +9,7 @@
                      scriblib/render-cond
                      xml/xexpr
                      net/url-structs
+                     scriblib/figure
                      (only-in scribble/html-render render-mixin)))
 
 @title[#:tag "core"]{Structures And Processing}
@@ -514,6 +515,11 @@ The recognized @tech{style properties} are as follows:
         module path plus a section-tag string, so that the user can
         create a reference to the section.}
 
+ @item{@racket[link-render-style] structure --- Determines the default
+       rendering of links to sections or other destinations within the
+       section. See also @racket[link-element] and
+       @racket[current-link-render-style].}
+
 ]
 
 The @racket[to-collect] field contains @techlink{content} that is
@@ -525,7 +531,8 @@ sub-parts).
 
 The @racket[parts] field contains sub-parts.
 
-@history[#:changed "1.25" @elem{Added @racket['no-index] support.}]}
+@history[#:changed "1.25" @elem{Added @racket['no-index] support.}
+         #:changed "1.26" @elem{Added @racket[link-render-style] support.}]}
 
 
 @defstruct[paragraph ([style style?] [content content?])]{
@@ -982,17 +989,64 @@ field.}
 
 @defstruct[(link-element element) ([tag tag?])]{
 
-Hyperlinks the content to @racket[_tag].
+Represents a hyperlink to @racket[_tag].
 
+Normally, the content of the element is rendered as the hyperlink.
 When @racket[_tag] is a part tag and the content of the element is
-@racket[null], then the hyperlink uses the target part's number and/or
-title as the content. In that case, if the section number is preceded
-by a word, the word starts in uppercase if the element's style includes a
-@racket['uppercase] property.
+@racket[null], however, rendering is treated specially based on the
+@racket[_mode] value of a @racket[link-render-style] @tech{style
+property}:
 
-The following symbol is recognized as a @tech{style property}:
+@itemlist[
+
+ @item{For HTML output, in the @racket['default] mode, the generated
+       reference is the hyperlinked title of the elements in the
+       section's title content, except that elements with the
+       @racket['aux] @tech{style property} are omitted in the
+       hyperlink label.
+
+       In @racket['number] mode, the section title is not shown.
+       Instead, the word ``section'' is shown followed by a
+       hyperlinked section number. The word ``section'' starts in
+       uppercase if the element's style includes a @racket['uppercase]
+       property.}
+
+ @item{For Latex/PDF output, the generated reference's format can
+       depend on the document style in addition the @racket[_mode].
+       For the @racket['default] mode and a default document style, a
+       section number is shown by the word ``section'' followed by the
+       section number, and the word ``section'' and the section number
+       are together hyperlinked. The word ``section'' starts in
+       uppercase if the element's style includes a @racket['uppercase]
+       property. The @racketmodname[scribble/manual] style uses the
+       symbol ``§'' in place of the word ``section''.
+
+       In @racket['number] mode, rendering is the same, except that
+       only the number is hyperlinked, not the word ``section'' or
+       the ``§'' symbol.
+
+       A new document style can customize Latex/PDF output (see
+       @secref["config"]) by redefining the @ltx{SecRefLocal}, @|etc|,
+       macros (see @secref["builtin-latex"]). The @ltx{SecRef},
+       @|etc|, variants are used in @racket['number] mode.}
+
+]
+
+If a @racket[link-render-style] @tech{style property} is not attached
+to a @racket[link-element] that refers to a part, a
+@racket[link-render-style] @tech{style property} that is attached to
+an enclosing part is used, since attaching a
+@racket[link-render-style] @tech{style property} to a part causes
+@racket[current-link-render-style] to be set while rendering the part.
+Otherwise, the render-time value of @racket[current-link-render-style]
+determine's a @racket[link-element]'s rendering.
+
+The following style properties are recognized in addition to the style
+properties for all @racket[element]s:
 
 @itemize[
+
+ @item{@racket[link-render-style] structure --- As described above.}
 
  @item{@indexed-racket['indirect-link] --- For HTML output, treats the link as
        ``external''. When rendering to HTML and the
@@ -1002,7 +1056,9 @@ The following symbol is recognized as a @tech{style property}:
        some cases, patched by JavaScript when the documentation is
        viewed in a browser).}
 
-]}
+]
+
+@history[#:changed "1.26" @elem{Added @racket[link-render-style] support.}]}
 
 
 @defstruct[(index-element element) ([tag tag?]
@@ -1139,7 +1195,7 @@ reverse order):
 
 ]
 
-@history[#:changed "6.4" @elem{Added @racket[(list/c string? string?)]
+@history[#:changed "1.1" @elem{Added @racket[(list/c string? string?)]
                                number items for
                                @tech{numberer}-generated section
                                numbers.}]}
@@ -1374,7 +1430,7 @@ Return @racket[#t] if @racket[v] is @racket[#f], an exact non-negative
 integer, a string, or a list containing two strings. See @racket[collected-info]
 for information on how different representations are used for numbering.
 
-@history[#:added "6.4"]}
+@history[#:added "1.1"]}
 
 
 @deftogether[(
@@ -1429,7 +1485,38 @@ number for each subsection. If @racket[numberer-step] produces a plain
 string for the rendered number, then it is not added as a prefix to
 subsection numbers. See also @racket[collected-info].
 
-@history[#:added "6.4"]}
+@history[#:added "1.1"]}
+
+
+@defstruct[link-render-style ([mode (or/c 'default 'number)])]{
+
+Used as a @tech{style property} for a @racket[part] or a specific
+@racket[link-element] to control the way that a hyperlink is rendered
+for a part via @racket[secref] or for a figure via @racket[figure-ref]
+from @racketmodname[scriblib/figure].
+
+The @racket['default] and @racket['number] modes represent generic
+hyperlink-style configurations that could make sense for various kinds
+of references. The @racket['number] style is intended to mean that a
+specific number is shown for the reference and that only the number is
+hyperlinked. The @racket['default] style is more flexible, allowing a
+more appropriate choice for the rendering context, such as using the
+target section's name for a hyperlink in HTML.
+
+@history[#:added "1.26"]}
+
+
+@defparam[current-link-render-style style link-render-style?]{
+
+A parameter that determines the default rendering style for a section
+link.
+
+When a @racket[part] has a @racket[link-render-style] as one of its
+@tech{style properties}, then the @racket[current-link-render-style]
+parameter is set during the @tech{resolve pass} and @tech{render pass}
+for the @racket[part]'s content.
+
+@history[#:added "1.26"]}
 
 
 @defstruct[collect-info ([fp any/c] [ht any/c] [ext-ht any/c] 

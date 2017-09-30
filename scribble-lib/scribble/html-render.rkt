@@ -277,7 +277,8 @@
              extract-part-style-files
              extract-version
              extract-authors
-             extract-pretitle)
+             extract-pretitle
+             link-render-style-at-element)
     (inherit-field prefix-file style-file style-extra-files image-preferences)
 
     (init-field [alt-paths null]
@@ -373,7 +374,7 @@
           (collect-put! ci key
                         (let ([v (vector (or (part-title-content d) '("???"))
                                          (add-current-tag-prefix key)
-                                         number ; for consistency with base
+                                         number
                                          (and (current-output-file)
                                               (path->relative (current-output-file)))
                                          (current-part-whole-page? d))])
@@ -407,6 +408,8 @@
       (vector-ref dest 3))
     (define (dest-title dest)
       (vector-ref dest 0))
+    (define (dest-number dest)
+      (vector-ref dest 2))
     (define (dest-page? dest)
       (vector-ref dest 4))
     (define (dest-anchor dest)
@@ -1341,13 +1344,31 @@
         [(and (link-element? e) (not (current-no-links)))
          (parameterize ([current-no-links #t])
            (define indirect-link? (link-element-indirect? e))
-           (let-values ([(dest ext-id)
-                         (if (and indirect-link?
-                                  external-tag-path)
-                             (values #f #f)
-                             (resolve-get/ext-id part ri (link-element-tag e)))])
+           (let*-values ([(dest ext-id)
+                          (if (and indirect-link?
+                                   external-tag-path)
+                              (values #f #f)
+                              (resolve-get/ext-id part ri (link-element-tag e)))]
+                         [(number-link?)
+                          (and dest
+                               (not ext-id)
+                               (let ([n (dest-number dest)])
+                                 ;; If the section number is empty, don't generate an
+                                 ;; empty link:
+                                 (not (or (not n)
+                                          (string=? "" (apply string-append (format-number n '("")))))))
+                               (eq? 'number (link-render-style-at-element e))
+                               (empty-content? (element-content e)))])
+             
              (if (or indirect-link? dest)
-                 `((a ([href
+                 `(,@(cond
+                       [number-link?
+                        `(,(if (let ([s (element-style e)])
+                                 (and (style? s) (memq 'uppercase (style-properties s))))
+                               "Section "
+                               "section "))]
+                       [else '()])
+                   (a ([href
                       ,(cond
                         [(and ext-id external-root-url dest
                               (let* ([ref-path (relative->path (dest-path dest))]
@@ -1401,7 +1422,10 @@
                                     null))
                      [data-pltdoc "x"])
                     ,@(if (empty-content? (element-content e))
-                          (render-content (strip-aux (dest-title dest)) part ri)
+                          (cond
+                            [number-link? (format-number (dest-number dest) '(""))]
+                            [else
+                             (render-content (strip-aux (dest-title dest)) part ri)])
                           (render-content (element-content e) part ri))))
                (begin
                  (when #f

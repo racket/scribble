@@ -1,6 +1,6 @@
 #lang scheme/base
-
-(require scribble/manual
+(require racket/contract/base
+         scribble/manual
          scribble/core
          scribble/decode
          scribble/html-properties
@@ -12,9 +12,18 @@
          figure*
          figure**
          figure-here
-         Figure-target 
-         Figure-ref
-         figure-ref
+         (contract-out
+          [Figure-target (->* (string?)
+                              (#:continue? any/c)
+                              element?)]
+          [Figure-ref (->* (string?)
+                           (#:link-render-style link-render-style?)
+                           #:rest (listof string?)
+                           element?)]
+          [figure-ref (->* (string?)
+                           (#:link-render-style link-render-style?)
+                           #:rest (listof string?)
+                           element?)])
          left-figure-style
          center-figure-style
          right-figure-style
@@ -132,24 +141,36 @@
                   #:continue? continue?))
 
 (define (ref-proc initial)
-  (case-lambda 
-   [(tag)
-    (make-element #f (list (counter-ref figures tag (string-append initial "igure"))))]
-   [(tag1 tag2)
-    (make-element #f (list (counter-ref figures tag1 (string-append initial "igures"))
-                           " and "
-                           (counter-ref figures tag2 #f)))]
-   [(tag . tags)
-    (make-element #f (cons (counter-ref figures tag (string-append initial "igures"))
-                           (let loop ([tags tags])
-                             (cond
-                              [(null? (cdr tags))
-                               (list ", and "
-                                     (counter-ref figures (car tags) #f))]
-                              [else
-                               (list* ", "
-                                      (counter-ref figures (car tags) #f)
-                                      (loop (cdr tags)))]))))]))
+  (lambda (tag #:link-render-style [link-style #f]
+               . tags)
+    (cond
+      [(null? tags)
+       (make-element
+        #f
+        (counter-ref figures tag (string-append initial "igure")
+                     #:link-render-style link-style))]
+      [(null? (cdr tags))
+       (define tag1 (car tags))
+       (define tag2 (cadr tags))
+       (make-element #f (list (counter-ref figures tag1 (string-append initial "igures")
+                                           #:link-render-style link-style)
+                              " and "
+                              (counter-ref figures tag2 #f
+                                           #:link-render-style link-style)))]
+      [else
+       (make-element #f (cons (counter-ref figures tag (string-append initial "igures")
+                                           #:link-render-style link-style)
+                              (let loop ([tags tags])
+                                (cond
+                                  [(null? (cdr tags))
+                                   (list ", and "
+                                         (counter-ref figures (car tags) #f
+                                                      #:link-render-style link-style))]
+                                  [else
+                                   (list* ", "
+                                          (counter-ref figures (car tags) #f
+                                                       #:link-render-style link-style)
+                                          (loop (cdr tags)))]))))])))
 
 (define Figure-ref (ref-proc "F"))
 (define figure-ref (ref-proc "f"))
