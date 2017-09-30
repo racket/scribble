@@ -162,6 +162,36 @@
 
 ;; ----------------------------------------
 
+(define-struct link-render-style (mode)
+  #:constructor-name link-render-style
+  #:property
+  prop:serializable
+  (make-serialize-info
+   (lambda (s)
+     (vector (link-render-style-mode s)))
+   #'deserialize-link-render-style
+   #f
+   (or (current-load-relative-directory) (current-directory))))
+
+(provide deserialize-link-render-style)
+(define deserialize-link-render-style
+  (make-deserialize-info (lambda (s)
+                           (link-render-style s))
+                         (lambda (tag init-val)
+                           (error "cannot allocate link-render-style for cycle"))))
+
+(define current-link-render-style (make-parameter (link-render-style 'default)))
+
+(provide
+ link-render-style?
+ link-render-style-mode
+ (contract-out
+  [link-render-style ((or/c 'default 'number)
+                      . -> . link-render-style?)]
+  [current-link-render-style (parameter/c link-render-style?)]))
+
+;; ----------------------------------------
+
 (define-struct numberer (tag step-proc initial-value)
   #:constructor-name numberer
   #:property

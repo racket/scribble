@@ -59,9 +59,13 @@
     (if (counter-target-wrap counter)
         ((counter-target-wrap counter)
          c
+         ;; Don't use this argument:
          (format "t:~a" (t-encode (tag->counter-tag counter tag))))
         c)))
 
+;; The use of this function is a leftover for backward compatibility.
+;; Duplicating the linking functionality of `link-element`, etc., is
+;; a bad idea.
 (define (t-encode s)
   (apply
    string-append
@@ -74,31 +78,42 @@
             [else (format "x~x" (char->integer c))]))
         (string->list (format "~s" s)))))
 
-(define (counter-ref counter tag label)
-  (let ([n (make-delayed-element
-            (lambda (renderer part ri)
-              (let ([n (resolve-get part ri (tag->counter-tag counter tag "value"))])
-                (if (counter-ref-wrap counter)
-                    (let ([id (format "t:~a" (t-encode (list 'counter (list (counter-name counter) tag))))])
-                      ((counter-ref-wrap counter)
-                       (format "~a" n) 
-                       id))
-                    (list (format "~a" n)))))
-            (lambda () (if label
-                           (list label 'nbsp "N")
-                           (list "N")))
-            (lambda () (if label
-                           (list label 'nbsp "N")
-                           (list "N"))))])
-    (make-link-element
-     #f
-     (if label
-         (list
-          label
-          'nbsp
-          n)
-         n)
-     (tag->counter-tag counter tag))))
+(define (counter-ref counter tag label
+                     #:link-render-style [link-style #f])
+  (make-delayed-element
+   (lambda (renderer part ri)
+     (let ([n (resolve-get part ri (tag->counter-tag counter tag "value"))])
+       (let ([n (if (counter-ref-wrap counter)
+                    ((counter-ref-wrap counter)
+                     (format "~a" n)
+                     ;; Don't use this argument:
+                     (format "t:~a" (t-encode (list 'counter (list (counter-name counter) tag)))))
+                    (list (format "~a" n)))]
+             [link-number-only? (eq? (link-render-style-mode
+                                      (or link-style
+                                          (current-link-render-style)))
+                                     'number)])
+         (cond
+           [(and label link-number-only?)
+            (make-element #f
+                          (list label 'nbsp
+                                (make-link-element
+                                 #f
+                                 (list n)
+                                 (tag->counter-tag counter tag))))]
+           [else
+            (make-link-element
+             #f
+             (if label
+                 (list label 'nbsp n)
+                 n)
+             (tag->counter-tag counter tag))]))))
+   (lambda () (if label
+                  (list label 'nbsp "N")
+                  (list "N")))
+   (lambda () (if label
+                  (list label 'nbsp "N")
+                  (list "N")))))
 
 (define (counter-collect-value counter)
   (counter-n counter))

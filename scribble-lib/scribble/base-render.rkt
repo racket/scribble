@@ -39,6 +39,7 @@
     render-nested-flow
     render-block
     render-other
+    link-render-style-at-element
     get-dest-directory
     format-number
     number-depth))
@@ -748,7 +749,8 @@
 
     (define/public (resolve-part d ri)
       (parameterize ([current-tag-prefixes
-                      (extend-prefix d (fresh-tag-resolve-context? d ri))])
+                      (extend-prefix d (fresh-tag-resolve-context? d ri))]
+                     [current-link-render-style (part-render-style d)])
         (when (part-title-content d)
           (resolve-content (part-title-content d) d ri))
         (resolve-flow (part-blocks d) d ri)
@@ -822,6 +824,15 @@
         [(multiarg-element? i)
          (resolve-content (multiarg-element-contents i) d ri)]))
 
+    (define/public (link-render-style-at-element e)
+      (link-render-style-mode
+       (or (let ([s (element-style e)])
+             (and (style? s)
+                  (for/or ([p (in-list (style-properties s))]
+                           #:when (link-render-style? p))
+                    p)))
+           (current-link-render-style))))
+
     ;; ----------------------------------------
     ;; render methods
 
@@ -882,8 +893,15 @@
 
     (define/public (render-part d ri)
       (parameterize ([current-tag-prefixes
-                      (extend-prefix d (fresh-tag-render-context? d ri))])
+                      (extend-prefix d (fresh-tag-render-context? d ri))]
+                     [current-link-render-style (part-render-style d)])
         (render-part-content d ri)))
+
+    (define/private (part-render-style d)
+      (or (for/or ([p (in-list (style-properties (part-style d)))]
+                   #:when (link-render-style? p))
+            p)
+          (current-link-render-style)))
 
     (define/public (render-part-content d ri)
       (list

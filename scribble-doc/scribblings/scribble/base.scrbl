@@ -613,7 +613,8 @@ Generates a literal hyperlinked URL.}
 @defproc[(secref [tag string?]
                  [#:doc module-path (or/c module-path? #f) #f]
                  [#:tag-prefixes prefixes (or/c (listof string?) #f) #f]
-                 [#:underline? underline? any/c #t])
+                 [#:underline? underline? any/c #t]
+                 [#:link-render-style ref-style (or/c link-render-style? #f)])
          element?]{
 
 Inserts a reference to the section tagged @racket[tag].
@@ -634,32 +635,35 @@ reach the @racket[tag] section. When @racket[#:doc] is not provided,
 the @racket[prefixes] path is relative to any enclosing section (i.e.,
 the youngest ancestor that produces a match).
 
-For HTML output, the generated reference is the hyperlinked title of
-the elements in the section's title content, except that elements with
-the @racket['aux] @tech{style property} are omitted in the hyperlink
-label. If @racket[underline?] is @racket[#f], then the hyperlink is
-rendered in HTML without an underline.
+For the result @racket[link-element], if @racket[ref-style] is not
+@racket[#f], then it is attached as a @tech{style property} and
+affects the rendering of the link. Alternatively, an enclosing
+@racket[part] can have a link-render style that adjusts the rendering
+style for all links within the @tech{part}. See @racket[link-element]
+for more information about the rendering of section references.
 
-For Latex output, the generated reference's format depends on the
-document style. By default, only the section number is shown in the
-reference, but the @racketmodname[scribble/manual] style shows the
-title after the section number. Customize the output (see
-@secref["config"]) by redefining the @ltx{BookRef}, @|etc|, macros (see
-@secref["builtin-latex"]).
-
+If @racket[underline?] is @racket[#f], then a @tech{style} is attached
+to the result @racket[link-element] so that the hyperlink is rendered
+in HTML without an underline
+       
 In Racket documentation that is rendered to HTML, clicking on a
 section title normally shows the @racket[secref] call that is needed
-to link to the section.}
+to link to the section.
+
+@history[#:changed "1.25" @elem{Added the @racket[#:link-render-style] argument.}]}
 
 
 @defproc[(Secref [tag string?]
                  [#:doc module-path (or/c module-path? #f) #f]
                  [#:tag-prefixes prefixes (or/c (listof string?) #f) #f]
-                 [#:underline? underline? any/c #t])
+                 [#:underline? underline? any/c #t]
+                 [#:link-render-style ref-style (or/c link-render-style? #f)])
          element?]{
 
 Like @racket[secref], but if the rendered form of the reference starts
-with a word (e.g., ``section''), then the word is capitalized.}
+with a word (e.g., ``section''), then the word is capitalized.
+
+@history[#:changed "1.25" @elem{Added the @racket[#:link-render-style] argument.}]}
 
 
 @defproc[(seclink [tag string?] 
