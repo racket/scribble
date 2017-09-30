@@ -21,6 +21,7 @@
 (define disable-images (make-parameter #f))
 (define escape-brackets (make-parameter #f))
 (define suppress-newline-content (make-parameter #f))
+(define disable-hyperref (make-parameter #f))
 
 (define-struct (toc-paragraph paragraph) ())
 
@@ -243,12 +244,14 @@
               (printf "{")
               (show-number)
               (parameterize ([disable-images #t]
-                             [escape-brackets #t])
+                             [escape-brackets #t]
+                             [disable-hyperref #t])
                 (render-content (part-title-content d) d ri))
               (printf "}"))
             (printf "{")
             (show-number)
-            (render-content (part-title-content d) d ri)
+            (parameterize ([disable-hyperref #t])
+              (render-content (part-title-content d) d ri))
             (printf "}")
             (when (and (part-style? d 'hidden-number)
                        (not (part-style? d 'unnumbered)))
@@ -382,6 +385,10 @@
                                  (style-name es)
                                  es)]
                  [style (and (style? es) es)]
+                 [hyperref? (and (link-element? e)
+                                 (not (disable-hyperref))
+                                 (let-values ([(dest ext?) (resolve-get/ext? part ri (link-element-tag e))])
+                                   (and dest (not ext?))))]
                  [check-render
                   (lambda ()
                     (when (render-element? e)
@@ -520,9 +527,15 @@
                 (wrap e style-name 'exact)]
                [else
                 (core-render e tt?)]))
+            (when hyperref?
+              (printf "\\hyperref[t:~a]{"
+                      (t-encode (link-element-tag e))))
             (let loop ([l (if style (style-properties style) null)] [tt? #f])
               (if (null? l)
-                  (finish tt?)
+                  (if hyperref?
+                      (parameterize ([disable-hyperref #t])
+                        (finish tt?))
+                      (finish tt?))
                   (let ([v (car l)])
                     (cond
                      [(target-url? v)
@@ -560,7 +573,9 @@
                       (loop (cdr l) tt?)
                       (for ([l (in-list (command-extras-arguments (car l)))])
                         (printf "{~a}" l))]
-                     [else (loop (cdr l) tt?)]))))))
+                     [else (loop (cdr l) tt?)]))))
+            (when hyperref?
+              (printf "}"))))
         (when part-label?
           (printf "}"))
         (when (and (link-element? e)
