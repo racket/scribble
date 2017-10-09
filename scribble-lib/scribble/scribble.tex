@@ -59,12 +59,14 @@
 
 \newcommand{\BookRefLocalUN}[2]{\hyperref[#1]{\BookRefUN{#2}}}
 \newcommand{\ChapRefLocalUN}[2]{\SecRefLocalUN{#1}{#2}}
-\newcommand{\SecRefLocalUN}[2]{\SecRefUN{#2} on page~\pageref{#1}}
+\newcommand{\SecRefLocalUN}[2]{\hyperref[#1]{\SecRefUN{#2}}}
 \newcommand{\PartRefLocalUN}[2]{\SecRefLocalUN{#1}{#2}}
 \newcommand{\BookRefLocalUCUN}[2]{\BookRefLocalUN{#1}{#2}}
 \newcommand{\ChapRefLocalUCUN}[2]{\ChapRefLocalUN{#1}{#2}}
 \newcommand{\SecRefLocalUCUN}[2]{\SecRefLocalUN{#1}{#2}}
 \newcommand{\PartRefLocalUCUN}[2]{\PartRefLocalUN{#1}{#2}}
+
+\newcommand{\SectionNumberLink}[2]{\hyperref[#1]{#2}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Fonts

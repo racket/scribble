@@ -70,26 +70,28 @@
      (lambda (renderer part ri)
        ;; (list which key) should be mapped to the bibliography element.
        (define s (resolve-get part ri `(,which ,key)))
-       (make-link-element #f
-                          (list (or s "???")
-                                (cond [(not (send style disambiguate-date?)) '()]
-                                      [disambiguation ;; should be a list of bib-entries with same author/date
-                                       (define disambiguation*
-                                         (add-between (for/list ([bib (in-list disambiguation)])
-                                                        (define key (auto-bib-key bib))
-                                                        (define maybe-disambiguation
-                                                          (resolve-get part ri `(autobib-disambiguation ,key)))
-                                                        (case maybe-disambiguation
-                                                          [(#f) #f]
-                                                          [(unambiguous) #f]
-                                                          [else (make-link-element #f maybe-disambiguation `(autobib ,key))]))
-                                                      ","))
-                                       (cond [(not (car disambiguation*)) '()] ;; the bib was unambiguous
-                                             [else disambiguation*])]
-                                      [else '()])
-                                (if with-specific?
-                                    (auto-bib-specific bib-entry)
-                                    ""))
+       (define content
+         (list (or s "???")
+               (cond [(not (send style disambiguate-date?)) '()]
+                     [disambiguation ;; should be a list of bib-entries with same author/date
+                      (define disambiguation*
+                        (add-between (for/list ([bib (in-list disambiguation)])
+                                       (define key (auto-bib-key bib))
+                                       (define maybe-disambiguation
+                                         (resolve-get part ri `(autobib-disambiguation ,key)))
+                                       (case maybe-disambiguation
+                                         [(#f) #f]
+                                         [(unambiguous) #f]
+                                         [else (make-link-element "AutobibLink" maybe-disambiguation `(autobib ,key))]))
+                                     ","))
+                      (cond [(not (car disambiguation*)) '()] ;; the bib was unambiguous
+                            [else disambiguation*])]
+                     [else '()])
+               (if with-specific?
+                   (auto-bib-specific bib-entry)
+                   "")))
+       (make-link-element "AutobibLink"
+                          content
                           `(autobib ,(auto-bib-key bib-entry))))
      (lambda () "(???)")
      (lambda () "(???)"))))

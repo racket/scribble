@@ -142,8 +142,16 @@
 		   #:replacements (hash "scribble-load-replace.tex" (scribble-file "acmart/acmart-load.tex"))))))
 
 (define (add-acmart-styles doc)
-  ;; Ensure that "acmart.tex" is used, since "style.tex"
-  ;; re-defines commands.
-  (struct-copy part doc [to-collect
-                         (cons invisible-element-to-collect-for-acmart-extras
-                               (part-to-collect doc))]))
+  (struct-copy part doc
+               [to-collect
+                ;; Ensure that "acmart.tex" is used, since "style.tex"
+                ;; re-defines commands.
+                (cons invisible-element-to-collect-for-acmart-extras
+                      (part-to-collect doc))]
+               [style (let ([s (part-style doc)])
+                        (struct-copy style s
+                                     [properties
+                                      ;; Immitate Latex-based links where only the
+                                      ;; number part is hyperlinked.
+                                      (cons (link-render-style 'number)
+                                            (style-properties s))]))]))

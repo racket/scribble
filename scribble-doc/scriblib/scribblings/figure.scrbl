@@ -85,14 +85,28 @@ The @racket[left] binding is a synonym for @racket[left-figure-style],
 provided for backward compatibility.}
 
 
-@defproc[(figure-ref [tag string?] ...+) element?]{
+@defproc[(figure-ref [tag string?] ...+
+                     [#:link-render-style link-style (or/c link-render-style? #f)])
+         element?]{
 
-Generates a reference to one or more figures, using a lowercase word ``figure''.}
+Generates a reference to one or more figures, using a lowercase word ``figure''.
+
+If @racket[link-style] or @racket[(current-link-render-style)] at the
+time of rendering indicates the @racket['number] style mode, then the
+word ``figure'' itself is not hyperlinked. Otherwise, the word
+@racket[figure] is hyperlinked together with the referenced figure's
+number.
+
+@history[#:changed "1.26" @elem{Added the @racket[#:link-render-style] argument.}]}
 
 
-@defproc[(Figure-ref [tag string?] ...+) element?]{
+@defproc[(Figure-ref [tag string?] ...+
+                     [#:link-render-style link-style (or/c link-render-style? #f)])
+         element?]{
 
-Generates a reference to one or more figures, capitalizing the word ``Figure''.}
+Like @racket[figure-ref], but capitalizes the word ``Figure''.
+
+@history[#:changed "1.26" @elem{Added the @racket[#:link-render-style] argument.}]}
 
 
 @defproc[(Figure-target [tag string?]

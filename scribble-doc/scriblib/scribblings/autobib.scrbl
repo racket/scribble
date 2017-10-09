@@ -58,7 +58,7 @@ includes a citation to section 8 of the Racket reference.
                        (code:line #:date=? date-compare-expr)
                        (code:line #:cite-author cite-author-id)
                        (code:line #:cite-year cite-year-id)])
-              #:contracts ([style-expr (or/c author+date-style number-style)]
+              #:contracts ([style-expr (or/c number-style author+date-style author+date-square-bracket-style)]
                            [spaces-expr number?]
                            [disambiguator-expr (or/c #f (-> exact-nonnegative-integer? element?))]
                            [render-date-expr (or/c #f (-> date? element?))]
