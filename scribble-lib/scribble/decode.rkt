@@ -166,8 +166,9 @@
                                                #f))
                          keys k-tags)
                      colls)])
-            (if (and title 
-                     (not (memq 'hidden (style-properties style))))
+            (if (and title
+                     (not (memq 'hidden (style-properties style)))
+                     (not (memq 'no-index (style-properties style))))
               (cons (make-index-element
                      #f null (car tags)
                      (list (clean-up-index-string

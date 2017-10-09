@@ -451,6 +451,14 @@ The recognized @tech{style properties} are as follows:
        document, causes the HTML output to not include an ``on this 
        page'' margin box.}
 
+ @item{@indexed-racket['no-index] --- Has no effect as a @tech{style
+       property} on a @racket[part], but as a style property on a
+       @racket[title] or @racket[part-start] that provides a
+       @racket[part]'s style via @racket[decode], the
+       @racket['no-index] @tech{style property} cause @racket[decode]
+       to skip the generation of an entry for the part's title in the
+       document index.}
+
  @item{@racket[document-version] structure --- A version number for
        this part and its sub-parts (except as overridden). When it is
        not @racket[""] may be used when rendering a document; at a
@@ -517,7 +525,7 @@ sub-parts).
 
 The @racket[parts] field contains sub-parts.
 
-}
+@history[#:changed "1.25" @elem{Added @racket['no-index] support.}]}
 
 
 @defstruct[paragraph ([style style?] [content content?])]{

@@ -94,8 +94,15 @@ parsing. Instances of @racket[section] trigger are used as-is as
 subsections, and instances of @racket[paragraph] and other
 flow-element datatypes are used as-is in the enclosing flow.
 
+As a part is decoded, as long as the style for the part does not
+include the @tech{style property} @racket['hidden] or
+@racket['no-index], an entry is added to the document index for the
+part's title.
+
 Portions of @racket[lst] are within a part are decoded using
-@racket[decode-flow].}
+@racket[decode-flow].
+
+@history[#:changed "1.25" @elem{Added @racket['no-index] support.}]}
 
 
 @defproc[(decode-part [lst (listof pre-part?)]
