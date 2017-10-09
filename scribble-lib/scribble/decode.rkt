@@ -258,9 +258,6 @@
       [(list? (car l))
        (loop (append (car l) (cdr l))
              next? keys colls accum title tag-prefix tags vers style)]
-       [(null? (cdr l))
-        (loop null #f keys colls (cons (car l) accum) title tag-prefix tags
-              vers style)]
        [(part-index-decl? (car l))
         (loop (cdr l) next? (cons (car l) keys) colls accum title tag-prefix
               tags vers style)]
@@ -271,6 +268,9 @@
        [(part-tag-decl? (car l))
         (loop (cdr l) next? keys colls accum title tag-prefix
               (append tags (list (part-tag-decl-tag (car l))))
+              vers style)]
+       [(null? (cdr l))
+        (loop null #f keys colls (cons (car l) accum) title tag-prefix tags
               vers style)]
        [(and (pair? (cdr l))
 	     (or (splice? (cadr l))
