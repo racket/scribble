@@ -340,10 +340,10 @@
 \newcommand{\Ssubsubsubsubsectionstar}[1]{\Ssubsubsubsectionstar{#1}}
 
 % "starx" means unnumbered but in ToC:
-\newcommand{\Spartstarx}[2]{\Spartstar{#2}\addcontentsline{toc}{part}{#1}}
-\newcommand{\Ssectionstarx}[2]{\Ssectionstar{#2}\addcontentsline{toc}{section}{#1}}
-\newcommand{\Ssubsectionstarx}[2]{\Ssubsectionstar{#2}\addcontentsline{toc}{subsection}{#1}}
-\newcommand{\Ssubsubsectionstarx}[2]{\Ssubsubsectionstar{#2}\addcontentsline{toc}{subsubsection}{#1}}
+\newcommand{\Spartstarx}[2]{\Spartstar{#2}\phantomsection\addcontentsline{toc}{part}{#1}}
+\newcommand{\Ssectionstarx}[2]{\Ssectionstar{#2}\phantomsection\addcontentsline{toc}{section}{#1}}
+\newcommand{\Ssubsectionstarx}[2]{\Ssubsectionstar{#2}\phantomsection\addcontentsline{toc}{subsection}{#1}}
+\newcommand{\Ssubsubsectionstarx}[2]{\Ssubsubsectionstar{#2}\phantomsection\addcontentsline{toc}{subsubsection}{#1}}
 \newcommand{\Ssubsubsubsectionstarx}[2]{\Ssubsubsubsectionstar{#2}}
 \newcommand{\Ssubsubsubsubsectionstarx}[2]{\Ssubsubsubsubsectionstar{#2}}
 
