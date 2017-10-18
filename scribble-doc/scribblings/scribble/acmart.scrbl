@@ -208,14 +208,14 @@ screen version of the image links to the badge authority.
  in some styles. By default this field is set to the authors'
  affiliation.
 
- The @racket[addresses] parameter is the address text. As a
- special case the empty list removes the adresses field entirely.
+ The @racket[addresses] parameter takes the address text. As a
+ special case the empty list removes the addresses field entirely.
 
  @codeblock|{
   #lang scribble/acmart @acmsmall
   @title{A fancy paper}
-  @author["Leif Andersen"]
-  @authoraddresses{}
+  @author["Ronon Dex"]
+  @authorsaddresses{}
 }|
 
  @history[#:added "1.26"]}
