@@ -45,6 +45,10 @@
                #:email (or/c pre-content? email? (listof email?) #f))
               #:rest (listof pre-content?)
               block?)]
+ [authorsaddresses (->* ()
+                        ()
+                        #:rest (listof pre-content?)
+                        block?)]
  [institution (->* ()
                    (#:departments (listof (or/c pre-content? institution?)))
                    #:rest pre-content?
@@ -282,7 +286,13 @@
                                                   [else
                                                    (for/list ([e (in-list email)])
                                                      (convert-email e))]))))))))
-  
+
+(define (authorsaddresses . content)
+  (make-paragraph
+   (make-style 'pretitle command-props)
+   (make-element (make-style "authorsaddresses" command-props)
+                 (decode-content content))))
+
 (define (institution #:departments [departments '()]
                      . name)
   (author-institution name departments))
