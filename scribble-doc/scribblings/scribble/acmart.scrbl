@@ -203,6 +203,23 @@ screen version of the image links to the badge authority.
   @abstract{This is an abstract.}
 }|
 
+@defproc[(authorsaddresses [addresses pre-content?] ...) block?]{
+ Sets the text for the authors' addresses on the first page
+ in some styles. By default this field is set to the authors
+ and their affiliation information.
+
+ The @racket[addresses] parameter takes the address text. As a
+ special case the empty list removes the addresses field entirely.
+
+ @codeblock|{
+  #lang scribble/acmart @acmsmall
+  @title{A fancy paper}
+  @author["Ronon Dex"]
+  @authorsaddresses{}
+}|
+
+ @history[#:added "1.26"]}
+
 @deftogether[(
 @defproc[(terms [content pre-content?] ...) content?]
 @defproc[(keywords [content pre-content?] ...) content?]
