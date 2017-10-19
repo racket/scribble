@@ -205,8 +205,8 @@ screen version of the image links to the badge authority.
 
 @defproc[(authorsaddresses [addresses pre-content?] ...) block?]{
  Sets the text for the authors' addresses on the first page
- in some styles. By default this field is set to the authors'
- affiliation.
+ in some styles. By default this field is set to the authors
+ and their affiliation information.
 
  The @racket[addresses] parameter takes the address text. As a
  special case the empty list removes the addresses field entirely.
