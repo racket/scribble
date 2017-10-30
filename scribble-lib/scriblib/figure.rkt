@@ -150,8 +150,8 @@
         (counter-ref figures tag (string-append initial "igure")
                      #:link-render-style link-style))]
       [(null? (cdr tags))
-       (define tag1 (car tags))
-       (define tag2 (cadr tags))
+       (define tag1 tag)
+       (define tag2 (car tags))
        (make-element #f (list (counter-ref figures tag1 (string-append initial "igures")
                                            #:link-render-style link-style)
                               " and "
