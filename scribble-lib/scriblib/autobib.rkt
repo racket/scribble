@@ -264,8 +264,8 @@
               [(date<? b a) #f]
               [else (string-ci<? (auto-bib-key a) (auto-bib-key b))]))))
   (define (ambiguous? a b)
-    (and (string-ci=? (author-element-cite (extract-bib-author a))
-                      (author-element-cite (extract-bib-author b)))
+    (and (string-ci=? (content->string (author-element-cite (extract-bib-author a)))
+                      (content->string (author-element-cite (extract-bib-author b))))
          (auto-bib-date a)
          (auto-bib-date b)
          (date=? a b)))
@@ -593,8 +593,8 @@
   (make-other-author-element
    #f
    (list "Alia")
-   "al."
-   "al."))
+   (list "al" ._)
+   (list "al" ._)))
 
 (define (authors name . names*)
   (define names (map parse-author (cons name names*)))
@@ -603,11 +603,12 @@
     (case (length names)
       [(1) (author-element-cite (car names))]
       [(2) (if (other-author-element? (cadr names))
-               (format "~a et al." (author-element-cite (car names)))
-               (format "~a and ~a"
-                       (author-element-cite (car names))
-                       (author-element-cite (cadr names))))]
-      [else (format "~a et al." (author-element-cite (car names)))]))
+               (list (author-element-cite (car names)) " et al" @._)
+               (list
+                (author-element-cite (car names))
+                " and "
+                (author-element-cite (cadr names))))]
+      [else (list (author-element-cite (car names)) " et al" ._)]))
   (make-author-element
      #f
      (let loop ([names names] [prefix 0])
@@ -615,10 +616,10 @@
               (case prefix
                 [(0) names]
                 [(1) (if (other-author-element? (car names))
-                         (list " et al.")
+                         (list " et al" ._)
                          (list " and " (car names)))]
                 [else (if (other-author-element? (car names))
-                          (list ", et al.")
+                          (list ", et al" ._)
                           (list ", and " (car names)))])]
              [else
               (case prefix
