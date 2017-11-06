@@ -98,3 +98,7 @@ Example:
   oops          
   (/ 1 0)       
   '=            
+
+Example:
+
+  (define x 42)

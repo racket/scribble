@@ -91,3 +91,8 @@
 @examples[
 (eval:alts (/ 100 0) (eval:results (list "(/ 1 0)" "'=") "getting +inf.0" "oops"))
 ]
+
+@examples[
+#:no-prompt
+(eval:alts (define x 42) (define x 42))
+]

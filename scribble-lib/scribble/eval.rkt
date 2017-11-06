@@ -732,7 +732,7 @@
 (define-syntax racketblock*
   (syntax-rules (eval:alts code:comment eval:check eval:no-prompt eval:error eval:result eval:results)
     [(_ #:escape id (code:comment . rest)) (racketblock0 #:escape id (code:comment . rest))]
-    [(_ #:escape id (eval:alts a b)) (racketblock #:escape id a)]
+    [(_ #:escape id (eval:alts a b)) (racketblock* #:escape id a)]
     [(_ #:escape id (eval:result a . _)) (racketinputblock #:escape id a)]
     [(_ #:escape id (eval:results a . _)) (racketinputblock #:escape id a)]
     [(_ #:escape id (eval:check a b)) (racketblock #:escape id a)]
