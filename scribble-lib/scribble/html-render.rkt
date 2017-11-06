@@ -1309,17 +1309,11 @@
                            (if (path? p)
                                (url->string* (path->url (path->complete-path p)))
                                p))])
-             `((,(if svg? 'object 'img)
-                ([,(if svg? 'data 'src) ,srcref]
+             `((img
+                ([src ,srcref]
                  [alt ,(content->string (element-content e))]
-                 ,@(if svg?
-                       `([type "image/svg+xml"])
-                       null)
                  ,@sz
-                 ,@(attribs))
-                ,@(if svg? 
-                      `((param ([name "src"] [value ,srcref])))
-                      null)))))]
+                 ,@(attribs))))))]
         [(and (or (element? e) (multiarg-element? e))
               (ormap (lambda (v) (and (script-property? v) v))
                      (let ([s (if (element? e)
@@ -1487,8 +1481,8 @@
                   (list
                    (add-padding
                     cvt
-                    `(object
-                      ([data ,(install-file "pict.svg" bstr)]
+                    `(img
+                      ([src ,(install-file "pict.svg" bstr)]
                        [type "image/svg+xml"]))))))]
           [else #f])))
 
