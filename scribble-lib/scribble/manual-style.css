@@ -31,6 +31,15 @@
     font-size: 1rem;
 }
 
+/* embolden the "Racket Guide" and "Racket Reference" links on the TOC */
+/* there isn't an obvious tag in the markup that designates the top TOC page, which is called "start.scrbl" */
+/* nor a tag that designates these two links as special */
+/* so we'll use this slightly tortured sibling selector that hooks onto the h2 tag */
+h2[x-source-module='(lib "scribblings/main/start.scrbl")'] ~ table a[href="guide/index.html"], 
+h2[x-source-module='(lib "scribblings/main/start.scrbl")'] ~ table a[href="reference/index.html"] {
+  font-weight: bold;
+}
+
 .stt {
     font-weight: 500;
 }
