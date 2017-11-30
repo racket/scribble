@@ -106,7 +106,7 @@ for-label bindings in the lexical environment of the syntax object
 provided by @racket[context-expr]. The default @racket[context-expr]
 has the same lexical context as the first @racket[str-expr].
 When @racket[line-number-expr] is true, line number is enabled starting 
-from @racket[line-number-expr], and @racket[line-number-sep] controls
+from @racket[line-number-expr], and @racket[line-number-sep-expr] controls
 the separation (in spaces; defaults to 1) between the line numbers and
 code.
 
