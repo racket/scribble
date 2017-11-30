@@ -69,6 +69,15 @@ a @racket[doc] submodule that is expanded (so that the content is
 effectively re-expanded). The @racketidfont{doc} submodule is declared
 with @racket[module*].
 
+To include a @racketmodname[scribble/lp2] document named
+ @filepath{file.scrbl} into another Scribble document,
+ import the @racketidfont{doc} submodule:
+
+@codeblock[#:keep-lang-line? #false]|{
+  #lang scribble/manual
+  @include-section[(submod "file.scrbl" doc)]
+}|
+
 @history[#:added "1.8"
          #:changed "1.17" @elem{Declared the @racketidfont{doc} submodule with
                                 @racket[module*] instead of @racket[module].}]
@@ -127,8 +136,8 @@ used.
 @defmodule[scribble/lp-include]{The
 @racketmodname[scribble/lp-include] library is normally used within a
 Scribble document---that is, a module that starts with something like
-@racket[#, @hash-lang[] @racketmodname[scribble/base]] or @racket[#, @hash-lang[]
-@racketmodname[scribble/manual]], instead of @racket[#, @hash-lang[] @racketmodname[racket]].}
+@hash-lang[] @racketmodname[scribble/base] or @hash-lang[] @racketmodname[scribble/manual],
+instead of @hash-lang[] @racketmodname[racket].}
 
 @defform[(lp-include filename)]{
 Includes the source of @racket[filename] as the typeset version of the literate
