@@ -616,8 +616,6 @@ blockquote {
     padding: 0.25em;
     padding-top: 0.3em;
     padding-bottom: 0.4em;
-    /* set default font for incidental chars (like arrows) */
-    font-family: 'Fira', sans-serif;
     background: #f3f3f3;
     box-sizing:border-box;
     border-top: 1px solid #99b;
