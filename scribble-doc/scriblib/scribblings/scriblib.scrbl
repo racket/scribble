@@ -10,3 +10,4 @@
 @include-section["bibtex.scrbl"]
 @include-section["footnote.scrbl"]
 @include-section["render-cond.scrbl"]
+@include-section["book-index.scrbl"]

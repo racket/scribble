@@ -2,6 +2,7 @@
 (require "core.rkt"
          "latex-properties.rkt"
          "private/render-utils.rkt"
+         "private/latex-index.rkt"
          racket/class
          racket/runtime-path
          racket/port
@@ -18,6 +19,7 @@
 (define rendering-tt (make-parameter #f))
 (define show-link-page-numbers (make-parameter #f))
 (define done-link-page-numbers (make-parameter #f))
+(define multiple-page-references (make-parameter #f))
 (define disable-images (make-parameter #f))
 (define escape-brackets (make-parameter #f))
 (define suppress-newline-content (make-parameter #f))
@@ -587,10 +589,19 @@
         (when (and (link-element? e)
                    (show-link-page-numbers)
                    (not (done-link-page-numbers)))
-          (printf ", \\pageref{t:~a}"
-                  (t-encode 
-                   (let ([v (resolve-get part ri (link-element-tag e))])
-                     (and v (vector-ref v 1))))))
+          (define (make-ref e)
+            (string-append
+             "t:"
+             (t-encode 
+              (let ([v (resolve-get part ri (link-element-tag e))])
+                (and v (vector-ref v 1))))))
+          (cond
+            [(multiple-page-references) ; for index
+             => (lambda (l)
+                  (printf ", \\Smanypageref{~a}" ; using cleveref
+                          (string-join (map make-ref l) ",")))]
+            [else
+             (printf ", \\pageref{~a}" (make-ref e))]))
         null))
 
     (define/private (t-encode s)
@@ -626,6 +637,11 @@
       (let* ([s-name (style-name (table-style t))]
              [boxed? (eq? 'boxed s-name)]
              [index? (eq? 'index s-name)]
+             [merge-index? (let loop ([part part])
+                             (or (memq 'enable-index-merge (style-properties (part-style part)))
+                                 (let* ([ci (part-collected-info part ri)]
+                                        [p (and ci (collected-info-parent ci))])
+                                   (and p (loop p)))))]
              [tableform
               (cond [index? "list"]
                     [(eq? 'block s-name) "tabular"]
@@ -758,6 +774,17 @@
                   (let ([flows (car blockss)]
                         [cell-styles (car cell-styless)])
                     (unless index? (add-clines prev-styles cell-styles))
+                    (define group-size
+                      (cond
+                        [merge-index?
+                         ;; Merge entries that have the same text & style
+                         (let loop ([blockss (cdr blockss)] [group-size 1])
+                           (cond
+                             [(null? blockss) group-size]
+                             [(same-index-entry? flows (car blockss))
+                              (loop (cdr blockss) (add1 group-size))]
+                             [else group-size]))]
+                        [else 1]))
                     (let loop ([flows flows]
                                [cell-styles cell-styles]
                                [all-left-line?s all-left-line?s]
@@ -769,7 +796,10 @@
                           (cond
                            [index?
                             (printf "\n\\item ")
-                            (render-cell 1)
+                            (parameterize ([multiple-page-references
+                                            (and (group-size . > . 1)
+                                                 (extract-index-link-targets (take blockss group-size)))])
+                              (render-cell 1))
                             #f]
                            [(eq? 'cont (car flows))
                             #f]
@@ -798,17 +828,18 @@
                                                           (cdr cell-styles)
                                                           (cdr all-left-line?s)
                                                           right-line?))))
+                    (define rest-blockss (list-tail blockss group-size))
                     (unless (or index?
-                                (and (null? (cdr blockss))
+                                (and (null? rest-blockss)
                                      (not (for/or ([cell-style (in-list cell-styles)])
                                             (or (memq 'bottom-border (style-properties cell-style))
                                                 (memq 'border (style-properties cell-style)))))))
                       (printf " \\\\\n"))
                     (cond
-                     [(null? (cdr blockss))
+                     [(null? rest-blockss)
                       (unless index? (add-clines cell-styles #f))]
                      [else
-                      (loop (cdr blockss) (cdr cell-styless) cell-styles)])))
+                      (loop rest-blockss (list-tail cell-styless group-size) cell-styles)])))
                 (unless inline?
                   (printf "\\end{~a}~a"
                           tableform

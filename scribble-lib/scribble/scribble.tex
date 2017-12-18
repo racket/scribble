@@ -14,6 +14,7 @@
 \packageTocstyle
 \packageCJK
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Configuration that is especially meant to be overridden:
 
@@ -67,6 +68,11 @@
 \newcommand{\PartRefLocalUCUN}[2]{\PartRefLocalUN{#1}{#2}}
 
 \newcommand{\SectionNumberLink}[2]{\hyperref[#1]{#2}}
+
+% Enabled with a 'enable-index-merge part style property. This default
+% implementation isn't good enough, because the argument is a
+% comma-separated sequence of labels:
+\newcommand{\Smanypageref}[1]{\pageref{#1}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Fonts

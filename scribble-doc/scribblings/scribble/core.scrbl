@@ -520,6 +520,14 @@ The recognized @tech{style properties} are as follows:
        section. See also @racket[link-element] and
        @racket[current-link-render-style].}
 
+ @item{@racket['enable-index-merge] --- On an index parts or one of
+       its enclosing parts for Latex output, causes index entries to
+       be merged when they have the same content, with multiple
+       references for the same entry combined with @ltx{Smanypageref}.
+       The @ltx{Smanypageref} Latex macro must be redefined to accept
+       multiple @litchar{,}-separated labels and generate a suitable set of
+       references. See also @racketmodname[scriblib/book-index].}
+
 ]
 
 The @racket[to-collect] field contains @techlink{content} that is
