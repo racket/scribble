@@ -2,6 +2,7 @@
 @(require scribble/manual 
           (except-in "utils.rkt" url)
           "struct-hierarchy.rkt" 
+          (only-in scribble/eval as-examples)
           (for-label scribble/manual-struct
                      racket/serialize
                      file/convertible
@@ -910,6 +911,9 @@ The following @tech{style properties} are currently recognized:
  @item{@racket[script-property] structure --- For HTML, supplies a
        script alternative to @racket[content].}
 
+ @item{@racket[xexpr-property] structure --- For HTML, supplies literal
+       HTML to render before and after @racket[content].}
+
   @item{@racket[body-id] structure --- For HTML uses the given
         string as an @tt{id} attribute of the @tt{<span>} tag.}
 
@@ -931,7 +935,8 @@ The following @tech{style properties} are currently recognized:
 ]
 
 @history[#:changed "1.6" @elem{Changed @racket['exact-chars] handling to
-         take effect when the style name is @racket[#f].}]}
+         take effect when the style name is @racket[#f].}
+         #:changed "1.27" @elem{Changed to support @racket[xexpr-property].}]}
 
 
 @defstruct[(image-element element) ([path (or/c path-string?
@@ -1744,6 +1749,30 @@ is shown when the mouse hovers over the element.}
 
 Used as a @tech{style property} with @racket[element] to supply a
 script alternative to the element content.}
+
+
+@defstruct[xexpr-property ([before xexpr/c]
+                           [after xexpr/c])]{
+
+Used as a @tech{style property} with @racket[element] to supply literal
+HTML that is rendered before and after element content.
+
+@as-examples["Example:"
+@codeblock[#:keep-lang-line? #t]|{
+  #lang scribble/base
+  @(require scribble/core
+            scribble/html-properties
+            (only-in xml cdata))
+
+  @(define comments (xexpr-property
+                     (cdata #f #f "<!-- before -->")
+                     (cdata #f #f "<!-- after -->")))
+
+  Here is some
+  @elem[#:style (style #f (list comments))]{content with comments around}.
+}|]
+
+@history[#:added "1.27"]}
 
 
 @defstruct[css-addition ([path (or/c path-string? 

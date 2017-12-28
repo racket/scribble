@@ -1231,6 +1231,14 @@
               (element-style->attribs (style-name s) s extras)
               (element-style->attribs s #f extras))))
 
+    (define (element-style-property-matching e pred)
+      (and (or (element? e) (multiarg-element? e))
+           (ormap (lambda (v) (and (pred v) v))
+                  (let ([s (if (element? e)
+                               (element-style e)
+                               (multiarg-element-style e))])
+                    (if (style? s) (style-properties s) null)))))
+
     (define/override (render-content e part ri)
       (define (attribs [extras null]) (content-attribs e extras))
       (cond
@@ -1320,13 +1328,8 @@
                 ,@(if svg? 
                       `((param ([name "src"] [value ,srcref])))
                       null)))))]
-        [(and (or (element? e) (multiarg-element? e))
-              (ormap (lambda (v) (and (script-property? v) v))
-                     (let ([s (if (element? e)
-                                  (element-style e)
-                                  (multiarg-element-style e))])
-                       (if (style? s) (style-properties s) null))))
-         =>
+        [(element-style-property-matching e script-property?)
+         => 
          (lambda (v)
            (let* ([t `[type ,(script-property-type v)]]
                   [s (script-property-script v)]
@@ -1335,6 +1338,12 @@
                          `(script (,t ,@(attribs) [src ,s])))])
              (list s
                    `(noscript ,@(render-plain-content e part ri)))))]
+        [(element-style-property-matching e xexpr-property?)
+         =>
+         (lambda (v)
+           (cons (xexpr-property-before v)
+                 (append (render-plain-content e part ri)
+                         (list (xexpr-property-after v)))))]
         [(target-element? e)
          `((a ([name ,(format "~a" (anchor-name (add-current-tag-prefix
                                                  (tag-key (target-element-tag e)

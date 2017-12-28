@@ -8,6 +8,7 @@
  [body-id ([value string?])]
  [document-source ([module-path module-path?])]
 
+ [xexpr-property ([before xexpr/c] [after xexpr/c])]
  [hover-property ([text string?])]
  [script-property ([type string?]
                    [script (or/c path-string? (listof string?))])]
