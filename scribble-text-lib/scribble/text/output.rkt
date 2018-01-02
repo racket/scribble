@@ -4,6 +4,7 @@
 
 (provide
  outputable/c
+ special?
  (contract-out 
   [output (->* (outputable/c) (output-port?) void?)]))
 ;; See also `provide-special` below
