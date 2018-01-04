@@ -261,7 +261,8 @@ Returns @racket[#t] if @racket[v] is an item produced by
                   [#:sep sep (or/c block? content? #f) #f]
                   [#:column-properties column-properties (listof any/c) '()]
                   [#:row-properties row-properties (listof any/c) '()]
-                  [#:cell-properties cell-properties (listof (listof any/c)) '()])
+                  [#:cell-properties cell-properties (listof (listof any/c)) '()]
+                  [#:sep-properties sep-properties (or/c list? #f) #f])
          table?]{
 
 Creates a @tech{table} with the given @racket[cells] content, which is
@@ -276,11 +277,11 @@ cell in a row.
 The @racket[style] argument is handled the same as @racket[para].
 See @racket[table] for a list of recognized @tech{style names} and @tech{style properties}.
 
-If @racket[sep] is not @racket[#f], it is inserted as a new column
-between every column in the table; note that any
-@racket[table-columns] or @racket[table-cells] property in
-@racket[style] must take the added columns into account. Otherwise,
-the default style places no space between table columns. When @racket[sep]
+The default style places no space between table columns. If
+@racket[sep] is not @racket[#f], it is inserted as a new column
+between every column in the table; the new column's properties are the
+same as the preceding column's, unless @racket[sep-properties]
+provides a list of @tech{style properties} to use. When @racket[sep]
 would be placed before a @racket['cont], a @racket['cont] is inserted,
 instead.
 
@@ -343,7 +344,10 @@ properties will be used from the merger into @racket[table-cells].}
                                @racket[#:row-properties],
                                and @racket[#:cell-properties] arguments.}
          #:changed "1.12" @elem{Changed @racket[sep] insertion before a
-                                @racket['cont].}]
+                                @racket['cont].}
+         #:changed "1.28" @elem{Added @racket[sep-properties] and made
+                                the preceding column's properties used
+                                consistently if not specified.}]
 
 Examples:
 @codeblock[#:keep-lang-line? #f]|{

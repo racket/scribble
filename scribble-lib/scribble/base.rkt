@@ -329,7 +329,8 @@
                 #:sep (or/c content? block? #f)
                 #:column-properties (listof any/c)
                 #:row-properties (listof any/c)
-                #:cell-properties (listof (listof any/c)))
+                #:cell-properties (listof (listof any/c))
+                #:sep-properties (or/c list? #f))
                table?)])
 
 (define (convert-block-style style)
@@ -352,6 +353,7 @@
 
 (define (tabular #:style [style #f]
                  #:sep [sep #f]
+                 #:sep-properties [sep-props #f]
                  #:column-properties [column-properties null]
                  #:row-properties [row-properties null]
                  #:cell-properties [cell-properties null]
@@ -426,7 +428,7 @@
                      [(null? column-properties)
                       (if (or (zero? n) (not sep))
                           (cons prev (loop null (add1 n) prev))
-                          (list* prev prev (loop null (+ n 2) prev)))]
+                          (list* (or sep-props prev) prev (loop null (+ n 2) prev)))]
                      [else
                       (define (to-list v) (if (list? v) v (list v)))
                       (define props (to-list (car column-properties)))
@@ -437,7 +439,7 @@
                                          props))
                       (if (or (zero? n) (not sep))
                           (cons props rest)
-                          (list* null props rest))])))
+                          (list* (or sep-props prev) props rest))])))
                 (define full-column-properties
                   (make-full-column-properties column-properties))
                 (define (make-full-cell-properties cell-properties)
