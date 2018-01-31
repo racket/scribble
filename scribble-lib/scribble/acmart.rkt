@@ -86,7 +86,8 @@
   (->* () () #:rest (listof pre-content?)
        any/c)])
 (provide
-  invisible-element-to-collect-for-acmart-extras)
+  invisible-element-to-collect-for-acmart-extras
+  include-abstract)
 
 (define-syntax-rule (defopts name ...)
   (begin (define-syntax (name stx)
@@ -158,6 +159,20 @@
   (make-nested-flow
    abstract-style
    (decode-flow strs)))
+
+(define (extract-abstract p)
+  (unless (part? p)
+    (error 'include-abstract "doc binding is not a part: ~e" p))
+  (unless (null? (part-parts p))
+    (error 'include-abstract "abstract part has sub-parts: ~e" (part-parts p)))
+  (when (part-title-content p)
+    (error 'include-abstract "abstract part has title content: ~e" (part-title-content p)))
+  (part-blocks p))
+
+(define-syntax-rule (include-abstract mp)
+  (begin
+    (require (only-in mp [doc abstract-doc]))
+    (make-nested-flow abstract-style (extract-abstract abstract-doc))))
 
 (define (acmConference name date venue)
   (make-paragraph (make-style 'pretitle '())
