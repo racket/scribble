@@ -1039,12 +1039,13 @@
      #'(with-togetherable-racket-variables
         ()
         ()
-        (*defthing kind.kind
-                   lt.expr
-                   (list (or id-expr (quote-syntax/loc id))) (list 'id) #f
-                   (list (racketblock0 result))
-                   (lambda () (list desc ...))
-                   (list (result-value value.value))))]))
+        (let ([id-val id-expr])
+          (*defthing kind.kind
+                     lt.expr
+                     (list (or id-val (quote-syntax/loc id))) (list (or id-val 'id)) #f
+                     (list (racketblock0 result))
+                     (lambda () (list desc ...))
+                     (list (result-value value.value)))))]))
 
 (define-syntax (defthing* stx)
   (syntax-parse stx
