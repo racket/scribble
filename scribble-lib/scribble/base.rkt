@@ -562,7 +562,7 @@
                 #:rest (listof pre-content?)
                 element?)]
   [secref (->* (string?)
-               (#:doc module-path?
+               (#:doc (or/c #f module-path?)
                 #:tag-prefixes (or/c #f (listof string?))
                 #:underline? any/c
                 #:link-render-style (or/c #f link-render-style?))
