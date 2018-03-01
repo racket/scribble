@@ -687,30 +687,30 @@ foo
 ---
 ;; -------------------- errors
 ---
-(  -@error-> "inp:1:0: read: expected a `)' to close `('" ; check -@error->
+(  -@error-> "inp:1:0: read: expected a `)` to close `(`" ; check -@error->
 ---
-@foo{ -@error-> #rx":1:0: missing closing `}'$"
+@foo{ -@error-> #rx":1:0: missing closing `}`$"
 ---
-\foo{ -\error-> #rx":1:0: missing closing `}'$"
+\foo{ -\error-> #rx":1:0: missing closing `}`$"
 ---
-@foo{@bar{ -@error-> #rx":1:5: missing closing `}'$"
+@foo{@bar{ -@error-> #rx":1:5: missing closing `}`$"
 ---
-\foo{\bar{ -\error-> #rx":1:5: missing closing `}'$"
+\foo{\bar{ -\error-> #rx":1:5: missing closing `}`$"
 ---
-@foo{@bar{} -@error-> #rx":1:0: missing closing `}'$"
+@foo{@bar{} -@error-> #rx":1:0: missing closing `}`$"
 ---
-@foo{@bar|{} -@error-> #rx":1:5: missing closing `}\\|'$"
+@foo{@bar|{} -@error-> #rx":1:5: missing closing `}\\|`$"
 ---
-@foo{@bar|-{} -@error-> #rx":1:5: missing closing `}-\\|'$"
+@foo{@bar|-{} -@error-> #rx":1:5: missing closing `}-\\|`$"
 ---
-@foo{@bar|-{} -@error-> #rx":1:5: missing closing `}-\\|'$"
+@foo{@bar|-{} -@error-> #rx":1:5: missing closing `}-\\|`$"
 ---
-\foo{\bar|-{} -\error-> #rx":1:5: missing closing `}-\\|'$"
+\foo{\bar|-{} -\error-> #rx":1:5: missing closing `}-\\|`$"
 ---
-@foo{@" -@error-> #rx":1:6: read: expected a closing '\"'$"
+@foo{@" -@error-> #rx":1:6: read-syntax: expected a closing `\"`$"
 ;; " <-- (balance this file)
 ---
-\foo{\" -\error-> #rx":1:6: read: expected a closing '\"'$"
+\foo{\" -\error-> #rx":1:6: read-syntax: expected a closing `\"`$"
 ---
 @|1 2|
 -@error->
