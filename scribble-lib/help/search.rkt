@@ -39,11 +39,16 @@
                                          (string->url
                                           (format "q?~a" query)))
                                         null))])))]
-   [else
-    (let* ([path (build-path (find-user-doc-dir) sub)]
-           [path (if (file-exists? path) path (build-path (find-doc-dir) sub))])
-      (notify path)
-      (send-url/file path #:fragment fragment #:query query))]))
+    [else
+      (let* ([path (build-path (find-user-doc-dir) sub)]
+             [path (if (file-exists? path) path (build-path (find-doc-dir) sub))])
+        (notify path)
+        (if (file-exists? path)
+          (send-url/file path #:fragment fragment #:query query)
+          (let ([part (lambda (pfx x) (if x (string-append pfx x) ""))])
+            (send-url (string-append
+                        "https://docs.racket-lang.org/"
+                        sub (part "#" fragment) (part "?" query))))))]))
 
 ;; This is an example of changing this code to use the online manuals.
 ;; Normally, it's better to set `doc-open-url` in "etc/config.rktd",
