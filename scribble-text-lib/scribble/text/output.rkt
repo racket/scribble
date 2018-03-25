@@ -3,6 +3,7 @@
          racket/contract/base)
 
 (provide
+ special?
  outputable/c
  (contract-out 
   [output (->* (outputable/c) (output-port?) void?)]))
