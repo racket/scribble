@@ -3,6 +3,8 @@
 % Avoid package option conflict
 \renewcommand\packageColor\relax
 \renewcommand\packageTocstyle\relax
+\renewcommand\packageMathabx{\ifx\bigtimes\undefined \usepackage{mathabx} \else \relax \fi}
+% Both 'mathabx' and 'newtxmath' (required by the 'acmart' class) define a '\bigtimes' command. 
 \let\Footnote\undefined
 \let\captionwidth\undefined
 \renewcommand{\renewrmdefault}{}
