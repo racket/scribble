@@ -1042,7 +1042,7 @@
         (let ([id-val id-expr])
           (*defthing kind.kind
                      lt.expr
-                     (list (or id-val (quote-syntax/loc id))) (list (or id-val 'id)) #f
+                     (list (or id-val (quote-syntax/loc id))) (list (if (identifier? id-val) (syntax-e id-val) 'id)) #f
                      (list (racketblock0 result))
                      (lambda () (list desc ...))
                      (list (result-value value.value)))))]))
