@@ -6,7 +6,8 @@
          scribble/html-properties
          scribble/latex-properties
          setup/main-collects
-         "private/counter.rkt")
+         "private/counter.rkt"
+         scribble/private/lang-params)
 
 (provide figure
          figure*
@@ -75,11 +76,9 @@
                                        figure-style-extras))
     c))
 
-(define default-label-sep ". ")
-
 (define (figure tag caption 
                 #:style [style center-figure-style]
-                #:label-sep [label-sep default-label-sep]
+                #:label-sep [label-sep (default-label-sep)]
                 #:label-style [label-style #f]
                 #:continue? [continue? #f]
                 . content)
@@ -87,7 +86,7 @@
 
 (define (figure-here tag caption 
                      #:style [style center-figure-style]
-                     #:label-sep [label-sep default-label-sep]
+                     #:label-sep [label-sep (default-label-sep)]
                      #:label-style [label-style #f]
                      #:continue? [continue? #f]
                      . content)
@@ -95,14 +94,14 @@
 
 (define (figure* tag caption 
                  #:style [style center-figure-style]
-                 #:label-sep [label-sep default-label-sep]
+                 #:label-sep [label-sep (default-label-sep)]
                  #:label-style [label-style #f]
                  #:continue? [continue? #f]
                  . content)
   (figure-helper figuremulti-style style label-sep label-style tag caption content continue?))
 (define (figure** tag caption 
                   #:style [style center-figure-style]
-                  #:label-sep [label-sep default-label-sep]
+                  #:label-sep [label-sep (default-label-sep)]
                   #:label-style [label-style #f]
                   #:continue? [continue? #f]
                   . content)
@@ -124,7 +123,7 @@
                                               #:label-sep label-sep
                                               #:label-style label-style
                                               #:continue? continue?)
-                               (make-element 'sf caption))))))))
+                               (make-element (default-caption-style) caption))))))))
 
 (define figures (new-counter "figure" 
                              #:target-wrap make-figure-target
@@ -134,7 +133,7 @@
                        #:label-sep [label-sep ": "]
                        #:label-style [label-style #f])
   (counter-target figures tag 
-                  (make-element 'sf "Fig.")
+                  (default-label-text)
                   #:label-suffix (list (if continue? " (continued)" "") label-sep)
                   #:label-style label-style
                   #:target-style figure-target-style

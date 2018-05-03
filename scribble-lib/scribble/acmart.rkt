@@ -9,6 +9,7 @@
          scribble/html-properties
          scribble/latex-properties
          scribble/private/tag
+         scribble/private/lang-params
          (for-syntax racket/base))
 
 (struct affiliation (position institution street-address city state postcode country)
@@ -407,3 +408,7 @@
 
 ; FIXME: theorem styles
 
+(default-label-text (make-element 'sf "Fig."))
+(default-label-sep ". ")
+(default-caption-style 'sf)
+(default-counter-style 'sf)
