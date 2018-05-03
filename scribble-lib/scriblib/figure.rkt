@@ -75,7 +75,7 @@
                                        figure-style-extras))
     c))
 
-(define default-label-sep ": ")
+(define default-label-sep ". ")
 
 (define (figure tag caption 
                 #:style [style center-figure-style]
@@ -124,7 +124,7 @@
                                               #:label-sep label-sep
                                               #:label-style label-style
                                               #:continue? continue?)
-                               caption)))))))
+                               (make-element 'sf caption))))))))
 
 (define figures (new-counter "figure" 
                              #:target-wrap make-figure-target
@@ -134,7 +134,7 @@
                        #:label-sep [label-sep ": "]
                        #:label-style [label-style #f])
   (counter-target figures tag 
-                  "Figure" 
+                  (make-element 'sf "Fig.")
                   #:label-suffix (list (if continue? " (continued)" "") label-sep)
                   #:label-style label-style
                   #:target-style figure-target-style

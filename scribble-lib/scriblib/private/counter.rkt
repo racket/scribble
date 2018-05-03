@@ -38,7 +38,7 @@
              (let ([n (resolve-get part ri (tag->counter-tag counter tag "value"))])
                (cons
                 (make-element label-style
-                              (let ([l (cons (format "~a" n) (decode-content (list label-suffix)))])
+                              (let ([l (cons (make-element 'sf (format "~a" n)) (decode-content (list label-suffix)))])
                                 (if label
                                     (list* label 'nbsp l)
                                     l)))
