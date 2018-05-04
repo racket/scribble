@@ -23,9 +23,10 @@
            [authorversion? #f]
            [font-size #f])
        (let loop ([stuff #'body])
-         (syntax-case* stuff (manuscript acmsmall acmlarge acmtog sigconf siggraph sigplan sigchi sigchi-a
-					 review screen natbib anonymous authorversion 9pt 10pt 11pt 12pt)
-		       (lambda (a b) (eq? (syntax-e a) (syntax-e b)))
+         (syntax-case* stuff (manuscript acmsmall acmlarge acmtog sigconf siggraph sigplan sigchi
+                                         sigchi-a dtrap pacmcgit tiot tdsci review screen natbib
+                                         anonymous authorversion 9pt 10pt 11pt 12pt)
+                       (lambda (a b) (eq? (syntax-e a) (syntax-e b)))
            [(ws . body)
             ;; Skip intraline whitespace to find options:
             (and (string? (syntax-e #'ws))
@@ -94,35 +95,25 @@
 	   
 	   
            ; format options
-           [(manuscript . body)
-            (set! format? "manuscript")
+           [((~and fmt
+                   (~or manuscript
+                        acmsmall
+                        acmlarge
+                        acmtog
+                        sigconf
+                        siggraph
+                        sigplan
+                        sigchi
+                        sigchi-a
+                        dtrap
+                        pacmcgit
+                        tiot
+                        tdsci))
+             . body)
+            (set! format? (symbol->string (syntax->datum #'fmt)))
             (loop #'body)]
-           [(acmsmall . body)
-            (set! format? "acmsmall")
-            (loop #'body)]
-           [(acmlarge . body)
-            (set! format? "acmlarge")
-            (loop #'body)]
-           [(acmtog . body)
-            (set! format? "acmtog")
-            (loop #'body)]
-           [(sigconf . body)
-            (set! format? "sigconf")
-            (loop #'body)]
-           [(sigconf . body)
-            (set! format? "siggraph")
-            (loop #'body)]
-           [(sigplan . body)
-            (set! format? "sigplan")
-            (loop #'body)]
-           [(sigchi . body)
-            (set! format? "sigchi")
-            (loop #'body)]
-           [(sigchi-a . body)
-            (set! format? "sigchi-a")
-            (loop #'body)]
-	    
-	   [body
+           
+           [body
             #`(#%module-begin id (post-process #,review? #,screen? #,natbib? #,anonymous? #,authorversion? #,font-size #,format?) () . body)])))]))
 
 (define ((post-process . opts) doc)  
