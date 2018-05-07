@@ -6,7 +6,8 @@
          scribble/latex-prefix
          racket/list
          "../private/defaults.rkt"
-         (for-syntax racket/base))
+         (for-syntax racket/base
+                     syntax/parse))
 (provide (except-out (all-from-out scribble/doclang) #%module-begin)
          (all-from-out scribble/acmart)
          (all-from-out scribble/base)
@@ -23,23 +24,24 @@
            [authorversion? #f]
            [font-size #f])
        (let loop ([stuff #'body])
-         (syntax-case* stuff (manuscript acmsmall acmlarge acmtog sigconf siggraph sigplan sigchi
-                                         sigchi-a dtrap pacmcgit tiot tdsci review screen natbib
-                                         anonymous authorversion 9pt 10pt 11pt 12pt)
-                       (lambda (a b) (eq? (syntax-e a) (syntax-e b)))
+         (syntax-parse stuff
+           #:datum-literals (manuscript acmsmall acmlarge acmtog sigconf siggraph sigplan sigchi
+                                        sigchi-a dtrap pacmcgit tiot tdsci review screen natbib
+                                        anonymous authorversion 9pt 10pt 11pt 12pt)
+           
+           ;; Skip intraline whitespace to find options:
            [(ws . body)
-            ;; Skip intraline whitespace to find options:
-            (and (string? (syntax-e #'ws))
-                 (regexp-match? #rx"^ *$" (syntax-e #'ws)))
+            #:when (and (string? (syntax-e #'ws))
+                        (regexp-match? #rx"^ *$" (syntax-e #'ws)))
             (loop #'body)]
 
 	   ; boolean options
-	   [((review #t) . body)
-	    (set! review? "review=true")
-	    (loop #'body)]
-	   [((review #f) . body)
-	    (set! review? "review=false")
-	    (loop #'body)]
+           [((review #t) . body)
+            (set! review? "review=true")
+            (loop #'body)]
+           [((review #f) . body)
+            (set! review? "review=false")
+            (loop #'body)]
 	   [(review . body)
 	    (set! review? "review=true")
 	    (loop #'body)]
