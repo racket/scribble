@@ -163,7 +163,7 @@ reports @racket["Hello, friend."].
 
 In addition to configuring the reader for a module body,
 @racketmodname[at-exp] attaches a run-time configuration annotation to
-the module, so that it if it used as the main module, the
+the module, so that if it used as the main module, the
 @racket[current-read-interaction] parameter is adjusted to use the
 @seclink["reader"]{@"@"-reader} readtable extension.
 
