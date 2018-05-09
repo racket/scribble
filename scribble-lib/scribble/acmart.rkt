@@ -409,7 +409,7 @@
 
 ; FIXME: theorem styles
 
-(default-label-text (make-element 'sf "Fig."))
-(default-label-sep ". ")
-(default-caption-style 'sf)
-(default-counter-style 'sf)
+(default-figure-label-text (make-element 'sf "Fig."))
+(default-figure-label-sep ". ")
+(default-figure-caption-style 'sf)
+(default-figure-counter-style 'sf)
