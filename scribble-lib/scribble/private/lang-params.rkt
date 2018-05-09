@@ -6,7 +6,14 @@
 ;;   figures, citations, etc. are displayed. This allows different
 ;;   scribble langs to handle them.
 
-(define default-label-text (make-parameter "Figure"))
-(define default-label-sep (make-parameter ": "))
-(define default-caption-style (make-parameter #f))
-(define default-counter-style (make-parameter #f))
+;; `Figure` string that appears in front of a figure caption
+(define default-figure-label-text (make-parameter "Figure"))
+
+;; Seperator string between figure counter and caption
+(define default-figure-label-sep (make-parameter ": "))
+
+;; Style for the figure caption
+(define default-figure-caption-style (make-parameter #f))
+
+;; Style for the number in the figure counter
+(define default-figure-counter-style (make-parameter #f))
