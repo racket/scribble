@@ -34,6 +34,9 @@ Example:
 @defidform[sigplan]
 @defidform[sigchi]
 @defidform[sigchi-a]
+@defidform[dtrap]
+@defidform[tiot]
+@defidform[tdsci]
 )]{
 
 Enables the given document format. Use the format only on the same

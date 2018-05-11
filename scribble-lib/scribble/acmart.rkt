@@ -9,6 +9,7 @@
          scribble/html-properties
          scribble/latex-properties
          scribble/private/tag
+         scribble/private/lang-parameters
          (for-syntax racket/base))
 
 (struct affiliation (position institution street-address city state postcode country)
@@ -132,7 +133,8 @@
     ...))
 
 ; format options
-(defopts manuscript acmsmall acmlarge acmtog sigconf siggraph sigplan sigchi sigchi-a)
+(defopts manuscript acmsmall acmlarge acmtog sigconf siggraph sigplan sigchi sigchi-a
+  dtrap pacmcgit tiot tdsci)
 ; boolean options
 (defopts review screen natbib anonymous authorversion 9pt 10pt 11pt 12pt)
 
@@ -407,3 +409,7 @@
 
 ; FIXME: theorem styles
 
+(default-figure-label-text (make-element 'sf "Fig."))
+(default-figure-label-sep ". ")
+(default-figure-caption-style 'sf)
+(default-figure-counter-style 'sf)
