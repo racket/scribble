@@ -7,7 +7,7 @@
          scribble/latex-properties
          setup/main-collects
          "private/counter.rkt"
-         scribble/private/lang-params)
+         scribble/private/lang-parameters)
 
 (provide figure
          figure*

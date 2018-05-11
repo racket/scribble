@@ -9,7 +9,7 @@
          scribble/html-properties
          scribble/latex-properties
          scribble/private/tag
-         scribble/private/lang-params
+         scribble/private/lang-parameters
          (for-syntax racket/base))
 
 (struct affiliation (position institution street-address city state postcode country)

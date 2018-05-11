@@ -1,7 +1,7 @@
 #lang racket/base
 (require scribble/core
          scribble/decode
-         scribble/private/lang-params)
+         scribble/private/lang-parameters)
 
 (provide new-counter
          counter-target

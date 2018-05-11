@@ -35,65 +35,65 @@
                         (regexp-match? #rx"^ *$" (syntax-e #'ws)))
             (loop #'body)]
 
-	   ; boolean options
+           ; boolean options
            [((review #t) . body)
             (set! review? "review=true")
             (loop #'body)]
            [((review #f) . body)
             (set! review? "review=false")
             (loop #'body)]
-	   [(review . body)
-	    (set! review? "review=true")
-	    (loop #'body)]
-	   [((screen #t) . body)
-	    (set! screen? "screen=true")
-	    (loop #'body)]
-	   [((screen #f) . body)
-	    (set! screen? "screen=false")
-	    (loop #'body)]
-	   [(screen . body)
-	    (set! screen? "screen=true")
-	    (loop #'body)]
-	   [((natbib #t) . body)
-	    (set! natbib? "natbib=true")
-	    (loop #'body)]
-	   [((natbib #f) . body)
-	    (set! natbib? "natbib=false")
-	    (loop #'body)]
-	   [(natbib . body)
-	    (set! natbib? "natbib=true")
-	    (loop #'body)]
+           [(review . body)
+            (set! review? "review=true")
+            (loop #'body)]
+           [((screen #t) . body)
+            (set! screen? "screen=true")
+            (loop #'body)]
+           [((screen #f) . body)
+            (set! screen? "screen=false")
+            (loop #'body)]
+           [(screen . body)
+            (set! screen? "screen=true")
+            (loop #'body)]
+           [((natbib #t) . body)
+            (set! natbib? "natbib=true")
+            (loop #'body)]
+           [((natbib #f) . body)
+            (set! natbib? "natbib=false")
+            (loop #'body)]
+           [(natbib . body)
+            (set! natbib? "natbib=true")
+            (loop #'body)]
 
-	   [((anonymous #t) . body)
-	    (set! anonymous? "anonymous=true")
-	    (loop #'body)]
-	   [((anonymous #f) . body)
-	    (set! anonymous? "anonymous=false")
-	    (loop #'body)]
-	   [(anonymous . body)
-	    (set! anonymous? "anonymous=true")
-	    (loop #'body)]
-	   [((authorversion #t) . body)
-	    (set! authorversion? "authorversion=true")
-	    (loop #'body)]
-	   [((authorversion #f) . body)
-	    (set! authorversion? "authorversion=false")
-	    (loop #'body)]
-	   [(authorversion . body)
-	    (set! authorversion? "authorversion=true")
-	    (loop #'body)]
-	   [(9pt . body)
-	    (set! font-size "9pt")
-	    (loop #'body)]
-	   [(10pt . body)
-	    (set! font-size "10pt")
-	    (loop #'body)]
-	   [(11pt . body)
-	    (set! font-size "11pt")
-	    (loop #'body)]
-	   [(12pt . body)
-	    (set! font-size "12pt")
-	    (loop #'body)]
+           [((anonymous #t) . body)
+            (set! anonymous? "anonymous=true")
+            (loop #'body)]
+           [((anonymous #f) . body)
+            (set! anonymous? "anonymous=false")
+            (loop #'body)]
+           [(anonymous . body)
+            (set! anonymous? "anonymous=true")
+            (loop #'body)]
+           [((authorversion #t) . body)
+            (set! authorversion? "authorversion=true")
+            (loop #'body)]
+           [((authorversion #f) . body)
+            (set! authorversion? "authorversion=false")
+            (loop #'body)]
+           [(authorversion . body)
+            (set! authorversion? "authorversion=true")
+            (loop #'body)]
+           [(9pt . body)
+            (set! font-size "9pt")
+            (loop #'body)]
+           [(10pt . body)
+            (set! font-size "10pt")
+            (loop #'body)]
+           [(11pt . body)
+            (set! font-size "11pt")
+            (loop #'body)]
+           [(12pt . body)
+            (set! font-size "12pt")
+            (loop #'body)]
 	   
 	   
            ; format options
@@ -132,7 +132,7 @@
                    (scribble-file "acmart/style.tex")
                    (list (scribble-file "acmart/acmart.cls"))
                    #f
-		   #:replacements (hash "scribble-load-replace.tex" (scribble-file "acmart/acmart-load.tex"))))))
+                   #:replacements (hash "scribble-load-replace.tex" (scribble-file "acmart/acmart-load.tex"))))))
 
 (define (add-acmart-styles doc)
   (struct-copy part doc
