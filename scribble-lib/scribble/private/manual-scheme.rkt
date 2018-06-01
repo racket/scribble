@@ -247,12 +247,16 @@
 
 (define-for-syntax (strip-ellipsis-context a)
   (define a-ellipsis (datum->syntax a '...))
+  (define a-ellipsis+ (datum->syntax a '...+))
   (let loop ([a a])
     (cond
      [(identifier? a)
-      (if (free-identifier=? a a-ellipsis #f)
-          (datum->syntax #f '... a a)
-          a)]
+      (cond
+        [(free-identifier=? a a-ellipsis #f)
+         (datum->syntax #f '... a a)]
+        [(free-identifier=? a a-ellipsis+ #f)
+         (datum->syntax #f '...+ a a)]
+        [else a])]
      [(syntax? a)
       (datum->syntax a (loop (syntax-e a)) a a)]
      [(pair? a)
