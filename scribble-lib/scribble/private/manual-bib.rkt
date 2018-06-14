@@ -17,7 +17,8 @@
              (#:is-book? boolean? #:author (or/c false/c pre-content?) 
                          #:location (or/c false/c pre-content?) 
                          #:date (or/c false/c pre-content?) 
-                         #:url (or/c false/c pre-content?))
+                         #:url (or/c false/c pre-content?)
+                         #:note (or/c false/c pre-content?))
              . ->* .
              a-bib-entry?)]
  [rename a-bib-entry? bib-entry? (any/c . -> . boolean?)]
@@ -46,7 +47,8 @@
                    #:author [author #f]
                    #:location [location #f]
                    #:date [date #f]
-                   #:url [url #f])
+                   #:url [url #f]
+                   #:note [note #f])
   (make-a-bib-entry
    key
    (make-element
@@ -63,7 +65,8 @@
        `(" " ,@(decode-content (list location)) ,(if date "," "."))
        null)
      (if date `(" " ,@(decode-content (list date)) ".") null)
-     (if url `(" " ,(link url (tt url))) null)))))
+     (if url `(" " ,(link url (tt url))) null)
+     (if note (decode-content (list note)) null)))))
 
 (define-on-demand bib-style (make-style "RBibliography" scheme-properties))
 
