@@ -350,7 +350,7 @@ sponsors, @racket[name] is the name of the sponsor.  The
 @codeblock[#:keep-lang-line? #f]|{
   #lang scribble/acmart
   @acks{
-    The author thanks Benjamin Greenman for helpful comments on this
+    The author thanks Ben Greenman for helpful comments on this
     code. Financial support provided by the @grantsponsor["NSF7000"
     "National Scribble Foundation"]{http://racket-lang.org} under
     grant No.: @grantnum["NSF7000"]{867-5309}.}
