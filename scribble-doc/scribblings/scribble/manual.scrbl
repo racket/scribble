@@ -263,7 +263,7 @@ produces
 (+ 1 (unsyntax (elem (racket x) (subscript "2"))))
 ]
 
-The @racket[escape-id] that defaults to @racket[unsyntax] is regonized via
+The @racket[escape-id] that defaults to @racket[unsyntax] is recognized via
 @racket[free-identifier=?], so a binding can hide the escape behavior:
 
 @RACKETBLOCK[
