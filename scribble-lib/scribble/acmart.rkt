@@ -50,6 +50,10 @@
                         ()
                         #:rest (listof pre-content?)
                         block?)]
+ [shortauthors (->* ()
+                    ()
+                    #:rest (listof pre-content?)
+                    element?)]
  [institution (->* ()
                    (#:departments (listof (or/c pre-content? institution?)))
                    #:rest pre-content?
@@ -309,6 +313,10 @@
    (make-style 'pretitle command-props)
    (make-element (make-style "authorsaddresses" command-props)
                  (decode-content content))))
+
+(define (shortauthors . content)
+  (make-element (make-style "Sshortauthors" command-props)
+                (decode-content content)))
 
 (define (institution #:departments [departments '()]
                      . name)

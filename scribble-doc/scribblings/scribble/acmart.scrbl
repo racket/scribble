@@ -271,6 +271,11 @@ screen version of the image links to the badge authority.
 
  @history[#:added "1.26"]}
 
+@defproc[(shortauthors [name pre-content?] ...) element?]{
+ Sets the text for the names of the authors in the running header.
+
+ @history[#:added "1.29"]}
+
 @deftogether[(
 @defproc[(terms [content pre-content?] ...) content?]
 @defproc[(keywords [content pre-content?] ...) content?]
