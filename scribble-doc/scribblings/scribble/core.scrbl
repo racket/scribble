@@ -137,7 +137,7 @@ A @deftech{block} is either a @techlink{table}, an
                          output may be collapsed togther or replaced
                          with a line break. In the style
                          @racket['hspace], all text is converted to
-                         uncollapsable spaces that cannot be broken
+                         uncollapsible spaces that cannot be broken
                          across lines.}
 
                    @item{A symbol content is either @racket['mdash],
