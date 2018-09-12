@@ -58,6 +58,7 @@ all mutually exclusive.}
 @defidform[natbib]
 @defidform[anonymous]
 @defidform[authorversion]
+@defidform[noacm]
 @defidform[9pt]
 @defidform[10pt]
 @defidform[11pt]
