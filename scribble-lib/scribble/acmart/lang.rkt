@@ -22,12 +22,13 @@
            [natbib? #f]
            [anonymous? #f]
            [authorversion? #f]
-           [font-size #f])
+           [font-size #f]
+           [nonacm? #f])
        (let loop ([stuff #'body])
          (syntax-parse stuff
            #:datum-literals (manuscript acmsmall acmlarge acmtog sigconf siggraph sigplan sigchi
                                         sigchi-a dtrap pacmcgit tiot tdsci review screen natbib
-                                        anonymous authorversion 9pt 10pt 11pt 12pt)
+                                        anonymous authorversion 9pt 10pt 11pt 12pt nonacm)
            
            ;; Skip intraline whitespace to find options:
            [(ws . body)
@@ -94,7 +95,15 @@
            [(12pt . body)
             (set! font-size "12pt")
             (loop #'body)]
-	   
+           [((nonacm #t) . body)
+            (set! nonacm? "nonacm=true")
+            (loop #'body)]
+           [((nonacm #f) . body)
+            (set! nonacm? "nonacm=false")
+            (loop #'body)]
+           [(nonacm . body)
+            (set! nonacm? "nonacm=true")
+            (loop #'body)]
 	   
            ; format options
            [((~and fmt
@@ -116,7 +125,7 @@
             (loop #'body)]
            
            [body
-            #`(#%module-begin id (post-process #,review? #,screen? #,natbib? #,anonymous? #,authorversion? #,font-size #,format?) () . body)])))]))
+            #`(#%module-begin id (post-process #,review? #,screen? #,natbib? #,anonymous? #,authorversion? #,font-size #,nonacm? #,format?) () . body)])))]))
 
 (define ((post-process . opts) doc)  
   (let ([options
