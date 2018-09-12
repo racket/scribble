@@ -156,7 +156,9 @@
             (loop #'body)]
            
            [body
-            #`(#%module-begin id (post-process #,review? #,screen? #,natbib? #,anonymous? #,authorversion? #,font-size #,nonacm? #,format?) () . body)])))]))
+            #`(#%module-begin id (post-process #,review? #,screen? #,natbib? #,anonymous?
+                                               #,authorversion? #,font-size #,nonacm? #,timestamp?
+                                               #,author-draft? #,acmthm? #,format?) () . body)])))]))
 
 (define ((post-process . opts) doc)  
   (let ([options
