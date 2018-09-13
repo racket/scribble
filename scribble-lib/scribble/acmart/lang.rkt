@@ -22,12 +22,17 @@
            [natbib? #f]
            [anonymous? #f]
            [authorversion? #f]
-           [font-size #f])
+           [font-size #f]
+           [nonacm? #f]
+           [timestamp? #f]
+           [author-draft? #f]
+           [acmthm? #f])
        (let loop ([stuff #'body])
          (syntax-parse stuff
            #:datum-literals (manuscript acmsmall acmlarge acmtog sigconf siggraph sigplan sigchi
                                         sigchi-a dtrap pacmcgit tiot tdsci review screen natbib
-                                        anonymous authorversion 9pt 10pt 11pt 12pt)
+                                        anonymous authorversion 9pt 10pt 11pt 12pt nonacm timestamp
+                                        authordraft acmthm)
            
            ;; Skip intraline whitespace to find options:
            [(ws . body)
@@ -94,7 +99,42 @@
            [(12pt . body)
             (set! font-size "12pt")
             (loop #'body)]
-	   
+           [((nonacm #t) . body)
+            (set! nonacm? "nonacm=true")
+            (loop #'body)]
+           [((nonacm #f) . body)
+            (set! nonacm? "nonacm=false")
+            (loop #'body)]
+           [(nonacm . body)
+            (set! nonacm? "nonacm=true")
+            (loop #'body)]
+           [(timestamp . body)
+            (set! timestamp? "timestamp=true")
+            (loop #'body)]
+           [((timestamp #t) . body)
+            (set! timestamp? "timestamp=true")
+            (loop #'body)]
+           [((timestamp #f) . body)
+            (set! timestamp? "timestamp=false")
+            (loop #'body)]
+           [(authordraft . body)
+            (set! author-draft? "authordraft=true")
+            (loop #'body)]
+           [((authordraft #t) . body)
+            (set! author-draft? "authordraft=true")
+            (loop #'body)]
+           [((authordraft #f) . body)
+            (set! author-draft? "authordraft=false")
+            (loop #'body)]
+           [(acmthm . body)
+            (set! acmthm? "acmthm=true")
+            (loop #'body)]
+           [((acmthm #t) . body)
+            (set! acmthm? "acmthm=true")
+            (loop #'body)]
+           [((acmthm #f) . body)
+            (set! acmthm? "acmthm=false")
+            (loop #'body)]
 	   
            ; format options
            [((~and fmt
@@ -116,7 +156,9 @@
             (loop #'body)]
            
            [body
-            #`(#%module-begin id (post-process #,review? #,screen? #,natbib? #,anonymous? #,authorversion? #,font-size #,format?) () . body)])))]))
+            #`(#%module-begin id (post-process #,review? #,screen? #,natbib? #,anonymous?
+                                               #,authorversion? #,font-size #,nonacm? #,timestamp?
+                                               #,author-draft? #,acmthm? #,format?) () . body)])))]))
 
 (define ((post-process . opts) doc)  
   (let ([options

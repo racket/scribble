@@ -58,6 +58,10 @@ all mutually exclusive.}
 @defidform[natbib]
 @defidform[anonymous]
 @defidform[authorversion]
+@defidform[nonacm]
+@defidform[timestamp]
+@defidform[authordraft]
+@defidform[acmthm]
 @defidform[9pt]
 @defidform[10pt]
 @defidform[11pt]
@@ -101,7 +105,6 @@ Veytsman) provides these defaults and descriptions:
  for the authors’ personal use or posting")
           ;; these options are documented in ACM docs but don't
           ;; appear to exist in the scribble acmart format:
-          #;(
           (list "nonacm" "false"
                 "Use the class typesetting options for a non-ACM\
  document, which will not include the conference/journal\
@@ -112,7 +115,7 @@ Veytsman) provides these defaults and descriptions:
           (list "authordraft" "false"
                 "Whether author’s-draft mode is enabled")
           (list "acmthm" "true"
-                "Whether to define theorem-like environments")))]
+                "Whether to define theorem-like environments"))]
 
 Further details for some of these are provided by the full
 documentation for the acmart LaTeX class.
