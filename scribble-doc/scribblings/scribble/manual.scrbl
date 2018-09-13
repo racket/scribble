@@ -1909,7 +1909,8 @@ order as given.}
                     [#:author author (or/c #f pre-content?) #f]
                     [#:location location (or/c #f pre-content?) #f]
                     [#:date date (or/c #f pre-content?) #f] 
-                    [#:url url (or/c #f pre-content?) #f])
+                    [#:url url (or/c #f pre-content?) #f]
+                    [#:note note (or/c #f pre-content?) #f])
          bib-entry?]{
 
 Creates a bibliography entry. The @racket[key] is used to refer to the
@@ -1942,7 +1943,12 @@ the entry:
        bibliography using @racket[tt] and hyperlinked, or it is
        omitted if given as @racket[#f].}
 
-]}
+ @item{@racket[note] is an optional comment about the work. It is typeset
+       in the bibliography as given, and appears directly after the date
+       (or URL, if given) with no space or punctuation in between.}
+]
+
+@history[#:changed "1.29" @elem{Added the @racket[#:note] option.}]}
 
 
 @defproc[(bib-entry? [v any/c]) boolean?]{
