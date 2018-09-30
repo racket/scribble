@@ -29,6 +29,8 @@
            (-> #:institution any/c #:number any/c element?)]
           [dissertation-location
            (->* [#:institution any/c] [#:degree any/c] element?)])
+          [book-chapter-location
+           (->* [any/c] [#:pages (or/c (list/c any/c any/c) #f) #:section any/c #:volume any/c #:publisher any/c] element?)]
          other-authors
          editor
          abbreviate-given-names)
@@ -562,6 +564,27 @@
          #:institution org
          #:degree [degree "PhD"])
   @elem{@to-string[degree] dissertation, @to-string[org]})
+
+(define (book-chapter-location
+         location
+         #:pages [pages #f]
+         #:series [series #f]
+         #:volume [volume #f]
+         #:publisher [publisher #f])
+  (let* ([s @elem{In @italic{@elem{@|location|}}}]
+         [s (if series
+                @elem{@|s|, @(format "~a" series)}
+                s)]
+         [s (if volume
+                @elem{@|s| volume @(format "~a" volume)}
+                s)]
+         [s (if pages
+                @elem{@|s|, pp. @(to-string (car pages))--@(to-string (cadr pages))}
+                s)]
+          [s (if publisher
+                @elem{@|s| @(format "~a" publisher)}
+                s)])
+    s))
 
 ;; ----------------------------------------
 

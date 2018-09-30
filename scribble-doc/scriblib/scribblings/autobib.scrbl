@@ -236,6 +236,17 @@ Combines elements to generate an element that is suitable for
 describing a dissertation.}
 
 
+@defproc[(book-chapter-location [title any/c]
+                           [#:pages pages (or (list/c any/c any/c) #f) #f]
+                           [#:section section any/c #f]
+                           [#:volume volume any/c #f]
+                           [#:publisher publisher any/c #f])
+         element?]{
+
+Combines elements to generate an element that is suitable for
+describing a paper's location within a chapter or part of a book.}
+
+
 @defproc[(author-name [first any/c]
                       [last any/c]
                       [#:suffix suffix any/c #f])
