@@ -148,7 +148,7 @@ information for all installed documentation, and @PFlag{m} or
 setup/xref load-collections-xref}.
 
 The @DFlag{redirect-main} flag for HTML output redirects links to the local
-installation's documentation to a given URL, such as
+installation's documentation (not user-scope documentation) to a given URL, such as
 @tt{http://docs.racket-lang.org/}. Beware that documentation links
 sometimes change (although Scribble generates HTML paths and anchors
 in a relatively stable way), so
@@ -156,11 +156,13 @@ in a relatively stable way), so
 more reliable when building with an installation for @italic{version}.
 The @DFlag{redirect-main} flag is ignored for non-HTML output.
 
-The @DFlag{redirect} flag is like @DFlag{redirect-main}, except
-that it builds on the given URL to indicate a cross-reference tag that
-is more stable than an HTML path and anchor (in case the documentation
-for a function changes sections, for example). No server currently
-exists to serve such tag requests, however.
+The @DFlag{redirect} flag is like @DFlag{redirect-main}, except that
+it builds on the given URL to indicate a cross-reference tag that is
+more stable than an HTML path and anchor (in case the documentation
+for a function changes sections, for example), and it can generate
+redirected linked for documentation that is installed in user scope.
+The URL @tt{https://docs.racket-lang.org/local-redirect/index.html} can
+work for these redirections.
 
 For cross-references among documentation that is not part of the
 Racket installation, use @DFlag{info-out} to save information from a

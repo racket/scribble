@@ -3,7 +3,8 @@
           "utils.rkt" 
           (for-label racket/class
                      scribble/render
-                     scribble/xref))
+                     scribble/xref
+                     setup/dirs))
 
 @(define-syntax-rule (defmodule/local lib . content)
    (begin
@@ -354,6 +355,7 @@ Configures the renderer to redirect links to external documents via
 @racket[url], adding a @tt{tag} query element to the end of the
 URL that contains the Base64-encoded, @racket[print]ed, serialized
 original tag (in the sense of @racket[link-element]) for the link.
+The result of @racket[get-doc-search-url] is intended for use as @racket[url].
 
 If the link is based on a cross-reference entry that has a
 document-identifying string (see @racket[load-xref] and its
