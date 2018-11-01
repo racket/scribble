@@ -737,7 +737,7 @@ which is normally defined using @racket[elemtag].}
 Creates an index element given a plain-text string---or list of
 strings for a hierarchy, such as @racket['("strings" "plain")] for a
 ``plain'' entry below a more general ``strings'' entry. As index keys,
-the strings are ``cleaned'' using @racket[clean-up-index-strings]. The
+the strings are ``cleaned'' using @racket[clean-up-index-string]. The
 strings (without clean-up) also serve as the text to render in the
 index. The @tech{decode}d @racket[pre-content] is the text to appear
 inline as the index target.
