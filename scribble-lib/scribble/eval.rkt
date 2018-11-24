@@ -325,8 +325,25 @@
     (when expect
       (let ([expect (do-plain-eval ev (car expect) #t)])
         (unless (equal? val expect)
-          (error 'eval "example result check failed: ~.s" s))))
+          (define result "  result: ")
+          (define expected "  expected: ")
+          (error 'eval "example result check failed: ~.s\n~a\n~a\n"
+                 s
+                 (string-append result (to-lines val (string-length result)))
+                 (string-append expected (to-lines expect (string-length expected)))))))
     render+output)
+
+  (define (to-lines exps blank-space)
+    (define blank (make-string blank-space #\space))
+    (apply
+     string-append
+     (for/list ([exp (in-list exps)]
+                [i (in-naturals)])
+       (define first-line? (= i 0))
+       (if (= i 0)
+           (format "~e" exp)
+           (format "\n~a~e" blank exp)))))
+
   (lambda (str)
     (if (eval-results? str)
         (list #f
