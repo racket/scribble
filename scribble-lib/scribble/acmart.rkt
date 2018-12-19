@@ -43,7 +43,7 @@
                                    affiliation?
                                    (listof affiliation?)
                                    #f)
-               #:email (or/c pre-content? email? (listof email?) #f))
+               #:email (or/c pre-content? email? (listof email?)))
               #:rest (listof pre-content?)
               block?)]
  [authorsaddresses (->* ()
