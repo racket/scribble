@@ -3,6 +3,7 @@
 (require setup/collects
          racket/contract/base
          racket/list
+         racket/string
          scribble/core
          scribble/base
          scribble/decode
@@ -62,6 +63,9 @@
  [email (->* ()
              #:rest (listof pre-content?)
              email?)]
+ [email-string (->* ()
+                    #:rest (listof string?)
+                    email?)]
  [email? (-> any/c boolean?)]
  [affiliation (->* ()
                    (#:position (or/c pre-content? #f)
@@ -367,10 +371,28 @@
 (define (email . text)
   (author-email text))
 
+(define (email-string . text)
+  (define text-escaped
+    (for/list ([str (in-list text)])
+      (escape-email-string str)))
+  (author-email
+   (list
+    (make-element
+     (make-style #f '(exact-chars))
+     text-escaped))))
+
 (define (convert-email email)
   (make-element
    (make-style "SAuthorEmail" command-props)
    (decode-content (email-text email))))
+
+(define escape-email-map
+  #(("#" . "\\#")
+    ("%" . "\\%")))
+(define (escape-email-string str)
+  (for/fold ([str str])
+            ([escape-map (in-vector escape-email-map)])
+    (string-replace str (car escape-map) (cdr escape-map))))
 
 (define (affiliation #:position [position #f]
                      #:institution [institution #f]
