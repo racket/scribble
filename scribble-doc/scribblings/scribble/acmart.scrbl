@@ -161,8 +161,8 @@ Specifies a subtitle.}
                         #f)
                   #f]
                  [#:email email
-                  (or/c pre-content? (listof pre-content?) #f)
-                  #f]
+                  (or/c pre-content? email? (listof email?))
+                  '()]
                  [name pre-content?] ...)
          block?]{
 
