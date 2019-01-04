@@ -491,7 +491,7 @@ label), then the string is typically provided through
 Sometimes, both @litchar{[}...@litchar{]} and
 @litchar["{"]...@litchar["}"] are used, where the former surround
 Racket arguments that precede text to typeset. Finally, if a form is a
-purely Racket-level form with not typeset result, such as a
+purely Racket-level form with no typeset result, such as a
 @racket[require] to import more operations, then typically just
 @litchar["@"] is used.
 
