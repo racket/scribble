@@ -399,7 +399,7 @@ What if you want to provide arguments in text mode, but you also want
 to supply other optional arguments? You can use both
 @litchar{[}...@litchar{]} and @litchar["{"]...@litchar["}"] for an
 operation, as long as the @litchar{[}...@litchar{]} is first, and as
-long as no character separate the closing @litchar{]} from the
+long as no characters separate the closing @litchar{]} from the
 opening @litchar["{"]. For example, calling @racket[italic] is the
 same as using @racket[elem] with the @racket['italic] style:
 
