@@ -175,7 +175,7 @@ The following example illustrates section hyperlinks:
 
 Since the page is so short, the hyperlinks in the above example are
  more effective if you change the @filepath{info.rkt} file to add the
- @racket['multi-file] flag:
+ @racket['multi-page] flag:
 
 @racketblock[
 (define scribblings '(("manual.scrbl" (multi-page))))
