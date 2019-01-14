@@ -1136,6 +1136,7 @@
                                 [(#\↓) "$\\downarrow$"]
                                 [(#\⇒) "$\\Rightarrow$"]
                                 [(#\→) "$\\rightarrow$"]
+                                [(#\⟶) "$\\longrightarrow$"]
                                 [(#\↘) "$\\searrow$"]
                                 [(#\↙) "$\\swarrow$"]
                                 [(#\←) "$\\leftarrow$"]
