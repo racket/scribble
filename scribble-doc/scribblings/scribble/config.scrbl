@@ -75,7 +75,7 @@ a @racket[css-addition] structure instance to a style's @tech{style property}
 list. To map a style name to a Latex macro or environment, add a
 @racket[tex-addition] structure instance. A @racket[css-addition] or
 @racket[tex-addition] is normally associated with the style whose name
-is implemented by the adition, but it can also be added to the style
+is implemented by the addition, but it can also be added to the style
 for an enclosing part.
 
 Scribble includes a number of predefined styles that are used by the
