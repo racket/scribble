@@ -37,7 +37,7 @@
 %%   Right brace   \}     Tilde         \~}
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesClass{acmart}
-[2018/07/16 v1.54 Typesetting articles for the Association for
+[2018/08/12 v1.55 Typesetting articles for the Association for
 Computing Machinery]
 \def\@classname{acmart}
 \InputIfFileExists{acmart-preload-hook.tex}{%
@@ -260,7 +260,7 @@ Computing Machinery]
    \def\@tempb{compress}\ifx\@tempa\@tempb
      \def\NAT@cmprs{\@ne}\fi
    \def\@tempb{nocompress}\ifx\@tempa\@tempb
-     \def\NAT@cmprs{\@z}\fi
+     \def\NAT@cmprs{\z@}\fi
    \def\@tempb{sort&compress}\ifx\@tempa\@tempb
      \def\NAT@sort{\@ne}\def\NAT@cmprs{\@ne}\fi
    \def\@tempb{mcite}\ifx\@tempa\@tempb
@@ -2159,14 +2159,15 @@ Computing Machinery]
 \def\@mkbibcitation{\bgroup
   \def\@pages@word{\ifnum\getrefnumber{TotPages}=1\relax page\else pages\fi}%
   \def\footnotemark{}%
-  \def\\{\unskip{}, \ignorespaces}%
+  \def\\{\unskip{} \ignorespaces}%
   \def\footnote{\ClassError{\@classname}{Please do not use footnotes
       inside a \string\title{} or \string\author{} command! Use
       \string\titlenote{} or \string\authornote{} instead!}}%
   \def\@article@string{\ifx\@acmArticle\@empty{\ }\else,
     Article~\@acmArticle\ \fi}%
   \par\medskip\small\noindent{\bfseries ACM Reference Format:}\par\nobreak
-  \noindent\authors. \@acmYear. \@title
+  \noindent\bgroup
+    \def\\{\unskip{}, \ignorespaces}\authors\egroup. \@acmYear. \@title
   \ifx\@subtitle\@empty. \else: \@subtitle. \fi
   \if@ACM@nonacm\else
     % The 'nonacm' option disables 'printacmref' by default,
