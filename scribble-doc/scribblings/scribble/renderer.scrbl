@@ -170,9 +170,9 @@ information on the @racket[dests] argument.  The @racket[ci] argument
 is a result from the @method[render<%> collect] method.}
 
 @defmethod[(render [srcs (listof part?)]
-                   [dests (listof path-string?)]
+                   [dests (listof (or/c path-string? #f))]
                    [ri resolve-info?])
-           void?]{
+           list?]{
 
 Produces the final output.  The @racket[ri] argument is a result from
 the @method[render<%> render] method.
@@ -182,7 +182,11 @@ HTML output, or names of sub-directories for multi-file HTML output.
 If the @racket[dests] are relative, they're relative to the current
 directory; normally, they should indicates a path within the
 @racket[_dest-dir] supplied on initialization of the @racket[render%]
-object.}
+object.
+
+If an element of @racket[dests] is @racket[#f], then the corresponding
+position of the result list contains a string for rendered document.
+Some renderers require that @racket[dest] contains all path strings.}
 
 
 @defmethod[(serialize-info [ri resolve-info?])
@@ -299,7 +303,284 @@ list are more preferred. The renderer may not support all of the
 formats listed in @racket[image-preferences].
 
 @history[#:changed "1.4" @elem{Added the @racket[image-preferences]
-                               initialization argument.}]}}
+                               initialization argument.}]}
+
+@defmethod[(traverse [parts (listof part?)]
+                     [dests (listof path-string?)])
+           (and/c hash? immutable?)]
+@defmethod[(start-traverse [parts (listof part?)]
+                           [dests (listof path-string?)]
+                           [fp (and/c hash? immutable?)])
+           (and/c hash? immutable?)]
+@defmethod[(traverse-part [p part?]
+                          [fp (and/c hash? immutable?)])
+            (and/c hash? immutable?)]
+@defmethod[(traverse-flow [bs (listof block?)]
+                          [fp (and/c hash? immutable?)])
+           (and/c hash? immutable?)]
+@defmethod[(traverse-block [b block?]
+                           [fp (and/c hash? immutable?)])
+           (and/c hash? immutable?)]
+@defmethod[(traverse-nested-flow [nf nested-flow?]
+                                 [fp (and/c hash? immutable?)])
+           (and/c hash? immutable?)]
+@defmethod[(traverse-table [t table?]
+                           [fp (and/c hash? immutable?)])
+           (and/c hash? immutable?)]
+@defmethod[(traverse-itemization [i itemization?] 
+                                 [fp (and/c hash? immutable?)])
+           (and/c hash? immutable?)]
+@defmethod[(traverse-compound-paragraph [cp compound-paragraph?]
+                                        [fp (and/c hash? immutable?)])
+           (and/c hash? immutable?)]
+@defmethod[(traverse-paragraph [p paragraph?]
+                               [fp (and/c hash? immutable?)])
+           (and/c hash? immutable?)]
+@defmethod[(traverse-content [c content?]
+                             [fp (and/c hash? immutable?)])
+           (and/c hash? immutable?)]
+@defmethod[(traverse-target-element [e target-element?]
+                                    [fp (and/c hash? immutable?)])
+           (and/c hash? immutable?)]
+@defmethod[(traverse-index-element [e index-element?]
+                                   [fp (and/c hash? immutable?)])
+           (and/c hash? immutable?)]{
+
+These methods implement the @tech{traverse pass} of document rendering.
+Except for the entry point @method[render% traverse] as described by
+as described at @xmethod[render<%> traverse], these methods
+generally would not be called to render a document, but instead
+provide natural points to interpose on the default implementation.
+
+A renderer for a specific format is relatively unlikely to override
+any of these methods. Each method accepts the information accumulated
+so far and returns augmented information as a result.}
+
+
+@defmethod[(collect [parts (listof part?)]
+                    [dests (listof path-string?)]
+                    [fp (and/c hash? immutable?)]
+                    [demand (tag? collect-info? . -> . any/c) (lambda (_tag _ci) #f)])
+           collect-info?]
+@defmethod[(start-collect [parts (listof part?)]
+                          [dests (listof path-string?)]
+                          [ci collect-info?])
+           void?]
+@defmethod[(collect-part [p part?]
+                         [parent (or/c #f part?)]
+                         [ci collect-info?]
+                         [number (listof part-number-item?)]
+                         [init-sub-number part-number-item?]
+                         [init-sub-numberers (listof numberer?)])
+            (values part-number-item? numberer?)]
+@defmethod[(collect-part-tags [p part?]
+                              [ci collect-info?]
+                              [number (listof part-number-item?)])
+           void?]
+@defmethod[(collect-flow [bs (listof block?)]
+                         [ci collect-info?])
+           void?]
+@defmethod[(collect-block [b block?]
+                          [ci collect-info?])
+           void?]
+@defmethod[(collect-nested-flow [nf nested-flow?]
+                                [ci collect-info?])
+           void?]
+@defmethod[(collect-table [t table?]
+                          [ci collect-info?])
+           void?]
+@defmethod[(collect-itemization [i itemization?]
+                                [ci collect-info?])
+           void?]
+@defmethod[(collect-compound-paragraph [cp compound-paragraph?]
+                                       [ci collect-info?])
+           void?]
+@defmethod[(collect-paragraph [p paragraph?]
+                              [ci collect-info?])
+           void?]
+@defmethod[(collect-content [c content?]
+                            [ci collect-info?])
+           void?]
+@defmethod[(collect-target-element [e target-element?]
+                                   [ci collect-info?])
+           void?]
+@defmethod[(collect-index-element [e index-element?]
+                                  [ci collect-info?])
+           void?]{
+
+These methods implement the @tech{collect pass} of document rendering.
+Except for the entry point @method[render% collect] as described at
+@xmethod[render<%> collect], these methods generally would not be
+called to render a document, but instead provide natural points to
+interpose on the default implementation.
+
+A renderer for a specific format is most likely to override
+@method[render% collect-part-tags], @method[render%
+collect-target-element], and perhaps @method[render% start-collect] to
+set up and record cross-reference information in a way that is
+suitable for the target format.}
+
+@defmethod[(resolve [parts (listof part?)]
+                    [dests (listof path-string?)]
+                    [ci collect-info?])
+           resolve-info?]
+@defmethod[(start-resolve [parts (listof part?)]
+                          [dests (listof path-string?)]
+                          [ri resolve-info?])
+           void?]
+@defmethod[(resolve-part [p part?]
+                         [ri resolve-info?])
+            void?]
+@defmethod[(resolve-flow [bs (listof block?)]
+                         [enclosing-p part?]
+                         [ri resolve-info?])
+           void?]
+@defmethod[(resolve-block [b block?]
+                         [enclosing-p part?]
+                          [ri resolve-info?])
+           void?]
+@defmethod[(resolve-nested-flow [nf nested-flow?]
+                                [enclosing-p part?]
+                                [ri resolve-info?])
+           void?]
+@defmethod[(resolve-table [t table?]
+                          [enclosing-p part?]
+                          [ri resolve-info?])
+           void?]
+@defmethod[(resolve-itemization [i itemization?]
+                                [enclosing-p part?]
+                                [ri resolve-info?])
+           void?]
+@defmethod[(resolve-compound-paragraph [cp compound-paragraph?]
+                                       [enclosing-p part?]
+                                       [ri resolve-info?])
+           void?]
+@defmethod[(resolve-paragraph [p paragraph?]
+                              [enclosing-p part?]
+                              [ri resolve-info?])
+           void?]
+@defmethod[(resolve-content [c content?]
+                            [enclosing-p part?]
+                            [ri resolve-info?])
+           void?]{
+
+These methods implement the @tech{resolve pass} of document rendering.
+Except for the entry point @method[render% resolve] as described at
+@xmethod[render<%> resolve], these methods generally would not be
+called to render a document, but instead provide natural points to
+interpose on the default implementation.
+
+A renderer for a specific format is unlikely to override any of these
+methods. Each method for a document fragment within a part receives
+the enclosing part as an argument, as well as resolve information as
+@racket[ri] to update.}
+
+
+@defmethod[(render [parts (listof part?)]
+                   [dests (listof (or/c path-string? #f))]
+                   [ri resolve-info?])
+           list?]
+@defmethod[(render-one [part part?]
+                       [ri resolve-info?]
+                       [dest (or/c path-string? #f)])
+           any/c]
+@defmethod[(render-part [p part?]
+                        [ri resolve-info?])
+           any/c]
+@defmethod[(render-part-content [p part?]
+                                [ri resolve-info?])
+           any/c]
+@defmethod[(render-flow [bs (listof block?)]
+                        [enclosing-p part?]
+                        [ri resolve-info?]
+                        [first-in-part-or-item? boolean?])
+           any/c]
+@defmethod[(render-block [b block?]
+                         [enclosing-p part?]
+                         [ri resolve-info?]
+                         [first-in-part-or-item? boolean?])
+           any/c]
+@defmethod[(render-nested-flow [nf nested-flow?]
+                               [enclosing-p part?]
+                               [ri resolve-info?]
+                               [first-in-part-or-item? boolean?])
+           any/c]
+@defmethod[(render-table [t table?]
+                         [enclosing-p part?]
+                         [ri resolve-info?]
+                         [first-in-part-or-item? boolean?])
+           any/c]
+@defmethod[(render-auxiliary-table [t table?]
+                                   [enclosing-p part?]
+                                   [ri resolve-info?])
+           any/c]
+@defmethod[(render-itemization [i itemization?]
+                               [enclosing-p part?]
+                               [ri resolve-info?])
+           any/c]
+@defmethod[(render-compound-paragraph [cp compound-paragraph?]
+                                      [enclosing-p part?]
+                                      [ri resolve-info?]
+                                      [first-in-part-or-item? boolean?])
+           any/c]
+@defmethod[(render-intrapara-block [p paragraph?]
+                                   [enclosing-p part?]
+                                   [ri resolve-info?]
+                                   [first-in-compound-paragraph? boolean?]
+                                   [last-in-compound-paragraph? boolean?]
+                                   [first-in-part-or-item? boolean?])
+           any/c]
+@defmethod[(render-paragraph [p paragraph?]
+                             [enclosing-p part?]
+                             [ri resolve-info?])
+           any/c]
+@defmethod[(render-content [c content?]
+                           [enclosing-p part?]
+                           [ri resolve-info?])
+           any/c]
+@defmethod[(render-other [c (and/c content? (not/c element?) (not/c convertible?))]
+                         [enclosing-p part?]
+                         [ri resolve-info?])
+           any/c]{
+
+These methods implement the @tech{render pass} of document rendering.
+Except for the entry point @method[render% render] as described at
+@xmethod[render<%> render], these methods generally would not be
+called to render a document, but instead provide natural points to
+interpose on the default implementation.
+
+A renderer for a specific format is likely to override most or all of
+these methods. The result of each method can be anything, and the
+default implementations of the methods propagate results and collect
+them into a list as needed. The value of @racket[current-output-port]
+is set by @method[render% render] for each immediate @racket[part]
+before calling @method[render% render-one], so methods might
+individually print to render, or they might return values that are
+used both other methods to print. The interposition points for this
+pass are somewhat different than for other passes:
+
+@itemlist[
+
+ @item{@method[render% render-one] is called by the @method[render%
+       render] method on each immediate @racket[part] in the list for
+       its first argument.}
+
+ @item{@method[render% render-auxiliary-table] is called by the
+       default @method[render% render-block] on any @racket[table]
+       that has the @racket['aux] @tech{style property}.}
+
+ @item{@method[render% render-intrapara-block] is called on blocks
+       within a @racket[compound-paragraph], where the default
+       implementation just chains to @racket[render% render-block].}
+
+
+ @item{@method[render% render-other] is called by the default
+       implementation of @racket[render-content] for any content that
+       does not satisfy @racket[element?] or @racket[convertible?].}
+
+]}
+
+}
 
 @; ----------------------------------------
 

@@ -745,7 +745,7 @@
         ri))
 
     (define/public (start-resolve ds fns ri)
-      (map (lambda (d) (resolve-part d ri)) ds))
+      (for-each (lambda (d) (resolve-part d ri)) ds))
 
     (define/public (resolve-part d ri)
       (parameterize ([current-tag-prefixes
