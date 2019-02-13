@@ -184,7 +184,7 @@ produces the typeset result
                        [#:keep-lang-line? keep? any/c #t]
                        [#:line-numbers line-numbers (or/c #f exact-nonnegative-integer?) #f]
                        [#:line-number-sep line-number-sep exact-nonnegative-integer? 1]
-                       [#:block? block? #t]
+                       [#:block? block? any/c #t]
                        [strs string?] ...)
          block?]{
  A function-based version of @racket[codeblock], allowing you to compute the @racket[strs] arguments.
