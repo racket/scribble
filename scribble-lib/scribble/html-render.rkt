@@ -1937,6 +1937,7 @@
     (define/override (start-collect ds fns ci)
       (parameterize ([current-part-files (make-hash)])
         (for-each (lambda (d fn)
+                    (check-duplicate-filename fn)
                     (parameterize ([collecting-sub
                                     (if (part-style? d 'non-toc)
                                         1
