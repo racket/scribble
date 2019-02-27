@@ -452,6 +452,10 @@ ol ol ol ol { list-style-type: upper-alpha; }
   border: 0;
 }
 
+.SVerbatim {
+  white-space: nowrap;
+}
+
 .SAuthorListBox {
   position: relative;
   float: right;

@@ -759,7 +759,7 @@
     ;; and non-strings --- to a paragraph for the line:
     (let* ([line (indent (strs->elts line))])
       (list (make-paragraph omitable-style (make-nonempty line)))))
-  (make-table plain (map make-line lines)))
+  (make-table (make-style "SVerbatim" null) (map make-line lines)))
 
 (define omitable-style (make-style 'omitable null))
 
