@@ -388,7 +388,7 @@
 \newcommand{\Svcenter}[1]{$\vcenter{#1}$}
 
 % Verbatim
-\newenvironment{SVerbatim}{}{}
+\newenvironment{SVerbatim}{\let\Sscribtextttold\Scribtexttt\renewcommand{\Scribtexttt}[1]{\mbox{\Sscribtextttold{##1}}}}{}
 
 % Helper to work around a problem with "#"s for URLs within \href
 % within other macros:
