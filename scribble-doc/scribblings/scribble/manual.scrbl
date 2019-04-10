@@ -1,4 +1,4 @@
-s are #lang scribble/doc
+#lang scribble/doc
 @(require scribble/manual "utils.rkt"
           (for-syntax racket/base)
           (for-label scribble/manual-struct
