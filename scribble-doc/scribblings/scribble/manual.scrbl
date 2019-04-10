@@ -1,4 +1,4 @@
-#lang scribble/doc
+s are #lang scribble/doc
 @(require scribble/manual "utils.rkt"
           (for-syntax racket/base)
           (for-label scribble/manual-struct
@@ -686,7 +686,7 @@ specified explicitly with @racket[#:packages]. Each @racket[pkg-expr]
 result is passed on to a function like @racket[tt] for
 typesetting. Provide an empty sequence after @racket[#:packages] to
 suppress any package name in the output. Each @racket[pkg-expr]
-expression is are duplicated for a  @racket[declare-exporting] form,
+expression is duplicated for a  @racket[declare-exporting] form,
 unless @racket[#:no-declare] is specified.
 
 Each @racket[option] form can appear at most once, and @racket[#:lang]
