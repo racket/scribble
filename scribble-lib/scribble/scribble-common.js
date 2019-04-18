@@ -169,10 +169,10 @@ AddOnLoad(function(){
     indicator.style.display = "block";
   });
 
-// Pressing "S" focuses on the "...search manuals..." text field
+// Pressing "S" or "s" focuses on the "...search manuals..." text field
 AddOnLoad(function(){
-  window.addEventListener("keypress", function(event) {
-    if (event && event.charCode == 115 && event.target == document.body) {
+  window.addEventListener("keyup", function(event) {
+    if (event && (event.keyCode == 83 || event.keyCode == 115) && event.target == document.body) {
       var field = document.getElementsByClassName("searchbox")[0];
       field.focus();
     }
