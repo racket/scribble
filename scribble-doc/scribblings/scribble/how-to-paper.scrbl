@@ -1,7 +1,7 @@
 #lang scribble/doc
 @(require scribble/manual scribble/bnf "utils.rkt"
           pict
-          (for-label scriblib/figure scribble/base scribble/sigplan
+          (for-label scriblib/figure scribble/base (only-in scribble/acmart abstract)
                      (except-in pict table)))
 
 @(define-syntax-rule (samplemod . text) (codeblock . text))
@@ -176,7 +176,7 @@ probably need a different topic. But you can start making the current
 content look right by changing the first line to
 
           @samplemod|{
-            #lang scribble/sigplan
+            #lang scribble/acmart
           }|
 
 If you're instead working toward Racket library documentation,
@@ -192,15 +192,15 @@ top-level sections turned into chapters that each start on a new page.
 If you have split the document into multiple files, the first line of
 the main document file determines the output format.
 
-Using @racketmodname[scribble/sigplan] or
+Using @racketmodname[scribble/acmart] or
 @racketmodname[scribble/manual] does not change the rendered HTML for
 a document---aside from @racketmodname[scribble/manual] adding a
 version number---but it changes the set of bindings available in the
-document body. For example, with @racketmodname[scribble/sigplan], the
+document body. For example, with @racketmodname[scribble/acmart], the
 introductory text can be marked as an abstract:
 
           @samplemod|{
-            #lang scribble/sigplan
+            #lang scribble/acmart
 
             @title{On the Cookie-Eating Habits of Mice}
 
@@ -221,7 +221,7 @@ When a document is implemented across multiple files, changing the
 language of the main document can set the style for all of the parts,
 but it does not introduce bindings into the other part files. For
 example, if you change the language of @filepath{mouse.scrbl} to
-@racketmodname[scribble/sigplan], then @racket[abstract] becomes
+@racketmodname[scribble/acmart], then @racket[abstract] becomes
 available in @filepath{mouse.scrbl} but not in @filepath{milk.scrbl}
 or @filepath{straw.scrbl}. In other words, operator names are
 lexically scoped.
@@ -230,7 +230,7 @@ lexically scoped.
 @section{More Functions}
 
 The @racketmodname[scribble/base] language provides a collection of
-basic operations (and The @racketmodname[scribble/sigplan] and
+basic operations (both @racketmodname[scribble/acmart] and
 @racketmodname[scribble/manual] are supersets of
 @racketmodname[scribble/base]). Many of the operations are style
 variations that you can apply to text:
@@ -573,7 +573,7 @@ and @litchar{'} to suitable curly quotes.
 The decoding process for document's stream is ultimately determined by
 the @hash-lang[] line that starts the document.  The
 @racketmodname[scribble/base], @racketmodname[scribble/manual], and
-@racketmodname[scribble/sigplan] languages all use the same
+@racketmodname[scribble/acmart] languages all use the same
 @racket[decode] operation.  The @racketmodname[scribble/text] language,
 however, acts more like a plain-text generator and preprocessor, and it
 does not perform any such decoding rules.  (For more on
