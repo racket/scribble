@@ -27,7 +27,7 @@ from run-time code, and documentation information is recorded in a
 submodule to be separately loadable from the enclosing module.
 
 For an example use, see the @filepath{file} collection's
-@link["https://github.com/racket/gui/blob/master/gui-lib/mrlib/gif.rkt"]{@filepath{gif.rkt}}
+@link["https://github.com/racket/draw/blob/master/draw-lib/file/gif.rkt"]{@filepath{gif.rkt}}
 source file and the corresponding extraction in
 @link["https://github.com/racket/racket/blob/master/pkgs/racket-doc/file/scribblings/gif.scrbl"]{@filepath{scribblings/gif.scrbl}}.
 As that example illustrates, starting the module declaration with
