@@ -830,7 +830,7 @@ The @racket[_get] procedure passed to @racket[traverse] takes a symbol
 and any value to act as a default; it returns information registered
 for the symbol or the given default if no value has been
 registered. The @racket[_set] procedure passed to @racket[traverse]
-takes a symbol and a value to registered for the symbol.
+takes a symbol and a value to be registered for the symbol.
 
 @margin-note*{See also @racket[cond-block] in @racketmodname[scriblib/render-cond].}
 @;
