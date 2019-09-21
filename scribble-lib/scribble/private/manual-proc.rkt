@@ -40,7 +40,7 @@
    (case n [(1) "("] [(0) ""] [(2) "(("] [else (make-string n #\()])))
 (define (make-closers n)
   (racketparenfont
-   (case n [(1) ")"] [(0) ""] [(2) "))"] [else (make-string n #\()])))
+   (case n [(1) ")"] [(0) ""] [(2) "))"] [else (make-string n #\))])))
 
 (define-syntax (arg-contract stx)
   (syntax-case stx (... ...+ _...superclass-args...)
@@ -207,13 +207,13 @@
                     (list (result-value value.value) ...)))))]))
 
 (define-struct arg
-  (special? kw id optional? starts-optional? ends-optional? num-closers))
+  (special? kw id optional? starts-optional? ends-optional? depth))
 
 (define (*defproc kind link? mode within-id
                   stx-ids sym prototypes arg-contractss arg-valss result-contracts content-thunk
                   [result-values (map (lambda (x) #f) result-contracts)])
   (define max-proto-width (current-display-width))
-  (define ((arg->elem show-opt-start?) arg)
+  (define ((arg->elem show-opt-start?) arg next-depth)
     (let* ([e (cond [(not (arg-special? arg))
                      (if (arg-kw arg)
                        (if (eq? mode 'new)
@@ -235,10 +235,11 @@
            [e (if (arg-ends-optional? arg)
                 (make-element #f (list e "]"))
                 e)]
-           [e (if (zero? (arg-num-closers arg))
+           [num-closers (- (arg-depth arg) next-depth)]
+           [e (if (zero? num-closers)
                 e
                 (make-element
-                 #f (list e (make-closers (arg-num-closers arg)))))])
+                 #f (list e (make-closers num-closers))))])
       (if (and show-opt-start? (arg-starts-optional? arg))
         (make-element #f (list "[" e))
         e)))
@@ -258,21 +259,23 @@
                            (not next-optional?)
                            (not next-special-dots?)))
                   depth)))
-    (let loop ([p p] [last-depth 0])
+    (let loop ([p p] [depth 0])
+      (define head
+        (if (symbol? (car p))
+            null
+            (loop (car p) (add1 depth))))
       (append
-       (if (symbol? (car p))
-         null
-         (loop (car p) (add1 last-depth)))
-       (let loop ([p (cdr p)][in-optional? #f])
+       head
+       (let loop ([p (cdr p)] [in-optional? #f])
          (cond
            [(null? p) null]
            [(null? (cdr p))
-            (list (parse-arg (car p) in-optional? last-depth #f #f))]
+            (list (parse-arg (car p) in-optional? depth #f #f))]
            [else
             (let ([a (parse-arg
                       (car p)
                       in-optional?
-                      0
+                      depth
                       (let ([v (cadr p)])
                         (and (pair? v)
                              (not
@@ -282,6 +285,10 @@
               (cons a (loop (cdr p)
                             (and (arg-optional? a)
                                  (not (arg-ends-optional? a))))))])))))
+  (define (next-args-depth args)
+    (if (null? args)
+        0
+        (arg-depth (car args))))
   (define (prototype-size args first-combine next-combine special-combine?)
     (let loop ([s args] [combine first-combine])
       (if (null? s)
@@ -289,7 +296,7 @@
         (combine
          (loop (cdr s) next-combine)
          (let ([a (car s)])
-           (+ (arg-num-closers a)
+           (+ (- (arg-depth a) (next-args-depth (cdr s)))
               (if (arg-special? a)
                 (string-length (symbol->string (arg-id a)))
                 (+ (if (arg-kw a)
@@ -468,11 +475,19 @@
                   #f
                   `(,(make-openers (add1 p-depth))
                     ,tagged
+                    ,(let ([num-closers (- p-depth (next-args-depth args))])
+                       (if (zero? num-closers)
+                           '()
+                           (make-closers num-closers)))
                     ,@(if (null? args)
                           (list (make-closers p-depth))
-                          (append-map (lambda (arg)
-                                        (list spacer ((arg->elem #t) arg)))
-                                      args))
+                          (let loop ([args args])
+                            (cond
+                              [(null? args) null]
+                              [else
+                               (append
+                                (list spacer ((arg->elem #t) (car args) (next-args-depth (cdr args))))
+                                (loop (cdr args)))])))
                     ,(racketparenfont ")"))))
                 (if result-next-line? null end))))
              ;; The multi-line case:
@@ -498,7 +513,7 @@
                         (if (arg-starts-optional? (car args))
                             (to-flow (make-element #f (list spacer "[")))
                             flow-spacer)
-                        (to-flow ((arg->elem #f) (car args)))
+                        (to-flow ((arg->elem #f) (car args) (next-args-depth (cdr args))))
                         not-end)
                        (list* 'cont 'cont not-end)))
                   (let loop ([args (if one-ok? (cdr args) args)])
@@ -517,12 +532,13 @@
                             (if (arg-starts-optional? (car args))
                                 (to-flow (make-element #f (list spacer "[")))
                                 flow-spacer)
-                            (let ([a ((arg->elem #f) (car args))]
+                            (let ([a ((arg->elem #f) (car args) (next-args-depth (cdr args)))]
                                   [next (if dots-next?
                                             (make-element
                                              #f (list spacer
                                                       ((arg->elem #f)
-                                                       (cadr args))))
+                                                       (cadr args)
+                                                       (next-args-depth (cddr args)))))
                                             "")])
                               (to-flow
                                (cond
