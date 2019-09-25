@@ -577,7 +577,7 @@
       [(_ id contract desc)
        (begin
          (unless (identifier? #'id)
-           (raise-syntax-error 'parameter/doc 
+           (raise-syntax-error 'thing-doc
                                "expected an identifier"
                                stx
                                #'id))
