@@ -1,5 +1,6 @@
 #lang racket/base
 (require racket/contract/base
+         racket/class
          (for-syntax racket/base
                      racket/require-transform
                      racket/provide-transform
