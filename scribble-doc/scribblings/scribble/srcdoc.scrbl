@@ -185,7 +185,9 @@ See @racket[defform] for information on @racket[options],
 Like @racket[proc-doc], but for class declarations that use @racket[class*].
 
 The @racket[id], @racket[super], and @racket[intf-id] expressions have the same
-meaning as in @racket[defclass].}
+meaning as in @racket[defclass].
+
+@history[#:added "1.30"]}
 
 
 @defform[(class-doc id super pre-flow)]{
@@ -194,7 +196,9 @@ Like @racket[class*-doc], but for class declarations that use @racket[class]
 omitting @racket[interface-expr]s.
 
 The @racket[id], and @racket[super] expressions have the same meaning as in
-@racket[defclass].}
+@racket[defclass].
+
+@history[#:added "1.30"]}
 
 
 @defform[(begin-for-doc form ...)]{
