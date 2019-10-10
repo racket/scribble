@@ -1,6 +1,5 @@
+#lang mzscheme
 
-(module config mzscheme
+(provide value-color)
 
-  (provide value-color)
-
-  (define value-color "schemevalue"))
+(define value-color "schemevalue")
