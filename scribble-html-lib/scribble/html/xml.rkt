@@ -33,7 +33,7 @@
   (let loop ([xs xs] [as '()])
     (define a (and (pair? xs) (attribute->symbol (car xs))))
     (cond [(not a) (values (reverse as) xs)]
-          [(null? (cdr xs)) (error 'attriubtes+body
+          [(null? (cdr xs)) (error 'attributes+body
                                    "missing attribute value for `~s:'" a)]
           [else (loop (cddr xs) (cons (cons a (cadr xs)) as))])))
 
