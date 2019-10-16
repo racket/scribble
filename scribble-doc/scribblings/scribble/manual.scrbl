@@ -2201,7 +2201,7 @@ For HTML rendering:
        @filepath{manual-style.css} from the @filepath{scribble}
        collection in @racket[html-defaults].}
 
- @item{The file @filepath{manual-files.css} from the
+ @item{The file @filepath{manual-fonts.css} from the
        @filepath{scribble} collection is designated as an additional
        accompanying file in @racket[html-defaults].}
 
