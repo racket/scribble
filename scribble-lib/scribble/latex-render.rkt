@@ -471,6 +471,7 @@
               (cond
                [(symbol? style-name)
                 (case style-name
+                  [(emph) (wrap e "emph" tt?)]
                   [(italic) (wrap e "textit" tt?)]
                   [(bold) (wrap e "textbf" tt?)]
                   [(tt) (wrap e "Scribtexttt" #t)]

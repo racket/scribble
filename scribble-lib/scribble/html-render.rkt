@@ -1607,6 +1607,7 @@
        (cond
         [(symbol? name)
          (case name
+           [(emph) '([class "emph"])]
            [(italic) '([style "font-style: italic"])]
            [(bold) '([style "font-weight: bold"])]
            [(tt) '([class "stt"])]
