@@ -467,7 +467,9 @@ gets progressively smaller.}
 gets progressively larger.}
 
 @defproc[(emph [pre-content pre-content?] ...) element?]{
-The same as @racket[italic].}
+Like @racket[elem], but emphasised. Typically, italics are used for
+emphasis. Uses of @racket[emph] can be nested; typically this causes
+the text to alternate between italic and upright.}
 
 @defproc[(literal [str string?] ...+) element?]{
 

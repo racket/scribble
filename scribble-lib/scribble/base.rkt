@@ -258,7 +258,7 @@
   (make-element 'larger (decode-content str)))
 
 (define (emph . str)
-  (make-element 'italic (decode-content str)))
+  (make-element 'emph (decode-content str)))
 
 (define (tt . str)
   (let* ([l (decode-content str)]

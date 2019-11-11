@@ -216,6 +216,9 @@
     (define (italic? i)
       (and (element? i) (eq? (element-style i) 'italic)))
 
+    (define (emph? i)
+      (and (element? i) (eq? (element-style i) 'emph)))
+
     (define (code? i)
       (and (element? i)
            (let ([s (element-style i)])
@@ -258,6 +261,12 @@
 
         [(and (italic? i) (not (in-italic?)) (not (in-code?)))
           (recurse-wrapped "_" in-italic?)]
+
+        [(and (emph? i) (not (in-code?)))
+         (display "​_") ;; zero-width space, underscore
+         (begin0
+             (super render-content i part ri)
+           (display "_​"))] ;; underscore, zero-width space
 
         [(and (preserve-spaces? i) (not (preserving-spaces?)))
           (parameterize ([preserving-spaces? #t])
@@ -378,4 +387,3 @@
             ([ptn (map car ptns&reps)]
              [rep (map cdr ptns&reps)])
     (regexp-replace* ptn str rep)))
-

@@ -30,6 +30,26 @@
   font-weight: bold;
 }
 
+/* Emphasis: alternate italics and normal as we nest */
+.emph {
+  font-style: italic;
+}
+.emph .emph {
+  font-style: normal;
+}
+.emph .emph .emph {
+  font-style: italic;
+}
+.emph .emph .emph .emph {
+  font-style: normal;
+}
+.emph .emph .emph .emph .emph {
+  font-style: italic;
+}
+.emph .emph .emph .emph .emph .emph {
+  font-style: normal;
+}
+
 /* ---------------------------------------- */
 
 p, .SIntrapara {
