@@ -1958,7 +1958,7 @@ arguments to the element's command in Latex output.}
 @defstruct[command-optional ([arguments (listof string?)])]{
                                                   
  Used as a @tech{style property} on a @racket[element] to add
- a optional arguments to the element's command in Latex output.
+ optional arguments to the element's command in Latex output.
 
  @history[#:added "1.20"]
 }
