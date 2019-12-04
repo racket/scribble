@@ -332,7 +332,7 @@ The style classes:
 
   [@css{versionbox} @elem{Outer wrapper for version}]
   [@css{version} @elem{Inner wrapper for version in the case of search box and/or navigation.}]
-  [@css{versionNoNav} @elem{Inner wrapper for version in the acse of no search box and navigation.}]
+  [@css{versionNoNav} @elem{Inner wrapper for version in the case of no search box and navigation.}]
 
   [@spacer @spacer]
 
