@@ -621,7 +621,7 @@
 
 (define (authors name . names*)
   (define names (map parse-author (cons name names*)))
-  (define slash-names (string-join (map author-element-names names) " / "))
+  (define slash-names (string-join (map (compose1 content->string author-element-names) names) " / "))
   (define cite
     (case (length names)
       [(1) (author-element-cite (car names))]

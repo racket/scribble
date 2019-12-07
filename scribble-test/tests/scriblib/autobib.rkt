@@ -55,7 +55,6 @@
   (check-equal? (book-location #:edition "4th")
                 (mk-bookloc-elem/ed "4th")))
 
-
 (test-case "techrpt-location"
   (check-not-exn
     (λ () (techrpt-location #:institution "MIT" #:number 'AIM-353)))
@@ -71,3 +70,31 @@
     (λ () (dissertation-location #:institution "Georgetown University" #:degree "BS")))
   (check-exn exn:fail:contract?
     (λ () (dissertation-location #:degree "PhD"))))
+
+(test-case "authors"
+  ;; Define authors, make a bibliography
+  ;; https://github.com/racket/scribble/issues/216
+
+  (check-not-exn
+    (lambda ()
+      (define-cite cite citet gen-bib)
+      (define x*
+        (map
+          cite
+          (list
+            (make-bib
+              #:title "Histoire d'une Montagne"
+              #:author (authors "Elisée Reclus"))
+            (make-bib
+              #:title "The Jeffersonians"
+              #:author (authors "Richard B. Morris" "James Leslie Woods"))
+            (make-bib
+              #:title "Lucifer Magazine"
+              #:author (authors "H.P. Blavatsky" (other-authors)))
+            (make-bib
+              #:title "Dean's Electronics"
+              #:author (authors (org-author-name "robco") (org-author-name (authors "industries"))
+                                (editor "mister") (editor (authors "crowley"))
+                                (other-authors))))))
+      (gen-bib))))
+
