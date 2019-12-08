@@ -151,7 +151,9 @@
                   (install-file style-file))))
         (when whole-doc?
           (printf "\\begin{document}\n\\preDoc\n")
-          (when (part-title-content d)
+          (when (and (part-title-content d)
+                     (not (and (part-style? d 'hidden)
+                               (equal? "" (content->string (part-title-content d))))))
             (let ([vers (extract-version d)]
                   [date (extract-date d)]
                   [pres (extract-pretitle-content d)]
@@ -166,7 +168,6 @@
                    (do-render-nested-flow pre d ri #t #f #t)]))
               (when date (printf "\\date{~a}\n" date))
               (printf "\\titleAnd~aVersionAnd~aAuthors~a{"
-                      
                       (if (equal? vers "") "Empty" "")
                       (if (null? auths) "Empty" "")
                       (if short "AndShort" ""))
