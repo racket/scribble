@@ -599,10 +599,6 @@ The currently recognized @tech{style properties} are as follows:
  @item{@racket[attributes] structure --- Provides additional HTML
        attributes for the @tt{<p>}, @tt{<div>}, or alternate tag.}
 
- @item{@racket[body-id] structure --- For HTML, uses the given string
-       as an @tt{id} attribute of the @tt{<p>}, @tt{<div>}, or
-       alternate tag.}
-
  @item{@indexed-racket['never-indents] --- For Latex and @tech{compound
        paragraphs}; see @racket[compound-paragraph].}
 
@@ -658,9 +654,6 @@ The following @tech{style properties} are currently recognized:
  @item{@racket[attributes] structure --- Provides additional HTML
        attributes for the @tt{<table>} tag.}
 
- @item{@racket[body-id] structure --- For HTML, uses the given string
-       as an @tt{id} attribute of the @tt{<table>} tag.}
-
  @item{@indexed-racket['aux] --- For HTML, include the table in the
        table-of-contents display for the enclosing part.}
 
@@ -706,9 +699,6 @@ The following @tech{style properties} are currently recognized:
 
  @item{@racket[attributes] structure --- Provides additional HTML
        attributes for the @tt{<ul>} or @tt{<ol>} tag.}
-
- @item{@racket[body-id] structure --- For HTML, uses the given string
-       as an @tt{id} attribute of the @tt{<ul>} or @tt{<ol>} tag.}
 
  @item{@indexed-racket['never-indents] --- For Latex and @tech{compound
        paragraphs}; see @racket[compound-paragraph].}
@@ -757,9 +747,6 @@ The following @tech{style properties} are currently recognized:
 
  @item{@racket[attributes] structure --- Provides additional HTML
        attributes for the @tt{<blockquote>} tag.}
-
- @item{@racket[body-id] structure --- For HTML, uses the given string
-       as an @tt{id} attribute of the @tt{<blockquote>} tag.}
 
  @item{@indexed-racket['never-indents] --- For Latex and @tech{compound
        paragraphs}; see @racket[compound-paragraph].}
@@ -810,9 +797,6 @@ for Latex output (see @secref["extra-style"]). The following
 
  @item{@racket[attributes] structure --- Provides additional HTML
        attributes for the @tt{<p>} or alternate tag.}
-
- @item{@racket[body-id] structure --- For HTML, uses the given string
-       as an @tt{id} attribute of the @tt{<p>} or alternate tag.}
 
  @item{@indexed-racket['never-indents] --- For Latex within another
        @tech{compound paragraph}; see above.}
@@ -922,9 +906,6 @@ The following @tech{style properties} are currently recognized:
 
  @item{@racket[xexpr-property] structure --- For HTML, supplies literal
        HTML to render before and after @racket[content].}
-
-  @item{@racket[body-id] structure --- For HTML uses the given
-        string as an @tt{id} attribute of the @tt{<span>} tag.}
 
   @item{@indexed-racket['aux] --- Intended for use in titles, where the
         auxiliary part of the title can be omitted in hyperlinks. See,
@@ -1827,7 +1808,7 @@ Like @racket[css-style-addition], but for a JavaScript file instead of a CSS fil
 @defstruct[body-id ([value string?])]{
 
 Used as a @tech{style property} to associate an @tt{id} attribute with
-an HTML tag.}
+an HTML tag within a main @racket[part].}
 
 
 @defstruct[document-source ([module-path module-path?])]{
