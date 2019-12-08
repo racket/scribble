@@ -1,5 +1,5 @@
 #lang scribble/manual
-@(require (for-label scribble/core
+@(require (for-label (only-in scribble/core content?)
                      scribble/struct
                      scriblib/autobib
                      scheme/base
