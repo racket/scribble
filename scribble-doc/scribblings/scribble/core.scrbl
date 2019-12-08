@@ -441,6 +441,14 @@ The recognized @tech{style properties} are as follows:
        listing except when those sub-parts are top-level entries in
        the listing.}
 
+ @item{@indexed-racket['no-toc+aux] --- As a @tech{style property} for
+       the main part of a rendered page, causes the HTML output to not
+       include a margin box for the main table of contents, ``on this
+       page'', or tables with the @racket['aux] style property. The
+       @racket['no-toc+aux] property effectively implies
+       @racket['no-toc] and @racket['no-sidebar], but also suppresses
+       @racket['aux] tables.}
+
  @item{@indexed-racket['no-toc] --- As a @tech{style property} for the main part of a
        rendered page, causes the HTML output to not include a margin box
        for the main table of contents; the ``on this page'' box that
@@ -541,7 +549,8 @@ sub-parts).
 The @racket[parts] field contains sub-parts.
 
 @history[#:changed "1.25" @elem{Added @racket['no-index] support.}
-         #:changed "1.26" @elem{Added @racket[link-render-style] support.}]}
+         #:changed "1.26" @elem{Added @racket[link-render-style] support.}
+         #:changed "1.27" @elem{Added @racket['no-toc+aux] support.}]}
 
 
 @defstruct[paragraph ([style style?] [content content?])]{

@@ -905,7 +905,9 @@
                        (head-extra-xexpr p)))
                  (body ([id ,(or (extract-part-body-id d ri)
                                  "scribble-racket-lang-org")])
-                   ,@(render-toc-view d ri)
+                   ,@(if (part-style? d 'no-toc+aux)
+                         null
+                         (render-toc-view d ri))
                    (div ([class "maincolumn"])
                      (div ([class "main"])
                        ,@(parameterize ([current-version (extract-version d)])
