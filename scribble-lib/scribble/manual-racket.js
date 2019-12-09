@@ -18,6 +18,7 @@ AddOnLoad(function() {
 function AddPartTitleOnClick(elem) {
     var mod_path = elem.getAttribute("x-source-module");
     var tag = elem.getAttribute("x-part-tag");
+    var pkg_url = elem.getAttribute("x-source-pkg-url");
     if (mod_path && tag) {
         // Might not be present:
         var prefixes = elem.getAttribute("x-part-prefixes");
@@ -77,6 +78,20 @@ function AddPartTitleOnClick(elem) {
             info.appendChild(line1x);
         if (is_long)
             info.appendChild(line2);
+
+        /* Add url to the document source code */
+        if (pkg_url) {
+          info.appendChild(document.createTextNode("Document source "));
+          var url_line = document.createElement("div");
+          var a = document.createElement("a");
+          a.href = pkg_url;
+          a.style.whiteSpace = "nowrap";
+          a.appendChild(document.createTextNode(pkg_url));
+          add(url_line, "\xA0", "RktRdr");
+          url_line.appendChild(a);
+          info.appendChild(url_line);
+        }
+
 
         info.style.display = "none";
 

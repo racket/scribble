@@ -15,6 +15,7 @@
          setup/collects
          setup/dirs
          net/url
+         net/url-string
          net/uri-codec
          net/base64
          scheme/serialize
@@ -814,6 +815,9 @@
     (define/public (extract-part-source d ri)
       (extract-inherited d ri document-source? document-source-module-path))
 
+    (define/public (extract-part-pkg-url d ri)
+      (extract-inherited d ri package-source? values))
+
     (define/public (part-nesting-depth d ri)
       0)
 
@@ -1124,22 +1128,52 @@
                                           (and (pair? t)
                                                (eq? 'part (car t))
                                                (= 2 (length t))
-                                               (cadr t)))])
+                                               (cadr t)))]
+                                [pkg-src (extract-part-pkg-url d ri)])
                             (if (and src taglet)
+                              (let*-values ([(path)
+                                             (resolved-module-path-name
+                                               (module-path-index-resolve
+                                                 (module-path-index-join src #f)))]
+                                            [(pkg subpath)
+                                             (if (path? path)
+                                               (path->pkg+subpath path #:cache pkg-cache)
+                                               (values #f #f))])
                                 `([x-source-module ,(format "~s" src)]
-                                  ,@(let* ([path (resolved-module-path-name
-                                                  (module-path-index-resolve
-                                                   (module-path-index-join src #f)))]
-                                           [pkg (and (path? path)
-                                                     (path->pkg path #:cache pkg-cache))])
-                                      (if pkg
-                                          `([x-source-pkg ,pkg])
-                                          null))
+                                  ,@(if pkg
+                                        `([x-source-pkg ,pkg])
+                                        null)
+                                  ,@(if pkg-src
+                                      (let ([pkg-url (package-source-base pkg-src)]
+                                            [subpath-target (package-source-subpath-target pkg-src)])
+                                        `([x-source-pkg-url
+                                            ,(url->string
+                                               (url ;; maybe update the query & fragment
+                                                 (url-scheme pkg-url)
+                                                 (url-user pkg-url)
+                                                 (url-host pkg-url)
+                                                 (url-port pkg-url)
+                                                 (url-path-absolute? pkg-url)
+                                                 (if (and (eq? #t subpath-target) (path? subpath))
+                                                   (append
+                                                     (url-path pkg-url)
+                                                     (for/list ((pth (in-list (explode-path subpath)))
+                                                                #:when (path? pth))
+                                                       (path/param (path->string pth) '())))
+                                                   (url-path pkg-url))
+                                                 (if (and (symbol? subpath-target) (path? subpath))
+                                                   (for/list ((kv (in-list (url-query pkg-url))))
+                                                     (if (eq? subpath-target (car kv))
+                                                       (cons (car kv) (string-append (cdr kv) "/" (path->string subpath)))
+                                                       kv))
+                                                   (url-query pkg-url))
+                                                 (url-fragment pkg-url)))]))
+                                      null)
                                   ,@(let ([prefixes (current-tag-prefixes)])
                                       (if (null? prefixes)
                                           null
                                           `([x-part-prefixes ,(format "~s" prefixes)])))
-                                  [x-part-tag ,(format "~s" taglet)])
+                                  [x-part-tag ,(format "~s" taglet)]))
                                 '()))
                          ,@(format-number number '((tt nbsp)))
                          ,@(map (lambda (t)

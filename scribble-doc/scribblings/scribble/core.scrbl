@@ -524,6 +524,11 @@ The recognized @tech{style properties} are as follows:
         module path plus a section-tag string, so that the user can
         create a reference to the section.}
 
+ @item{@racket[package-source] structure --- For HTML, provides a
+        URL for the part's source Scribble file. Clicking on an HTML section
+        title generated for the part or its sub-parts may show this URL so
+        that a user can suggest patches to the source code.}
+
  @item{@racket[link-render-style] structure --- Determines the default
        rendering of links to sections or other destinations within the
        section. See also @racket[link-element] and
@@ -1830,6 +1835,27 @@ clicking a title show cross-reference information.
          #:changed "1.9" @elem{Added @tt{x-source-pkg}.}]}
 
 
+@defstruct[package-source ([base url?] [subpath-target (or/c #f #t symbol?)])]{
+
+Used as a @tech{style property} to associate a URL with a part.
+Clicking on a section title within the part may show a URL to help
+readers find the Scribble source code of the part.
+
+More specifically, the section title is given the HTML attribute
+@tt{x-source-pkg-url} and the @racket[scribble/manual] style recognizes
+this tag to make the generated URL visible on click.
+
+If the @racket[_subpath-target] field is @racket[#true], then the base URL
+ may be extended with a module path to an enclosing part.
+If the @racket[_subpath-target] field is a symbol, then the base URL
+ may be extended with a query association from the symbol to a module path
+ (if the base URL contains an association, then it is extended).
+
+See also @secref{make-package-source}.
+
+@history[#:added "1.33"]}
+
+
 @defstruct[html-defaults ([prefix (or/c bytes? path-string? 
                                         (cons/c 'collects (listof bytes?)))]
                           [style (or/c bytes? path-string? 
@@ -1961,3 +1987,27 @@ arguments to the element's command in Latex output.}
 
  @history[#:added "1.20"]
 }
+
+@; ----------------------------------------
+
+@section[#:tag "make-package-source"]{Package Source Constructors}
+
+@defproc[(exact-source-url [url (or/c string? url?)]) package-source?]{
+  Similar to @racket[(package-source url #f)].
+}
+
+@defproc[(github-source-url [user (or/c symbol? string?)]
+                            [repo (or/c symbol? string?)]
+                            [#:path path (or/c #f symbol? string?) #f]
+                            [#:branch branch (or/c #f symbol? string?) #f]) package-source?]{
+  TODO
+}
+
+
+@defproc[(gitlab-source-url [user (or/c symbol? string?)]
+                            [repo (or/c symbol? string?)]
+                            [#:path path (or/c #f symbol? string?) #f]
+                            [#:branch branch (or/c #f symbol? string?) #f]) package-source?]{
+  TODO x
+}
+
