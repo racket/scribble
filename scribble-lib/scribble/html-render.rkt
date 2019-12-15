@@ -226,6 +226,7 @@
         ([class "searchbox"]
          [style ,(sa "color: "dimcolor";")]
          [type "text"]
+         [tabindex "1"]
          [value ,emptylabel]
          [title "Enter a search string to search the manuals"]
          [onkeypress ,(format "return DoSearchKey(event, this, ~s, ~s);"
