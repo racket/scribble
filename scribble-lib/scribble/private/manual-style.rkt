@@ -4,7 +4,7 @@
          "../base.rkt"
          (only-in "../basic.rkt" aux-elem itemize)
          "../scheme.rkt"
-         (only-in "../core.rkt" make-style plain
+         (only-in "../core.rkt" content? make-style plain
                   make-nested-flow nested-flow? box-mode box-mode*
                   [element? core:element?])
          "manual-utils.rkt"
@@ -31,7 +31,7 @@
 (provide-styling racketmodfont racketoutput
                  racketerror racketfont racketplainfont racketvalfont racketidfont racketvarfont
                  racketcommentfont racketparenfont racketkeywordfont racketmetafont
-                 onscreen defterm filepath exec envvar Flag DFlag PFlag DPFlag math
+                 onscreen defterm filepath envvar Flag DFlag PFlag DPFlag math
                  procedure
                  indexed-file indexed-envvar idefterm pidefterm)
 (provide
@@ -59,7 +59,8 @@
  [inset-flow (() () #:rest (listof pre-content?) . ->* . nested-flow?)]
  [litchar (() () #:rest (listof string?) . ->* . element?)]
  [t (() () #:rest (listof pre-content?) . ->* . paragraph?)]
- [commandline (() () #:rest (listof pre-content?) . ->* . paragraph?)]
+ [exec (() () #:rest (listof content?) . ->* . element?)]
+ [commandline (() () #:rest (listof content?) . ->* . paragraph?)]
  [menuitem (string? string? . -> . element?)])
 
 (define PLaneT (make-element "planetName" '("PLaneT")))

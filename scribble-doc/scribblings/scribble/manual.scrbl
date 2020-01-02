@@ -1714,9 +1714,8 @@ Typesets the given combination of a GUI's menu and item name.}
 @tech{decode}d @racket[pre-content] as a file name (e.g., in
 typewriter font and in quotes).}
 
-@defproc[(exec [pre-content pre-content?] ...) element?]{Typesets the
-@tech{decode}d @racket[pre-content] as a command line (e.g., in
-typewriter font).}
+@defproc[(exec [content content?] ...) element?]{Typesets the
+@racket[content] as a command line (e.g., in typewriter font).}
 
 @defproc[(envvar [pre-content pre-content?] ...) element?]{Typesets the given
 @tech{decode}d @racket[pre-content] as an environment variable (e.g.,
@@ -2028,7 +2027,7 @@ that is hyperlinked to an explanation.}
 
 @defthing[undefined-const element?]{Returns an element for @|undefined-const|.}
 
-@defproc[(commandline [pre-content pre-content?] ...) paragraph?]{Produces
+@defproc[(commandline [content content?] ...) paragraph?]{Produces
 an inset command-line example (e.g., in typewriter font).}
 
 @defproc[(inset-flow [pre-flow pre-flow?] ...) nested-flow?]{
