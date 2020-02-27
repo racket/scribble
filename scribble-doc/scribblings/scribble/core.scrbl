@@ -1961,3 +1961,14 @@ arguments to the element's command in Latex output.}
 
  @history[#:added "1.20"]
 }
+
+@defstruct[table-row-skip ([amount string?])]{
+
+ Used as a @tech{style property} in @racket[table-cells] to specify a
+ spacing adjustment between the cell's row and the row afterward, such
+ as @racket["1ex"] to increase the space or @racket["-1ex"] to
+ decrease it. If multiple cells on a row provide this property, the
+ first one in the row is used.
+
+ @history[#:added "1.33"]
+}

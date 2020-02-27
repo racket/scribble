@@ -12,4 +12,5 @@
   ([replacements (hash/c string? (or/c bytes? path-string? (cons/c 'collects (listof bytes?))))])]
  [command-extras ([arguments (listof string?)])]
  [command-optional ([arguments (listof string?)])]
- [short-title ([text (or/c string? #f)])])
+ [short-title ([text (or/c string? #f)])]
+ [table-row-skip ([amount string?])])

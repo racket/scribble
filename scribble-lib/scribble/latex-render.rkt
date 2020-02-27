@@ -836,7 +836,12 @@
                                      (not (for/or ([cell-style (in-list cell-styles)])
                                             (or (memq 'bottom-border (style-properties cell-style))
                                                 (memq 'border (style-properties cell-style)))))))
-                      (printf " \\\\\n"))
+                      (let ([row-skip (for/or ([cell-style (in-list cell-styles)])
+                                        (for/or ([prop (style-properties cell-style)])
+                                          (and (table-row-skip? prop) prop)))])
+                        (printf " \\\\~a\n" (if row-skip
+                                                (format "[~a]" (table-row-skip-amount row-skip))
+                                                ""))))
                     (cond
                      [(null? rest-blockss)
                       (unless index? (add-clines cell-styles #f))]
