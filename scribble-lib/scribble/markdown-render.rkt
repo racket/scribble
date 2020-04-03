@@ -4,7 +4,10 @@
          "private/render-utils.rkt"
          racket/class racket/port racket/list racket/string racket/match
          scribble/text/wrap)
-(provide render-mixin)
+(provide render-mixin
+         current-markdown-link-sections)
+
+(define current-markdown-link-sections (make-parameter #f))
 
 (define current-indent (make-parameter 0))
 (define (make-indent amt)
@@ -17,6 +20,9 @@
   (indent))
 
 (define note-depth (make-parameter 0))
+(define in-toc (make-parameter #f))
+
+(define markdown-part-tag 'markdown-section)
 
 (define (render-mixin %)
   (class %
@@ -36,6 +42,16 @@
     (inherit render-block
              format-number
              number-depth)
+
+    (define/override (collect-part-tags d ci number)
+      (for ([t (part-tags d)])
+        (let ([t (generate-tag t ci)])
+          (collect-put! ci
+                        t
+                        (vector (or (part-title-content d) '("???"))
+                                (add-current-tag-prefix t)
+                                number
+                                markdown-part-tag)))))
 
     (define/override (render-part d ht)
       (let ([number (collected-info-number (part-collected-info d ht))])
@@ -153,25 +169,32 @@
         (write-string (make-string (note-depth) #\>))
         (unless (zero? (note-depth))
           (write-string " ")))
-      (define o (open-output-string))
-      (parameterize ([current-output-port o])
-        (super render-paragraph p part ri))
-      ;; 1. Remove newlines so we can re-wrap the text.
-      ;;
-      ;; 2. Combine adjacent code spans into one. These result from
-      ;; something like @racket[(x y)] being treated as multiple
-      ;; RktXXX items rather than one. (Although it would be
-      ;; more-correct to handle them at that level, I don't easily see
-      ;; how. As a result I'm handling it after-the-fact, at the
-      ;; text/Markdown stage.)
-      (define to-wrap (regexp-replaces (get-output-string o)
-                                       '([#rx"\n" " "]   ;1
-                                         [#rx"``" ""]))) ;2
-      (define lines (wrap-line (string-trim to-wrap) (- 72 (current-indent))))
-      (write-note)
-      (write-string (car lines))
-      (for ([line (in-list (cdr lines))])
-        (newline) (indent) (write-note) (write-string line))
+      (cond
+        [(in-toc)
+         (write-note)
+         (super render-paragraph p part ri)
+         ;; two spaces at a line end creates a line break:
+         (write-string "  ")]
+        [else
+         (define o (open-output-string))
+         (parameterize ([current-output-port o])
+           (super render-paragraph p part ri))
+         ;; 1. Remove newlines so we can re-wrap the text.
+         ;;
+         ;; 2. Combine adjacent code spans into one. These result from
+         ;; something like @racket[(x y)] being treated as multiple
+         ;; RktXXX items rather than one. (Although it would be
+         ;; more-correct to handle them at that level, I don't easily see
+         ;; how. As a result I'm handling it after-the-fact, at the
+         ;; text/Markdown stage.)
+         (define to-wrap (regexp-replaces (get-output-string o)
+                                          '([#rx"\n" " "]   ;1
+                                            [#rx"``" ""]))) ;2
+         (define lines (wrap-line (string-trim to-wrap) (- 72 (current-indent))))
+         (write-note)
+         (write-string (car lines))
+         (for ([line (in-list (cdr lines))])
+           (newline) (indent) (write-note) (write-string line))])
       (newline)
       null)
 
@@ -192,6 +215,9 @@
 
     (define (italic? i)
       (and (element? i) (eq? (element-style i) 'italic)))
+
+    (define (emph? i)
+      (and (element? i) (eq? (element-style i) 'emph)))
 
     (define (code? i)
       (and (element? i)
@@ -230,11 +256,17 @@
         [(and (code? i) (not (in-code?)))
           (recurse-wrapped "`" in-code?)]
 
-        [(and (bold? i) (not (in-bold?)))
+        [(and (bold? i) (not (in-bold?)) (not (in-code?)))
           (recurse-wrapped "**" in-bold?)]
 
-        [(and (italic? i) (not (in-italic?)))
+        [(and (italic? i) (not (in-italic?)) (not (in-code?)))
           (recurse-wrapped "_" in-italic?)]
+
+        [(and (emph? i) (not (in-code?)))
+         (display "​_") ;; zero-width space, underscore
+         (begin0
+             (super render-content i part ri)
+           (display "_​"))] ;; underscore, zero-width space
 
         [(and (preserve-spaces? i) (not (preserving-spaces?)))
           (parameterize ([preserving-spaces? #t])
@@ -248,15 +280,45 @@
                 (render-content i part ri))
               (printf "](~a)" (sanitize-parens link))))]
 
+        [(and (link-element? i)
+              (current-markdown-link-sections)
+              (not (in-link?))
+              ;; Link to a part within this document?
+              (let ([vec (resolve-get part ri (link-element-tag i))])
+                (and (vector? vec)
+                     (= 4 (vector-length vec))
+                     (eq? markdown-part-tag (vector-ref vec 3))
+                     vec)))
+         => (lambda (vec)
+              (define s (string-append
+                         (let ([s (if (vector-ref vec 2)
+                                      (format-number (vector-ref vec 2) '() #t)
+                                      '())])
+                           (if (null? s)
+                               ""
+                               (string-append (car s) " ")))
+                         (content->string (vector-ref vec 0))))
+              (display "[")
+              (begin0
+                (parameterize ([in-link? #t])
+                  (super render-content i part ri))
+                (display "](#")
+                (display (regexp-replace* #" "
+                                          (regexp-replace* #rx"[^a-zA-Z0-9_ -]" (string-downcase s) "")
+                                          #"-"))
+                (display ")")))]
+
         [else (super render-content i part ri)]))
 
     (define/override (render-nested-flow i part ri starting-item?)
       (define s (nested-flow-style i))
       (unless (memq 'decorative (style-properties s))
         (define note? (equal? (style-name s) "refcontent"))
+        (define toc? (equal? (style-name s) 'table-of-contents))
         (when note?
           (note-depth (add1 (note-depth))))
-        (begin0 (super render-nested-flow i part ri starting-item?)
+        (begin0 (parameterize ([in-toc (or toc? (in-toc))])
+                  (super render-nested-flow i part ri starting-item?))
           (when note?
             (note-depth (sub1 (note-depth)))))))
 
@@ -270,8 +332,8 @@
                     [(rdquo) "\U201D"]
                     [(lsquo) "\U2018"]
                     [(rsquo) "\U2019"]
-                    [(lang) ">"]
-                    [(rang) "<"]
+                    [(lang) "<"]
+                    [(rang) ">"]
                     [(rarr) "->"]
                     [(nbsp) "\uA0"]
                     [(prime) "'"]
@@ -280,16 +342,43 @@
                     [else (error 'markdown-render "unknown element symbol: ~e"
                                  i)]))]
         [(string? i)
-         (let* ([i (if (in-code?)
-                       (regexp-replace** i '([#rx"``" . "\U201C"]
-                                             [#rx"''" . "\U201D"]))
-                       (regexp-replace* #px"([#_*`\\[\\(\\]\\)]{1})" i "\\\\\\1"))]
+         (let* ([i (cond
+                     [(in-code?)
+                      (regexp-replace** i '([#rx"``" . "\U201C"]
+                                            [#rx"''" . "\U201D"]))]
+                     [(or (in-link?)
+                          (regexp-match? #rx"^[(]" i)
+                          (regexp-match? #rx"[]][(]" i))
+                      (regexp-replace* #px"([#_*`\\[\\(\\]\\)]{1})" i "\\\\\\1")]
+                     [else
+                      ;; Avoid escaping parentheses
+                      (regexp-replace* #px"([#_*`\\[\\]]{1})" i "\\\\\\1")])]
                 [i (if (preserving-spaces?)
                        (regexp-replace* #rx" " i "\uA0")
                        i)])
            (display i))]
         [else (write i)])
       null)
+
+    (define/override (table-of-contents part ri)
+      (define t (super table-of-contents part ri))
+      (cond
+        [(current-markdown-link-sections)
+         ;; Table generated by `table-of-contents` always has one
+         ;; column, and each row has one paragraph that starts
+         ;; with a 'hspace element to indent
+         (nested-flow
+          (style 'table-of-contents null)
+          (for/list ([p (map car (table-blockss t))])
+            (define c (paragraph-content p))
+            (define keep-c (cdr c))
+            (define (spaces->depth n)
+              (add1 (quotient (- n 4) 2)))
+            (for/fold ([p (paragraph plain keep-c)]) ([s (in-range
+                                                          (spaces->depth
+                                                           (string-length (car (element-content (car c))))))])
+              (nested-flow (style "refcontent" null) (list p)))))]
+        [else t]))
 
     (super-new)))
 
@@ -298,4 +387,3 @@
             ([ptn (map car ptns&reps)]
              [rep (map cdr ptns&reps)])
     (regexp-replace* ptn str rep)))
-

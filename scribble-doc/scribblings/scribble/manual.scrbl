@@ -686,7 +686,7 @@ specified explicitly with @racket[#:packages]. Each @racket[pkg-expr]
 result is passed on to a function like @racket[tt] for
 typesetting. Provide an empty sequence after @racket[#:packages] to
 suppress any package name in the output. Each @racket[pkg-expr]
-expression is are duplicated for a  @racket[declare-exporting] form,
+expression is duplicated for a  @racket[declare-exporting] form,
 unless @racket[#:no-declare] is specified.
 
 Each @racket[option] form can appear at most once, and @racket[#:lang]
@@ -1714,9 +1714,8 @@ Typesets the given combination of a GUI's menu and item name.}
 @tech{decode}d @racket[pre-content] as a file name (e.g., in
 typewriter font and in quotes).}
 
-@defproc[(exec [pre-content pre-content?] ...) element?]{Typesets the
-@tech{decode}d @racket[pre-content] as a command line (e.g., in
-typewriter font).}
+@defproc[(exec [content content?] ...) element?]{Typesets the
+@racket[content] as a command line (e.g., in typewriter font).}
 
 @defproc[(envvar [pre-content pre-content?] ...) element?]{Typesets the given
 @tech{decode}d @racket[pre-content] as an environment variable (e.g.,
@@ -2028,7 +2027,7 @@ that is hyperlinked to an explanation.}
 
 @defthing[undefined-const element?]{Returns an element for @|undefined-const|.}
 
-@defproc[(commandline [pre-content pre-content?] ...) paragraph?]{Produces
+@defproc[(commandline [content content?] ...) paragraph?]{Produces
 an inset command-line example (e.g., in typewriter font).}
 
 @defproc[(inset-flow [pre-flow pre-flow?] ...) nested-flow?]{
@@ -2201,7 +2200,7 @@ For HTML rendering:
        @filepath{manual-style.css} from the @filepath{scribble}
        collection in @racket[html-defaults].}
 
- @item{The file @filepath{manual-files.css} from the
+ @item{The file @filepath{manual-fonts.css} from the
        @filepath{scribble} collection is designated as an additional
        accompanying file in @racket[html-defaults].}
 

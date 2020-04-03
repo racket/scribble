@@ -83,8 +83,8 @@
 \newcommand{\textsuper}[1]{$^{\hbox{\textsmaller{#1}}}$}
 \newcommand{\intextcolor}[2]{\textcolor{#1}{#2}}
 \newcommand{\intextrgbcolor}[2]{\textcolor[rgb]{#1}{#2}}
-\newcommand{\incolorbox}[2]{{\fboxrule=0pt\fboxsep=0pt\colorbox{#1}{#2}}}
-\newcommand{\inrgbcolorbox}[2]{{\fboxrule=0pt\fboxsep=0pt\colorbox[rgb]{#1}{#2}}}
+\newcommand{\incolorbox}[2]{{\fboxrule=0pt\fboxsep=0pt\protect\colorbox{#1}{#2}}}
+\newcommand{\inrgbcolorbox}[2]{{\fboxrule=0pt\fboxsep=0pt\protect\colorbox[rgb]{#1}{#2}}}
 \newcommand{\plainlink}[1]{#1}
 \newcommand{\techoutside}[1]{#1}
 \newcommand{\techinside}[1]{#1}
@@ -112,7 +112,7 @@
 \makeatletter
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \message{pltstabular is a modification of stabular}
-%% A renamed vsetion of:
+%% A renamed version of:
 %% stabular.sty
 %% Copyright 1998 Sigitas Tolu\v sis
 %% VTeX Ltd., Akademijos 4, Vilnius, Lithuania
@@ -372,7 +372,7 @@
 % For hidden parts with an empty title:
 \newcommand{\notitlesection}{\vspace{2ex}\phantomsection\noindent}
 
-% To increments section numbers:
+% To increment section numbers:
 \newcommand{\Sincpart}{\stepcounter{part}}
 \newcommand{\Sincsection}{\stepcounter{section}}
 \newcommand{\Sincsubsection}{\stepcounter{subsection}}

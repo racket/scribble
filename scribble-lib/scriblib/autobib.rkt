@@ -28,7 +28,9 @@
           [techrpt-location
            (-> #:institution any/c #:number any/c element?)]
           [dissertation-location
-           (->* [#:institution any/c] [#:degree any/c] element?)])
+           (->* [#:institution any/c] [#:degree any/c] element?)]
+          [book-chapter-location
+           (->* [any/c] [#:pages (or/c (list/c any/c any/c) #f) #:series any/c #:volume any/c #:publisher any/c] element?)])
          other-authors
          editor
          abbreviate-given-names)
@@ -563,6 +565,27 @@
          #:degree [degree "PhD"])
   @elem{@to-string[degree] dissertation, @to-string[org]})
 
+(define (book-chapter-location
+         location
+         #:pages [pages #f]
+         #:series [series #f]
+         #:volume [volume #f]
+         #:publisher [publisher #f])
+  (let* ([s @elem{In @italic{@elem{@to-string[location]}}}]
+         [s (if series
+                @elem{@|s|, @to-string[series]}
+                s)]
+         [s (if volume
+                @elem{@|s| volume @to-string[volume]}
+                s)]
+         [s (if pages
+                @elem{@|s|, pp. @(to-string (car pages))--@(to-string (cadr pages))}
+                s)]
+          [s (if publisher
+                @elem{@|s| @to-string[publisher]}
+                s)])
+    s))
+
 ;; ----------------------------------------
 
 (define (author-name first last #:suffix [suffix #f])
@@ -598,7 +621,7 @@
 
 (define (authors name . names*)
   (define names (map parse-author (cons name names*)))
-  (define slash-names (string-join (map author-element-names names) " / "))
+  (define slash-names (string-join (map (compose1 content->string author-element-names) names) " / "))
   (define cite
     (case (length names)
       [(1) (author-element-cite (car names))]

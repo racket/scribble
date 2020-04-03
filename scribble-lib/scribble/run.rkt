@@ -106,6 +106,8 @@
     (current-style-file file)]
    [("--prefix") file "use given .html/.tex prefix (for doctype/documentclass)"
     (current-prefix-file file)]
+   [("--link-section") "support section links for markdown"
+    (markdown:current-markdown-link-sections #t)]
    #:multi
    [("++extra") file "add given file"
     (current-extra-files (cons file (current-extra-files)))]

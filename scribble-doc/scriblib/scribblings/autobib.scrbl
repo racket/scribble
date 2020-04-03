@@ -1,5 +1,6 @@
 #lang scribble/manual
-@(require (for-label scribble/struct
+@(require (for-label (only-in scribble/core content?)
+                     scribble/struct
                      scriblib/autobib
                      scheme/base
                      scheme/contract))
@@ -228,12 +229,23 @@ Both arguments are optional, but at least one must be supplied.}
 Combines elements to generate an element that is suitable for
 describing a technical report's location.}
 
-@defproc[(dissertation-location [#:institution institution edition any/c]
+@defproc[(dissertation-location [#:institution institution any/c]
                                 [#:degree degree any/c "PhD"])
          element?]{
 
 Combines elements to generate an element that is suitable for
 describing a dissertation.}
+
+
+@defproc[(book-chapter-location [title any/c]
+                           [#:pages pages (or (list/c any/c any/c) #f) #f]
+                           [#:section section any/c #f]
+                           [#:volume volume any/c #f]
+                           [#:publisher publisher any/c #f])
+         element?]{
+
+Combines elements to generate an element that is suitable for
+describing a paper's location within a chapter or part of a book.}
 
 
 @defproc[(author-name [first any/c]
@@ -253,7 +265,7 @@ alphabetized appropriately. Any of @racket[name] or @racket[names]
 that are strings are
 parsed in the same way as by @racket[make-bib].}
 
-@defproc[(org-author-name [name any/c]) element?]{
+@defproc[(org-author-name [name (or/c element? string?)]) element?]{
 
 Converts an element for an organization name to one suitable for use
 as a bib-value author.}
@@ -264,7 +276,7 @@ Generates an element that is suitable for use as a ``others'' author.
 When combined with another author element via @racket[authors], the
 one created by @racket[other-authors] renders as ``et al.''}
 
-@defproc[(editor [name name/c]) element?]{
+@defproc[(editor [name (or/c element? string?)]) element?]{
 
 Takes an author-name element and create one that represents the editor
 of a collection. If a @racket[name] is a string, it is parsed in the

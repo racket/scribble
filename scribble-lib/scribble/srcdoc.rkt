@@ -1,5 +1,6 @@
 #lang racket/base
 (require racket/contract/base
+         racket/class
          (for-syntax racket/base
                      racket/require-transform
                      racket/provide-transform
@@ -16,6 +17,8 @@
          struct-doc
          struct*-doc
          form-doc
+         class*-doc
+         class-doc
          generate-delayed-documents
          begin-for-doc)
 
@@ -577,7 +580,7 @@
       [(_ id contract desc)
        (begin
          (unless (identifier? #'id)
-           (raise-syntax-error 'parameter/doc 
+           (raise-syntax-error 'thing-doc
                                "expected an identifier"
                                stx
                                #'id))
@@ -660,6 +663,48 @@
               c.contracts-seq ...
               . desc)
           #'((only-in scribble/manual defform))
+          #'id))])))
+
+(define-provide/doc-transformer class*-doc
+  (lambda (stx)
+    (syntax-case stx ()
+      [(_ id super (intf-id ...) pre-flow)
+       (begin
+         (unless (identifier? #'id)
+           (raise-syntax-error 'class*-doc
+                               "expected an identifier"
+                               stx
+                               #'id))
+         (unless (identifier? #'super)
+           (raise-syntax-error 'class*-doc
+                               "expected super class identifier"
+                               stx
+                               #'id))
+         (values
+          #'[id class?]
+          #'(defclass id super (intf-id ...) . pre-flow)
+          #'((only-in scribble/manual defclass defconstructor defmethod this-obj))
+          #'id))])))
+
+(define-provide/doc-transformer class-doc
+  (lambda (stx)
+    (syntax-case stx ()
+      [(_ id super pre-flow)
+       (begin
+         (unless (identifier? #'id)
+           (raise-syntax-error 'class-doc
+                               "expected an identifier"
+                               stx
+                               #'id))
+         (unless (identifier? #'super)
+           (raise-syntax-error 'class-doc
+                               "expected super class identifier"
+                               stx
+                               #'id))
+         (values
+          #'[id class?]
+          #'(defclass id super () . pre-flow)
+          #'((only-in scribble/manual defclass defconstructor defmethod this-obj))
           #'id))])))
 
 (define-syntax (generate-delayed-documents stx)

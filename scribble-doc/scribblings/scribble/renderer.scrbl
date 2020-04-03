@@ -607,6 +607,13 @@ Code blocks are marked using the
 "Github convention"] @verbatim{```racket} so that they are lexed and
 formatted as Racket code.}}
 
+@defboolparam[current-markdown-link-sections enabled?]{
+
+Determines whether section links within an output document are
+rendered as a section link. The default is @racket[#f].
+
+@history[#:added "1.31"]}
+
 @; ----------------------------------------
 
 @section{HTML Renderer}

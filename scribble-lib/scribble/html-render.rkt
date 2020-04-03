@@ -226,6 +226,7 @@
         ([class "searchbox"]
          [style ,(sa "color: "dimcolor";")]
          [type "text"]
+         [tabindex "1"]
          [value ,emptylabel]
          [title "Enter a search string to search the manuals"]
          [onkeypress ,(format "return DoSearchKey(event, this, ~s, ~s);"
@@ -905,7 +906,9 @@
                        (head-extra-xexpr p)))
                  (body ([id ,(or (extract-part-body-id d ri)
                                  "scribble-racket-lang-org")])
-                   ,@(render-toc-view d ri)
+                   ,@(if (part-style? d 'no-toc+aux)
+                         null
+                         (render-toc-view d ri))
                    (div ([class "maincolumn"])
                      (div ([class "main"])
                        ,@(parameterize ([current-version (extract-version d)])
@@ -1607,6 +1610,7 @@
        (cond
         [(symbol? name)
          (case name
+           [(emph) '([class "emph"])]
            [(italic) '([style "font-style: italic"])]
            [(bold) '([style "font-weight: bold"])]
            [(tt) '([class "stt"])]
