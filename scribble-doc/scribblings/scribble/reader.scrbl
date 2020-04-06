@@ -356,7 +356,7 @@ Finally, note that there are currently no special rules for using
 @;--------------------------------------------------------------------
 @section{The Datum Part}
 
-The datum part can contains arbitrary Racket expressions, which
+The datum part can contain arbitrary Racket expressions, which
 are simply stacked before the body text arguments:
 
 @scribble-examples|==={

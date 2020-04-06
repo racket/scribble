@@ -181,7 +181,7 @@ in the command itself, which can lead to things like:
 
 ** The Datum Part
 
-The datum part can contains arbitrary Scheme expressions, which are
+The datum part can contain arbitrary Scheme expressions, which are
 simply stacked before the body text arguments:
 
   @foo[1 (* 2 3)]{bar}     --reads-as-->    (foo 1 (* 2 3) "bar")
