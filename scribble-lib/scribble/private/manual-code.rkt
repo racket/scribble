@@ -124,7 +124,9 @@
                           (loop (if (dont-stop? mode)
                                     (dont-stop-val mode)
                                     mode))))))]
-           [program-source 'prog]
+           ;; use a source that both identifies the original code
+           ;; and is unique wrt eq? as used below
+           [program-source (or context bstr)]
            [e (parameterize ([read-accept-reader #t])
                 ((or expand 
                      (lambda (stx) 
