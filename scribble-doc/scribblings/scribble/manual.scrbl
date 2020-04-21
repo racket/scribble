@@ -1820,7 +1820,7 @@ For example:
 @racketblock[@tech[#:doc '(lib "scribblings/reference/reference.scrbl")]{blame object}]
 
 creates a link to @tech[#:doc '(lib "scribblings/reference/reference.scrbl")]{blame object} in
-@other-doc['(lib "scribblings/guide/guide.scrbl")].
+@other-doc['(lib "scribblings/reference/reference.scrbl")].
 
 With the default style files, the hyperlink created by @racket[tech]
 is somewhat quieter than most hyperlinks: the underline in HTML output
