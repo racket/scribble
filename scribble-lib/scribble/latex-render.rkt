@@ -341,7 +341,7 @@
         (parameterize ([done-link-page-numbers (or (done-link-page-numbers)
                                                    (link-element? e))])
           (when (target-element? e)
-            (printf "\\label{t:~a}"
+            (printf "\\phantomsection\\label{t:~a}"
                     (t-encode (add-current-tag-prefix (tag-key (target-element-tag e) ri)))))
           (when part-label?
             (define-values (dest ext?) (resolve-get/ext? part ri (link-element-tag e)))
@@ -393,8 +393,15 @@
                                  (style-name es)
                                  es)]
                  [style (and (style? es) es)]
+                 [pageref? (and (not part-label?)
+                                (link-element? e)
+                                (pageref-tag? (link-element-tag e))
+                                (not (disable-hyperref))
+                                (let-values ([(dest ext?) (resolve-get/ext? part ri (cons 'elem (cdr (link-element-tag e))))])
+                                  (and dest (not ext?))))]
                  [hyperref? (and (not part-label?)
                                  (link-element? e)
+                                 (not (pageref-tag? (link-element-tag e)))
                                  (not (disable-hyperref))
                                  (let-values ([(dest ext?) (resolve-get/ext? part ri (link-element-tag e))])
                                    (and dest (not ext?))))]
@@ -537,15 +544,18 @@
                 (wrap e style-name 'exact)]
                [else
                 (core-render e tt?)]))
+            (when pageref?
+              (printf "\\PageRef{\\pageref{t:~a}}"
+                      (t-encode (cons 'elem (cdr (link-element-tag e))))))
             (when hyperref?
               (printf "\\hyperref[t:~a]{"
                       (t-encode (link-element-tag e))))
             (let loop ([l (if style (style-properties style) null)] [tt? #f])
               (if (null? l)
-                  (if hyperref?
-                      (parameterize ([disable-hyperref #t])
-                        (finish tt?))
-                      (finish tt?))
+                  (cond [pageref? (void)]
+                        [hyperref? (parameterize ([disable-hyperref #t])
+                                     (finish tt?))]
+                        [else (finish tt?)])
                   (let ([v (car l)])
                     (cond
                      [(target-url? v)
