@@ -1496,6 +1496,12 @@
                     `(img
                       ([src ,(install-file "pict.svg" bstr)]
                        [type "image/svg+xml"]))))))]
+          [(and (equal? request 'gif-bytes) (convert e 'gif-bytes))
+           =>
+           (lambda (gif-bytes)
+             (define gif-src (install-file "pict.gif" gif-bytes))
+             (define image-tag `(img ([src ,gif-src] [type "image/gif"])))
+             (list image-tag))]
           [else #f])))
 
     ;; Add padding for a bounding-box conversion reply:
