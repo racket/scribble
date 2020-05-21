@@ -1848,13 +1848,15 @@ For a @racket[part] that corresponds to an HTML page, adds content to
 the @tt{<head>} tag.}
 
 
-@defstruct[render-convertible-as ([types (listof (or/c 'png-bytes 'svg-bytes))])]{
+@defstruct[render-convertible-as ([types (listof (or/c 'png-bytes 'svg-bytes 'gif-bytes))])]{
  For a @racket[part] that corresponds to an HTML page,
  controls how objects that subscribe to the @racketmodname[file/convertible]
  protocol are rendered.
       
  The alternatives in the @racket[types] field are tried in order
  and the first one that succeeds is used in the html output.
+
+ @history[#:changed "1.34" @elem{Added support for  @racket['gif-bytes].}]
 }
 
 @defstruct[part-link-redirect ([url url?])]{
