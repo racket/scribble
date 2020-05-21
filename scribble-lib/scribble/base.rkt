@@ -676,7 +676,7 @@
                  null)
      (list
       (make-nested-flow
-       (make-style "refcontent" null)
+       (make-style "refcontent" (list (alt-tag "aside")))
        (decode-flow c)))))))
 
 (define (margin-note* #:left? [left? #f] . c)
