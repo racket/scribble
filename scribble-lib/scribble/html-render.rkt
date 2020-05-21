@@ -107,7 +107,7 @@
 (define extra-breaking? (make-parameter #f))
 (define current-version (make-parameter (version)))
 (define current-part-files (make-parameter #f))
-(define current-render-convertible-requests (make-parameter '(png@2x-bytes png-bytes svg-bytes)))
+(define current-render-convertible-requests (make-parameter '(png@2x-bytes png-bytes svg-bytes gif-bytes)))
 
 (define (url->string* u)
   (parameterize ([current-url-encode-mode 'unreserved])
