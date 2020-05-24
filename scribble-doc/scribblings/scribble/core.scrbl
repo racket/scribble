@@ -1712,7 +1712,7 @@ tag.}
 
 Use as a @tech{style property} for an @racket[element],
 @racket[paragraph], or @racket[compound-paragraph] to substitute an
-alternate HTML tag (instead of @tt{<span>}, @tt{<p>}, @tt{div},
+alternate HTML tag (instead of @tt{<span>}, @tt{<p>}, @tt{<div>},
 @|etc|).}
 
 
