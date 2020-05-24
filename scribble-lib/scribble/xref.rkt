@@ -43,6 +43,8 @@
 
 (define (load-xref sources
                    #:demand-source [demand-source (lambda (key) #f)]
+                   #:demand-source-for-use [demand-source-for-use
+                                            (lambda (key use-id) (demand-source key))]
                    #:render% [render% (html:render-mixin render%)]
                    #:root [root-path #f]
                    #:doc-id [doc-id-str #f])
@@ -61,9 +63,15 @@
                                 (send renderer deserialize-info data ci
                                       #:root root
                                       #:doc-id doc-id))))))]
+         [use-ids (make-weak-hasheq)]
          [ci (send renderer collect null null fp
                    (lambda (key ci)
-                     (define src (demand-source key))
+                     (define use-obj (collect-info-ext-ht ci))
+                     (define use-id (or (hash-ref use-ids use-obj #f)
+                                        (let ([s (gensym 'render)])
+                                          (hash-set! use-ids use-obj s)
+                                          s)))
+                     (define src (demand-source-for-use key use-id))
                      (and src
                           (load-source src ci))))])
     (for ([src sources])

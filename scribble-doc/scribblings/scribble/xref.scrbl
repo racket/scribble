@@ -20,6 +20,10 @@ by @racket[load-xref], @racket[#f] otherwise.}
 
 
 @defproc[(load-xref [sources (listof (-> (or/c any/c (-> list?))))]
+                    [#:demand-source-for-use
+                     demand-source-for-use
+                     (tag? symbol? -> (or/c (-> any/c) #f)) 
+                     (lambda (_tag _use-id) (demand-source _tag))]
                     [#:demand-source demand-source 
                                      (tag? -> (or/c (-> any/c) #f)) 
                                      (lambda (_tag) #f)]
@@ -45,10 +49,22 @@ information, a @racket[#f] to be ignored, or a value produced by
 and the @racket[_doc-id] part (if any) overrides
 @racket[doc-id-string] to identify the source document.
 
-The @racket[demand-source] function can effectively add a new source
-to @racket[sources] in response to a search for information on the
-given tag. The @racket[demand-source] function returns @racket[#f]
-to indicate that no new sources satisfy the given tag.
+The @racket[demand-source-for-use] function can effectively add a new
+source to @racket[sources] in response to a search for information on
+the given tag in the given rendering, where @racket[_use-id] is unique
+to a particular rendering request, a particular transfer (in the sense
+of @racket[xref-transfer-info]), or all direct queries of the
+cross-reference information (such as through
+@racket[xref-binding->definition-tag]). The
+@racket[demand-source-for-use] function should return @racket[#f] to
+indicate that no new sources satisfy the given tag for the given
+@racket[_use-id].
+
+The default @racket[demand-source-for-use] function uses
+@racket[demand-source], which is provided only for backward
+compatibility. Since the @racket[demand-source] function accepts only
+a tag, it is suitable only when the result of @racket[load-xref] will
+only have a single use context, such as a single rendering.
 
 Since the format of serialized information is specific to a rendering
 class, the optional @racket[using-render%] argument accepts the
@@ -72,7 +88,8 @@ method of @racket[render-mixin].
 Use @racket[load-collections-xref] from @racketmodname[setup/xref] to
 get all cross-reference information for installed documentation.
 
-@history[#:changed "1.1" @elem{Added the @racket[#:doc-id] argument.}]}
+@history[#:changed "1.1" @elem{Added the @racket[#:doc-id] argument.}
+         #:changed "1.34" @elem{Added the @racket[#:demand-source-for-use] argument.}]}
 
 
 @defproc[(xref-binding->definition-tag [xref xref?]
