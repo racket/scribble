@@ -690,7 +690,8 @@ the section hyperlink's resolution in HTML is potentially delayed; see
 
 @defproc[(other-doc [module-path module-path?]
                     [#:underline? underline? any/c #t]
-                    [#:indirect indirect (or/c #f content?) #f])
+                    [#:indirect indirect (or/c #f content?) #f]
+		    [#:content content (or/c #f content?) #f])
          element?]{
 
 Like @racket[secref] for the document's implicit @racket["top"]
@@ -702,7 +703,8 @@ If @racket[indirect] is not @racket[#f], then the link's resolution in
 HTML can be delayed, like @racket[seclink] with @racket[#:indirect?
 #t].  The @racket[indirect] content is prefixed with ``the'' and
 suffixed with ``documentation'' to generate the rendered text of the
-link. For example:
+link, unless @racket[content] is provided, in which case @racket[content] is
+used without prefixing or suffixing. For example:
 
 @verbatim[#:indent 2]|{
   @other-doc['(lib "parsack/parsack/parsack.scrbl")
@@ -713,7 +715,9 @@ renders as a hyperlink with the text:
 
 @verbatim[#:indent 2]|{
   the Parsec implementation in Racket documentation
-}|}
+}|
+
+@history[#:changed "1.34" @elem{Added @racket[#:content].}]}
 
 
 @defproc[(elemtag [t (or/c taglet? generated-tag?)] [pre-content pre-content?] ...) element?]{

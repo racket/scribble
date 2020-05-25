@@ -627,10 +627,11 @@
 
 (define (other-doc doc 
                    #:underline? [u? #t]
-                   #:indirect [indirect #f])
+                   #:indirect [indirect #f]
+                   #:content [content (and indirect (list "the " indirect " documentation"))])
   (if indirect
       (seclink "top" #:doc doc #:underline? u? #:indirect? #t
-               (list "the " indirect " documentation"))
+               content)
       (secref "top" #:doc doc #:underline? u?)))
 
 ;; ----------------------------------------

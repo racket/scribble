@@ -2,8 +2,8 @@
 
 (define collection 'multi)
 
-(define deps '("scheme-lib"
-               "base" "at-exp-lib"
+(define deps '("base"
+               "at-exp-lib"
                "scribble-text-lib"))
 
 (define pkg-desc "Language for HTML with embedded Racket code")
