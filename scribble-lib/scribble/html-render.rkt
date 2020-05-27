@@ -1500,7 +1500,15 @@
            =>
            (lambda (gif-bytes)
              (define gif-src (install-file "pict.gif" gif-bytes))
-             (define image-tag `(img ([src ,gif-src] [type "image/gif"])))
+
+             ;; GIFs store their width and height in the first 4 bytes of the logical screen
+             ;; descriptor, which comes after the 6-byte long header block. The width and height are
+             ;; each represented by 2-byte wide little-endian unsigned fields.
+             (define width (+ (bytes-ref gif-bytes 6) (* (bytes-ref gif-bytes 7) 256)))
+             (define height (+ (bytes-ref gif-bytes 8) (* (bytes-ref gif-bytes 9) 256)))
+
+             (define image-tag
+               `(img ([src ,gif-src] [type "image/gif"] [width ,width] [height ,height])))
              (list image-tag))]
           [else #f])))
 
