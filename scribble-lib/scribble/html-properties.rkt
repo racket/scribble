@@ -30,4 +30,4 @@
  [link-resource ([path path-string?])]
 
  [head-extra ([xexpr xexpr/c])]
- [render-convertible-as ([types (listof (or/c 'png-bytes 'svg-bytes))])])
+ [render-convertible-as ([types (listof (or/c 'png-bytes 'svg-bytes 'gif-bytes))])])

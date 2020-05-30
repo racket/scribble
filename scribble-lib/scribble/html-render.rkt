@@ -107,7 +107,7 @@
 (define extra-breaking? (make-parameter #f))
 (define current-version (make-parameter (version)))
 (define current-part-files (make-parameter #f))
-(define current-render-convertible-requests (make-parameter '(png@2x-bytes png-bytes svg-bytes)))
+(define current-render-convertible-requests (make-parameter '(png@2x-bytes png-bytes svg-bytes gif-bytes)))
 
 (define (url->string* u)
   (parameterize ([current-url-encode-mode 'unreserved])
@@ -1496,6 +1496,20 @@
                     `(img
                       ([src ,(install-file "pict.svg" bstr)]
                        [type "image/svg+xml"]))))))]
+          [(and (equal? request 'gif-bytes) (convert e 'gif-bytes))
+           =>
+           (lambda (gif-bytes)
+             (define gif-src (install-file "pict.gif" gif-bytes))
+
+             ;; GIFs store their width and height in the first 4 bytes of the logical screen
+             ;; descriptor, which comes after the 6-byte long header block. The width and height are
+             ;; each represented by 2-byte wide little-endian unsigned fields.
+             (define width (+ (bytes-ref gif-bytes 6) (* (bytes-ref gif-bytes 7) 256)))
+             (define height (+ (bytes-ref gif-bytes 8) (* (bytes-ref gif-bytes 9) 256)))
+
+             (define image-tag
+               `(img ([src ,gif-src] [type "image/gif"] [width ,width] [height ,height])))
+             (list image-tag))]
           [else #f])))
 
     ;; Add padding for a bounding-box conversion reply:
