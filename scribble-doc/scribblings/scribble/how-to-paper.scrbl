@@ -322,7 +322,7 @@ which renders as
 
 The @racket[tabular] function takes a list of lists to organize into a
 two-dimensional table. By default, no spacing is added between columns,
-so supply a @racket[#:sep] argument to acts as a column separator.
+so supply a @racket[#:sep] argument to act as a column separator.
 For example,
 
    @sample|{
