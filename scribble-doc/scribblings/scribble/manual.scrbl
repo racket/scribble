@@ -1609,14 +1609,15 @@ accepted and propagated to the superclass.}
               ([maybe-link code:blank
                            (code:line #:link-target? link-target?-expr)]
                [maybe-mode code:blank
+                           (code:line #:mode public)
+                           (code:line #:mode public-final)
                            (code:line #:mode override)
                            (code:line #:mode override-final)
-                           (code:line #:mode public-final)
                            (code:line #:mode augment)
                            (code:line #:mode augment-final)
-                           (code:line #:mode pubment)
                            (code:line #:mode extend)
-                           (code:line #:mode extend-final)])]{
+                           (code:line #:mode extend-final)
+                           (code:line #:mode pubment)])]{
 
 Like @racket[defproc], but for a method within a @racket[defclass] or
 @racket[definterface] body.
@@ -1626,7 +1627,10 @@ method from a superclass, and so on. (For these purposes, use
 @racket[#:mode override] when refining a method of an implemented
 interface.) The @racket[extend] mode is like @racket[override], but
 the description of the method should describe only extensions to the
-superclass implementation.}
+superclass implementation. When @racket[maybe-mode] is not supplied,
+it defaults to @racket[public].
+
+@history[#:changed "1.35" @elem{Added a check against invalid @racket[maybe-mode].}]}
 
 @defform[(defmethod* maybe-mode maybe-link
                      ([(id arg-spec ...)

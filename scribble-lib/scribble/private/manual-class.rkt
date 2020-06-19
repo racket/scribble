@@ -425,26 +425,32 @@
                    [name1 (car (syntax->list #'(name ...)))])
        (with-syntax ([(extra ...)
                       (let ([finality
-                             (lambda ()
+                             (lambda (prefix)
                                (case (syntax-e #'mode)
                                  [(override-final public-final extend-final)
-                                  #'(" This method is final, so it cannot be overiddden.")]
+                                  #`(#,prefix "This method is final, so it cannot be overiddden.")]
                                  [(augment-final)
-                                  #'(" This method is final, so it cannot be augmented.")]
+                                  #`(#,prefix "This method is final, so it cannot be augmented.")]
                                  [else null]))])
                         (case (syntax-e #'mode)
                           [(pubment)
                            #'((t "Refine this method with "
                                  (racket augment) "."))]
-                          [(override override-final extend augment)
-                           #`((t (case (syntax-e #'mode)
-                                   [(override override-final) "Overrides "]
-                                   [(extend extend-final) "Extends "]
-                                   [(augment augment-final) "Augments "])
+                          [(override
+                            override-final
+                            extend
+                            extend-final
+                            augment
+                            augment-final)
+                           #`((t #,(case (syntax-e #'mode)
+                                     [(override override-final) "Overrides "]
+                                     [(extend extend-final) "Extends "]
+                                     [(augment augment-final) "Augments "])
                                  (*xmethod/super (quote-syntax/loc cname) 'name1)
                                  "."
-                                 #,@(finality)))]
-                          [else null]))])
+                                 #,@(finality " ")))]
+                          [(public public-final) #`((t #,@(finality "")))]
+                          [else (raise-syntax-error #f "unrecognized mode" #'mode)]))])
          #'(make-meth '(name ...)
                       'mode
                       (lambda ()
