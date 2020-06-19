@@ -436,7 +436,12 @@
                           [(pubment)
                            #'((t "Refine this method with "
                                  (racket augment) "."))]
-                          [(override override-final extend augment)
+                          [(override
+                            override-final
+                            extend
+                            extend-final
+                            augment
+                            augment-final)
                            #`((t (case (syntax-e #'mode)
                                    [(override override-final) "Overrides "]
                                    [(extend extend-final) "Extends "]
@@ -444,7 +449,8 @@
                                  (*xmethod/super (quote-syntax/loc cname) 'name1)
                                  "."
                                  #,@(finality)))]
-                          [else null]))])
+                          [(public public-final) null]
+                          [else (raise-syntax-error #f "unrecognized mode" #'mode)]))])
          #'(make-meth '(name ...)
                       'mode
                       (lambda ()
