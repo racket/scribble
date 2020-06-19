@@ -1,4 +1,4 @@
-# scribble-text-lib
+# Scribble
 
 This the source for the Racket packages: "scribble", "scribble-doc", "scribble-html-lib", "scribble-lib", "scribble-test", "scribble-text-lib".
 
@@ -18,7 +18,7 @@ is licensed under the [Apache 2.0] license and the [MIT] license.
 
 [MIT]: https://github.com/racket/racket/blob/master/racket/src/LICENSE-MIT.txt
 [Apache 2.0]: https://www.apache.org/licenses/LICENSE-2.0.txt
-[pull request]: https://github.com/racket/scribble-text-lib/pulls
-[issue]: https://github.com/racket/scribble-text-lib/issues
+[pull request]: https://github.com/racket/scribble/pulls
+[issue]: https://github.com/racket/scribble/issues
 [development mailing list]: https://lists.racket-lang.org
 [LICENSE]: LICENSE
