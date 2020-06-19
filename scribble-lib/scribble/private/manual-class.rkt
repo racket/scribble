@@ -442,10 +442,10 @@
                             extend-final
                             augment
                             augment-final)
-                           #`((t (case (syntax-e #'mode)
-                                   [(override override-final) "Overrides "]
-                                   [(extend extend-final) "Extends "]
-                                   [(augment augment-final) "Augments "])
+                           #`((t #,(case (syntax-e #'mode)
+                                     [(override override-final) "Overrides "]
+                                     [(extend extend-final) "Extends "]
+                                     [(augment augment-final) "Augments "])
                                  (*xmethod/super (quote-syntax/loc cname) 'name1)
                                  "."
                                  #,@(finality)))]
