@@ -721,7 +721,9 @@
                     ((loop init-line! quote-depth first-expr? #f) (car l) srcless-step)
                     (lloop (cdr l) expr? #f 1)]
                    [(forced-pair? l)
-                    ((loop init-line! quote-depth first-expr? #f) (forced-pair-car l) srcless-step)
+                    ;; forced pairs are for hash tables, where the `car` cannot be
+                    ;; unquoted: use +inf.0 for `quote-depth`
+                    ((loop init-line! +inf.0 first-expr? #f) (forced-pair-car l) srcless-step)
                     (lloop (forced-pair-cdr l) expr? #t 1)]
                    [(mpair? l)
                     ((loop init-line! quote-depth first-expr? #f) (mcar l) srcless-step)
@@ -774,7 +776,7 @@
                    [orig-col src-col])
                (set! src-col (+ src-col delta))
                (hash-set! next-col-map src-col dest-col)
-               ((loop init-line! (if expr? quote-depth +inf.0) expr? (and expr? (zero? quote-depth)))
+               ((loop init-line! quote-depth expr? (and expr? (zero? quote-depth)))
                 (let*-values ([(l) (sort (hash-map (syntax-e c) cons)
                                          (lambda (a b)
                                            (< (or (syntax-position (cdr a)) -inf.0)
