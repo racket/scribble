@@ -428,7 +428,7 @@
                              (lambda (prefix)
                                (case (syntax-e #'mode)
                                  [(override-final public-final extend-final)
-                                  #`(#,prefix "This method is final, so it cannot be overiddden.")]
+                                  #`(#,prefix "This method is final, so it cannot be overridden.")]
                                  [(augment-final)
                                   #`(#,prefix "This method is final, so it cannot be augmented.")]
                                  [else null]))])
