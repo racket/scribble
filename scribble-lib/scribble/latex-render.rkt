@@ -1317,6 +1317,10 @@
                                 [(#\⋱) "$\\ddots$"]
                                 [(#\⋯) "$\\cdots$"]
                                 [(#\⋯) "\\hdots"]
+                                [(#\⊸) "$\\multimap$"]
+                                [(#\⟜) "$\\multimapinv$"]
+                                [(#\⅋) "$\\invamp$"]
+                                [(#\□) "$\\square$"]
                                 [else
                                  (cond
                                   [(char<=? #\uAC00 c #\uD7AF) ; Korean Hangul
