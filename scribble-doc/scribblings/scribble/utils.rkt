@@ -215,7 +215,7 @@
 (define (ltx s) (tt "\\" s)) ; command
 (define (ltxe s) (tt s)) ; enviornment
 (define (ltxd n s)
-  (make-element #f (cons (index (list s) (ltx s))
+  (make-element #f (cons (index (list (format "\\~a" s)) (ltx s))
                          (for/list ([i (in-range n)]) (tt "{}")))))
 
 ;; Utility to render examples of scribble documentation forms
