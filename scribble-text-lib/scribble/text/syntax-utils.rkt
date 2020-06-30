@@ -128,7 +128,7 @@
             [(def ids rhs)
              (datum->syntax expr*
                             (list #'def
-                                  (map syntax-local-identifier-as-binding
+                                  (map (lambda (id) (syntax-local-identifier-as-binding id (car ctx)))
                                        (syntax->list #'ids))
                                   #'rhs)
                             expr*
