@@ -1321,6 +1321,7 @@
                                 [(#\⟜) "$\\multimapinv$"]
                                 [(#\⅋) "$\\invamp$"]
                                 [(#\□) "$\\square$"]
+                                [(#\⚠) "{\\fontencoding{U}\\fontfamily{futs}\\selectfont\\char 66\\relax}"]
                                 [else
                                  (cond
                                   [(char<=? #\uAC00 c #\uD7AF) ; Korean Hangul
