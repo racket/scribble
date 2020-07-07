@@ -30,7 +30,7 @@
 (define-syntax (tangle stx)
   (define chunk-mentions '())
   (unless first-id
-    (raise-syntax-error 'scribble/lp "no chunks"))
+    (raise-no-chunks-error))
   (define orig-stx (syntax-case stx () [(_ orig) #'orig]))
   (define (restore nstx d) (datum->syntax orig-stx d nstx nstx))
   (define (shift nstx) (replace-context orig-stx nstx))
@@ -121,6 +121,7 @@
 
 (define-for-syntax ((make-module-begin submod?) stx)
   (syntax-case stx ()
+    [(_) (raise-no-chunks-error)]
     [(_ body0 . body)
      (let ([expanded 
             (expand `(,#'module scribble-lp-tmp-name scribble/private/lp
@@ -147,3 +148,6 @@
 
 (define-syntax module-begin/plain (make-module-begin #f))
 (define-syntax module-begin/doc (make-module-begin #t))
+
+(define-for-syntax (raise-no-chunks-error)
+  (raise-syntax-error 'scribble/lp "no chunks"))
