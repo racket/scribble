@@ -28,13 +28,7 @@
 (define (*tech make-elem style doc prefix s key normalize?)
   (let* ([c (decode-content s)]
          [s (or key (content->string c))]
-         [s (if normalize?
-                (let* ([s (string-foldcase s)]
-                       [s (regexp-replace #rx"ies$" s "y")]
-                       [s (regexp-replace #rx"s$" s "")]
-                       [s (regexp-replace* #px"[-\\s]+" s " ")])
-                  s)
-                s)]
+         [s (if normalize? (normalize s) s)]
          [s (datum-intern-literal s)])
     (make-elem style c (list 'tech (doc-prefix doc prefix s)))))
 
@@ -74,3 +68,16 @@
                   #:normalize? [normalize? #t] 
                   . s)
   (*tech make-link-element #f doc prefix s key normalize?))
+
+(define (normalize raw-string)
+  (define folded (string-foldcase raw-string))
+  ;; This logic was derived from the rules for singular and plural words
+  ;; described here: https://www.ef.com/wwen/english-resources/english-grammar/singular-and-plural-nouns/
+  (define singular
+    (cond
+      [(regexp-match? #rx"ies$" folded) (regexp-replace #rx"ies$" folded "y")]
+      [(regexp-match? #rx"(s|x|z|ch|sh)es$" folded)
+       (regexp-replace #rx"es$" folded "")]
+      [(regexp-match? #rx"[^s]s%" folded) (regexp-replace #rx"s$" folded "")]
+      [else folded]))
+  (regexp-replace* #px"[-\\s]+" singular " "))

@@ -1791,7 +1791,10 @@ normalized as follows:
 
  @item{A trailing ``ies'' is replaced by ``y''.}
 
- @item{A trailing ``s'' is removed.}
+ @item{A trailing ``es'' is removed if it was preceded by an ``s'', ``x'',
+   ``z'', ``ch'', or an ``sh''.}
+
+ @item{A trailing ``s'' is removed if it was not preceded by an ``s''.}
 
  @item{Consecutive hyphens and whitespaces are all replaced by a
        single space.}
