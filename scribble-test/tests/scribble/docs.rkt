@@ -45,6 +45,7 @@
 
 (provide docs-tests)
 (module+ main (docs-tests))
+(module+ test (docs-tests))
 (define (docs-tests)
   (when (or (file-exists? work-dir) (directory-exists? work-dir))
     (delete-directory/files work-dir))
