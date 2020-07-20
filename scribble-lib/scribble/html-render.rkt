@@ -27,6 +27,9 @@
 (provide render-mixin
          render-multi-mixin)
 
+(define (number->decimal-string s)
+  (number->string (if (integer? s) s (exact->inexact s))))
+
 (define as-literal
   (let ([loc (xml:make-location 0 0 0)])
     (lambda strings (xml:make-cdata loc loc (string-append* strings)))))
@@ -1470,12 +1473,7 @@
                              (if (and (not (list? cvt))
                                       (equal? request 'png@2x-bytes))
                                  (/ v 2.0)
-                                 v))]
-                    [number->decimal-string (lambda (s)
-                                              (number->string
-                                               (if (integer? s)
-                                                   s
-                                                   (exact->inexact s))))])
+                                 v))])
                (list
                 (add-padding
                  cvt
@@ -1508,7 +1506,10 @@
              (define height (+ (bytes-ref gif-bytes 8) (* (bytes-ref gif-bytes 9) 256)))
 
              (define image-tag
-               `(img ([src ,gif-src] [type "image/gif"] [width ,width] [height ,height])))
+               `(img ([src ,gif-src]
+                      [type "image/gif"]
+                      [width ,(number->decimal-string width)]
+                      [height ,(number->decimal-string height)])))
              (list image-tag))]
           [else #f])))
 
