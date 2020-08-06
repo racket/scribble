@@ -606,9 +606,7 @@
                                    quote-depth)]
                   [p-color (if (positive? quote-depth) 
                                value-color
-                               (if (eq? sh #\?)
-                                   opt-color
-                                   paren-color))])
+                               paren-color)])
              (advance c init-line! srcless-step)
              (let ([quote-depth (if (struct-proxy? (syntax-e c))
                                     quote-depth
@@ -655,7 +653,7 @@
                    (set! src-col (+ src-col 2))))
                (unless (and expr? (zero? quote-depth))
                  (out (case sh
-                        [(#\[ #\?) "["]
+                        [(#\[) "["]
                         [(#\{) "{"]
                         [else "("])
                       p-color))
@@ -738,7 +736,7 @@
                                                                         srcless-step
                                                                         #f))]))
                (out (case sh
-                      [(#\[ #\?) "]"]
+                      [(#\[) "]"]
                       [(#\{) "}"]
                       [else ")"])
                     p-color)

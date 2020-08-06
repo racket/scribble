@@ -555,6 +555,11 @@ sub-form in a procedure being documented).}
 @defproc[(racketparenfont [pre-content pre-content?] ...) element?]{Like
 @racket[racketplainfont], but colored like parentheses.}
 
+@defproc[(racketoptionalfont [pre-content pre-content?] ...) element?]{Like
+@racket[racketplainfont], but colored as optional.
+@history[#:added "1.36"]
+}
+
 @defproc[(racketmetafont [pre-content pre-content?] ...) element?]{Like
 @racket[racketplainfont], but colored as meta-syntax, such as backquote or
 unquote.}
@@ -596,6 +601,7 @@ in a form definition.}
 @defproc[(schemevarfont [pre-content pre-content?] ...) element?]
 @defproc[(schemekeywordfont [pre-content pre-content?] ...) element?]
 @defproc[(schemeparenfont [pre-content pre-content?] ...) element?]
+@defproc[(schemeoptionalfont [pre-content pre-content?] ...) element?]
 @defproc[(schememetafont [pre-content pre-content?] ...) element?]
 @defproc[(schemeerror [pre-content pre-content?] ...) element?]
 @defproc[(schememodfont [pre-content pre-content?] ...) element?]

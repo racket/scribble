@@ -233,7 +233,7 @@
                     [(eq? (arg-id arg) '_...superclass-args...) (to-element (arg-id arg))]
                     [else (to-element (make-var-id (arg-id arg)))])]
            [e (if (arg-ends-optional? arg)
-                (make-element #f (list e "]"))
+                (make-element #f (list e (racketoptionalfont "]")))
                 e)]
            [num-closers (- (arg-depth arg) next-depth)]
            [e (if (zero? num-closers)
@@ -241,7 +241,7 @@
                 (make-element
                  #f (list e (make-closers num-closers))))])
       (if (and show-opt-start? (arg-starts-optional? arg))
-        (make-element #f (list "[" e))
+        (make-element #f (list (racketoptionalfont "[") e))
         e)))
   (define (prototype-depth p)
     (let loop ([p (car p)])
@@ -511,7 +511,7 @@
                    (if one-ok?
                        (list*
                         (if (arg-starts-optional? (car args))
-                            (to-flow (make-element #f (list spacer "[")))
+                            (to-flow (make-element #f (list spacer (racketoptionalfont "["))))
                             flow-spacer)
                         (to-flow ((arg->elem #f) (car args) (next-args-depth (cdr args))))
                         not-end)
@@ -530,7 +530,7 @@
                                 (flow-spacer/n 3)
                                 flow-spacer)
                             (if (arg-starts-optional? (car args))
-                                (to-flow (make-element #f (list spacer "[")))
+                                (to-flow (make-element #f (list spacer (racketoptionalfont "["))))
                                 flow-spacer)
                             (let ([a ((arg->elem #f) (car args) (next-args-depth (cdr args)))]
                                   [next (if dots-next?
