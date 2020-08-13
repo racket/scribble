@@ -17,6 +17,7 @@
          "on-demand.rkt"
          scheme/string
          scheme/list
+         racket/contract
          (for-syntax racket/base
                      syntax/parse)
          (for-label racket/base
@@ -126,10 +127,12 @@
     [(_ v)  #'(racketblock0 v)]))
 
 (begin-for-syntax
- (define-splicing-syntax-class kind-kw
-   #:description "#:kind keyword"
-   (pattern (~optional (~seq #:kind kind)
-                       #:defaults ([kind #'#f]))))
+  (define-splicing-syntax-class kind-kw
+    #:attributes (kind) ;; Expr[String/#f]
+    #:description "#:kind keyword"
+    (pattern (~optional (~seq #:kind k))
+             #:declare k (expr/c #'(or/c string? #f) #:name "#:kind argument")
+             #:with kind #'(~? k.c #f)))
 
  (define-splicing-syntax-class value-kw
    #:description "#:value keyword"
