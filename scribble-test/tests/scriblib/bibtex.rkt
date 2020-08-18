@@ -73,4 +73,5 @@
               (λ (~cite-id citet-id)
                 (citet-id "salib:starkiller")
                 (citet-id "cryptoeprint:2000:067")
-                (citet-id "Tobin-Hochstadt:2011fk"))))
+                (citet-id "Tobin-Hochstadt:2011fk")
+                (citet-id "anannoyingkey"))))
