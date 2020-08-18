@@ -83,7 +83,7 @@
       [typ
        (read-char ip)
        (slurp-whitespace ip)
-       (define label (read-until (λ (c) (char=? c #\,)) ip))
+       (define label (string-downcase (read-until (λ (c) (char=? c #\,)) ip)))
        (read-char ip)
        (define alist
          (let loop ()
@@ -110,7 +110,7 @@
                 [c
                  (perror ip 'read-entry "Parsing entry tag, expected =, got ~v; label is ~v; atag is ~v" c label atag)])])))
        (hash-set! ENTRY-DB label
-                  (hash-set alist 'type typ))]))
+                  (hash-set alist 'type (string-downcase typ)))]))
 
   (define (read-tag ip)
     (slurp-whitespace ip)
@@ -425,9 +425,9 @@
 
 (define (generate-bib db key)
   (match-define (bibdb raw bibs) db)
-  (hash-ref! bibs key
+  (hash-ref! bibs (string-downcase key)
              (λ ()
-               (define the-raw (hash-ref raw key (λ () (error 'bibtex "Unknown citation ~e" key))))
+               (define the-raw (hash-ref raw (string-downcase key) (λ () (error 'bibtex "Unknown citation ~e" key))))
                (define (raw-attr a [def #f])
                  (hash-ref the-raw a def))
                (define (raw-attr* a)
