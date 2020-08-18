@@ -159,7 +159,7 @@
         (values (hash-update h k (lambda (cur) (cons b cur)) null)
                 (cons k (remove k ks))))))
   (make-element
-   (make-style "Autobibref" '())
+   (make-style "Autobibref" autobib-style-extras)
    (append
     (list 'nbsp (send style get-cite-open))
     (add-between
