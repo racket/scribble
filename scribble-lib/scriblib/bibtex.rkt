@@ -197,22 +197,23 @@
       autobib-cite autobib-citet
       ~cite-id citet-id)))
 
+(define ((make-citer bibtex-db citer) f . r)
+  (apply citer
+         (filter-map
+          (λ (key)
+            (and (not (string=? "\n" key))
+                 (generate-bib bibtex-db key)))
+          (append-map (curry regexp-split #px"\\s+")
+                      (cons f r)))))
+
 (define-syntax-rule
   (define-bibtex-cite* bib-pth
     autobib-cite autobib-citet
     ~cite-id citet-id)
   (begin
     (define bibtex-db (path->bibdb bib-pth))
-    (define ((make-citer citer) f . r)
-      (apply citer
-             (filter-map
-              (λ (key)
-                (and (not (string=? "\n" key))
-                     (generate-bib bibtex-db key)))
-              (append-map (curry regexp-split #px"\\s+")
-                          (cons f r)))))
-    (define ~cite-id (make-citer autobib-cite))
-    (define citet-id (make-citer autobib-citet))))
+    (define ~cite-id (make-citer bibtex-db autobib-cite))
+    (define citet-id (make-citer bibtex-db autobib-citet))))
 
 (define (parse-author as)
   (and as
