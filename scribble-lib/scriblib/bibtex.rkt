@@ -214,13 +214,35 @@
     (define ~cite-id (make-citer autobib-cite))
     (define citet-id (make-citer autobib-citet))))
 
+;; Seems a little redundant to convert latex escapes into unicode only to
+;; convert them back into latex, but we need to sort authors so we can't
+;; leave them as literal-chars.
+(define (latex-to-unicode str)
+  ; This is probably defined somewhere...
+  ; NOTE: Incomplete. Please file PR if you need more.
+  (define converts
+    '(("\\'\\i" . "ı́")
+      ("\\\"u" . "ü")
+      ("\\\"o" . "ö")
+      ("\\\"i" . "ï")
+      ("\\'i" . "í")
+      ("\\i" . "ı")
+      ("\\'a" . "á")
+      ("\\'A" . "Á")
+      ("\\~a" . "ã")
+      ("\\`a" . "À")
+      ("\\~A" . "Ã")))
+  (for/fold ([str str])
+            ([p converts])
+    (string-replace str (car p) (cdr p))))
+
 (define (parse-author as)
   (and as
       (apply authors
          (for/list ([a (in-list (regexp-split #px"\\s+and\\s+" as))])
            (define (trim s)
              (string-trim (regexp-replace #px"\\s+" s " ")))
-           (match a
+           (match (latex-to-unicode a)
              [(pregexp #px"^(.*),(.*),(.*)$" (list _ two suffix one))
               (author-name (trim one) (trim two) #:suffix (trim suffix))]
              [(pregexp #px"^(.*),(.*)$" (list _ two one))
@@ -422,6 +444,10 @@
     [_
      (error 'parse-pages "Invalid page format ~e" ps)]))
 
+(require scribble/core)
+(define (support-escapes s)
+  (elem #:style (make-style #f '(exact-chars)) s))
+
 (define (generate-bib db key)
   (match-define (bibdb raw bibs) db)
   (hash-ref! bibs key
@@ -435,18 +461,18 @@
                                         key a the-raw))))
                (match (raw-attr 'type)
                  ["misc"
-                  (make-bib #:title (raw-attr "title")
+                  (make-bib #:title (support-escapes (raw-attr "title"))
                             #:author (parse-author (raw-attr "author"))
                             #:date (raw-attr "year")
                             #:url (raw-attr "url"))]
                  ["book"
-                  (make-bib #:title (raw-attr "title")
+                  (make-bib #:title (support-escapes (raw-attr "title"))
                             #:author (parse-author (raw-attr "author"))
                             #:date (raw-attr "year")
                             #:is-book? #t
                             #:url (raw-attr "url"))]
                  ["article"
-                  (make-bib #:title (raw-attr "title")
+                  (make-bib #:title (support-escapes (raw-attr "title"))
                             #:author (parse-author (raw-attr "author"))
                             #:date (raw-attr "year")
                             #:location (journal-location (raw-attr* "journal")
@@ -455,31 +481,31 @@
                                                          #:volume (raw-attr "volume"))
                             #:url (raw-attr "url"))]
                  ["inproceedings"
-                  (make-bib #:title (raw-attr "title")
+                  (make-bib #:title (support-escapes (raw-attr "title"))
                             #:author (parse-author (raw-attr "author"))
                             #:date (raw-attr "year")
                             #:location (proceedings-location (raw-attr "booktitle"))
                             #:url (raw-attr "url"))]
                  ["webpage"
-                  (make-bib #:title (raw-attr "title")
+                  (make-bib #:title (support-escapes (raw-attr "title"))
                             #:author (parse-author (raw-attr "author"))
                             #:date (raw-attr "year")
-                            #:url (raw-attr "url"))]                 
+                            #:url (raw-attr "url"))]
                  ["mastersthesis"
-                  (make-bib #:title (raw-attr "title")
+                  (make-bib #:title (support-escapes (raw-attr "title"))
                             #:author (parse-author (raw-attr "author"))
                             #:date (raw-attr "year")
                             #:location (raw-attr "school")
                             #:url (raw-attr "url"))]
                  ["phdthesis"
-                  (make-bib #:title (raw-attr "title")
+                  (make-bib #:title (support-escapes (raw-attr "title"))
                             #:author (parse-author (raw-attr "author"))
                             #:date (raw-attr "year")
                             #:location (dissertation-location #:institution (raw-attr "school")
                                                               #:degree "PhD")
                             #:url (raw-attr "url"))]
                  ["techreport"
-                  (make-bib #:title (raw-attr "title")
+                  (make-bib #:title (support-escapes (raw-attr "title"))
                             #:author (parse-author (raw-attr "author"))
                             #:date (raw-attr "year")
                             #:location
