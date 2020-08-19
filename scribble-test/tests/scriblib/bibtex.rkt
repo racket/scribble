@@ -10,6 +10,7 @@
 
 (define-runtime-path normal-expected-path "bibtex.normal.txt")
 (define-runtime-path number-expected-path "bibtex.number.txt")
+(define-runtime-path escapes-expected-path "bibtex.escapes.txt")
 
 (define-syntax-rule (test-render* definer expected-path body generate-bibliography-id)
   (let ()
@@ -73,4 +74,9 @@
               (λ (~cite-id citet-id)
                 (citet-id "salib:starkiller")
                 (citet-id "cryptoeprint:2000:067")
-                (citet-id "Tobin-Hochstadt:2011fk"))))
+                (citet-id "Tobin-Hochstadt:2011fk")))
+
+ (test-render escapes-expected-path (#:style number-style)
+              (λ (~cite-id citet-id)
+                (citet-id "escape1")
+                (citet-id "hochreiter_long_1997"))))

@@ -125,14 +125,28 @@
   (define (read-braced-value ip)
     (read-char ip)
     (let loop ()
-      (define first-part (read-until (λ (c) (or (char=? c #\{) (char=? c #\})))
+      (define first-part (read-until (λ (c) (or (char=? c #\{) (char=? c #\})
+                                                (char=? c #\\)))
                                      ip))
       (match (peek-char ip)
         [#\{
-         (string-append first-part (read-value ip) (loop))]
+         (string-append first-part (read-braced-value ip) (loop))]
         [#\}
          (read-char ip)
-         first-part])))
+         first-part]
+        [#\\
+         (read-char ip)
+         (string-append first-part (read-maybe-bibtex-escape ip) (loop))])))
+
+  (define (read-maybe-bibtex-escape ip)
+    (match (peek-char ip)
+      [#\#
+       (read-char ip)
+       "#"]
+      [_
+       ;; unknown escape; probably latex
+       "\\"]))
+
 
   (define (read-value ip)
     (slurp-whitespace ip)
