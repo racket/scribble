@@ -129,7 +129,7 @@
                                      ip))
       (match (peek-char ip)
         [#\{
-         (string-append first-part (read-value ip) (loop))]
+         (string-append first-part (read-braced-value ip) (loop))]
         [#\}
          (read-char ip)
          first-part])))
