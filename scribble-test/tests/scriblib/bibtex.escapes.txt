@@ -1,0 +1,5 @@
+Bibliography
+
+[1]A A\"uthor. Foo Bar $\Sigma$. fake, 2003. example.com#tag       
+[2]S. Hochreiter and J. Schmidhuber. Long Short-Term Memory. Neural
+   Computation 9(8), pp. 1735–1780, 1997.                          
