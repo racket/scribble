@@ -1,0 +1,6 @@
+Bibliography
+
+[1]Vı́ctor Braberman, Federico Fernández, Diego Garbervetsky, and Sergio
+   Yovine. Parametric prediction of heap memory requirements. In Proc.  
+   Proceedings of the 7th international symposium on Memory management, 
+   2008. http://doi.acm.org/10.1145/1375634.1375655                     
