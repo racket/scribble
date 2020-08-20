@@ -74,7 +74,7 @@
 
  @item{@css{RktOpt} (option-argument brackets): brackets in
 
-       @defproc[(f [x any/c 1]) any]}
+       @defproc[#:link-target? #f (f [x any/c 1]) any]}
 
  @item{@css{RktKw} (not normally used): @racketkeywordfont{example}}
 
