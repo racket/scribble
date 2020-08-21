@@ -8,10 +8,6 @@
 
 @(define css tt)
 
-@(define-syntax (opt-example stx)
-  ;; A #\? 'paren-shape value triggers RktOpt:
-   #`@racket[#,(syntax-property #'(in-example) 'paren-shape '#\?)])
-
 @title{Manual All-Styles Document}
 
 @table-of-contents[]
@@ -76,7 +72,9 @@
 
  @item{@css{RktModLink} (a linked module reference): @racketmodname[racket/base]}
 
- @item{@css{RktOpt} (option-argument brackets): brackets in @opt-example[]}
+ @item{@css{RktOpt} (option-argument brackets): brackets in
+
+       @defproc[#:link-target? #f (f [x any/c 1]) any]}
 
  @item{@css{RktKw} (not normally used): @racketkeywordfont{example}}
 
