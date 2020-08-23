@@ -49,7 +49,7 @@
     (match (read-until (λ (c) (or (char=? c #\{)
                                   (char=? c #\()))
                        ip)
-      [(app string-downcase "string")
+      [(app string-foldcase "string")
        (slurp-whitespace ip)
        (match (read-char ip)
          [#\{
@@ -70,8 +70,8 @@
              (perror ip 'read-entry "Parsing string, expected }, got ~v; tag is ~v; string is ~v" c tag string)])]
          [c
           (perror ip 'read-entry "Parsing string, expected =, got ~v; tag is ~v" c tag)])]
-      [(or (app string-downcase "comment")
-           (app string-downcase "preamble"))
+      [(or (app string-foldcase "comment")
+           (app string-foldcase "preamble"))
        (read-char ip)
        (let loop ()
          (read-until (λ (c) (or (char=? c #\{) (char=? c #\}))) ip)
@@ -83,7 +83,7 @@
       [typ
        (read-char ip)
        (slurp-whitespace ip)
-       (define label (read-until (λ (c) (char=? c #\,)) ip))
+       (define label (string-foldcase (read-until (λ (c) (char=? c #\,)) ip)))
        (read-char ip)
        (define alist
          (let loop ()
@@ -110,11 +110,11 @@
                 [c
                  (perror ip 'read-entry "Parsing entry tag, expected =, got ~v; label is ~v; atag is ~v" c label atag)])])))
        (hash-set! ENTRY-DB label
-                  (hash-set alist 'type typ))]))
+                  (hash-set alist 'type (string-foldcase typ)))]))
 
   (define (read-tag ip)
     (slurp-whitespace ip)
-    (string-downcase
+    (string-foldcase
      (read-until
       (λ (c) (or (char-whitespace? c)
                  (char=? c #\=)
@@ -197,22 +197,23 @@
       autobib-cite autobib-citet
       ~cite-id citet-id)))
 
+(define ((make-citer bibtex-db citer) f . r)
+  (apply citer
+         (filter-map
+          (λ (key)
+            (and (not (string=? "\n" key))
+                 (generate-bib bibtex-db key)))
+          (append-map (curry regexp-split #px"\\s+")
+                      (cons f r)))))
+
 (define-syntax-rule
   (define-bibtex-cite* bib-pth
     autobib-cite autobib-citet
     ~cite-id citet-id)
   (begin
     (define bibtex-db (path->bibdb bib-pth))
-    (define ((make-citer citer) f . r)
-      (apply citer
-             (filter-map
-              (λ (key)
-                (and (not (string=? "\n" key))
-                     (generate-bib bibtex-db key)))
-              (append-map (curry regexp-split #px"\\s+")
-                          (cons f r)))))
-    (define ~cite-id (make-citer autobib-cite))
-    (define citet-id (make-citer autobib-citet))))
+    (define ~cite-id (make-citer bibtex-db autobib-cite))
+    (define citet-id (make-citer bibtex-db autobib-citet))))
 
 ;; Seems a little redundant to convert latex escapes into unicode only to
 ;; convert them back into latex, but we need to sort authors so we can't
@@ -450,9 +451,9 @@
 
 (define (generate-bib db key)
   (match-define (bibdb raw bibs) db)
-  (hash-ref! bibs key
+  (hash-ref! bibs (string-foldcase key)
              (λ ()
-               (define the-raw (hash-ref raw key (λ () (error 'bibtex "Unknown citation ~e" key))))
+               (define the-raw (hash-ref raw (string-foldcase key) (λ () (error 'bibtex "Unknown citation ~e" key))))
                (define (raw-attr a [def #f])
                  (hash-ref the-raw a def))
                (define (raw-attr* a)
