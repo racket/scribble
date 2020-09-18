@@ -3,12 +3,23 @@
 \newcommand{\packageHyperref}{\usepackage{hyperref}}
 \newcommand{\renewrmdefault}{\renewcommand{\rmdefault}{ptm}}
 \newcommand{\packageRelsize}{\usepackage{relsize}}
+% amsmath is required for the combination of {mathabx,
+% wasysym, newtxmath} to work. Otherwise, newtxmath
+% would load amsmath *after* mathabx and wasysym,
+% causing command redefinition issues.
+\newcommand{\packageAmsmath}{\usepackage{amsmath}}
 \newcommand{\packageMathabx}{\usepackage{mathabx}}
-% Avoid conflicts between "mathabx" and "wasysym":
+% Avoid conflicts between "mathabx" and "wasysym",
+% and between "wasysym" integrals and "amsmath" integrals (iint).
 \newcommand{\packageWasysym}{
   \let\leftmoon\relax \let\rightmoon\relax \let\fullmoon\relax \let\newmoon\relax \let\diameter\relax
-  \usepackage{wasysym}}
-\newcommand{\packageTxfonts}{\usepackage{txfonts}}
+  \usepackage[nointegrals]{wasysym}}
+% Both newtxmath and mathabx define the \widering command.
+% The only reason we choose the newtxmath version is that
+% acmart.cls is also using the one from newtxmath.
+\newcommand{\packageTxfonts}{
+  \let\widering\relax
+  \usepackage{newtxmath}}
 \newcommand{\packageTextcomp}{\usepackage{textcomp}}
 \newcommand{\packageFramed}{\usepackage{framed}}
 \newcommand{\packageHyphenat}{\usepackage[htt]{hyphenat}}
