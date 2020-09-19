@@ -1,0 +1,14 @@
+% Scribble should not change the default font from CMR
+% to ptm for LNCS. See Guidelines for Authors of Papers
+% to be Published in Springer Computer Science Proceedings,
+% section 2.3, Fonts.
+%
+% IMPORTANT: the default package newtxmath *still*
+% changes the math font. If you want to disable it,
+% uncomment the next line
+% \renewcommand\packageTxfonts\relax
+% However, scribble would still generate LaTeX commands
+% that depend on newtxmath upon rendering symbols
+% \multimap, \multimapinv, \invamp and \square in
+% scribble-lib/scribble/latex-render.rkt.
+\renewcommand\renewrmdefault\relax
