@@ -50,7 +50,8 @@
                                                     unicode-encoding-packages))
                 (scribble-file "lncs/style.tex")
                 (list cls-file)
-                #f))
+                #f
+                #:replacements (hash "scribble-load-replace.tex" (scribble-file "lncs/lncs-load.tex"))))
 
 (define lncs-extras
   (let ([abs (lambda (s)
