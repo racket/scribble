@@ -172,7 +172,7 @@ AddOnLoad(function(){
 // Pressing "S" or "s" focuses on the "...search manuals..." text field
 AddOnLoad(function(){
   window.addEventListener("keyup", function(e) {
-    if (e.key === 's' || e.key == 'S' && e.target === document.body) {
+    if (e.key === 's' || e.key === 'S' && e.target === document.body) {
       var field = document.getElementsByClassName("searchbox")[0];
       field.focus();
     }
