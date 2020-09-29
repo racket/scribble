@@ -221,26 +221,16 @@
          (string->symbol (alt-tag-name s)))))
 
 (define (make-search-box top-path) ; appears on every page
-  (let ([sa         string-append]
-        [emptylabel "...search manuals..."]
-        [dimcolor   "#888"])
+  (let ([emptylabel "...search manuals..."])
     `(form ([class "searchform"])
        (input
         ([class "searchbox"]
-         [style ,(sa "color: "dimcolor";")]
          [type "text"]
          [tabindex "1"]
-         [value ,emptylabel]
+         [placeholder ,emptylabel]
          [title "Enter a search string to search the manuals"]
          [onkeypress ,(format "return DoSearchKey(event, this, ~s, ~s);"
-                              (version) top-path)]
-         [onfocus ,(sa "this.style.color=\"black\"; "
-                       "this.style.textAlign=\"left\"; "
-                       "if (this.value == \""emptylabel"\") this.value=\"\";")]
-         [onblur ,(sa "if (this.value.match(/^ *$/)) {"
-                      " this.style.color=\""dimcolor"\";"
-                      " this.style.textAlign=\"center\";"
-                      " this.value=\""emptylabel"\"; }")])))))
+                              (version) top-path)])))))
 (define search-box (make-search-box "../"))
 (define top-search-box (make-search-box ""))
 
