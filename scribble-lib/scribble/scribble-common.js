@@ -173,8 +173,10 @@ AddOnLoad(function(){
 AddOnLoad(function(){
   window.addEventListener("keyup", function(event) {
     if (event && (event.keyCode == 83 || event.keyCode == 115) && event.target == document.body) {
-      var field = document.getElementsByClassName("searchbox")[0];
-      field.focus();
+      var searchBox = document.getElementById('searchbox');
+      if (searchBox) {
+        searchBox.focus();
+      }
     }
   }, false);
 });

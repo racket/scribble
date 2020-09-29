@@ -228,6 +228,7 @@
        (input
         ([class "searchbox"]
          [style ,(sa "color: "dimcolor";")]
+         [id "searchbox"]
          [type "text"]
          [tabindex "1"]
          [value ,emptylabel]
