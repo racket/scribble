@@ -4,7 +4,9 @@
          "../basic.rkt"
          "../manual-struct.rkt"
          (only-in "../core.rkt" 
-                  make-style make-table-columns)
+                  make-style
+                  make-table-columns
+                  content?)
          "../html-properties.rkt"
          "qsloc.rkt"
          "manual-utils.rkt"
@@ -131,7 +133,7 @@
     #:attributes (kind) ;; Expr[String/#f]
     #:description "#:kind keyword"
     (pattern (~optional (~seq #:kind k))
-             #:declare k (expr/c #'(or/c string? #f) #:name "#:kind argument")
+             #:declare k (expr/c #'(or/c content? #f) #:name "#:kind argument")
              #:with kind #'(~? k.c #f)))
 
  (define-splicing-syntax-class value-kw

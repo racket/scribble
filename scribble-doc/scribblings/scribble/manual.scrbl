@@ -836,7 +836,7 @@ Equivalent to @racket[defmodule] variants @racket[#:no-declare].}
                          ellipses+]
                [options (code:line maybe-kind maybe-link maybe-id)]
                [maybe-kind code:blank
-                           (code:line #:kind kind-string-expr)]
+                           (code:line #:kind kind-content-expr)]
                [maybe-link code:blank
                            (code:line #:link-target? link-target?-expr)]
                [maybe-id code:blank
@@ -945,8 +945,8 @@ by the @racket[current-display-width] parameter.
 
 An optional @racket[#:kind] specification chooses the decorative
 label, which defaults to @racket["procedure"]. A @racket[#f]
-result for @racket[kind-string-expr] uses the default, otherwise
-@racket[kind-string-expr] should produce a string. An alternate
+result for @racket[kind-content-expr] uses the default, otherwise
+@racket[kind-content-expr] should produce content in the sense of @racket[content?]. An alternate
 label should be all lowercase.
 
 If @racket[#:id [src-id dest-id-expr]] is supplied, then
@@ -1007,7 +1007,7 @@ Examples:
                 pre-flow ...)
               ([options (code:line maybe-kind maybe-link maybe-id maybe-literals)]
                [maybe-kind code:blank
-                           (code:line #:kind kind-string-expr)]
+                           (code:line #:kind kind-content-expr)]
                [maybe-link code:blank
                            (code:line #:link-target? link-target?-expr)]
                [maybe-id code:blank
@@ -1028,7 +1028,7 @@ result of @racket[id-expr]) whose syntax is described by
 @racket[id], then @racket[form-datum] must have the form @racket[(id
 . _datum)].
 
-If @racket[#:kind kind-string-expr] is supplied, it is used in the
+If @racket[#:kind kind-content-expr] is supplied, it is used in the
 same way as for @racket[defproc], but the default kind is
 @racket["syntax"].
 
@@ -1338,7 +1338,7 @@ Like @racket[defparam], but the contract on a parameter argument is
                 pre-flow ...)
               ([options (code:line maybe-kind maybe-link maybe-id)]
                [maybe-kind code:blank
-                           (code:line #:kind kind-string-expr)]
+                           (code:line #:kind kind-content-expr)]
                [maybe-link code:blank
                            (code:line #:link-target? link-target?-expr)]
                [maybe-id code:blank
@@ -1348,7 +1348,7 @@ Like @racket[defparam], but the contract on a parameter argument is
 
 Like @racket[defproc], but for a non-procedure binding.
 
-If @racket[#:kind kind-string-expr] is supplied,
+If @racket[#:kind kind-content-expr] is supplied,
 it is used in the same way as for
 @racket[defproc], but the default kind is @racket["value"].
 
