@@ -1851,6 +1851,15 @@ For a @racket[part] that corresponds to an HTML page, adds content to
 the @tt{<head>} tag.}
 
 
+@defstruct[head-addition ([xexpr xexpr/c])]{
+
+Like @racket[head-extra] in content, but propagated to enclosing and
+nested HTML pages like @racket[css-addition]. Additions to @tt{<head>}
+via @racket[head-addition] appear before additions via @racket[head-extra].
+
+@history[#:added "1.38"]}
+
+
 @defstruct[render-convertible-as ([types (listof (or/c 'png-bytes 'svg-bytes 'gif-bytes))])]{
  For a @racket[part] that corresponds to an HTML page,
  controls how objects that subscribe to the @racketmodname[file/convertible]
