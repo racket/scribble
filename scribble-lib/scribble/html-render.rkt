@@ -225,6 +225,7 @@
     `(form ([class "searchform"])
        (input
         ([class "searchbox"]
+         [id "searchbox"]
          [type "text"]
          [tabindex "1"]
          [placeholder ,emptylabel]
