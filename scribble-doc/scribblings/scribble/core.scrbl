@@ -1771,10 +1771,13 @@ HTML that is rendered before and after element content.
                                      bytes?)])]{
 
 Used as a @tech{style property} to supply a CSS file (if @racket[path]
-is a path, string, or list), URL (if @racket[path] is a @racket[url]) or content (if @racket[path] is a byte
-string) to be referenced or included in the generated HTML. This
-property can be attached to any style, and all additions are collected
-to the top of the generated HTML page.
+is a path, string, or list), URL (if @racket[path] is a @racket[url])
+or content (if @racket[path] is a byte string) to be referenced or
+included in the generated HTML. This property can be attached to any
+style, and all additions are collected and lifted to the enclosing
+generated HTML. When the style property is attached to a @tech{part},
+then it is also propagated to any generated HTML for a subpart of the
+part.
 
 The @racket[path] field can be a result of
 @racket[path->main-collects-relative].}
@@ -1846,6 +1849,15 @@ Like @racket[latex-defaults], but use for the
 
 For a @racket[part] that corresponds to an HTML page, adds content to
 the @tt{<head>} tag.}
+
+
+@defstruct[head-addition ([xexpr xexpr/c])]{
+
+Like @racket[head-extra] in content, but propagated to enclosing and
+nested HTML pages like @racket[css-addition]. Additions to @tt{<head>}
+via @racket[head-addition] appear before additions via @racket[head-extra].
+
+@history[#:added "1.38"]}
 
 
 @defstruct[render-convertible-as ([types (listof (or/c 'png-bytes 'svg-bytes 'gif-bytes))])]{
