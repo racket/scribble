@@ -1,10 +1,10 @@
 #lang racket/base
 
-(provide valid-blueboxes-info?)
+(provide valid-signature-box-info?)
 
 (require scribble/core racket/contract/base)
 
-(define valid-blueboxes-info?
+(define valid-signature-box-info?
   (hash/c
    tag?
    (listof (cons/c exact-nonnegative-integer?

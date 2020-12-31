@@ -744,7 +744,7 @@ via a @racketmodname[scribble/text-render] renderer).
    
 It saves this information in three pieces in a file
 inside the @racket[dests] directories called
-@filepath{blueboxes.rktd}. The first piece is
+@filepath{signature-box.rktd}. The first piece is
 a single line containing a (decimal, ASCII) number. That number
 is the number of bytes that the second piece of information
 occupies in the file. The second piece of information
@@ -771,7 +771,7 @@ it saves the resulting files in a different place.
                           [ri render-info?])
                   void?]{
   Just like @method[override-render-mixin-multi render], except
-  that it saves the file @filepath{blueboxes.rktd} in
+  that it saves the file @filepath{signature-box.rktd} in
   the same directory where each @racket[dests] element resides.
 }}
 }
