@@ -5,11 +5,11 @@
                      racket/contract
                      setup/xref))
 
-@title[#:tag "signature-box"]{Blue Boxes Utilities}
+@title[#:tag "signature-box"]{Signature Boxes Utilities}
 
 @defmodule[scribble/signature-box]{
   The @racketmodname[scribble/signature-box] provides access
-  to the content of the ``blue boxes'' that describe
+  to the content of the ``signature boxes'' that describe
   some module's export (but without any styling).}
 
 @defproc[(fetch-signature-box-strs [tag tag?]
@@ -17,7 +17,7 @@
                                                   signature-box-cache?
                                                   (make-signature-box-cache #t)])
          (or/c #f (non-empty-listof string?))]{
-  Returns a list of strings that show the content of the blue box
+  Returns a list of strings that show the content of the signature box
   (without any styling information) for the documentation referenced
   by @racket[tag].
 
