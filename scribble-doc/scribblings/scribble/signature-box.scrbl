@@ -45,7 +45,7 @@
   
   If @racket[populate?] is @racket[#f], the cache is initially
   unpopulated, in which case it is filled in the first time the cache
-  is passed to @racket[fetch-bluebxoes-strs]. Otherwise, the cache is
+  is passed to @racket[fetch-signature-box-strs]. Otherwise, the cache is
   populated immediately.
 
   The @racket[signature-box-dirs] argument is a list of directories that are
