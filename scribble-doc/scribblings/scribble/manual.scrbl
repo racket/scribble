@@ -1381,6 +1381,29 @@ Examples:
   }]
 }
 
+@defform[(defthing* options ([id contract-expr-datum maybe-value] ...+)
+           pre-flow ...)]{
+
+Like @racket[defthing], but for multiple non-procedure bindings.
+Unlike @racket[defthing], @racket[_id-expr] is not supported.
+
+Examples:
+@codeblock[#:keep-lang-line? #f]|{
+#lang scribble/manual
+@defthing*[([moldy-sandwich sandwich?]
+            [empty-sandwich sandwich?])]{
+  Predefined sandwiches.
+}
+}|
+@doc-render-examples[
+@defthing*[#:link-target? #f
+           ([moldy-sandwich sandwich?]
+            [empty-sandwich sandwich?])]{
+  Predefined sandwiches.
+}
+]
+}
+
 
 @deftogether[(
 @defform[       (defstruct* maybe-link struct-name ([field-name contract-expr-datum] ...)
