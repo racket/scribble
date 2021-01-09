@@ -192,7 +192,7 @@
         d:id-kw
         mode:mode-kw
         within:within-kw
-        [[proto result value:value-kw] ...]
+        [[proto result value:value-kw] ...+]
         desc ...)
      (syntax/loc stx
        (with-togetherable-racket-variables

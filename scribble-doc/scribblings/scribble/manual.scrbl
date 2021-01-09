@@ -966,7 +966,7 @@ simple, short functions.
 @defform[(defproc* options
                    ([prototype
                      result-contract-expr-datum
-                     maybe-value] ...)
+                     maybe-value] ...+)
                    pre-flow ...)]{
 
 Like @racket[defproc], but for multiple cases with the same
@@ -1447,7 +1447,7 @@ Additionally, an example using @racket[defstruct*]:
   }]
 
 
-@defform[(deftogether [def-expr ...] pre-flow ...)]{
+@defform[(deftogether [def-expr ...+] pre-flow ...)]{
 
 Combines the definitions created by the @racket[def-expr]s into a
 single definition box. Each @racket[def-expr] should produce a
