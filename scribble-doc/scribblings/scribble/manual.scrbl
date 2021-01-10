@@ -1993,7 +1993,7 @@ Returns @racket[#t] if @racket[v] is a bibliography entry created by
 @; ------------------------------------------------------------------------
 @section{Version History}
 
-@defform[(history clause ...)
+@defform[(history clause ...+)
          #:grammar ([clause (code:line #:added version-expr)
                             (code:line #:changed version-expr content-expr)])
          #:contracts ([version-expr valid-version?]
