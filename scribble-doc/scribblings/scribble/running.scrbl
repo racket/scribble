@@ -218,3 +218,16 @@ and rendered, which could affect the content that
 @racket[current-command-line-arguments].
 
 @history[#:changed "1.1" @elem{Added the empty-vector default and @DPFlag{arg} flag.}]
+
+@section{Additional Options}
+
+@itemlist[
+ @item{@DFlag{quiet} --- suppress output-file and undefined-tag reporting}
+
+ @item{@DFlag{doc-binding} @nonterm{id} --- render document
+       provided as @nonterm{id} instead of @racket[doc]}
+
+ @item{@DFlag{errortrace} --- enable @racketmodname[errortrace #:indirect]}
+]
+
+@history[#:changed "1.38" @elem{Added the @DFlag{errortrace} flag.}]
