@@ -145,6 +145,13 @@
    [("--doc-binding") id
     "render document provided as <id> instead of `doc`"
     (set! doc-binding (string->symbol id))]
+   [("--errortrace") "enable errortrace"
+    (with-handlers ([exn:fail:filesystem:missing-module?
+                     (λ (e)
+                       (raise-user-error
+                        'scribble
+                        "errortrace not installed"))])
+      (dynamic-require 'errortrace #f))]
    #:args (file . another-file)
    (let ([files (cons file another-file)])
      (parameterize ([current-command-line-arguments
