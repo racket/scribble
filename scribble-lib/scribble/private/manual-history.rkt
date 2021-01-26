@@ -23,7 +23,7 @@
 
 (define-syntax (history stx)
   (syntax-parse stx
-    [(_ c:clause ...)
+    [(_ c:clause ...+)
      #'(make-history (list c.e ...))]))
 
 (define (make-history es)

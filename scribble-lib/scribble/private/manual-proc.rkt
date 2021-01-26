@@ -192,7 +192,7 @@
         d:id-kw
         mode:mode-kw
         within:within-kw
-        [[proto result value:value-kw] ...]
+        [[proto result value:value-kw] ...+]
         desc ...)
      (syntax/loc stx
        (with-togetherable-racket-variables
@@ -1070,7 +1070,7 @@
 
 (define-syntax (defthing* stx)
   (syntax-parse stx
-    [(_ kind:kind-kw lt:link-target?-kw ([id result value:value-kw] ...) desc ...)
+    [(_ kind:kind-kw lt:link-target?-kw ([id result value:value-kw] ...+) desc ...)
      #'(with-togetherable-racket-variables
         ()
         ()

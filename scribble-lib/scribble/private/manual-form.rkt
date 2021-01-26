@@ -121,7 +121,7 @@
 
 (define-syntax (defform* stx)
   (syntax-parse stx
-    [(_ k:kind-kw lt:link-target?-kw d:id-kw l:literals-kw [spec ...]
+    [(_ k:kind-kw lt:link-target?-kw d:id-kw l:literals-kw [spec ...+]
         subs:subs-kw c:contracts-kw desc ...)
      (syntax/loc stx
        (defform*/subs #:kind k.kind 

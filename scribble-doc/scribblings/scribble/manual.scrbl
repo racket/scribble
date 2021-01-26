@@ -966,7 +966,7 @@ simple, short functions.
 @defform[(defproc* options
                    ([prototype
                      result-contract-expr-datum
-                     maybe-value] ...)
+                     maybe-value] ...+)
                    pre-flow ...)]{
 
 Like @racket[defproc], but for multiple cases with the same
@@ -1381,6 +1381,29 @@ Examples:
   }]
 }
 
+@defform[(defthing* options ([id contract-expr-datum maybe-value] ...+)
+           pre-flow ...)]{
+
+Like @racket[defthing], but for multiple non-procedure bindings.
+Unlike @racket[defthing], @racket[_id-expr] is not supported.
+
+Examples:
+@codeblock[#:keep-lang-line? #f]|{
+#lang scribble/manual
+@defthing*[([moldy-sandwich sandwich?]
+            [empty-sandwich sandwich?])]{
+  Predefined sandwiches.
+}
+}|
+@doc-render-examples[
+@defthing*[#:link-target? #f
+           ([moldy-sandwich sandwich?]
+            [empty-sandwich sandwich?])]{
+  Predefined sandwiches.
+}
+]
+}
+
 
 @deftogether[(
 @defform[       (defstruct* maybe-link struct-name ([field-name contract-expr-datum] ...)
@@ -1447,7 +1470,7 @@ Additionally, an example using @racket[defstruct*]:
   }]
 
 
-@defform[(deftogether [def-expr ...] pre-flow ...)]{
+@defform[(deftogether [def-expr ...+] pre-flow ...)]{
 
 Combines the definitions created by the @racket[def-expr]s into a
 single definition box. Each @racket[def-expr] should produce a
@@ -1970,7 +1993,7 @@ Returns @racket[#t] if @racket[v] is a bibliography entry created by
 @; ------------------------------------------------------------------------
 @section{Version History}
 
-@defform[(history clause ...)
+@defform[(history clause ...+)
          #:grammar ([clause (code:line #:added version-expr)
                             (code:line #:changed version-expr content-expr)])
          #:contracts ([version-expr valid-version?]

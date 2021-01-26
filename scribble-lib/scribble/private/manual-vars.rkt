@@ -9,6 +9,7 @@
          "../html-properties.rkt"
          racket/contract/base
          (for-syntax scheme/base
+                     syntax/parse
                      syntax/kerncase
                      syntax/boundmap)
          (for-label scheme/base
@@ -192,8 +193,8 @@
     (body-thunk))))
 
 (define-syntax (deftogether stx)
-  (syntax-case stx ()
-    [(_ (def ...) . body)
+  (syntax-parse stx
+    [(_ (def ...+) . body)
      (with-syntax ([((_ (lit ...) (var ...) decl) ...)
                     (map (lambda (def)
                            (let ([exp-def (local-expand 
