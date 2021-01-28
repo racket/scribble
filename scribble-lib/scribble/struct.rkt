@@ -5,7 +5,7 @@
          "private/provide-structs.rkt"
          "html-properties.rkt"
          racket/provide-syntax
-         scheme/struct-info
+         racket/struct-info
          racket/contract/base
          (for-syntax racket/base))
 
