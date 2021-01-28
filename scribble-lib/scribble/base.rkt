@@ -7,7 +7,7 @@
          "html-properties.rkt"
          "tag.rkt"
          "private/tag.rkt"
-         scheme/list
+         racket/list
          racket/class
          racket/contract/base
          racket/contract/combinator

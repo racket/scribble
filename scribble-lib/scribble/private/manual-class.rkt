@@ -16,7 +16,7 @@
          "manual-proc.rkt"
          "manual-vars.rkt"
          "manual-class-struct.rkt"
-         scheme/list
+         racket/list
          (for-syntax racket/base)
          (for-label racket/base
                     racket/class))

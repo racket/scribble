@@ -5,7 +5,7 @@
                    content?
                    style?)
          racket/contract/base
-         scheme/list)
+         racket/list)
 
 (provide doc-prefix)
 (provide/contract

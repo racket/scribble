@@ -4,7 +4,7 @@
          "decode-struct.rkt"
          racket/contract/base
          racket/contract/combinator
-         scheme/list)
+         racket/list)
 
 (define (pre-content? i)
   (or (string? i)

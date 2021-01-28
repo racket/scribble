@@ -7,7 +7,7 @@
          scheme/path
          racket/file
          scheme/port
-         scheme/list
+         racket/list
          scheme/string
          file/convertible
          mzlib/runtime-path

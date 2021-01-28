@@ -9,7 +9,7 @@
          "manual-vars.rkt"
          "manual-scheme.rkt"
          "manual-bind.rkt"
-         scheme/list
+         racket/list
          (for-syntax racket/base
                      syntax/parse
                      racket/syntax)
