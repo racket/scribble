@@ -183,7 +183,7 @@
 
 ;; include for templates
 (require (for-syntax racket/base (prefix-in scribble: scribble/reader) syntax/parse)
-         scheme/include)
+         racket/include)
 (define-syntax (include/text stx)
   (syntax-case stx ()
     [(_ path-spec)
