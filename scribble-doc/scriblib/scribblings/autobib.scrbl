@@ -2,7 +2,7 @@
 @(require (for-label (only-in scribble/core content?)
                      scribble/struct
                      scriblib/autobib
-                     scheme/base
+                     racket/base
                      scheme/contract))
 
 @title[#:tag "autobib"]{Bibliographies}

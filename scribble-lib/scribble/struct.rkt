@@ -7,7 +7,7 @@
          scheme/provide-syntax
          scheme/struct-info
          racket/contract/base
-         (for-syntax scheme/base))
+         (for-syntax racket/base))
 
 (define-provide-syntax (compat**-out stx)
   (syntax-case stx ()

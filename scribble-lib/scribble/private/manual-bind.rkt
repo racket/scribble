@@ -10,8 +10,8 @@
          "../html-properties.rkt"
          "manual-ex.rkt"
          racket/contract/base
-         (for-syntax scheme/base)
-         (for-label scheme/base
+         (for-syntax racket/base)
+         (for-label racket/base
                     scheme/class))
 
 (provide definition-site

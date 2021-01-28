@@ -11,7 +11,7 @@
          scheme/class
          racket/contract/base
          racket/contract/combinator
-         (for-syntax scheme/base))
+         (for-syntax racket/base))
 
 (provide (all-from-out "tag.rkt"))
 

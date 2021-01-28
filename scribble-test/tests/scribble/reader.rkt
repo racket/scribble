@@ -742,7 +742,7 @@ foo
 -@eval->
 "/Note/: *This is _not_ a pipe*."
 ---
-(require (for-syntax scheme/base))
+(require (for-syntax racket/base))
 (let-syntax ([foo
               (lambda (stx)
                 (let ([p (syntax-property stx 'scribble)])

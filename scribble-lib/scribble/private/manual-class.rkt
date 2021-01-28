@@ -17,8 +17,8 @@
          "manual-vars.rkt"
          "manual-class-struct.rkt"
          scheme/list
-         (for-syntax scheme/base)
-         (for-label scheme/base
+         (for-syntax racket/base)
+         (for-label racket/base
                     scheme/class))
 
 (provide defclass

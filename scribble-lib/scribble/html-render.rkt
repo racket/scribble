@@ -21,7 +21,7 @@
          racket/draw/gif
          pkg/path
          (prefix-in xml: xml/xml)
-         (for-syntax scheme/base)
+         (for-syntax racket/base)
          "search.rkt"
          (except-in "base.rkt" url))
 (provide render-mixin

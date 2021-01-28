@@ -1,6 +1,6 @@
 #lang racket/base
 
-(require "output.rkt" (for-syntax scheme/base syntax/kerncase))
+(require "output.rkt" (for-syntax racket/base syntax/kerncase))
 
 (provide module-begin/text begin/text include/text begin/collect
          process-begin/text)
@@ -182,7 +182,7 @@
      #'(process-begin/text begin/collect begin expr ...)]))
 
 ;; include for templates
-(require (for-syntax scheme/base (prefix-in scribble: scribble/reader) syntax/parse)
+(require (for-syntax racket/base (prefix-in scribble: scribble/reader) syntax/parse)
          scheme/include)
 (define-syntax (include/text stx)
   (syntax-case stx ()
