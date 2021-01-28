@@ -2,7 +2,7 @@
 @(require (for-label scribble/struct
                      scriblib/footnote
                      racket/base
-                     scheme/contract))
+                     racket/contract))
 
 @title[#:tag "footnotes"]{Footnotes}
 

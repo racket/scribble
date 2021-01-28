@@ -3,7 +3,7 @@
                      scribble/decode
                      scriblib/figure
                      racket/base
-                     scheme/contract))
+                     racket/contract))
 
 @(define-syntax-rule (sn s) @racket[s])
 

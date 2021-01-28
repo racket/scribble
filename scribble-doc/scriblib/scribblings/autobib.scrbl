@@ -3,7 +3,7 @@
                      scribble/struct
                      scriblib/autobib
                      racket/base
-                     scheme/contract))
+                     racket/contract))
 
 @title[#:tag "autobib"]{Bibliographies}
 
