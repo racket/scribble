@@ -1,5 +1,5 @@
 #lang racket/base
-(require scheme/serialize
+(require racket/serialize
          racket/contract/base
          (for-syntax racket/base))
 

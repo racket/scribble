@@ -17,7 +17,7 @@
          net/url
          net/uri-codec
          net/base64
-         scheme/serialize
+         racket/serialize
          racket/draw/gif
          pkg/path
          (prefix-in xml: xml/xml)

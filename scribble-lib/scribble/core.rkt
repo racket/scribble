@@ -1,6 +1,6 @@
 #lang racket/base
 (require "private/provide-structs.rkt"
-         scheme/serialize
+         racket/serialize
          racket/contract/base
          file/convertible)
 
