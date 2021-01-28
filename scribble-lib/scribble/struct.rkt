@@ -4,7 +4,7 @@
                     [make-target-url core:make-target-url])
          "private/provide-structs.rkt"
          "html-properties.rkt"
-         scheme/provide-syntax
+         racket/provide-syntax
          scheme/struct-info
          racket/contract/base
          (for-syntax racket/base))
