@@ -6,7 +6,7 @@
          scribble/search
          (prefix-in html: scribble/html-render)
          racket/class
-         scheme/path)
+         racket/path)
 
 (provide load-xref
          xref?

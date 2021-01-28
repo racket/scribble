@@ -4,7 +4,7 @@
          "html-properties.rkt"
          "private/literal-anchor.rkt"
          racket/class
-         scheme/path
+         racket/path
          racket/file
          scheme/port
          racket/list

@@ -5,7 +5,7 @@
          mzlib/class
          mzlib/serialize
          racket/file
-         scheme/path
+         racket/path
          setup/collects
          setup/path-relativize
          file/convertible
