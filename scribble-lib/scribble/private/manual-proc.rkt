@@ -17,7 +17,7 @@
          "manual-method.rkt"
          "manual-ex.rkt"
          "on-demand.rkt"
-         scheme/string
+         racket/string
          racket/list
          racket/contract
          (for-syntax racket/base

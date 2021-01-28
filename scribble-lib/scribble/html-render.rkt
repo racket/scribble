@@ -8,7 +8,7 @@
          racket/file
          racket/port
          racket/list
-         scheme/string
+         racket/string
          file/convertible
          mzlib/runtime-path
          setup/main-doc
