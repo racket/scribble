@@ -7,7 +7,7 @@
          "../manual-struct.rkt"
          "qsloc.rkt"
          racket/serialize
-         scheme/stxparam
+         racket/stxparam
          "manual-utils.rkt"
          "manual-style.rkt"
          "manual-scheme.rkt"
