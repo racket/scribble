@@ -1,6 +1,6 @@
 #lang racket/base
 
-(require scheme/system scheme/port)
+(require scheme/system racket/port)
 
 (provide run-pdflatex run-dvipdf-latex run-xelatex)
 

@@ -6,7 +6,7 @@
          racket/class
          racket/path
          racket/file
-         scheme/port
+         racket/port
          racket/list
          scheme/string
          file/convertible
