@@ -1,7 +1,7 @@
 #lang racket/base
 (require "xref.rkt"
          "render.rkt"
-         scheme/cmdline
+         racket/cmdline
          raco/command-name
          (prefix-in text:     "text-render.rkt")
          (prefix-in markdown: "markdown-render.rkt")

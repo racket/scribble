@@ -1,6 +1,6 @@
 #lang racket/base
 
-(require "search.rkt" scheme/cmdline scheme/list scheme/string
+(require "search.rkt" racket/cmdline scheme/list scheme/string
          raco/command-name) 
 
 ;; Minimal command-line arguments, the query string can contain all
