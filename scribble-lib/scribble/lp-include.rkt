@@ -1,4 +1,4 @@
-#lang scheme/base
+#lang racket/base
 
 (require scheme/include (for-syntax scheme/base)
           (only-in scribble/private/lp chunk CHUNK)

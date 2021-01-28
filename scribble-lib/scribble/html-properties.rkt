@@ -1,4 +1,4 @@
-#lang scheme/base
+#lang racket/base
 (require "private/provide-structs.rkt"
          racket/contract/base
          xml/xexpr

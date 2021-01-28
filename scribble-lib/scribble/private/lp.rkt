@@ -1,4 +1,4 @@
-#lang scheme/base
+#lang racket/base
 
 (require (for-syntax scheme/base syntax/boundmap)
          scribble/scheme scribble/decode scribble/manual scribble/struct)

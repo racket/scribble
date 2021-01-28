@@ -1,4 +1,4 @@
-#lang scheme/base
+#lang racket/base
 (require "../struct.rkt"
          "../base.rkt"
          (only-in "../core.rkt"

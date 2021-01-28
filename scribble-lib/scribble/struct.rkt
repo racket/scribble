@@ -1,4 +1,4 @@
-#lang scheme/base
+#lang racket/base
 (require (rename-in (except-in "core.rkt"
                                target-url struct:target-url target-url? target-url-addr)
                     [make-target-url core:make-target-url])

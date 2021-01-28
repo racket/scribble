@@ -1,4 +1,4 @@
-#lang scheme/base
+#lang racket/base
 (require "core.rkt"
          "private/render-utils.rkt"
          "html-properties.rkt"

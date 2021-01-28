@@ -1,4 +1,4 @@
-#lang scheme/base
+#lang racket/base
 (require racket/contract/base
          "../decode.rkt"
          "../struct.rkt"

@@ -1,4 +1,4 @@
-#lang scheme/base
+#lang racket/base
 
 (require "search.rkt" scheme/cmdline scheme/list scheme/string
          raco/command-name) 
