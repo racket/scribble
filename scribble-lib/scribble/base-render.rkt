@@ -4,7 +4,7 @@
          "private/render-utils.rkt"
          mzlib/class
          mzlib/serialize
-         scheme/file
+         racket/file
          scheme/path
          setup/collects
          setup/path-relativize

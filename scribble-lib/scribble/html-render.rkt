@@ -5,7 +5,7 @@
          "private/literal-anchor.rkt"
          racket/class
          scheme/path
-         scheme/file
+         racket/file
          scheme/port
          scheme/list
          scheme/string
