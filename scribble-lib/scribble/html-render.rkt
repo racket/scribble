@@ -3,7 +3,7 @@
          "private/render-utils.rkt"
          "html-properties.rkt"
          "private/literal-anchor.rkt"
-         scheme/class
+         racket/class
          scheme/path
          scheme/file
          scheme/port

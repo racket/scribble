@@ -8,7 +8,7 @@
          "tag.rkt"
          "private/tag.rkt"
          scheme/list
-         scheme/class
+         racket/class
          racket/contract/base
          racket/contract/combinator
          (for-syntax racket/base))

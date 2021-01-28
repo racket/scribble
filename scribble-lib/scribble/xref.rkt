@@ -5,7 +5,7 @@
          scribble/base-render
          scribble/search
          (prefix-in html: scribble/html-render)
-         scheme/class
+         racket/class
          scheme/path)
 
 (provide load-xref

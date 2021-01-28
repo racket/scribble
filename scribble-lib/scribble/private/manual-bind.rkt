@@ -12,7 +12,7 @@
          racket/contract/base
          (for-syntax racket/base)
          (for-label racket/base
-                    scheme/class))
+                    racket/class))
 
 (provide definition-site
          libs->taglet

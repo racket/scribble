@@ -13,7 +13,7 @@
                      syntax/kerncase
                      syntax/boundmap)
          (for-label racket/base
-                    scheme/class))
+                    racket/class))
 
 (define-struct (box-splice splice) ())
 
