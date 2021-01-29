@@ -53,11 +53,15 @@
   (resolve-get/ext-id* part ri key #f))
 
 (define (resolve-get/ext-id* part ri key search-key)
-  (let-values ([(v ext-id) (resolve-get/where part ri key)])
-    (when ext-id
-      (hash-set! (resolve-info-undef ri) (tag-key key ri) 
-                 (if v 'found search-key)))
-    (values v ext-id)))
+  (let ((real-key
+         (if (pageref-tag? key)
+             (cons 'elem (cdr key))
+             key)))
+    (let-values ([(v ext-id) (resolve-get/where part ri real-key)])
+      (when ext-id
+        (hash-set! (resolve-info-undef ri) (tag-key real-key ri)
+                   (if v 'found search-key)))
+      (values v ext-id))))
 
 (define (resolve-get part ri key)
   (resolve-get* part ri key #f))
@@ -107,6 +111,11 @@
                 (list? (cadr s))
                 (serializable? (cadr s))))
        (null? (cddr s))))
+
+(provide pageref-tag?)
+(define (pageref-tag? x)
+  (and (tag? x)
+       (equal? (car x) 'page)))
 
 (provide block?)
 (define (block? p)
