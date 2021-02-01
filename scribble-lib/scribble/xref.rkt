@@ -1,4 +1,4 @@
-#lang scheme/base
+#lang racket/base
 
 (require scribble/struct
          (only-in scribble/core known-doc? known-doc-v)

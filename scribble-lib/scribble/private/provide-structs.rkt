@@ -1,4 +1,4 @@
-#lang scheme/base
+#lang racket/base
 (require scheme/serialize
          racket/contract/base
          (for-syntax scheme/base))

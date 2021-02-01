@@ -1,4 +1,4 @@
-#lang scheme/base
+#lang racket/base
 (require setup/collects
          racket/contract/base
          scribble/core

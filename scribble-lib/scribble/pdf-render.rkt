@@ -1,4 +1,4 @@
-#lang scheme/base
+#lang racket/base
 
 (require "private/indirect-renderer.rkt" "private/run-pdflatex.rkt"
          (prefix-in latex: "latex-render.rkt"))

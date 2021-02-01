@@ -1,4 +1,4 @@
-#lang scheme/base
+#lang racket/base
 (require scribble/doclang
          scribble/core
          scribble/base

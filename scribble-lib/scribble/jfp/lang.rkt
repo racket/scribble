@@ -1,4 +1,4 @@
-#lang scheme/base
+#lang racket/base
 (require scribble/doclang
          (except-in scribble/base author)
          scribble/jfp

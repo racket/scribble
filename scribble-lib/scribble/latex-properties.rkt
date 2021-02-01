@@ -1,4 +1,4 @@
-#lang scheme/base
+#lang racket/base
 (require "private/provide-structs.rkt"
          racket/serialize
          racket/contract/base)

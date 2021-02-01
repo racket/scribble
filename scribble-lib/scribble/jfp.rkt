@@ -1,4 +1,4 @@
-#lang scheme/base
+#lang racket/base
 (require setup/collects
          scribble/core
          (except-in scribble/base author)

@@ -1,4 +1,4 @@
-#lang scheme/base
+#lang racket/base
 
 (require "output.rkt" (for-syntax scheme/base syntax/kerncase))
 

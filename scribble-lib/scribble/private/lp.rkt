@@ -1,4 +1,4 @@
-#lang scheme/base
+#lang racket/base
 
 (require (for-syntax scheme/base syntax/boundmap)
          scribble/scheme scribble/decode scribble/manual scribble/struct)
@@ -80,6 +80,6 @@
        #'(elemref '(chunk tag) #:underline? #f str))]))
 
 
-(provide (all-from-out scheme/base
+(provide (all-from-out racket/base
                        scribble/manual)
          chunk CHUNK)
