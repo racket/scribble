@@ -20,6 +20,7 @@ jobs:
       # This next step was copied from the CI config for Typed Racket:
       # https://github.com/racket/typed-racket/blob/master/.github/workflows/ci.yml
       - run: |
+             sudo raco pkg install --auto -i --no-setup --skip-installed scribble-test
              racket -l- pkg/dirs-catalog --link --check-metadata pkgs-catalog .
              echo file://`pwd`/pkgs-catalog/ > catalog-config.txt
              raco pkg config catalogs >> catalog-config.txt
