@@ -2,8 +2,8 @@
 @(require (for-label (only-in scribble/core content?)
                      scribble/struct
                      scriblib/autobib
-                     scheme/base
-                     scheme/contract))
+                     racket/base
+                     racket/contract))
 
 @title[#:tag "autobib"]{Bibliographies}
 

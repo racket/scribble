@@ -7,11 +7,11 @@
          "html-properties.rkt"
          "tag.rkt"
          "private/tag.rkt"
-         scheme/list
-         scheme/class
+         racket/list
+         racket/class
          racket/contract/base
          racket/contract/combinator
-         (for-syntax scheme/base))
+         (for-syntax racket/base))
 
 (provide (all-from-out "tag.rkt"))
 

@@ -3,12 +3,12 @@
          "private/render-utils.rkt"
          "html-properties.rkt"
          "private/literal-anchor.rkt"
-         scheme/class
-         scheme/path
-         scheme/file
-         scheme/port
-         scheme/list
-         scheme/string
+         racket/class
+         racket/path
+         racket/file
+         racket/port
+         racket/list
+         racket/string
          file/convertible
          mzlib/runtime-path
          setup/main-doc
@@ -17,11 +17,11 @@
          net/url
          net/uri-codec
          net/base64
-         scheme/serialize
+         racket/serialize
          racket/draw/gif
          pkg/path
          (prefix-in xml: xml/xml)
-         (for-syntax scheme/base)
+         (for-syntax racket/base)
          "search.rkt"
          (except-in "base.rkt" url))
 (provide render-mixin

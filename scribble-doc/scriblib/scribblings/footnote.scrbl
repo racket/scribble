@@ -1,8 +1,8 @@
 #lang scribble/manual
 @(require (for-label scribble/struct
                      scriblib/footnote
-                     scheme/base
-                     scheme/contract))
+                     racket/base
+                     racket/contract))
 
 @title[#:tag "footnotes"]{Footnotes}
 

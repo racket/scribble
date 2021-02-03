@@ -7,7 +7,7 @@
          net/ftp
          racket/file
          scribble/latex-prefix
-         (for-syntax scheme/base))
+         (for-syntax racket/base))
 (provide (except-out (all-from-out scribble/doclang) #%module-begin)
          (all-from-out scribble/jfp)
          (all-from-out scribble/base)

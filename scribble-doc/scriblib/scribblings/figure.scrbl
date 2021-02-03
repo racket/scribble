@@ -2,8 +2,8 @@
 @(require (for-label scribble/core
                      scribble/decode
                      scriblib/figure
-                     scheme/base
-                     scheme/contract))
+                     racket/base
+                     racket/contract))
 
 @(define-syntax-rule (sn s) @racket[s])
 
@@ -12,12 +12,12 @@
 @defmodule[scriblib/figure]
 
 @deftogether[(
-@defproc[(figure [tag string?] [caption content?] 
+@defproc[(figure [tag string?] [caption content?]
                  [p pre-flow?] ...
                  [#:style style style? center-figure-style]
                  [#:label-sep label-sep pre-content? ": "]
                  [#:label-style label-style element-style? #f]
-                 [#:continue? continue? any/c #f]) 
+                 [#:continue? continue? any/c #f])
          block?]
 @defproc[(figure* [tag string?] [caption content?]
                   [p pre-flow?] ...
@@ -110,7 +110,7 @@ Like @racket[figure-ref], but capitalizes the word ``Figure''.
 
 
 @defproc[(Figure-target [tag string?]
-                        [#:continue? continue? any/c #f]) 
+                        [#:continue? continue? any/c #f])
          element?]{
 
 Generates a new figure label. This function is normally not used

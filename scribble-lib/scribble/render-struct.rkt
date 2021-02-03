@@ -1,6 +1,6 @@
 #lang racket/base
 
-(require scheme/serialize)
+(require racket/serialize)
 (provide (struct-out mobile-root))
 
 (define-serializable-struct mobile-root (path) 

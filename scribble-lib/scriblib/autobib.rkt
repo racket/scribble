@@ -9,7 +9,7 @@
          scribble/latex-properties
          (for-syntax syntax/parse
                      racket/base)
-         scheme/string
+         racket/string
          setup/main-collects
          racket/contract)
 

@@ -4,10 +4,10 @@
                     [make-target-url core:make-target-url])
          "private/provide-structs.rkt"
          "html-properties.rkt"
-         scheme/provide-syntax
-         scheme/struct-info
+         racket/provide-syntax
+         racket/struct-info
          racket/contract/base
-         (for-syntax scheme/base))
+         (for-syntax racket/base))
 
 (define-provide-syntax (compat**-out stx)
   (syntax-case stx ()

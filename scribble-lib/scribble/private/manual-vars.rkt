@@ -8,12 +8,12 @@
                   make-nested-flow)
          "../html-properties.rkt"
          racket/contract/base
-         (for-syntax scheme/base
+         (for-syntax racket/base
                      syntax/parse
                      syntax/kerncase
                      syntax/boundmap)
-         (for-label scheme/base
-                    scheme/class))
+         (for-label racket/base
+                    racket/class))
 
 (define-struct (box-splice splice) ())
 

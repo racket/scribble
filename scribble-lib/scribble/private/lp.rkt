@@ -1,6 +1,6 @@
 #lang racket/base
 
-(require (for-syntax scheme/base syntax/boundmap)
+(require (for-syntax racket/base syntax/boundmap)
          scribble/scheme scribble/decode scribble/manual scribble/struct)
 
 (begin-for-syntax

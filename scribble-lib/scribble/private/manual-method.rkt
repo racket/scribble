@@ -4,7 +4,7 @@
          "../scheme.rkt"
          "../basic.rkt"
          "manual-scheme.rkt"
-         (for-syntax scheme/base))
+         (for-syntax racket/base))
 
 (provide ;; public:
          method xmethod)

@@ -5,7 +5,7 @@
          scribble/decode
          scribble/html-properties
          scribble/latex-properties
-         (for-syntax scheme/base))
+         (for-syntax racket/base))
 
 (provide abstract include-abstract
          author author/short

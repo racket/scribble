@@ -9,11 +9,11 @@
          "manual-vars.rkt"
          "manual-scheme.rkt"
          "manual-bind.rkt"
-         scheme/list
-         (for-syntax scheme/base
+         racket/list
+         (for-syntax racket/base
                      syntax/parse
                      racket/syntax)
-         (for-label scheme/base))
+         (for-label racket/base))
 
 (provide defform defform* defform/subs defform*/subs defform/none
          defidform defidform/inline

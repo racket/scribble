@@ -6,8 +6,8 @@
          "../basic.rkt"
          "../manual-struct.rkt"
          "qsloc.rkt"
-         scheme/serialize
-         scheme/stxparam
+         racket/serialize
+         racket/stxparam
          "manual-utils.rkt"
          "manual-style.rkt"
          "manual-scheme.rkt"
@@ -16,10 +16,10 @@
          "manual-proc.rkt"
          "manual-vars.rkt"
          "manual-class-struct.rkt"
-         scheme/list
-         (for-syntax scheme/base)
-         (for-label scheme/base
-                    scheme/class))
+         racket/list
+         (for-syntax racket/base)
+         (for-label racket/base
+                    racket/class))
 
 (provide defclass
          defclass/title

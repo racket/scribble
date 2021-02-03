@@ -12,9 +12,9 @@
          pkg/path
          racket/list
          scribble/html-properties
-         (for-syntax scheme/base
+         (for-syntax racket/base
                      syntax/parse)
-         (for-label scheme/base))
+         (for-label racket/base))
 
 (provide defmodule defmodule* 
          defmodulelang defmodulelang* 

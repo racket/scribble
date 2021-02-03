@@ -1,6 +1,6 @@
 #lang racket/base
 
-(require scheme/include (for-syntax scheme/base)
+(require racket/include (for-syntax racket/base)
           (only-in scribble/private/lp chunk CHUNK)
           scribble/manual)
 

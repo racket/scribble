@@ -1,5 +1,5 @@
 #lang racket/base
-(require (for-syntax scheme/base))
+(require (for-syntax racket/base))
 
 (provide quote-syntax/loc)
 
