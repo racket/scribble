@@ -17,16 +17,17 @@
                              "scribble-docs-tests"))
 
 (define (build-doc render% src-file dest-file)
-  (let* ([renderer (new render% [dest-dir work-dir])]
-         [docs     (list (if (module-declared? `(submod ,src-file doc) #t)
-                             (dynamic-require `(submod ,src-file doc) 'doc)
-                             (dynamic-require src-file 'doc)))]
-         [fns      (list (build-path work-dir dest-file))]
-         [fp       (send renderer traverse docs fns)]
-         [info     (send renderer collect  docs fns fp)]
-         [r-info   (send renderer resolve  docs fns info)])
-    (send renderer render docs fns r-info)
-    (send renderer get-undefined r-info)))
+  (define renderer (new render% [dest-dir work-dir]))
+  (define docs
+    (list (if (module-declared? `(submod ,src-file doc) #t)
+              (dynamic-require `(submod ,src-file doc) 'doc)
+              (dynamic-require src-file 'doc))))
+  (define fns (list (build-path work-dir dest-file)))
+  (define fp (send renderer traverse docs fns))
+  (define info (send renderer collect  docs fns fp))
+  (define r-info (send renderer resolve  docs fns info))
+  (send renderer render docs fns r-info)
+  (send renderer get-undefined r-info))
 
 (define (build-text-doc src-file dest-file)
   (build-doc (text:render-mixin render%) src-file dest-file))

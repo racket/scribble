@@ -71,16 +71,18 @@
 (define (litchar . strs)
   (let ([s (string-append* (map (lambda (s) (regexp-replace* "\n" s " "))
                                 strs))])
-    (if (regexp-match? #rx"^ *$" s)
-      (make-element input-background-color (list (hspace (string-length s))))
-      (let ([^spaces (car (regexp-match-positions #rx"^ *" s))]
-            [$spaces (car (regexp-match-positions #rx" *$" s))])
-        (make-element
-         input-background-color
-         (list (hspace (cdr ^spaces))
-               (make-element input-color
-                             (list (substring s (cdr ^spaces) (car $spaces))))
-               (hspace (- (cdr $spaces) (car $spaces)))))))))
+    (cond
+      [(regexp-match? #rx"^ *$" s)
+       (make-element input-background-color (list (hspace (string-length s))))]
+      [else
+       (define ^spaces (car (regexp-match-positions #rx"^ *" s)))
+       (define $spaces (car (regexp-match-positions #rx" *$" s)))
+       (make-element
+        input-background-color
+        (list (hspace (cdr ^spaces))
+              (make-element input-color
+                            (list (substring s (cdr ^spaces) (car $spaces))))
+              (hspace (- (cdr $spaces) (car $spaces)))))])))
 
 (define (onscreen . str)
   (make-element 'sf (decode-content str)))
@@ -89,8 +91,8 @@
 (define (defterm . str)
   (make-element 'italic (decode-content str)))
 (define (idefterm . str)
-  (let ([c (decode-content str)])
-    (make-element 'italic c)))
+  (define c (decode-content str))
+  (make-element 'italic c))
 (define (racketfont . str)
   (apply tt str))
 (define (racketplainfont . str)
@@ -118,13 +120,13 @@
 (define (filepath . str)
   (make-element 'tt (append (list "\"") (decode-content str) (list "\""))))
 (define (indexed-file . str)
-  (let* ([f (apply filepath str)]
-         [s (element->string f)])
-    (index* (list (datum-intern-literal
-                   (clean-up-index-string
-                    (substring s 1 (sub1 (string-length s))))))
-            (list f)
-            f)))
+  (define f (apply filepath str))
+  (define s (element->string f))
+  (index* (list (datum-intern-literal
+                 (clean-up-index-string
+                  (substring s 1 (sub1 (string-length s))))))
+          (list f)
+          f))
 (define (exec . str)
   (if (andmap string? str)
     (make-element 'tt str)
@@ -148,9 +150,9 @@
 (define (envvar . str)
   (make-element 'tt (decode-content str)))
 (define (indexed-envvar . str)
-  (let* ([f (apply envvar str)]
-         [s (element->string f)])
-    (index* (list s) (list f) f)))
+  (define f (apply envvar str))
+  (define s (element->string f))
+  (index* (list s) (list f) f))
 (define (procedure . str)
   (make-element result-color `("#<procedure:" ,@(decode-content str) ">")))
 
@@ -178,9 +180,9 @@
                                         s))))
 
 (define (pidefterm . s)
-  (let ([c (apply defterm s)])
-    (index (string-append (content->string (element-content c)) "s")
-           c)))
+  (define c (apply defterm s))
+  (index (string-append (content->string (element-content c)) "s")
+         c))
 
 (define (hash-lang)
   (make-link-element
@@ -208,37 +210,37 @@
   (apply hyperlink url #:style (if style (make-style style null) plain) str))
 
 (define (math . s)
-  (let ([c (decode-content s)])
-    (make-element
-     #f
-     (append-map
-      (lambda (i)
-        (let loop ([i i])
-          (cond
-            [(string? i)
-             (cond
-               [(regexp-match #px"^(.*)_([a-zA-Z0-9]+)(.*)$" i)
-                => (lambda (m)
-                     (append (loop (cadr m))
-                             (list (make-element 'subscript
-                                                 (loop (caddr m))))
-                             (loop (cadddr m))))]
-               [(regexp-match #px"^(.*)\\^([a-zA-Z0-9]+)(.*)$" i)
-                => (lambda (m)
-                     (append (loop (cadr m))
-                             (list (make-element 'superscript
-                                                 (loop (caddr m))))
-                             (loop (cadddr m))))]
-               [(regexp-match #px"^(.*)([()0-9{}\\[\\]\u03C0])(.*)$" i)
-                => (lambda (m)
-                     (append (loop (cadr m))
-                             (list (caddr m))
-                             (loop (cadddr m))))]
-               [else
-                (list (make-element 'italic (list i)))])]
-            [(eq? i 'rsquo) (list 'prime)]
-            [else (list i)])))
-      c))))
+  (define c (decode-content s))
+  (make-element
+   #f
+   (append-map
+    (lambda (i)
+      (let loop ([i i])
+        (cond
+          [(string? i)
+           (cond
+             [(regexp-match #px"^(.*)_([a-zA-Z0-9]+)(.*)$" i)
+              => (lambda (m)
+                   (append (loop (cadr m))
+                           (list (make-element 'subscript
+                                               (loop (caddr m))))
+                           (loop (cadddr m))))]
+             [(regexp-match #px"^(.*)\\^([a-zA-Z0-9]+)(.*)$" i)
+              => (lambda (m)
+                   (append (loop (cadr m))
+                           (list (make-element 'superscript
+                                               (loop (caddr m))))
+                           (loop (cadddr m))))]
+             [(regexp-match #px"^(.*)([()0-9{}\\[\\]\u03C0])(.*)$" i)
+              => (lambda (m)
+                   (append (loop (cadr m))
+                           (list (caddr m))
+                           (loop (cadddr m))))]
+             [else
+              (list (make-element 'italic (list i)))])]
+          [(eq? i 'rsquo) (list 'prime)]
+          [else (list i)])))
+    c)))
 
 (define (filebox filename . inside)
   (make-nested-flow 

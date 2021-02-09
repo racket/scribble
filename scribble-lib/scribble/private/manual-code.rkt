@@ -82,14 +82,14 @@
                                    (substring bstr (cadar tokens) (caddar tokens)))])
                     (cond
                       [(symbol? style)
-                       (let ([scribble-style
-                              (case style
-                                [(symbol) symbol-color]
-                                [(parenthesis hash-colon-keyword) paren-color]
-                                [(constant string) value-color]
-                                [(comment) comment-color]
-                                [else default-color])])
-                         (split-lines scribble-style (get-str)))]
+                       (define scribble-style
+                         (case style
+                           [(symbol) symbol-color]
+                           [(parenthesis hash-colon-keyword) paren-color]
+                           [(constant string) value-color]
+                           [(comment) comment-color]
+                           [else default-color]))
+                       (split-lines scribble-style (get-str))]
                       [(procedure? style)
                        (list (style (get-str)))]
                       [else (list style)]))

@@ -54,29 +54,29 @@
                                 markdown-part-tag)))))
 
     (define/override (render-part d ht)
-      (let ([number (collected-info-number (part-collected-info d ht))])
-        (unless (part-style? d 'hidden)
-          (printf (string-append (make-string (add1 (number-depth number)) #\#) " "))
-          (let ([s (format-number number '() #t)])
-            (unless (null? s)
-              (printf "~a~a" 
-                      (car s)
-                      (if (part-title-content d)
-                          " "
-                          "")))
-            (when (part-title-content d)
-              (render-content (part-title-content d) d ht))
-            (when (or (pair? number) (part-title-content d))
-              (newline)
-              (newline))))
-        (render-flow (part-blocks d) d ht #f)
-        (let loop ([pos 1]
-                   [secs (part-parts d)]
-                   [need-newline? (pair? (part-blocks d))])
-          (unless (null? secs)
-            (when need-newline? (newline))
-            (render-part (car secs) ht)
-            (loop (add1 pos) (cdr secs) #t)))))
+      (define number (collected-info-number (part-collected-info d ht)))
+      (unless (part-style? d 'hidden)
+        (printf (string-append (make-string (add1 (number-depth number)) #\#) " "))
+        (let ([s (format-number number '() #t)])
+          (unless (null? s)
+            (printf "~a~a" 
+                    (car s)
+                    (if (part-title-content d)
+                        " "
+                        "")))
+          (when (part-title-content d)
+            (render-content (part-title-content d) d ht))
+          (when (or (pair? number) (part-title-content d))
+            (newline)
+            (newline))))
+      (render-flow (part-blocks d) d ht #f)
+      (let loop ([pos 1]
+                 [secs (part-parts d)]
+                 [need-newline? (pair? (part-blocks d))])
+        (unless (null? secs)
+          (when need-newline? (newline))
+          (render-part (car secs) ht)
+          (loop (add1 pos) (cdr secs) #t))))
 
     (define/override (render-flow f part ht starting-item?)
       (if (null? f)
@@ -109,17 +109,19 @@
         [else
           (define strs (map (lambda (flows)
                               (map (lambda (d)
-                                     (if (eq? d 'cont)
-                                         d
-                                         (let ([o (open-output-string)])
-                                           (parameterize ([current-indent 0]
-                                                          [current-output-port o])
-                                             (render-block d part ht #f))
-                                           (regexp-split
-                                            #rx"\n"
-                                            (regexp-replace #rx"\n$"
-                                                            (get-output-string o)
-                                                            "")))))
+                                     (cond
+                                       [(eq? d 'cont)
+                                        d]
+                                       [else
+                                        (define o (open-output-string))
+                                        (parameterize ([current-indent 0]
+                                                       [current-output-port o])
+                                          (render-block d part ht #f))
+                                        (regexp-split
+                                         #rx"\n"
+                                         (regexp-replace #rx"\n$"
+                                                         (get-output-string o)
+                                                         ""))]))
                                    flows))
                             flowss))
           (define widths (map (lambda (col)
@@ -131,38 +133,39 @@
           (define x-length (lambda (col) (if (eq? col 'cont) 0 (length col))))
           (for/fold ([indent? #f]) ([row (in-list strs)])
             (let ([h (apply max 0 (map x-length row))])
-              (let ([row* (for/list ([i (in-range h)])
-                            (for/list ([col (in-list row)])
-                              (if (i . < . (x-length col))
-                                  (list-ref col i)
-                                  "")))])
-                (for/fold ([indent? indent?]) ([sub-row (in-list row*)])
-                  (when indent? (indent))
-                  (for/fold ([space? #f])
-                      ([col (in-list sub-row)]
-                       [w (in-list widths)])
-                    (let ([col (if (eq? col 'cont) "" col)])
-                      (display (regexp-replace* #rx"\uA0" col " "))
-                      (display (make-string (max 0 (- w (string-length col))) #\space)))
-                    #t)
-                  (newline)
-                  #t)))
+              (define row*
+                (for/list ([i (in-range h)])
+                  (for/list ([col (in-list row)])
+                    (if (i . < . (x-length col))
+                        (list-ref col i)
+                        ""))))
+              (for/fold ([indent? indent?]) ([sub-row (in-list row*)])
+                (when indent? (indent))
+                (for/fold ([space? #f])
+                          ([col (in-list sub-row)]
+                           [w (in-list widths)])
+                  (let ([col (if (eq? col 'cont) "" col)])
+                    (display (regexp-replace* #rx"\uA0" col " "))
+                    (display (make-string (max 0 (- w (string-length col))) #\space)))
+                  #t)
+                (newline)
+                #t))
             #t)])
       null)
 
     (define/override (render-itemization i part ht)
-      (let ([flows (itemization-blockss i)])
-        (if (null? flows)
-            null
-            (append*
-             (begin (printf "* ")
-                    (parameterize ([current-indent (make-indent 2)])
-                      (render-flow (car flows) part ht #t)))
-             (for/list ([d (in-list (cdr flows))])
-               (indented-newline)
-               (printf "* ")
-               (parameterize ([current-indent (make-indent 2)])
-                 (render-flow d part ht #f)))))))
+      (define flows (itemization-blockss i))
+      (if (null? flows)
+          null
+          (append*
+           (begin (printf "* ")
+                  (parameterize ([current-indent (make-indent 2)])
+                    (render-flow (car flows) part ht #t)))
+           (for/list ([d (in-list (cdr flows))])
+             (indented-newline)
+             (printf "* ")
+             (parameterize ([current-indent (make-indent 2)])
+               (render-flow d part ht #f))))))
 
     (define/override (render-paragraph p part ri)
       (define (write-note)
@@ -220,26 +223,30 @@
       (and (element? i) (eq? (element-style i) 'emph)))
 
     (define (code? i)
-      (and (element? i)
-           (let ([s (element-style i)])
-             (or (eq? 'tt s)
-                 (and (style? s)
-                      (style-name s)
-                      (regexp-match? #rx"^Rkt[A-Z]" (style-name s)))))))
+      (cond
+        [(not (element? i)) #f]
+        [else
+         (define s (element-style i))
+         (or (eq? 'tt s)
+             (and (style? s)
+                  (style-name s)
+                  (regexp-match? #rx"^Rkt[A-Z]" (style-name s))))]))
 
     (define (link? i)
-      (let ([s (content-style i)])
-        (and (style? s) (findf target-url? (style-properties s)))))
+      (define s (content-style i))
+      (and (style? s) (findf target-url? (style-properties s))))
 
     (define (link-from i)
       (target-url-addr (findf target-url? (style-properties (content-style i)))))
 
     (define (preserve-spaces? i)
-      (and (element? i)
-           (let ([s (element-style i)])
-             (or (eq? 'hspace s)
-                 (and (style? s)
-                      (eq? 'hspace (style-name s)))))))
+      (cond
+        [(not (element? i)) #f]
+        [else
+         (define s (element-style i))
+         (or (eq? 'hspace s)
+             (and (style? s)
+                  (eq? 'hspace (style-name s))))]))
 
     (define (sanitize-parens str)
       (regexp-replace #rx"[\\(\\)]" str "\\&"))
@@ -273,13 +280,12 @@
             (render-content i part ri))]
 
         [(and (link? i) (not (in-link?)))
-          (let ([link (link-from i)])
-            (display "[")
-            (begin0
-              (parameterize ([in-link? #t])
-                (render-content i part ri))
-              (printf "](~a)" (sanitize-parens link))))]
-
+         (define link (link-from i))
+         (display "[")
+         (begin0
+           (parameterize ([in-link? #t])
+             (render-content i part ri))
+           (printf "](~a)" (sanitize-parens link)))]
         [(and (link-element? i)
               (current-markdown-link-sections)
               (not (in-link?))

@@ -48,32 +48,33 @@
                    #:render% [render% (html:render-mixin render%)]
                    #:root [root-path #f]
                    #:doc-id [doc-id-str #f])
-  (let* ([renderer (new render% [dest-dir (find-system-path 'temp-dir)])]
-         [fp (send renderer traverse null null)]
-         [load-source (lambda (src ci)
-                        (parameterize ([current-namespace
-                                        (namespace-anchor->empty-namespace here)])
-                          (let ([vs (src)])
-                            (for ([v (in-list (if (procedure? vs) (vs) (list vs)))])
-                              (when v
-                                (define data (if (data+root? v) (data+root-data v) v))
-                                (define root (if (data+root? v) (data+root-root v) root-path))
-                                (define doc-id (or (and (data+root+doc-id? v) (data+root+doc-id-doc-id v))
-                                                   doc-id-str))
-                                (send renderer deserialize-info data ci
-                                      #:root root
-                                      #:doc-id doc-id))))))]
-         [use-ids (make-weak-hasheq)]
-         [ci (send renderer collect null null fp
-                   (lambda (key ci)
-                     (define use-obj (collect-info-ext-ht ci))
-                     (define use-id (or (hash-ref use-ids use-obj #f)
-                                        (let ([s (gensym 'render)])
-                                          (hash-set! use-ids use-obj s)
-                                          s)))
-                     (define src (demand-source-for-use key use-id))
-                     (and src
-                          (load-source src ci))))])
+  (define renderer (new render% [dest-dir (find-system-path 'temp-dir)]))
+  (define fp (send renderer traverse null null))
+  (define load-source
+    (lambda (src ci)
+      (parameterize ([current-namespace
+                      (namespace-anchor->empty-namespace here)])
+        (let ([vs (src)])
+          (for ([v (in-list (if (procedure? vs) (vs) (list vs)))])
+            (when v
+              (define data (if (data+root? v) (data+root-data v) v))
+              (define root (if (data+root? v) (data+root-root v) root-path))
+              (define doc-id (or (and (data+root+doc-id? v) (data+root+doc-id-doc-id v))
+                                 doc-id-str))
+              (send renderer deserialize-info data ci
+                    #:root root
+                    #:doc-id doc-id)))))))
+  (define use-ids (make-weak-hasheq))
+  (let ([ci (send renderer collect null null fp
+                  (lambda (key ci)
+                    (define use-obj (collect-info-ext-ht ci))
+                    (define use-id (or (hash-ref use-ids use-obj #f)
+                                       (let ([s (gensym 'render)])
+                                         (hash-set! use-ids use-obj s)
+                                         s)))
+                    (define src (demand-source-for-use key use-id))
+                    (and src
+                         (load-source src ci))))])
     (for ([src sources])
       (load-source src ci))
     (make-xrefs renderer (send renderer resolve null null ci))))
@@ -100,16 +101,17 @@
 (define (xref-render xrefs doc dest-file
                      #:render% [render% (html:render-mixin render%)]
                      #:refer-to-existing-files? [use-existing? (not dest-file)])
-  (let* ([dest-file (if (string? dest-file) (string->path dest-file) dest-file)]
-         [renderer (new render%
-                        [dest-dir (and dest-file (path-only dest-file))]
-                        [refer-to-existing-files use-existing?]
-                        [css-path    'inline]
-                        [script-path 'inline])]
-         [ci (send renderer collect (list doc) (list dest-file))]
-         [_ (send renderer transfer-info ci (resolve-info-ci (xrefs-ri xrefs)))]
-         [ri (send renderer resolve (list doc) (list dest-file) ci)]
-         [xs (send renderer render (list doc) (list dest-file) ri)])
+  (let ([dest-file (if (string? dest-file) (string->path dest-file) dest-file)])
+    (define renderer
+      (new render%
+           [dest-dir (and dest-file (path-only dest-file))]
+           [refer-to-existing-files use-existing?]
+           [css-path    'inline]
+           [script-path 'inline]))
+    (define ci (send renderer collect (list doc) (list dest-file)))
+    (define _ (send renderer transfer-info ci (resolve-info-ci (xrefs-ri xrefs))))
+    (define ri (send renderer resolve (list doc) (list dest-file) ci))
+    (define xs (send renderer render (list doc) (list dest-file) ri))
     (if dest-file
         (void)
         (car xs))))
@@ -123,10 +125,10 @@
    [(xrefs id/binding mode)
     (let ([search
            (lambda (id/binding)
-             (let ([tag (find-scheme-tag #f (xrefs-ri xrefs) id/binding mode)])
-               (if tag
-                   (values tag (eq? (car tag) 'form))
-                   (values #f #f))))])
+             (define tag (find-scheme-tag #f (xrefs-ri xrefs) id/binding mode))
+             (if tag
+                 (values tag (eq? (car tag) 'form))
+                 (values #f #f)))])
       (cond
         [(identifier? id/binding)
          (search id/binding)]
@@ -154,8 +156,8 @@
                                     id/binding)]))]))
 
 (define (xref-binding->definition-tag xrefs id/binding mode)
-  (let-values ([(tag form?) (xref-binding-tag xrefs id/binding mode)])
-    tag))
+  (define-values (tag form?) (xref-binding-tag xrefs id/binding mode))
+  tag)
 
 (define (xref-tag->path+anchor xrefs tag
                                #:render% [render% (html:render-mixin render%)]

@@ -34,10 +34,10 @@
 (define current-image-prefs        (make-parameter null)) ; reverse order
 
 (define (read-one str)
-  (let ([i (open-input-string str)])
-    (with-handlers ([exn:fail:read? (lambda (x) #f)])
-      (let ([v (read i)])
-        (and (eof-object? (read i)) v)))))
+  (define i (open-input-string str))
+  (with-handlers ([exn:fail:read? (lambda (x) #f)])
+    (let ([v (read i)])
+      (and (eof-object? (read i)) v))))
 
 (define (run)
   (define doc-binding 'doc)
@@ -171,8 +171,8 @@
     (raise-user-error 'scribble "cannot supply a destination name with multiple inputs"))
   (render docs
           (map (lambda (fn)
-                 (let-values ([(base name dir?) (split-path fn)])
-                   (or (current-dest-name) name)))
+                 (define-values (base name dir?) (split-path fn))
+                 (or (current-dest-name) name))
                files)
           #:dest-dir (current-dest-directory)
           #:render-mixin (current-render-mixin)

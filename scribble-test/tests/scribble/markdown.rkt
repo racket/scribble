@@ -10,14 +10,14 @@
                              "scribble-docs-tests"))
 
 (define (build-markdown-doc src-file dest-file)
-  (let* ([renderer (new (markdown:render-mixin render%) [dest-dir work-dir])]
-         [docs     (list (dynamic-require src-file 'doc))]
-         [fns      (list (build-path work-dir dest-file))]
-         [fp       (send renderer traverse docs fns)]
-         [info     (send renderer collect  docs fns fp)]
-         [r-info   (send renderer resolve  docs fns info)])
-    (send renderer render docs fns r-info)
-    (send renderer get-undefined r-info)))
+  (define renderer (new (markdown:render-mixin render%) [dest-dir work-dir]))
+  (define docs (list (dynamic-require src-file 'doc)))
+  (define fns (list (build-path work-dir dest-file)))
+  (define fp (send renderer traverse docs fns))
+  (define info (send renderer collect  docs fns fp))
+  (define r-info (send renderer resolve  docs fns info))
+  (send renderer render docs fns r-info)
+  (send renderer get-undefined r-info))
 
 (provide markdown-tests)
 (module+ main (markdown-tests))

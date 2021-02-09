@@ -315,20 +315,20 @@
   (inset (panorama w/delayed-connections) 0 0 1 0))
 
 (define (double f p0 a b c d [count 1])
-  (let ([arrows1 (launder (f (ghost p0) a b c d count #:dot-delta 1))]
-        [arrows2 (launder (f (ghost p0) a b c d count #:dot-delta -1))])
-    (cc-superimpose p0
-                    arrows1
-                    arrows2)))
+  (define arrows1 (launder (f (ghost p0) a b c d count #:dot-delta 1)))
+  (define arrows2 (launder (f (ghost p0) a b c d count #:dot-delta -1)))
+  (cc-superimpose p0
+                  arrows1
+                  arrows2))
 
 (define (triple f p0 a b c d [count 1])
-  (let ([arrows (launder (f (ghost p0) a b c d count))]
-        [up-arrows (launder (f (ghost p0) a b c d count #:dot-delta 2))]
-        [down-arrows (launder (f (ghost p0) a b c d count #:dot-delta -2))])
-    (cc-superimpose p0
-                    arrows
-                    up-arrows
-                    down-arrows)))
+  (define arrows (launder (f (ghost p0) a b c d count)))
+  (define up-arrows (launder (f (ghost p0) a b c d count #:dot-delta 2)))
+  (define down-arrows (launder (f (ghost p0) a b c d count #:dot-delta -2)))
+  (cc-superimpose p0
+                  arrows
+                  up-arrows
+                  down-arrows))
 
 (define (connect-circly-dots show-arrowhead? main dot1 . dots)
   (let loop ([prev-dot dot1]
@@ -343,38 +343,38 @@
 
 ;; this is a hack -- it will only work with right-right-reference
 (define (connect-two-circly-dots pict dot1 dot2 arrowhead?)
-  (let ([base
-         (let*-values ([(sx sy) (cc-find pict dot1)]
-                       [(raw-ex ey) (cc-find pict dot2)]
-                       [(ex) (if arrowhead?
-                                 (+ raw-ex 2)
-                                 raw-ex)])
-           (cc-superimpose
-            (dc 
-             (λ (dc dx dy)
-               (let ([pen (send dc get-pen)])
-                 (send dc set-pen
-                       type-link-color ;(send pen get-color)
-                       (if (is-a? dc post-script-dc%)
-                           4
-                           2)
-                       'dot)
-                 (send dc draw-line 
-                       (+ dx sx) (+ dy sy)
-                       (+ dx ex) (+ dy ey))
-                 (send dc set-pen pen)))
-             (pict-width pict)
-             (pict-height pict))
-            pict))])
+  (define base
+    (let*-values ([(sx sy) (cc-find pict dot1)]
+                  [(raw-ex ey) (cc-find pict dot2)]
+                  [(ex) (if arrowhead?
+                            (+ raw-ex 2)
+                            raw-ex)])
+      (cc-superimpose
+       (dc 
+        (λ (dc dx dy)
+          (define pen (send dc get-pen))
+          (send dc set-pen
+                type-link-color ;(send pen get-color)
+                (if (is-a? dc post-script-dc%)
+                    4
+                    2)
+                'dot)
+          (send dc draw-line 
+                (+ dx sx) (+ dy sy)
+                (+ dx ex) (+ dy ey))
+          (send dc set-pen pen))
+        (pict-width pict)
+        (pict-height pict))
+       pict)))
   (if arrowhead?
       (pin-arrow-line field-arrowhead-size
                       base
                       dot1 (λ (ignored1 ignored2)
-                             (let-values ([(x y) (cc-find pict dot2)])
-                               (values (+ x 2) y)))
+                             (define-values (x y) (cc-find pict dot2))
+                             (values (+ x 2) y))
                       dot2 cc-find
                       #:color type-link-color)
-      base)))
+      base))
 
 (define (dotted-right-right-reference p0 a b c d [count 1])
   (right-right-reference p0 a b c d count #:connect-dots connect-circly-dots))

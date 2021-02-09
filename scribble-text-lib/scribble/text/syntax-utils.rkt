@@ -24,15 +24,19 @@
   (define (group-by pred? xs fun)
     (let loop ([xs xs] [before '()] [cur #f] [after '()] [r '()])
       (define (add) (cons (fun (reverse before) cur (reverse after)) r))
-      (if (null? xs)
-        (reverse (if (or cur (pair? before) (pair? after)) (add) r))
-        (let* ([x (car xs)] [xs (cdr xs)] [p (pred? x)])
-          (cond [(eq? '> p) (loop xs before cur (cons x after) r)]
-                [(eq? '< p) (if (or cur (pair? after))
-                              (loop xs (list x) #f '() (add))
-                              (loop xs (cons x before) cur after r))]
-                [(or cur (pair? after)) (loop xs '() x '() (add))]
-                [else (loop xs before x '() r)])))))
+      (cond
+        [(null? xs)
+         (reverse (if (or cur (pair? before) (pair? after)) (add) r))]
+        [else
+         (define x (car xs))
+         (let ([xs (cdr xs)])
+           (define p (pred? x))
+           (cond [(eq? '> p) (loop xs before cur (cons x after) r)]
+                 [(eq? '< p) (if (or cur (pair? after))
+                                 (loop xs (list x) #f '() (add))
+                                 (loop xs (cons x before) cur after r))]
+                 [(or cur (pair? after)) (loop xs '() x '() (add))]
+                 [else (loop xs before x '() r)]))])))
   (define (group-stxs stxs fun)
     (group-by (λ (stx)
                 (define p (syntax-property stx 'scribble))

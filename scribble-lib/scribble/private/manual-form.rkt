@@ -300,27 +300,27 @@
 (define (meta-symbol? s) (memq s '(... ...+ ?)))
 
 (define (defform-site kw-id)
-  (let ([target-maker (id-to-form-target-maker kw-id #t)])
-    (define-values (content ref-content) (definition-site (syntax-e kw-id) kw-id #t))
-    (if target-maker
-        (target-maker
-         content
-         (lambda (tag)
-           (make-toc-target2-element
-            #f
-            (if kw-id
-                (make-index-element
-                 #f content tag
-                 (list (datum-intern-literal (symbol->string (syntax-e kw-id))))
-                 (list ref-content)
-                 (with-exporting-libraries
-                  (lambda (libs)
-                    (make-form-index-desc (syntax-e kw-id)
-                                          libs))))
-                content)
-            tag
-            ref-content)))
-        content)))
+  (define target-maker (id-to-form-target-maker kw-id #t))
+  (define-values (content ref-content) (definition-site (syntax-e kw-id) kw-id #t))
+  (if target-maker
+      (target-maker
+       content
+       (lambda (tag)
+         (make-toc-target2-element
+          #f
+          (if kw-id
+              (make-index-element
+               #f content tag
+               (list (datum-intern-literal (symbol->string (syntax-e kw-id))))
+               (list ref-content)
+               (with-exporting-libraries
+                   (lambda (libs)
+                     (make-form-index-desc (syntax-e kw-id)
+                                           libs))))
+              content)
+          tag
+          ref-content)))
+      content))
 
 (define (*defforms kind link? kw-id forms form-procs subs sub-procs contract-procs content-thunk)
   (parameterize ([current-meta-list '(... ...+)])
@@ -416,14 +416,14 @@
   (*racketrawgrammars style (list nonterm) (list (cons clause1 clauses))))
 
 (define (*racketgrammar lits s-expr clauseses-thunk)
-  (let ([l (clauseses-thunk)])
-    (*racketrawgrammars #f
-                        (map (lambda (x)
-                               (make-element #f
-                                             (list (hspace 2)
-                                                   (car x))))
-                             l)
-                        (map cdr l))))
+  (define l (clauseses-thunk))
+  (*racketrawgrammars #f
+                      (map (lambda (x)
+                             (make-element #f
+                                           (list (hspace 2)
+                                                 (car x))))
+                           l)
+                      (map cdr l)))
 
 (define (*var id)
   (to-element (*var-sym id)))

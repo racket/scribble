@@ -49,19 +49,21 @@
    (lambda ()
      (define in
        (parameterize ([current-signature (make-sig stx-id)]) (body-thunk)))
-     (if indent?
-       (let-values ([(pre-body post-body)
-                     (let loop ([in in][pre-accum null])
-                       (cond [(null? in) (values (reverse pre-accum) null)]
-                             [(whitespace? (car in))
-                              (loop (cdr in) (cons (car in) pre-accum))]
-                             [(sig-desc? (car in))
-                              (loop (cdr in)
-                                    (append (reverse (sig-desc-in (car in)))
-                                            pre-accum))]
-                             [else (values (reverse pre-accum) in)]))])
-         `(,@pre-body
-           ,(make-blockquote
-             "leftindent"
-             (flow-paragraphs (decode-flow post-body)))))
-       in))))
+     (cond
+       [indent?
+        (define-values (pre-body post-body)
+          (let loop ([in in][pre-accum null])
+            (cond [(null? in) (values (reverse pre-accum) null)]
+                  [(whitespace? (car in))
+                   (loop (cdr in) (cons (car in) pre-accum))]
+                  [(sig-desc? (car in))
+                   (loop (cdr in)
+                         (append (reverse (sig-desc-in (car in)))
+                                 pre-accum))]
+                  [else (values (reverse pre-accum) in)])))
+        `(,@pre-body
+          ,(make-blockquote
+            "leftindent"
+            (flow-paragraphs (decode-flow post-body))))]
+       [else
+        in]))))

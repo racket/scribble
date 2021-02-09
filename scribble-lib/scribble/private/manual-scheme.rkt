@@ -58,12 +58,12 @@
                 #:wrap-elem
                 (lambda (e) (make-element result-color e))))
 (define (to-result-paragraph/prefix a b c)
-  (let ([to-paragraph (to-paragraph/prefix a b c)])
-    (lambda (v)
-      (to-paragraph v 
-                    #:color? #f 
-                    #:wrap-elem
-                    (lambda (e) (make-element result-color e))))))
+  (define to-paragraph (to-paragraph/prefix a b c))
+  (lambda (v)
+    (to-paragraph v 
+                  #:color? #f 
+                  #:wrap-elem
+                  (lambda (e) (make-element result-color e)))))
 
 (define-code racketresultblock0 to-result-paragraph)
 (define-code racketresultblock (to-result-paragraph/prefix (hspace 2) (hspace 2) ""))
@@ -174,24 +174,27 @@
           ;; for `lib' or `planet' (which are rarely used)
           #,(if (identifier? stx)
                 (datum->syntax #f (syntax-e stx) stx stx)
-                (if (and (pair? (syntax-e stx))
-                         (memq (syntax-e (car (syntax-e stx))) '(lib planet file)))
-                    (let ([s (car (syntax-e stx))]
-                          [rest (let loop ([a (cdr (syntax-e stx))] [head? #f])
-                                  (cond
-                                   [(identifier? a) (datum->syntax #f (syntax-e a) a a)]
-                                   [(and head? (pair? a) (and (identifier? (car a))
-                                                              (free-identifier=? #'unsyntax (car a))))
-                                    a]
-                                   [(pair? a) (cons (loop (car a) #t) 
-                                                    (loop (cdr a) #f))]
-                                   [(syntax? a) (datum->syntax a
-                                                               (loop (syntax-e a) head?)
-                                                               a 
-                                                               a)]
-                                   [else a]))])
-                      (datum->syntax stx (cons s rest) stx stx))
-                    stx))))]))
+                (cond
+                  [(and (pair? (syntax-e stx))
+                        (memq (syntax-e (car (syntax-e stx))) '(lib planet file)))
+                   (define s (car (syntax-e stx)))
+                   (define rest
+                     (let loop ([a (cdr (syntax-e stx))] [head? #f])
+                       (cond
+                         [(identifier? a) (datum->syntax #f (syntax-e a) a a)]
+                         [(and head? (pair? a) (and (identifier? (car a))
+                                                    (free-identifier=? #'unsyntax (car a))))
+                          a]
+                         [(pair? a) (cons (loop (car a) #t) 
+                                          (loop (cdr a) #f))]
+                         [(syntax? a) (datum->syntax a
+                                                     (loop (syntax-e a) head?)
+                                                     a 
+                                                     a)]
+                         [else a])))
+                   (datum->syntax stx (cons s rest) stx stx)]
+                  [else
+                   stx]))))]))
 
 (define-syntax racketmodname
   (syntax-rules (unsyntax)
@@ -232,10 +235,11 @@
   (add-racket-index 'x (racket x)))
 
 (define (add-racket-index s e)
-  (let ([k (cond [(and (pair? s) (eq? (car s) 'quote)) (format "~s" (cadr s))]
-                 [(string? s) s]
-                 [else (format "~s" s)])])
-    (index* (list k) (list e) e)))
+  (define k
+    (cond [(and (pair? s) (eq? (car s) 'quote)) (format "~s" (cadr s))]
+          [(string? s) s]
+          [else (format "~s" s)]))
+  (index* (list k) (list e) e))
 
 (define-syntax-rule (define-/form id base)
   (define-syntax (id stx)
@@ -279,16 +283,16 @@
 (define-/form racket/form racket)
 
 (define (*racketlink stx-id id style . s)
-  (let ([content (decode-content s)])
-    (make-delayed-element
-     (lambda (r p ri)
-       (make-link-element
-        style
-        content
-        (or (find-racket-tag p ri stx-id #f)
-            `(undef ,(format "--UNDEFINED:~a--" (syntax-e stx-id))))))
-     (lambda () content)
-     (lambda () content))))
+  (define content (decode-content s))
+  (make-delayed-element
+   (lambda (r p ri)
+     (make-link-element
+      style
+      content
+      (or (find-racket-tag p ri stx-id #f)
+          `(undef ,(format "--UNDEFINED:~a--" (syntax-e stx-id))))))
+   (lambda () content)
+   (lambda () content)))
 
 (define-syntax racketlink
   (syntax-rules ()

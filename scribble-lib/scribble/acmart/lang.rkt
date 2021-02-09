@@ -160,21 +160,21 @@
                                                #,authorversion? #,font-size #,nonacm? #,timestamp?
                                                #,author-draft? #,acmthm? #,format?) () . body)])))]))
 
-(define ((post-process . opts) doc)  
-  (let ([options
-         (if (ormap values opts)
-             (format "[~a]" (apply string-append (add-between (filter values opts) ", ")))
-             "")])
-    (add-acmart-styles 
-     (add-defaults doc
-                   (string->bytes/utf-8
-                    (format "\\documentclass~a{acmart}\n~a"
-                            options
-                            unicode-encoding-packages))
-                   (scribble-file "acmart/style.tex")
-                   (list (scribble-file "acmart/acmart.cls"))
-                   #f
-                   #:replacements (hash "scribble-load-replace.tex" (scribble-file "acmart/acmart-load.tex"))))))
+(define ((post-process . opts) doc)
+  (define options
+    (if (ormap values opts)
+        (format "[~a]" (apply string-append (add-between (filter values opts) ", ")))
+        ""))
+  (add-acmart-styles 
+   (add-defaults doc
+                 (string->bytes/utf-8
+                  (format "\\documentclass~a{acmart}\n~a"
+                          options
+                          unicode-encoding-packages))
+                 (scribble-file "acmart/style.tex")
+                 (list (scribble-file "acmart/acmart.cls"))
+                 #f
+                 #:replacements (hash "scribble-load-replace.tex" (scribble-file "acmart/acmart-load.tex")))))
 
 (define (add-acmart-styles doc)
   (struct-copy part doc

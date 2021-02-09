@@ -41,16 +41,18 @@
        (let loop ([block (get-chunk main-id)])
          (append-map
           (lambda (expr)
-            (if (identifier? expr)
-                (let ([subs (get-chunk expr)])
-                  (if (pair? subs)
-                      (begin (set! chunk-mentions (cons expr chunk-mentions))
-                             (loop subs))
-                      (list (shift expr))))
-                (let ([subs (syntax->list expr)])
-                  (if subs
-                      (list (restore expr (loop subs)))
-                      (list (shift expr))))))
+            (cond
+              [(identifier? expr)
+               (define subs (get-chunk expr))
+               (if (pair? subs)
+                   (begin (set! chunk-mentions (cons expr chunk-mentions))
+                          (loop subs))
+                   (list (shift expr)))]
+              [else
+               (define subs (syntax->list expr))
+               (if subs
+                   (list (restore expr (loop subs)))
+                   (list (shift expr)))]))
           block)))))                               
   (with-syntax ([(body ...) (strip-comments body)]
                 ;; construct arrows manually
@@ -81,16 +83,18 @@
       (strip-comments (cdr body))]
      [(eq? ad 'code:blank)
       (strip-comments (cdr body))]
-     [(and (or (eq? ad 'code:hilite)
-               (eq? ad 'code:quote))
-           (let* ([d (cdr body)]
-                  [dd (if (syntax? d)
-                          (syntax-e d)
-                          d)])
-             (and (pair? dd)
-                  (or (null? (cdr dd))
-                      (and (syntax? (cdr dd))
-                           (null? (syntax-e (cdr dd))))))))
+     [(cond
+        [(not (or (eq? ad 'code:hilite)
+                  (eq? ad 'code:quote))) #f]
+        [else
+         (define d (cdr body))
+         (define dd (if (syntax? d)
+                        (syntax-e d)
+                        d))
+         (and (pair? dd)
+              (or (null? (cdr dd))
+                  (and (syntax? (cdr dd))
+                       (null? (syntax-e (cdr dd))))))])
       (define d (cdr body))
       (define r
         (strip-comments (car (if (syntax? d) (syntax-e d) d))))

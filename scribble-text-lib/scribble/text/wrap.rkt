@@ -59,10 +59,11 @@
       (define word (substring str w1* w2*))
       (define-values [r1 r2 r3]
         (if split-word (split-word word (- width w1*)) (values #f word #t)))
-      (let* ([1st (cond [r1 (string-append (substring str 0 w1*) r1)]
-                        [(eq? w1* 0) #f]
-                        [else (substring str 0 s1)])]
-             [strs (if 1st (cons 1st strs) strs)]
+      (define 1st
+        (cond [r1 (string-append (substring str 0 w1*) r1)]
+              [(eq? w1* 0) #f]
+              [else (substring str 0 s1)]))
+      (let* ([strs (if 1st (cons 1st strs) strs)]
              [width* (cond [(not r1) width*]
                            [(pair? width*) (cdr width*)]
                            [else width*])]
@@ -73,11 +74,12 @@
              [strs (if 2nd (cons 2nd strs) strs)]
              [width* (cond [(not r2) width*]
                            [(pair? width*) (cdr width*)]
-                           [else width*])]
-             [rst (cond [(and (not 2nd) r2)
-                         (string-append r2 (substring str w2*))]
-                        [(eq? w2* strlen) #f]
-                        [else (substring str s2)])])
+                           [else width*])])
+        (define rst
+          (cond [(and (not 2nd) r2)
+                 (string-append r2 (substring str w2*))]
+                [(eq? w2* strlen) #f]
+                [else (substring str s2)]))
         (if rst (loop rst strs width*) (reverse strs))))
     (cond
       [(strlen . <= . width) (reverse (cons str strs))]

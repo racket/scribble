@@ -227,11 +227,11 @@
        (table-blockss t)))
 
 (define (make-auxiliary-table style cells)
-  (let ([t (make-table/compat style cells)])
-    (make-table (make-style (style-name (table-style t))
-                            (cons 'aux
-                                  (style-properties (table-style t))))
-                (table-blockss t))))
+  (define t (make-table/compat style cells))
+  (make-table (make-style (style-name (table-style t))
+                          (cons 'aux
+                                (style-properties (table-style t))))
+              (table-blockss t)))
 
 (define (auxiliary-table? t)
   (ormap (lambda (v) (eq? v 'aux) (style-properties (table-style t)))))
@@ -344,86 +344,90 @@
 
 (define (convert-style s)
   (cond
-   [(not s) plain]
-   [(style? s) s]
-   [(string? s) (make-style s null)]
-   [(symbol? s) (make-style s null)]
-   [(and (list? s) (andmap symbol? s)) (make-style #f s)]
-   [(with-attributes? s) (let* ([wa (flatten-style s)]
-                                [s (convert-style (with-attributes-style wa))])
-                           (make-style (style-name s)
-                                       (cons
-                                        (make-attributes (with-attributes-assoc wa))
-                                        (style-properties s))))]
-   [(target-url? s) (let ([s (convert-style (target-url-style s))])
-                      (make-style (style-name s)
-                                       (cons
-                                        (core:make-target-url (target-url-addr s))
-                                        (style-properties s))))]
-   [(image-file? s) (make-style #f null)]
-   [(and (list? s) (pair? s) (eq? (car s) 'color))
-    (make-style #f (list (make-color-property
-                          (if (string? (cadr s)) (cadr s) (cdr s)))))]
-   [(and (list? s) (pair? s) (eq? (car s) 'bg-color))
-    (make-style #f (list (make-background-color-property
-                          (if (string? (cadr s)) (cadr s) (cdr s)))))]
-   [(and (pair? s)
-         (list? s)
-         (andmap (lambda (v) (and (pair? v) 
-                                  (memq (car v) '(alignment valignment row-styles style))))
-                 s))
-    (let ([gen-columns (lambda (sn a va)
-                         (map (lambda (sn a va)
-                                (make-style sn
-                                            (append (if a (list a) null)
-                                                    (if va (list va) null))))
-                              (cdr (or sn (map (lambda (x) #f) (or va a))))
-                              (cdr (or a (map (lambda (x) #f) (or va sn))))
-                              (cdr (or va (map (lambda (x) #f) (or a sn))))))])
-      (make-style (let ([s (assq 'style s)])
-                    (and s (cadr s)))
-                  (let ([a (assq 'alignment s)]
-                        [va (assq 'valignment s)])
-                    (if (or a va)
-                        (list (make-table-columns (gen-columns #f a va)))
-                        (let ([l (cdr (assq 'row-styles s))])
-                          (list
-                           (make-table-cells
-                            (map (lambda (row)
-                                   (let ([sn (assq 'style row)]
-                                         [a (assq 'alignment row)]
-                                         [va (assq 'valignment row)])
-                                     (if (or sn a va)
-                                         (gen-columns sn a va)
-                                         (error 'convert-style "no row style found"))))
-                                 l))))))))]
-   [else (error 'convert-style "unrecognized style: ~e" s)]))
+    [(not s) plain]
+    [(style? s) s]
+    [(string? s) (make-style s null)]
+    [(symbol? s) (make-style s null)]
+    [(and (list? s) (andmap symbol? s)) (make-style #f s)]
+    [(with-attributes? s)
+     (define wa (flatten-style s))
+     (let ([s (convert-style (with-attributes-style wa))])
+       (make-style (style-name s)
+                   (cons
+                    (make-attributes (with-attributes-assoc wa))
+                    (style-properties s))))]
+    [(target-url? s) (let ([s (convert-style (target-url-style s))])
+                       (make-style (style-name s)
+                                   (cons
+                                    (core:make-target-url (target-url-addr s))
+                                    (style-properties s))))]
+    [(image-file? s) (make-style #f null)]
+    [(and (list? s) (pair? s) (eq? (car s) 'color))
+     (make-style #f (list (make-color-property
+                           (if (string? (cadr s)) (cadr s) (cdr s)))))]
+    [(and (list? s) (pair? s) (eq? (car s) 'bg-color))
+     (make-style #f (list (make-background-color-property
+                           (if (string? (cadr s)) (cadr s) (cdr s)))))]
+    [(and (pair? s)
+          (list? s)
+          (andmap (lambda (v) (and (pair? v) 
+                                   (memq (car v) '(alignment valignment row-styles style))))
+                  s))
+     (define gen-columns
+       (lambda (sn a va)
+         (map (lambda (sn a va)
+                (make-style sn
+                            (append (if a (list a) null)
+                                    (if va (list va) null))))
+              (cdr (or sn (map (lambda (x) #f) (or va a))))
+              (cdr (or a (map (lambda (x) #f) (or va sn))))
+              (cdr (or va (map (lambda (x) #f) (or a sn)))))))
+     (make-style (let ([s (assq 'style s)])
+                   (and s (cadr s)))
+                 (let ([a (assq 'alignment s)]
+                       [va (assq 'valignment s)])
+                   (cond
+                     [(or a va)
+                      (list (make-table-columns (gen-columns #f a va)))]
+                     [else
+                      (define l (cdr (assq 'row-styles s)))
+                      (list
+                       (make-table-cells
+                        (map (lambda (row)
+                               (define sn (assq 'style row))
+                               (define a (assq 'alignment row))
+                               (define va (assq 'valignment row))
+                               (if (or sn a va)
+                                   (gen-columns sn a va)
+                                   (error 'convert-style "no row style found")))
+                             l)))])))]
+    [else (error 'convert-style "unrecognized style: ~e" s)]))
 
 (define (flatten-style s)
   (cond
-   [(with-attributes? s)
-    (let ([rest (flatten-style (with-attributes-style s))])
-      (if (with-attributes? rest)
-          ;; collapse nested with-attributes
-          (make-with-attributes 
-           (with-attributes-style rest)
-           (append (with-attributes-assoc s)
-                   (with-attributes-assoc rest)))
-          ;; rebuild with flattened inner:
-          (make-with-attributes 
-           rest
-           (with-attributes-assoc s))))]
-   [(target-url? s)
-    (let ([rest (flatten-style (target-url-style s))])
-      (if (with-attributes? rest)
-          ;; lift nested attributes out:
-          (make-with-attributes 
-           (make-target-url
-            (target-url-addr s)
-            (with-attributes-style rest))
-           (with-attributes-assoc rest))
-          ;; rebuild with flattened inner:
+    [(with-attributes? s)
+     (define rest (flatten-style (with-attributes-style s)))
+     (if (with-attributes? rest)
+         ;; collapse nested with-attributes
+         (make-with-attributes 
+          (with-attributes-style rest)
+          (append (with-attributes-assoc s)
+                  (with-attributes-assoc rest)))
+         ;; rebuild with flattened inner:
+         (make-with-attributes 
+          rest
+          (with-attributes-assoc s)))]
+    [(target-url? s)
+     (define rest (flatten-style (target-url-style s)))
+     (if (with-attributes? rest)
+         ;; lift nested attributes out:
+         (make-with-attributes 
           (make-target-url
            (target-url-addr s)
-           rest)))]
-   [else s]))
+           (with-attributes-style rest))
+          (with-attributes-assoc rest))
+         ;; rebuild with flattened inner:
+         (make-target-url
+          (target-url-addr s)
+          rest))]
+    [else s]))

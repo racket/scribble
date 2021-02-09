@@ -825,8 +825,8 @@ END-OF-TESTS
   (if whole?
     (reader i)
     (let loop ()
-      (let ([x (reader i)])
-        (if (eof-object? x) '() (cons x (loop)))))))
+      (define x (reader i))
+      (if (eof-object? x) '() (cons x (loop))))))
 
 (define read/BS (scr:make-at-reader #:command-char #\\ #:syntax? #f))
 (define read-syntax/BS (scr:make-at-reader #:command-char #\\ #:syntax? #t))
@@ -944,15 +944,16 @@ END-OF-TESTS
                                      t)
                        (regexp-match #px"^(.*\\S)\\s+(-\\S+->)\\s+(\\S.*)$"
                                      t))])
-            (if (not (and m (= 4 (length m))))
-              (error 'bad-test "~a" t)
-              (let-values ([(x y)
-                            ((string->tester (caddr m)) (cadr m) (cadddr m))])
-                (test #:failure-message
-                      (format "bad result in\n    ~a\n  results:\n    ~s != ~s"
-                              (regexp-replace* #rx"\n" t "\n    ")
-                              x y)
-                      (matching? x y))))))))
+            (cond
+              [(not (and m (= 4 (length m))))
+               (error 'bad-test "~a" t)]
+              [else
+               (define-values (x y) ((string->tester (caddr m)) (cadr m) (cadddr m)))
+               (test #:failure-message
+                     (format "bad result in\n    ~a\n  results:\n    ~s != ~s"
+                             (regexp-replace* #rx"\n" t "\n    ")
+                             x y)
+                     (matching? x y))])))))
 
     ;; Check static versus dynamic readtable for command (dynamic when "c" in the
     ;; name) and datum (dynamic when "d" in the name) parts:

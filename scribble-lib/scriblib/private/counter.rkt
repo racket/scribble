@@ -36,15 +36,15 @@
          (list
           (make-delayed-element
            (lambda (renderer part ri)
-             (let ([n (resolve-get part ri (tag->counter-tag counter tag "value"))])
-               (cons
-                (make-element label-style
-                              (let ([l (cons (make-element (default-figure-counter-style) (format "~a" n))
-                                             (decode-content (list label-suffix)))])
-                                (if label
-                                    (list* label 'nbsp l)
-                                    l)))
-                content)))
+             (define n (resolve-get part ri (tag->counter-tag counter tag "value")))
+             (cons
+              (make-element label-style
+                            (let ([l (cons (make-element (default-figure-counter-style) (format "~a" n))
+                                           (decode-content (list label-suffix)))])
+                              (if label
+                                  (list* label 'nbsp l)
+                                  l)))
+              content))
            (lambda () (if label
                           (list* label 'nbsp "N" content)
                           (cons "N" content)))
@@ -52,11 +52,12 @@
                           (list* label 'nbsp "N" content)
                           (cons "N" content)))))
          (lambda (ci)
-           (let ([n (if continue?
-                        (counter-n counter)
-                        (add1 (counter-n counter)))])
-             (set-counter-n! counter n)
-             (collect-put! ci (generate-tag (tag->counter-tag counter tag "value") ci) n)))))
+           (define n
+             (if continue?
+                 (counter-n counter)
+                 (add1 (counter-n counter))))
+           (set-counter-n! counter n)
+           (collect-put! ci (generate-tag (tag->counter-tag counter tag "value") ci) n))))
        (tag->counter-tag counter tag)))
     (if (counter-target-wrap counter)
         ((counter-target-wrap counter)

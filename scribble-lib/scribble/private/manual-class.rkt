@@ -47,15 +47,15 @@
 (define-struct impl (def))
 
 (define (id-info id)
-  (let ([b (identifier-label-binding id)])
-    (if b
+  (define b (identifier-label-binding id))
+  (if b
       (list (caddr b)
             (list-ref b 3)
             (list-ref b 4)
             (list-ref b 5)
             (list-ref b 6))
       (error 'scribble "no class/interface/mixin information for identifier: ~e"
-             id))))
+             id)))
 
 (define (make-inherited-table r d ri decl)
   (define start
@@ -71,20 +71,20 @@
            [(assoc (caar supers) accum)
             (loop (cdr supers) accum)]
            [else
-            (let ([super (car supers)])
-              (loop (append (filter-map
-                             (lambda (i)
-                               (let ([key (find-scheme-tag d ri i #f)])
-                                 (and key
-                                      (cons key (lookup-cls/intf d ri key)))))
-                             (append
-                              (reverse (cls/intf-intfs (cdr super)))
-                              (if (cls/intf-super (cdr super))
+            (define super (car supers))
+            (loop (append (filter-map
+                           (lambda (i)
+                             (define key (find-scheme-tag d ri i #f))
+                             (and key
+                                  (cons key (lookup-cls/intf d ri key))))
+                           (append
+                            (reverse (cls/intf-intfs (cdr super)))
+                            (if (cls/intf-super (cdr super))
                                 (list (cls/intf-super (cdr super)))
                                 null)
-                              (reverse (cls/intf-app-mixins (cdr super)))))
-                            (cdr supers))
-                    (cons super accum)))])))))
+                            (reverse (cls/intf-app-mixins (cdr super)))))
+                          (cdr supers))
+                  (cons super accum))])))))
   (define ht
     (let ([ht (make-hasheq)])
       (for* ([i (decl-body decl)]
@@ -95,19 +95,20 @@
   (define inh
     (append-map
      (lambda (super)
-       (let ([inh (filter-map
-                   (lambda (k)
-                     (if (hash-ref ht k #f)
-                       #f
-                       (begin (hash-set! ht k #t)
-                              (cons (datum-intern-literal (symbol->string k))
-                                    (**method k (car super))))))
-                   (cls/intf-methods (cdr super)))])
-         (if (null? inh)
+       (define inh
+         (filter-map
+          (lambda (k)
+            (if (hash-ref ht k #f)
+                #f
+                (begin (hash-set! ht k #t)
+                       (cons (datum-intern-literal (symbol->string k))
+                             (**method k (car super))))))
+          (cls/intf-methods (cdr super))))
+       (if (null? inh)
            null
            (cons (make-element #f (list (make-element "inheritedlbl" '("from "))
                                         (cls/intf-name-element (cdr super))))
-                 (map cdr (sort inh string<? #:key car))))))
+                 (map cdr (sort inh string<? #:key car)))))
      supers))
   (if (null? inh)
     (make-auxiliary-table "inherited" null)
@@ -196,32 +197,35 @@
        (make-flow
         (list
          (make-omitable-paragraph
-          (list (if link?
-                    (let ([target-maker (id-to-target-maker stx-id #t)]
-                          [content (annote-exporting-library
-                                    (to-element #:defn? #t stx-id))]
-                          [ref-content (to-element stx-id)])
-                      (if target-maker
-                          (target-maker
-                           content
-                           (lambda (tag)
-                             ((if whole-page?
-                                  make-page-target-element
-                                  (lambda (s c t)
-                                    (make-toc-target2-element s c t ref-content)))
-                              #f
-                              (list
-                               (make-index-element
-                                #f content tag
-                                (list (datum-intern-literal
-                                       (symbol->string (syntax-e stx-id))))
-                                (list ref-content)
-                                (with-exporting-libraries
+          (list (cond
+                  [link?
+                   (define target-maker (id-to-target-maker stx-id #t))
+                   (define content
+                     (annote-exporting-library
+                      (to-element #:defn? #t stx-id)))
+                   (define ref-content (to-element stx-id))
+                   (if target-maker
+                       (target-maker
+                        content
+                        (lambda (tag)
+                          ((if whole-page?
+                               make-page-target-element
+                               (lambda (s c t)
+                                 (make-toc-target2-element s c t ref-content)))
+                           #f
+                           (list
+                            (make-index-element
+                             #f content tag
+                             (list (datum-intern-literal
+                                    (symbol->string (syntax-e stx-id))))
+                             (list ref-content)
+                             (with-exporting-libraries
                                  (lambda (libs)
                                    (make-index-desc (syntax-e stx-id) libs)))))
-                              tag)))
-                          content))
-                    (to-element stx-id))
+                           tag)))
+                       content)]
+                  [else
+                   (to-element stx-id)])
                 spacer ":" spacer
                 (case kind
                   [(class) (racket class?)]
@@ -496,29 +500,31 @@
        #'(*this-obj 'cname))]))
 
 (define (*xmethod/super cname name)
-  (let ([get
-         (lambda (d ri key)
-           (if key
-             (let ([v (lookup-cls/intf d ri key)])
-               (if v
-                 (append (cls/intf-app-mixins v)
-                         (cons (cls/intf-super v)
-                               (cls/intf-intfs v)))
-                 null))
-             null))])
-    (make-delayed-element
-     (lambda (r d ri)
-       (let loop ([search (get d ri (find-scheme-tag d ri cname #f))])
-         (cond
-           [(null? search)
-            (list (make-element #f '("<method not found>")))]
-           [(not (car search))
-            (loop (cdr search))]
-           [else
-            (let* ([a-key (find-scheme-tag d ri (car search) #f)]
-                   [v (and a-key (lookup-cls/intf d ri a-key))])
-              (if v
-                (if (member name (cls/intf-methods v))
+  (define get
+    (lambda (d ri key)
+      (cond
+        [key
+         (define v (lookup-cls/intf d ri key))
+         (if v
+             (append (cls/intf-app-mixins v)
+                     (cons (cls/intf-super v)
+                           (cls/intf-intfs v)))
+             null)]
+        [else
+         null])))
+  (make-delayed-element
+   (lambda (r d ri)
+     (let loop ([search (get d ri (find-scheme-tag d ri cname #f))])
+       (cond
+         [(null? search)
+          (list (make-element #f '("<method not found>")))]
+         [(not (car search))
+          (loop (cdr search))]
+         [else
+          (define a-key (find-scheme-tag d ri (car search) #f))
+          (define v (and a-key (lookup-cls/intf d ri a-key)))
+          (if v
+              (if (member name (cls/intf-methods v))
                   (list
                    (make-element #f
                                  (list (**method name a-key)
@@ -527,10 +533,10 @@
                   (loop (append (cdr search)
                                 (get d ri (find-scheme-tag d ri (car search)
                                                            #f)))))
-                (loop (cdr search))))])))
-     (lambda () (format "~a in ~a" (syntax-e cname) name))
-     (lambda () (format "~a in ~a" (syntax-e cname) name)))))
+              (loop (cdr search)))])))
+   (lambda () (format "~a in ~a" (syntax-e cname) name))
+   (lambda () (format "~a in ~a" (syntax-e cname) name))))
 
 (define (lookup-cls/intf d ri tag)
-  (let ([v (resolve-get d ri `(cls/intf ,(cadr tag)))])
-    (or v (make-cls/intf "unknown" null #f null null))))
+  (define v (resolve-get d ri `(cls/intf ,(cadr tag))))
+  (or v (make-cls/intf "unknown" null #f null null)))

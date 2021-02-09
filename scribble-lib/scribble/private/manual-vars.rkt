@@ -57,16 +57,18 @@
                     (let ([p (style-properties s)])
                       (if (ormap attributes? p)
                           (for/list ([i (in-list p)])
-                            (if (attributes? i)
-                                (let ([al (attributes-assoc i)])
-                                  (if (assq 'class al)
-                                      (for/list ([a (in-list al)])
-                                        (if (eq? (car a) 'class)
-                                            (cons 'class (string-append (cdr a) " RForeground"))
-                                            a))
-                                      (attributes (cons '(class . "RForeground")
-                                                        al))))
-                                i))
+                            (cond
+                              [(attributes? i)
+                               (define al (attributes-assoc i))
+                               (if (assq 'class al)
+                                   (for/list ([a (in-list al)])
+                                     (if (eq? (car a) 'class)
+                                         (cons 'class (string-append (cdr a) " RForeground"))
+                                         a))
+                                   (attributes (cons '(class . "RForeground")
+                                                     al)))]
+                              [else
+                               i]))
                           (cons (attributes '((class . "RForeground")))
                                 p)))))))))
 
@@ -197,21 +199,22 @@
     [(_ (def ...+) . body)
      (with-syntax ([((_ (lit ...) (var ...) decl) ...)
                     (map (lambda (def)
-                           (let ([exp-def (local-expand 
-                                           def
-                                           (list (make-deftogether-tag))
-                                           (cons
-                                            #'with-togetherable-racket-variables*
-                                            (kernel-form-identifier-list)))])
-                             (syntax-case exp-def (with-togetherable-racket-variables*)
-                               [(with-togetherable-racket-variables* lits vars decl)
-                                exp-def]
-                               [_
-                                (raise-syntax-error
-                                 #f
-                                 "sub-form is not a documentation form that can be combined"
-                                 stx
-                                 def)])))
+                           (define exp-def
+                             (local-expand 
+                              def
+                              (list (make-deftogether-tag))
+                              (cons
+                               #'with-togetherable-racket-variables*
+                               (kernel-form-identifier-list))))
+                           (syntax-case exp-def (with-togetherable-racket-variables*)
+                             [(with-togetherable-racket-variables* lits vars decl)
+                              exp-def]
+                             [_
+                              (raise-syntax-error
+                               #f
+                               "sub-form is not a documentation form that can be combined"
+                               stx
+                               def)]))
                          (syntax->list #'(def ...)))])
        #'(with-togetherable-racket-variables
           (lit ... ...)

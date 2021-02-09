@@ -17,38 +17,40 @@
                         #:notify [notify void])
   (define open-url (get-doc-open-url))
   (cond
-   [open-url
-    (define dest-url (let ([u (string->url open-url)])
-                       (combine-url/relative
-                        u
-                        (string-join
-                         (for/list ([s (explode-path sub)])
-                           (if (path? s)
-                               (path-element->string s)
-                               (format "~a" s)))
-                         "/"))))
-    (notify (url->string dest-url))
-    (send-url (url->string
-               (struct-copy url dest-url
-                            [fragment (or fragment
-                                          (url-fragment dest-url))]
-                            [query (append
-                                    (url-query dest-url)
-                                    (if query
-                                        (url-query
-                                         (string->url
-                                          (format "q?~a" query)))
-                                        null))])))]
+    [open-url
+     (define dest-url (let ([u (string->url open-url)])
+                        (combine-url/relative
+                         u
+                         (string-join
+                          (for/list ([s (explode-path sub)])
+                            (if (path? s)
+                                (path-element->string s)
+                                (format "~a" s)))
+                          "/"))))
+     (notify (url->string dest-url))
+     (send-url (url->string
+                (struct-copy url dest-url
+                             [fragment (or fragment
+                                           (url-fragment dest-url))]
+                             [query (append
+                                     (url-query dest-url)
+                                     (if query
+                                         (url-query
+                                          (string->url
+                                           (format "q?~a" query)))
+                                         null))])))]
     [else
-      (let* ([path (build-path (find-user-doc-dir) sub)]
-             [path (if (file-exists? path) path (build-path (find-doc-dir) sub))])
-        (notify path)
-        (if (file-exists? path)
-          (send-url/file path #:fragment fragment #:query query)
-          (let ([part (lambda (pfx x) (if x (string-append pfx x) ""))])
-            (send-url (string-append
-                        "https://docs.racket-lang.org/"
-                        sub (part "#" fragment) (part "?" query))))))]))
+     (define path (build-path (find-user-doc-dir) sub))
+     (let ([path (if (file-exists? path) path (build-path (find-doc-dir) sub))])
+       (notify path)
+       (cond
+         [(file-exists? path)
+          (send-url/file path #:fragment fragment #:query query)]
+         [else
+          (define part (lambda (pfx x) (if x (string-append pfx x) "")))
+          (send-url (string-append
+                     "https://docs.racket-lang.org/"
+                     sub (part "#" fragment) (part "?" query)))]))]))
 
 ;; This is an example of changing this code to use the online manuals.
 ;; Normally, it's better to set `doc-open-url` in "etc/config.rktd",
@@ -72,15 +74,15 @@
   ;; goes through the search-context.html page which tranpolines to
   ;; the main search page after setting the cookies (so when the
   ;; search page is refreshed it won't reset the context).
-  (let* ([label   (and (list? context) (= 2 (length context)) (cadr context))]
-         [context (if (pair? context) (car context) context)]
+  (define label (and (list? context) (= 2 (length context)) (cadr context)))
+  (let* ([context (if (pair? context) (car context) context)]
          [page    (if context "search-context.html" "index.html")]
          [query   (format "q=~a" (uri-encode str))]
          [query   (if context
-                    (format "~a&hq=~a~a"
-                            query (uri-encode context)
-                            (if label
-                              (format "&label=~a" (uri-encode label))
-                              ""))
-                    query)])
+                      (format "~a&hq=~a~a"
+                              query (uri-encode context)
+                              (if label
+                                  (format "&label=~a" (uri-encode label))
+                                  ""))
+                      query)])
     (send-main-page #:sub (string-append search-dir page) #:query query)))

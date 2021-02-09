@@ -49,22 +49,25 @@
                     [pos base]
                     [second #f]
                     [accum null])
-           (if (null? e)
-             (datum->syntax
-              p (reverse accum)
-              (list (syntax-source p) (syntax-line p) base (add1 base)
-                    (- pos base))
-              p)
-             (let* ([v ((norm-spacing (if (= line (syntax-line (car e)))
-                                        pos
-                                        (or second pos)))
-                        (car e))]
-                    [next-pos (+ (syntax-column v) (syntax-span v) 1)])
-               (loop (cdr e)
-                     (syntax-line v)
-                     next-pos
-                     (or second next-pos)
-                     (cons v accum)))))]
+           (cond
+             [(null? e)
+              (datum->syntax
+               p (reverse accum)
+               (list (syntax-source p) (syntax-line p) base (add1 base)
+                     (- pos base))
+               p)]
+             [else
+              (define v
+                ((norm-spacing (if (= line (syntax-line (car e)))
+                                   pos
+                                   (or second pos)))
+                 (car e)))
+              (define next-pos (+ (syntax-column v) (syntax-span v) 1))
+              (loop (cdr e)
+                    (syntax-line v)
+                    next-pos
+                    (or second next-pos)
+                    (cons v accum))]))]
         [else (datum->syntax
                p (syntax-e p)
                (list (syntax-source p) (syntax-line p) base (add1 base) 1)
@@ -72,33 +75,36 @@
 
 (define (scribble-examples . lines)
   (define reads-as (make-paragraph plain (list spacer "reads as" spacer)))
-  (let* ([lines (apply string-append lines)]
-         [p (open-input-string lines)])
+  (let ([lines (apply string-append lines)])
+    (define p (open-input-string lines))
     (port-count-lines! p)
     (let loop ([r '()] [newlines? #f])
       (regexp-match? #px#"^[[:space:]]*" p)
-      (let* ([p1  (file-position p)]
-             [stx (scribble:read-syntax #f p)]
-             [p2  (file-position p)])
-        (if (not (eof-object? stx))
-          (let ([str (substring lines p1 p2)])
-            (loop (cons (list str stx) r)
-                  (or newlines? (regexp-match? #rx#"\n" str))))
-          (let* ([r (reverse r)]
-                 [r (if newlines?
-                      (cdr (apply append (map (lambda (x) (list #f x)) r)))
-                      r)])
-            (make-table
-             plain
-             (map (lambda (x)
-                    (let ([@expr (if x (litchar/lines (car x)) "")]
-                          [sexpr (if x
-                                   (racket:to-paragraph
-                                    ((norm-spacing 0) (cadr x)))
-                                   "")]
-                          [reads-as (if x reads-as "")])
-                      (map as-flow (list spacer @expr reads-as sexpr))))
-                  r))))))))
+      (define p1 (file-position p))
+      (define stx (scribble:read-syntax #f p))
+      (define p2 (file-position p))
+      (cond
+        [(not (eof-object? stx))
+         (define str (substring lines p1 p2))
+         (loop (cons (list str stx) r)
+               (or newlines? (regexp-match? #rx#"\n" str)))]
+        [else
+         (let* ([r (reverse r)]
+                [r (if newlines?
+                       (cdr (apply append (map (lambda (x) (list #f x)) r)))
+                       r)])
+           (make-table
+            plain
+            (map (lambda (x)
+                   (define @expr (if x (litchar/lines (car x)) ""))
+                   (define sexpr
+                     (if x
+                         (racket:to-paragraph
+                          ((norm-spacing 0) (cadr x)))
+                         ""))
+                   (let ([reads-as (if x reads-as "")])
+                     (map as-flow (list spacer @expr reads-as sexpr))))
+                 r)))]))))
 
 ;; stuff for the scribble/text examples
 
@@ -112,12 +118,12 @@
   (define strs2 (split out-text))
   (define strsm (map (compose split cdr) more))
   (define (str->elts str)
-    (let ([spaces (regexp-match-positions #rx"(?:^| ) +" str)])
-      (if spaces
+    (define spaces (regexp-match-positions #rx"(?:^| ) +" str))
+    (if spaces
         (list* (str->elts (substring str 0 (caar spaces)))
                (smaller (hspace (- (cdar spaces) (caar spaces))))
                (str->elts (substring str (cdar spaces))))
-        (list (smaller (make-element 'tt str))))))
+        (list (smaller (make-element 'tt str)))))
   (define (make-line str)
     (list (as-flow (if (equal? str "")
                        (smaller (hspace 1))

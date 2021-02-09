@@ -46,52 +46,52 @@
 (define (title #:tag [tag #f] #:tag-prefix [prefix #f] #:style [style plain]
                #:version [version #f] #:date [date #f]
                . str)
-  (let ([content (decode-content str)])
-    (make-title-decl (prefix->string prefix)
-                     (convert-tag tag content)
-                     version
-                     (let ([s (convert-part-style 'title style)])
-                       (if date
-                           (make-style (style-name s)
-                                       (cons (make-document-date date)
-                                             (style-properties s)))
-                           s))
-                     content)))
+  (define content (decode-content str))
+  (make-title-decl (prefix->string prefix)
+                   (convert-tag tag content)
+                   version
+                   (let ([s (convert-part-style 'title style)])
+                     (if date
+                         (make-style (style-name s)
+                                     (cons (make-document-date date)
+                                           (style-properties s)))
+                         s))
+                   content))
 
 (define (section #:tag [tag #f] #:tag-prefix [prefix #f] #:style [style plain]
                  . str)
-  (let ([content (decode-content str)])
-    (make-part-start 0 (prefix->string prefix)
-                     (convert-tag tag content)
-                     (convert-part-style 'section style)
-                     content)))
+  (define content (decode-content str))
+  (make-part-start 0 (prefix->string prefix)
+                   (convert-tag tag content)
+                   (convert-part-style 'section style)
+                   content))
 
 (define (subsection #:tag [tag #f] #:tag-prefix [prefix #f] #:style [style plain]
                     . str)
-  (let ([content (decode-content str)])
-    (make-part-start 1
-                     (prefix->string prefix)
-                     (convert-tag tag content)
-                     (convert-part-style 'subsection style)
-                     content)))
+  (define content (decode-content str))
+  (make-part-start 1
+                   (prefix->string prefix)
+                   (convert-tag tag content)
+                   (convert-part-style 'subsection style)
+                   content))
 
 (define (subsubsection #:tag [tag #f] #:tag-prefix [prefix #f]
                        #:style [style plain] . str)
-  (let ([content (decode-content str)])
-    (make-part-start 2
-                     (prefix->string prefix)
-                     (convert-tag tag content)
-                     (convert-part-style 'subsubsection style)
-                     content)))
+  (define content (decode-content str))
+  (make-part-start 2
+                   (prefix->string prefix)
+                   (convert-tag tag content)
+                   (convert-part-style 'subsubsection style)
+                   content))
 
 (define (subsubsub*section #:tag [tag #f] . str)
-  (let ([content (decode-content str)])
-    (make-paragraph plain 
-                    (list
-                     (make-element "SSubSubSubSection"
-                                   (if tag
-                                       (make-target-element #f content `(part ,tag))
-                                       content))))))
+  (define content (decode-content str))
+  (make-paragraph plain 
+                  (list
+                   (make-element "SSubSubSubSection"
+                                 (if tag
+                                     (make-target-element #f content `(part ,tag))
+                                     content)))))
 
 (define-syntax (include-section stx)
   (syntax-case stx ()
@@ -166,19 +166,20 @@
  [item? (any/c . -> . boolean?)])
 
 (define (itemlist #:style [style plain] . items)
-  (let ([flows (let loop ([items items])
-                 (cond
-                  [(null? items) null]
-                  [(item? (car items)) (cons (an-item-flow (car items))
-                                             (loop (cdr items)))]
-                  [(block? (car items)) (cons (list (car items))
-                                              (loop (cdr items)))]
-                  [(splice? (car items))
-                   (loop (append (splice-run (car items))
-                                 (cdr items)))]
-                  [else
-                   (loop (append (car items) (cdr items)))]))])
-    (make-itemization (convert-block-style style) flows)))
+  (define flows
+    (let loop ([items items])
+      (cond
+        [(null? items) null]
+        [(item? (car items)) (cons (an-item-flow (car items))
+                                   (loop (cdr items)))]
+        [(block? (car items)) (cons (list (car items))
+                                    (loop (cdr items)))]
+        [(splice? (car items))
+         (loop (append (splice-run (car items))
+                       (cdr items)))]
+        [else
+         (loop (append (car items) (cdr items)))])))
+  (make-itemization (convert-block-style style) flows))
 
 (define-struct an-item (flow))
 
@@ -479,25 +480,31 @@
                 ;; and `table-cells` properties with the right number of
                 ;; styles:
                 (define props (style-properties s))
-                (define tc (and all-column-properties
-                                (let ([tc (ormap (lambda (v) (and (table-columns? v) v))
-                                                 props)])
-                                  (if (and tc
-                                           (= (length (table-columns-styles tc))
-                                              n-cols))
-                                      tc
-                                      #f))))
-                (define tl (and all-cell-properties
-                                (let ([tl (ormap (lambda (v) (and (table-cells? v) v))
-                                                 props)])
-                                  (if (and tl
-                                           (= (length (table-cells-styless tl))
-                                              n-rows)
-                                           (andmap (lambda (cl)
-                                                     (= (length cl) n-cols))
-                                                   (table-cells-styless tl)))
-                                      tl
-                                      #f))))
+                (define tc (cond
+                             [(not all-column-properties) #f]
+                             [else
+                              (define tc
+                                (ormap (lambda (v) (and (table-columns? v) v))
+                                       props))
+                              (if (and tc
+                                       (= (length (table-columns-styles tc))
+                                          n-cols))
+                                  tc
+                                  #f)]))
+                (define tl (cond
+                             [(not all-cell-properties) #f]
+                             [else
+                              (define tl
+                                (ormap (lambda (v) (and (table-cells? v) v))
+                                       props))
+                              (if (and tl
+                                       (= (length (table-cells-styless tl))
+                                          n-rows)
+                                       (andmap (lambda (cl)
+                                                 (= (length cl) n-cols))
+                                               (table-cells-styless tl)))
+                                  tl
+                                  #f)]))
                 ;; Merge:
                 (define (cons-maybe v l) (if v (cons v l) l))
                 (make-style (style-name s)
@@ -600,11 +607,11 @@
                      (make-section-tag s #:doc doc #:tag-prefixes prefix)))
 (define (Secref s #:underline? [u? #t] #:doc [doc #f] #:tag-prefixes [prefix #f]
                 #:link-render-style [link-style #f])
-  (let ([le (secref s #:underline? u? #:doc doc #:tag-prefixes prefix)])
-    (make-link-element
-     (make-style (element-style le) '(uppercase))
-     (element-content le)
-     (link-element-tag le))))
+  (define le (secref s #:underline? u? #:doc doc #:tag-prefixes prefix))
+  (make-link-element
+   (make-style (element-style le) '(uppercase))
+   (element-content le)
+   (link-element-tag le)))
 
 (define normal-indirect (style #f '(indirect-link)))
 (define plain-indirect (style "plainlink" '(indirect-link)))
@@ -724,12 +731,12 @@
     ;; Convert a single string in a line to typewriter font,
     ;; and also convert multiple adjacent spaces to `hspace` so
     ;; that the space is preserved exactly:
-    (let ([spaces (regexp-match-positions #rx"(?:^| ) +" str)])
-      (if spaces
+    (define spaces (regexp-match-positions #rx"(?:^| ) +" str))
+    (if spaces
         (list* (make-element 'tt (substring str 0 (caar spaces)))
                (hspace (- (cdar spaces) (caar spaces)))
                (str->elts (substring str (cdar spaces))))
-        (list (make-element 'tt (list str))))))
+        (list (make-element 'tt (list str)))))
   (define (strs->elts line)
     ;; Convert strings in the line:
     (apply append (map (lambda (e) 
@@ -739,9 +746,12 @@
                        line)))
   (define indent
     ;; Add indentation to a line:
-    (if (zero? i)
-      values
-      (let ([hs (hspace i)]) (lambda (line) (cons hs line)))))
+    (cond
+      [(zero? i)
+       values]
+      [else
+       (define hs (hspace i))
+       (lambda (line) (cons hs line))]))
   (define (make-nonempty l)
     ;; If a line has no content, then add a single space:
     (if (let loop ([l l])
@@ -757,7 +767,7 @@
   (define (make-line line)
     ;; Convert a list of line elements --- a mixture of strings
     ;; and non-strings --- to a paragraph for the line:
-    (let* ([line (indent (strs->elts line))])
+    (let ([line (indent (strs->elts line))])
       (list (make-paragraph omitable-style (make-nonempty line)))))
   (make-table (make-style "SVerbatim" null) (map make-line lines)))
 
@@ -787,22 +797,22 @@
                       #f))
 
 (define (index* word-seq content-seq . s)
-  (let ([key (make-generated-tag)])
-    (record-index (map clean-up-index-string word-seq)
-                  content-seq key (decode-content s))))
+  (define key (make-generated-tag))
+  (record-index (map clean-up-index-string word-seq)
+                content-seq key (decode-content s)))
 
 (define (index word-seq . s)
   (let ([word-seq (if (string? word-seq) (list word-seq) word-seq)])
     (apply index* word-seq word-seq s)))
 
 (define (as-index . s)
-  (let ([key (make-generated-tag)]
-        [content (decode-content s)])
-    (record-index
-     (list (clean-up-index-string (content->string content)))
-     (if (= 1 (length content)) content (list (make-element #f content)))
-     key
-     content)))
+  (define key (make-generated-tag))
+  (define content (decode-content s))
+  (record-index
+   (list (clean-up-index-string (content->string content)))
+   (if (= 1 (length content)) content (list (make-element #f content)))
+   key
+   content))
 
 (define (index-section #:title [title "Index"] #:tag [tag #f])
   (make-part #f
@@ -828,15 +838,15 @@
   ;;   (or (string-ci<? s1 s2)
   ;;       (and (not (string-ci<? s2 s1)) (string<? s1 s2))))
   (define (get-desc entry)
-    (let ([desc (cadddr entry)])
-      (cond [(exported-index-desc? desc)
-             (cons 'libs (map (lambda (l)
-                                (format "~s" l))
-                              (exported-index-desc-from-libs desc)))]
-            [(module-path-index-desc? desc) '(mod)]
-            [(part-index-desc? desc) '(part)]
-            [(delayed-index-desc? desc) '(delayed)]
-            [else '(#f)])))
+    (define desc (cadddr entry))
+    (cond [(exported-index-desc? desc)
+           (cons 'libs (map (lambda (l)
+                              (format "~s" l))
+                            (exported-index-desc-from-libs desc)))]
+          [(module-path-index-desc? desc) '(mod)]
+          [(part-index-desc? desc) '(part)]
+          [(delayed-index-desc? desc) '(delayed)]
+          [else '(#f)]))
   ;; parts first, then modules, then bindings, delayed means it's not
   ;; the last round, and #f means no desc
   (define desc-order '(part mod libs delayed #f))
@@ -846,37 +856,41 @@
     (define (lib-level lib)
       (let loop ([i 0] [rxs lib-order])
         (if (or (null? rxs) (regexp-match? (car rxs) lib))
-          i (loop (add1 i) (cdr rxs)))))
-    (let ([l1 (lib-level lib1)] [l2 (lib-level lib2)])
-      (if (= l1 l2) (string<? lib1 lib2) (< l1 l2))))
+            i (loop (add1 i) (cdr rxs)))))
+    (define l1 (lib-level lib1))
+    (define l2 (lib-level lib2))
+    (if (= l1 l2) (string<? lib1 lib2) (< l1 l2)))
   (define (compare-desc e1 e2)
-    (let* ([d1 (get-desc e1)] [d2 (get-desc e2)]
-           [t1 (car d1)]      [t2 (car d2)])
-      (cond [(memq t2 (cdr (memq t1 desc-order))) '<]
-            [(memq t1 (cdr (memq t2 desc-order))) '>]
-            [else (case t1 ; equal to t2
-                    [(part) '=] ; will just compare tags
-                    [(mod)  '=] ; the text fields are the names of the modules
-                    [(libs) (compare-lists (cdr d1) (cdr d2) lib<?)]
-                    [(delayed) '>] ; dosn't matter, will run again
-                    [(#f) '=])])))
+    (define d1 (get-desc e1))
+    (define d2 (get-desc e2))
+    (define t1 (car d1))
+    (define t2 (car d2))
+    (cond [(memq t2 (cdr (memq t1 desc-order))) '<]
+          [(memq t1 (cdr (memq t2 desc-order))) '>]
+          [else (case t1 ; equal to t2
+                  [(part) '=] ; will just compare tags
+                  [(mod)  '=] ; the text fields are the names of the modules
+                  [(libs) (compare-lists (cdr d1) (cdr d2) lib<?)]
+                  [(delayed) '>] ; dosn't matter, will run again
+                  [(#f) '=])]))
   (define (entry<? e1 e2)
-    (let ([text1 (cadr e1)] [text2 (cadr e2)])
-      (case (compare-lists text1 text2 string-ci<?)
-        [(<) #t] [(>) #f]
-        [else (case (compare-desc e1 e2)
-                [(<) #t] [(>) #f]
-                [else (case (compare-lists text1 text2 string<?)
-                        [(<) #t] [(>) #f]
-                        [else
-                         ;; (error 'get-index-entries
-                         ;;        ;; when this happens, revise this code so
-                         ;;        ;; ordering will always be deterministic
-                         ;;        "internal error -- unordered entries: ~e ~e"
-                         ;;        e1 e2)
-                         ;; Instead, just compare the tags
-                         (string<? (format "~a" (car e1))
-                                   (format "~a" (car e2)))])])])))
+    (define text1 (cadr e1))
+    (define text2 (cadr e2))
+    (case (compare-lists text1 text2 string-ci<?)
+      [(<) #t] [(>) #f]
+      [else (case (compare-desc e1 e2)
+              [(<) #t] [(>) #f]
+              [else (case (compare-lists text1 text2 string<?)
+                      [(<) #t] [(>) #f]
+                      [else
+                       ;; (error 'get-index-entries
+                       ;;        ;; when this happens, revise this code so
+                       ;;        ;; ordering will always be deterministic
+                       ;;        "internal error -- unordered entries: ~e ~e"
+                       ;;        e1 e2)
+                       ;; Instead, just compare the tags
+                       (string<? (format "~a" (car e1))
+                                 (format "~a" (car e2)))])])]))
   (define l null)
   (hash-for-each
    (let ([parent (collected-info-parent (part-collected-info sec ri))])
@@ -908,39 +922,42 @@
         (let loop ([i l] [alpha alpha])
           (define (add-letter let l)
             (list* (make-element "nonavigation" (list (string let))) " " l))
-          (cond [(null? alpha) null]
-                [(null? i) (add-letter (car alpha) (loop i (cdr alpha)))]
-                [else
-                 (let* ([strs (cadr (car i))]
-                        [letter (if (or (null? strs) (string=? "" (car strs)))
-                                  #f
-                                  (char-upcase (string-ref (car strs) 0)))])
-                   (cond [(not letter) (loop (cdr i) alpha)]
-                         [(char-ci>? letter (car alpha))
-                          (add-letter (car alpha) (loop i (cdr alpha)))]
-                         [(char-ci=? letter (car alpha))
-                          (hash-set! alpha-starts (car i) letter)
-                          (list* (make-element
-                                  (make-style #f (list (make-target-url (format "#alpha:~a" letter))))
-                                  (list (string (car alpha))))
-                                 " "
-                                 (loop (cdr i) (cdr alpha)))]
-                         [else (loop (cdr i) alpha)]))])))
+          (cond
+            [(null? alpha) null]
+            [(null? i) (add-letter (car alpha) (loop i (cdr alpha)))]
+            [else
+             (define strs (cadr (car i)))
+             (define letter
+               (if (or (null? strs) (string=? "" (car strs)))
+                   #f
+                   (char-upcase (string-ref (car strs) 0))))
+             (cond [(not letter) (loop (cdr i) alpha)]
+                   [(char-ci>? letter (car alpha))
+                    (add-letter (car alpha) (loop i (cdr alpha)))]
+                   [(char-ci=? letter (car alpha))
+                    (hash-set! alpha-starts (car i) letter)
+                    (list* (make-element
+                            (make-style #f (list (make-target-url (format "#alpha:~a" letter))))
+                            (list (string (car alpha))))
+                           " "
+                           (loop (cdr i) (cdr alpha)))]
+                   [else (loop (cdr i) alpha)])])))
       (define body
         (let ([br (if manual-newlines? (make-element 'newline '("\n")) "")])
           (map (lambda (i)
-                 (let ([e (make-link-element
-                           "indexlink"
-                           `(,@(add-between (caddr i) ", ") ,br)
-                           (car i))])
-                   (cond [(hash-ref alpha-starts i #f)
-                          => (lambda (let)
-                               (make-element
-                                (make-style #f (list
-                                                (make-url-anchor
-                                                 (format "alpha:~a" (char-upcase let)))))
-                                (list e)))]
-                         [else e])))
+                 (define e
+                   (make-link-element
+                    "indexlink"
+                    `(,@(add-between (caddr i) ", ") ,br)
+                    (car i)))
+                 (cond [(hash-ref alpha-starts i #f)
+                        => (lambda (let)
+                             (make-element
+                              (make-style #f (list
+                                              (make-url-anchor
+                                               (format "alpha:~a" (char-upcase let)))))
+                              (list e)))]
+                       [else e]))
                l)))
       (if manual-newlines?
         (rows alpha-row '(nbsp) body)

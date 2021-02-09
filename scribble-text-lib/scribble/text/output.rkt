@@ -47,7 +47,9 @@
   ;; the low-level string output function (can change with `with-writer')
   (define write write-string)
   ;; to get the output column
-  (define (getcol) (let-values ([(line col pos) (port-next-location p)]) col))
+  (define (getcol)
+    (define-values (line col pos) (port-next-location p))
+    col)
   ;; total size of the two prefixes
   (define (2pfx-length pfx1 pfx2)
     (if (and pfx1 pfx2)
@@ -56,11 +58,14 @@
       0))
   ;; combines a prefix with a target column to get to
   (define (pfx+col pfx)
-    (and pfx (let ([col (getcol)])
-               (cond [(number? pfx) (max pfx col)]
-                     [(>= (string-length pfx) col) pfx]
-                     [else (string-append
-                            pfx (make-spaces (- col (string-length pfx))))]))))
+    (cond
+      [(not pfx) #f]
+      [else
+       (define col (getcol))
+       (cond [(number? pfx) (max pfx col)]
+             [(>= (string-length pfx) col) pfx]
+             [else (string-append
+                    pfx (make-spaces (- col (string-length pfx))))])]))
   ;; adds two prefixes
   (define (pfx+ pfx1 pfx2)
     (and pfx1 pfx2
@@ -73,16 +78,18 @@
     (define-syntax-rule (show pfx) ; optimize when not needed
       (unless (eq? pfx 0) (write (->str pfx) p)))
     (when (and pfx1 pfx2)
-      (if (eq? 0 col)
-        (begin (show pfx1) (show pfx2))
-        (let ([len1 (if (number? pfx1) pfx1 (string-length pfx1))])
-          (cond [(< col len1) (write (->str pfx1) p col) (show pfx2)]
-                [(= col len1) (show pfx2)]
-                [(eq? 0 pfx2)]
-                [else
-                 (let ([col (- col len1)]
-                       [len2 (if (number? pfx2) pfx2 (string-length pfx2))])
-                   (when (< col len2) (write (->str pfx2) p col)))])))))
+      (cond
+        [(eq? 0 col)
+         (begin (show pfx1) (show pfx2))]
+        [else
+         (define len1 (if (number? pfx1) pfx1 (string-length pfx1)))
+         (cond [(< col len1) (write (->str pfx1) p col) (show pfx2)]
+               [(= col len1) (show pfx2)]
+               [(eq? 0 pfx2)]
+               [else
+                (let ([col (- col len1)]
+                      [len2 (if (number? pfx2) pfx2 (string-length pfx2))])
+                  (when (< col len2) (write (->str pfx2) p col)))])])))
   ;; the basic printing unit: strings
   (define (output-string x)
     (define pfx (mcar pfxs))
@@ -292,12 +299,14 @@
 (define (add-newlines list #:sep [sep "\n"])
   (define r
     (let loop ([list list])
-      (if (null? list)
-        null
-        (let ([1st (car list)])
-          (if (or (not 1st) (void? 1st))
-            (loop (cdr list))
-            (list* sep 1st (loop (cdr list))))))))
+      (cond
+        [(null? list)
+         null]
+        [else
+         (define 1st (car list))
+         (if (or (not 1st) (void? 1st))
+             (loop (cdr list))
+             (list* sep 1st (loop (cdr list))))])))
   (if (null? r) r (cdr r)))
 
 (provide split-lines)

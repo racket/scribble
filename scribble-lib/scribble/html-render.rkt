@@ -74,23 +74,23 @@
                 p))]
          [file-getter
           (lambda (default-file make-inline make-ref)
-            (let ([c #f])
-              (lambda (file path depth)
-                (cond [(bytes? file)
-                       (make-inline (bytes->string/utf-8 file))]
-                      [(url? file)
-                       (make-ref (url->string* file))]
-                      [(not (eq? 'inline path))
-                       (make-ref (adjust-rel
-                                  depth
-                                  (or path (let-values ([(base name dir?)
-                                                         (split-path file)])
-                                             (path->string name)))))]
-                      [(or (not file) (equal? file default-file))
-                       (unless c
-                         (set! c (make-inline (read-file default-file))))
-                       c]
-                      [else (make-inline (read-file file))]))))])
+            (define c #f)
+            (lambda (file path depth)
+              (cond [(bytes? file)
+                     (make-inline (bytes->string/utf-8 file))]
+                    [(url? file)
+                     (make-ref (url->string* file))]
+                    [(not (eq? 'inline path))
+                     (make-ref (adjust-rel
+                                depth
+                                (or path (let-values ([(base name dir?)
+                                                       (split-path file)])
+                                           (path->string name)))))]
+                    [(or (not file) (equal? file default-file))
+                     (unless c
+                       (set! c (make-inline (read-file default-file))))
+                     c]
+                    [else (make-inline (read-file file))])))])
     (values (file-getter scribble-css inlined-style  ref-style)
             (file-getter scribble-js  inlined-script ref-script))))
 
@@ -142,8 +142,8 @@
       (string-append*
        "#"
        (map (lambda (v)
-              (let ([s (number->string v 16)])
-                (if (< v 16) (string-append "0" s) s)))
+              (define s (number->string v 16))
+              (if (< v 16) (string-append "0" s) s))
             c))))
 
 (define (merge-styles s cls l)
@@ -167,34 +167,35 @@
    [else (cons (car l) (merge-styles s cls (cdr l)))]))
 
 (define (style->attribs style [extras null])
-  (let ([a (merge-styles
-            #f
-            #f
-            (apply
-             append
-             extras
-             (map (lambda (v)
-                    (cond
-                     [(attributes? v)
-                      (map (lambda (v) (list (car v) (cdr v))) (attributes-assoc v))]
-                     [(color-property? v)
-                      `((style ,(format "color: ~a" (color->string (color-property-color v)))))]
-                     [(background-color-property? v)
-                      `((style ,(format "background-color: ~a" (color->string (background-color-property-color v)))))]
-                     [(hover-property? v)
-                      `((title ,(hover-property-text v)))]
-                     [else null]))
-                  (style-properties style))))])
-    (let ([name (style-name style)])
-      (if (string? name)
-          (if (assq 'class a)
-              (for/list ([i (in-list a)])
-                (if (eq? (car i) 'class)
-                    (list 'class (string-append name " " (cadr i)))
-                    i))
-              (cons `[class ,name]
-                    a))
-          a))))
+  (define a
+    (merge-styles
+     #f
+     #f
+     (apply
+      append
+      extras
+      (map (lambda (v)
+             (cond
+               [(attributes? v)
+                (map (lambda (v) (list (car v) (cdr v))) (attributes-assoc v))]
+               [(color-property? v)
+                `((style ,(format "color: ~a" (color->string (color-property-color v)))))]
+               [(background-color-property? v)
+                `((style ,(format "background-color: ~a" (color->string (background-color-property-color v)))))]
+               [(hover-property? v)
+                `((title ,(hover-property-text v)))]
+               [else null]))
+           (style-properties style)))))
+  (define name (style-name style))
+  (if (string? name)
+      (if (assq 'class a)
+          (for/list ([i (in-list a)])
+            (if (eq? (car i) 'class)
+                (list 'class (string-append name " " (cadr i)))
+                i))
+          (cons `[class ,name]
+                a))
+      a))
 
 ;; combine a 'class attribute from both `cl' and `al'
 ;;  if `cl' starts with one
@@ -221,17 +222,17 @@
          (string->symbol (alt-tag-name s)))))
 
 (define (make-search-box top-path) ; appears on every page
-  (let ([emptylabel "...search manuals..."])
-    `(form ([class "searchform"])
-       (input
-        ([class "searchbox"]
-         [id "searchbox"]
-         [type "text"]
-         [tabindex "1"]
-         [placeholder ,emptylabel]
-         [title "Enter a search string to search the manuals"]
-         [onkeypress ,(format "return DoSearchKey(event, this, ~s, ~s);"
-                              (version) top-path)])))))
+  (define emptylabel "...search manuals...")
+  `(form ([class "searchform"])
+         (input
+          ([class "searchbox"]
+           [id "searchbox"]
+           [type "text"]
+           [tabindex "1"]
+           [placeholder ,emptylabel]
+           [title "Enter a search string to search the manuals"]
+           [onkeypress ,(format "return DoSearchKey(event, this, ~s, ~s);"
+                                (version) top-path)]))))
 (define search-box (make-search-box "../"))
 (define top-search-box (make-search-box ""))
 
@@ -345,8 +346,8 @@
                 fns))
 
     (define/public (part-whole-page? p ri)
-      (let ([dest (resolve-get p ri (car (part-tags/nonempty p)))])
-        (and dest (dest-page? dest))))
+      (define dest (resolve-get p ri (car (part-tags/nonempty p))))
+      (and dest (dest-page? dest)))
 
     (define/public (current-part-whole-page? d)
       (eq? d (current-top-part)))
@@ -379,25 +380,27 @@
                               v))))))
 
     (define/override (collect-target-element i ci)
-      (let ([key (generate-tag (target-element-tag i) ci)])
-        (collect-put! ci key
-                      (vector (let ([tag (target-element-tag i)])
-                                (if (and (pair? tag) (eq? 'part (car tag)))
-                                    (element-content i)
-                                    #f))
-                              (if (redirect-target-element? i)
-                                  (make-literal-anchor
-                                   (redirect-target-element-alt-anchor i))
-                                  (add-current-tag-prefix key))
-                              #f ; for consistency with 'part info
-                              (path->relative
-                               (let ([p (current-output-file)])
-                                 (if (redirect-target-element? i)
-                                     (let-values ([(base name dir?) (split-path p)])
-                                       (build-path base
-                                                   (redirect-target-element-alt-path i)))
-                                     p)))
-                              (page-target-element? i)))))
+      (define key (generate-tag (target-element-tag i) ci))
+      (collect-put! ci key
+                    (vector (let ([tag (target-element-tag i)])
+                              (if (and (pair? tag) (eq? 'part (car tag)))
+                                  (element-content i)
+                                  #f))
+                            (if (redirect-target-element? i)
+                                (make-literal-anchor
+                                 (redirect-target-element-alt-anchor i))
+                                (add-current-tag-prefix key))
+                            #f ; for consistency with 'part info
+                            (path->relative
+                             (let ([p (current-output-file)])
+                               (cond
+                                 [(redirect-target-element? i)
+                                  (define-values (base name dir?) (split-path p))
+                                  (build-path base
+                                              (redirect-target-element-alt-path i))]
+                                 [else
+                                  p])))
+                            (page-target-element? i))))
 
     (define (dest-path dest)
       (vector-ref dest 3))
@@ -451,23 +454,23 @@
 
     (define/public (tag->path+anchor ri tag)
       ;; Called externally; not used internally
-      (let-values ([(dest ext?) (resolve-get/ext? #f ri tag)])
-        (cond [(not dest) (values #f #f)]
-              [(and ext? external-root-url
-                    (try-relative-to-external-root dest))
-               => (lambda (p)
-                    (values (car p) (cdr p)))]
-              [(and ext? external-tag-path)
-               (values (string->url external-tag-path) (format "~a" (serialize tag)))]
-              [else (values (relative->path (dest-path dest))
-                            (and (not (dest-page? dest))
-                                 (anchor-name (dest-anchor dest))))])))
+      (define-values (dest ext?) (resolve-get/ext? #f ri tag))
+      (cond [(not dest) (values #f #f)]
+            [(and ext? external-root-url
+                  (try-relative-to-external-root dest))
+             => (lambda (p)
+                  (values (car p) (cdr p)))]
+            [(and ext? external-tag-path)
+             (values (string->url external-tag-path) (format "~a" (serialize tag)))]
+            [else (values (relative->path (dest-path dest))
+                          (and (not (dest-page? dest))
+                               (anchor-name (dest-anchor dest))))]))
 
     (define/public (tag->url-string ri tag #:absolute? [abs? #f])
       ;; Called externally; not used internally
-      (let-values ([(dest ext?) (resolve-get/ext? #f ri tag)])
-        (cond [(not dest) ""]
-              [else (dest->url dest abs?)])))
+      (define-values (dest ext?) (resolve-get/ext? #f ri tag))
+      (cond [(not dest) ""]
+            [else (dest->url dest abs?)]))
 
     (define/public (tag->query-string tag)
       (define (simple? s)
@@ -531,16 +534,16 @@
                    ;; directory doesn't match `ext-id`:
                    (let loop ([path (relative->path (dest-path dest))]
                               [empty-ok? #f])
-                     (let-values ([(base name dir?) (split-path path)])
-                       (cond
-                        [(and empty-ok?
-                              dir? 
-                              (equal? (format "~a" name) (format "~a" ext-id)))
-                         #f]
-                        [(path? base)
-                         (define r (loop base #t))
-                         (if r (build-path r name) name)]
-                        [else name])))
+                     (define-values (base name dir?) (split-path path))
+                     (cond
+                       [(and empty-ok?
+                             dir? 
+                             (equal? (format "~a" name) (format "~a" ext-id)))
+                        #f]
+                       [(path? base)
+                        (define r (loop base #t))
+                        (if r (build-path r name) name)]
+                       [else name]))
                    (if (dest-page? dest) "" "#")
                    (if (dest-page? dest)
                        ""
@@ -745,54 +748,53 @@
                 ,@(get-onthispage-label)
                 (table ([class "tocsublist"] [cellspacing "0"])
                   ,@(map (lambda (p)
-                           (let ([p (vector-ref p 0)]
-                                 [prefixes (vector-ref p 1)]
-                                 [from-d (vector-ref p 2)]
-                                 [add-tag-prefixes
-                                  (lambda (t prefixes)
+                                (let ([p (vector-ref p 0)])
+                                  (define prefixes (vector-ref p 1))
+                                  (define from-d (vector-ref p 2))
+                                  (define (add-tag-prefixes t prefixes)
                                     (if (null? prefixes)
                                         t
-                                        (cons (car t) (append prefixes (cdr t)))))])
-                             `(tr
-                               (td
-                                ,@(if (part? p)
-                                      `((span ([class "tocsublinknumber"])
-                                              ,@(format-number
-                                                 (collected-info-number
-                                                  (part-collected-info p ri))
-                                                 '((tt nbsp)))))
-                                      '(""))
-                                ,@(if (toc-element? p)
-                                      (render-content (toc-element-toc-content p)
-                                                      from-d ri)
-                                      (parameterize ([current-no-links #t]
-                                                     [extra-breaking? #t])
-                                        `((a ([href
-                                               ,(format
-                                                 "#~a"
-                                                 (uri-unreserved-encode
-                                                  (anchor-name
-                                                   (add-tag-prefixes
-                                                    (tag-key (if (part? p)
-                                                                 (car (part-tags/nonempty p))
-                                                                 (target-element-tag p))
-                                                             ri)
-                                                    prefixes))))]
-                                              [class
-                                                  ,(cond
-                                                    [(part? p) "tocsubseclink"]
-                                                    [any-parts? "tocsubnonseclink"]
-                                                    [else "tocsublink"])]
-                                              [data-pltdoc "x"])
-                                             ,@(render-content
-                                                (if (part? p)
-                                                    (strip-aux
-                                                     (or (part-title-content p)
-                                                         "???"))
-                                                    (if (toc-target2-element? p)
-                                                        (toc-target2-element-toc-content p)
-                                                        (element-content p)))
-                                                from-d ri)))))))))
+                                        (cons (car t) (append prefixes (cdr t)))))
+                                  `(tr
+                                    (td
+                                     ,@(if (part? p)
+                                           `((span ([class "tocsublinknumber"])
+                                                   ,@(format-number
+                                                      (collected-info-number
+                                                       (part-collected-info p ri))
+                                                      '((tt nbsp)))))
+                                           '(""))
+                                     ,@(if (toc-element? p)
+                                           (render-content (toc-element-toc-content p)
+                                                           from-d ri)
+                                           (parameterize ([current-no-links #t]
+                                                          [extra-breaking? #t])
+                                             `((a ([href
+                                                    ,(format
+                                                      "#~a"
+                                                      (uri-unreserved-encode
+                                                       (anchor-name
+                                                        (add-tag-prefixes
+                                                         (tag-key (if (part? p)
+                                                                      (car (part-tags/nonempty p))
+                                                                      (target-element-tag p))
+                                                                  ri)
+                                                         prefixes))))]
+                                                   [class
+                                                       ,(cond
+                                                          [(part? p) "tocsubseclink"]
+                                                          [any-parts? "tocsubnonseclink"]
+                                                          [else "tocsublink"])]
+                                                   [data-pltdoc "x"])
+                                                  ,@(render-content
+                                                     (if (part? p)
+                                                         (strip-aux
+                                                          (or (part-title-content p)
+                                                              "???"))
+                                                         (if (toc-target2-element? p)
+                                                             (toc-target2-element-toc-content p)
+                                                             (element-content p)))
+                                                     from-d ri)))))))))
                          ps)))))))
 
     (define/private (extract-inherited d ri pred extract)
@@ -820,18 +822,22 @@
                                (let ([p (part-parent d ri)])
                                  (and p (loop p)))))]
                [prefix-file (or prefix-file 
-                                (and defaults
-                                     (let ([v (html-defaults-prefix-path defaults)])
-                                       (if (bytes? v)
-                                           v
-                                           (collects-relative->path v))))
+                                (cond
+                                  [(not defaults) #f]
+                                  [else
+                                   (define v (html-defaults-prefix-path defaults))
+                                   (if (bytes? v)
+                                       v
+                                       (collects-relative->path v))])
                                 scribble-prefix-html)]
                [style-file (or style-file 
-                               (and defaults
-                                    (let ([v (html-defaults-style-path defaults)])
-                                      (if (bytes? v)
-                                          v
-                                          (collects-relative->path v))))
+                               (cond
+                                 [(not defaults) #f]
+                                 [else
+                                  (define v (html-defaults-style-path defaults))
+                                  (if (bytes? v)
+                                      v
+                                      (collects-relative->path v))])
                                scribble-style-css)]
                [script-file (or script-file scribble-js)]
                [title (cond [(part-title-content d)
@@ -872,11 +878,13 @@
                                            (lookup-path scribble-css alt-paths) 
                                            dir-depth)
                    ,@(map (lambda (style-file)
-                            (if (or (bytes? style-file) (url? style-file))
-                                (scribble-css-contents style-file #f dir-depth)
-                                (let ([p (lookup-path style-file alt-paths)])
-                                  (unless p (install-file style-file))
-                                  (scribble-css-contents style-file p dir-depth))))
+                            (cond
+                              [(or (bytes? style-file) (url? style-file))
+                               (scribble-css-contents style-file #f dir-depth)]
+                              [else
+                               (define p (lookup-path style-file alt-paths))
+                               (unless p (install-file style-file))
+                               (scribble-css-contents style-file p dir-depth)]))
                           (append (extract css-addition? css-addition-path)
                                   (list style-file)
                                   (extract css-style-addition? css-style-addition-path)
@@ -885,11 +893,13 @@
                                           (lookup-path script-file alt-paths)
                                           dir-depth)
                    ,@(map (lambda (script-file)
-                            (if (or (bytes? script-file) (url? script-file))
-                                (scribble-js-contents script-file #f dir-depth)
-                                (let ([p (lookup-path script-file alt-paths)])
-                                  (unless p (install-file script-file))
-                                  (scribble-js-contents script-file p dir-depth))))
+                            (cond
+                              [(or (bytes? script-file) (url? script-file))
+                               (scribble-js-contents script-file #f dir-depth)]
+                              [else
+                               (define p (lookup-path script-file alt-paths))
+                               (unless p (install-file script-file))
+                               (scribble-js-contents script-file p dir-depth)]))
                           (append
                            (extract js-addition? js-addition-path)
                            (extract js-style-addition? js-style-addition-path)
@@ -919,17 +929,17 @@
            (part-parent d ri)))
 
     (define/private (find-siblings d ri)
-      (let ([parent (collected-info-parent (part-collected-info d ri))])
-        (let loop ([l (cond
-                        [parent (part-parts parent)]
-                        [(or (null? (part-parts d))
-                             (not (part-whole-page? (car (part-parts d)) ri)))
-                         (list d)]
-                        [else (list d (car (part-parts d)))])]
-                   [prev #f])
-          (if (eq? (car l) d)
+      (define parent (collected-info-parent (part-collected-info d ri)))
+      (let loop ([l (cond
+                      [parent (part-parts parent)]
+                      [(or (null? (part-parts d))
+                           (not (part-whole-page? (car (part-parts d)) ri)))
+                       (list d)]
+                      [else (list d (car (part-parts d)))])]
+                 [prev #f])
+        (if (eq? (car l) d)
             (values prev (and (pair? (cdr l)) (cadr l)))
-            (loop (cdr l) (car l))))))
+            (loop (cdr l) (car l)))))
 
     (define top-content      "top")
     (define contents-content "contents")
@@ -965,14 +975,18 @@
               [else next0]))
       (define index
         (let loop ([d d])
-          (let ([p (part-parent d ri)])
-            (if p
-              (loop p)
-              (let ([subs (part-parts d)])
-                (and (pair? subs)
-                     (let ([d (last subs)])
-                       (and (eq? (style-name (part-style d)) 'index)
-                            d))))))))
+          (define p (part-parent d ri))
+          (cond
+            [p
+             (loop p)]
+            [else
+             (define subs (part-parts d))
+             (cond
+               [(not (pair? subs)) #f]
+               [else
+                (define d (last subs))
+                (and (eq? (style-name (part-style d)) 'index)
+                     d)])])))
       (define (render . content)
         (render-content (filter values content) d ri))
       (define (titled-url label x #:title-from [tfrom #f] . more)
@@ -1075,19 +1089,19 @@
       (render-one-part d ri fn null))
 
     (define/public (render-version d ri)
-      (let ([v (current-version)])
-        (if (equal? v "")
-            ;; don't show empty version:
-            null
-            ;; show version:
-            `((div ([class "versionbox"])
-                   ,@(render-content
-                      (list (make-element (if (include-navigation?)
-                                              "version"
-                                              "versionNoNav")
-                                          v))
-                      d
-                      ri))))))
+      (define v (current-version))
+      (if (equal? v "")
+          ;; don't show empty version:
+          null
+          ;; show version:
+          `((div ([class "versionbox"])
+                 ,@(render-content
+                    (list (make-element (if (include-navigation?)
+                                            "version"
+                                            "versionNoNav")
+                                        v))
+                    d
+                    ri)))))
 
     (define/public (extract-render-convertible-as d)
       (for/or ([v (in-list (style-properties (part-style d)))])
@@ -1184,29 +1198,29 @@
       (render-flow* p part ri starting-item? #t))
 
     (define/private (do-render-paragraph p part ri flatten-unstyled? show-pre?)
-      (let* ([contents (super render-paragraph p part ri)]
-             [style (paragraph-style p)]
-             [attrs (style->attribs style)])
-        (if (and (not show-pre?)
-                 (or (eq? (style-name style) 'author)
-                     (eq? (style-name style) 'pretitle)))
-            null
-            (if (and flatten-unstyled?
-                     (not (style-name style))
-                     (null? attrs))
-                contents
-                `((,(or (style->tag style)
-                        (if (memq 'div (style-properties style)) 
-                            'div 
-                            'p))
-                   [,@(combine-class
-                       (case (style-name style)
-                         [(author) '([class "author"])]
-                         [(pretitle) '([class "SPretitle"])]
-                         [(wraps) null]
-                         [else null])
-                       attrs)]
-                   ,@contents))))))
+      (define contents (super render-paragraph p part ri))
+      (define style (paragraph-style p))
+      (define attrs (style->attribs style))
+      (if (and (not show-pre?)
+               (or (eq? (style-name style) 'author)
+                   (eq? (style-name style) 'pretitle)))
+          null
+          (if (and flatten-unstyled?
+                   (not (style-name style))
+                   (null? attrs))
+              contents
+              `((,(or (style->tag style)
+                      (if (memq 'div (style-properties style)) 
+                          'div 
+                          'p))
+                 [,@(combine-class
+                     (case (style-name style)
+                       [(author) '([class "author"])]
+                       [(pretitle) '([class "SPretitle"])]
+                       [(wraps) null]
+                       [else null])
+                     attrs)]
+                 ,@contents)))))
 
     (define/override (render-paragraph p part ri)
       (do-render-paragraph p part ri #f #f))
@@ -1224,10 +1238,10 @@
        [else #f]))
 
     (define/private (content-attribs e [extras null])
-      (let ([s (content-style e)])
-          (if (style? s)
-              (element-style->attribs (style-name s) s extras)
-              (element-style->attribs s #f extras))))
+      (define s (content-style e))
+      (if (style? s)
+          (element-style->attribs (style-name s) s extras)
+          (element-style->attribs s #f extras)))
 
     (define (element-style-property-matching e pred)
       (and (or (element? e) (multiarg-element? e))
@@ -1246,80 +1260,81 @@
               (render-as-convertible e (current-render-convertible-requests)))
          => values]
         [(image-element? e)
-         (let* ([src (collects-relative->path (image-element-path e))]
-                [suffixes (image-element-suffixes e)]
-                [scale (image-element-scale e)]
-                [to-scaled-num
-                 (lambda (s)
-                   (number->string
-                    (inexact->exact
-                     (floor (* scale (if (number? s)
-                                         s
-                                         (integer-bytes->integer s #f #t)))))))]
-                [src (select-suffix src suffixes '(".png" ".gif" ".svg"))]
-                [svg? (regexp-match? #rx#"[.]svg$" (if (path? src) (path->bytes src) src))]
-                [sz (cond
-                     [svg?
-                      (define (to-scaled-num-from-str s)
-                        (define parts
-                          (regexp-match
-                           #rx"^([+-]?[0-9]*\\.?([0-9]+)?)(em|ex|px|in|cm|mm|pt|pc|%|)$"
-                           s))
-                        (cond
-                          [parts
-                           (string-append
-                            (number->string
-                             (* scale
-                                (string->number (list-ref parts 1))))
-                            (list-ref parts 3))]
-                          [else s]))
-                      (call-with-input-file*
-                       src
-                       (lambda (in)
-                         (with-handlers ([exn:fail? (lambda (exn) 
-                                                      (log-warning
-                                                       (format "warning: error while reading SVG file for size: ~a"
-                                                               (if (exn? exn)
-                                                                   (exn-message exn)
-                                                                   (format "~e" exn))))
-                                                      null)])
-                           (let* ([d (xml:read-xml in)]
-                                  [attribs (xml:element-attributes 
-                                            (xml:document-element d))]
-                                  [check-name (lambda (n)
-                                                (lambda (a)
-                                                  (and (eq? n (xml:attribute-name a))
-                                                       (xml:attribute-value a))))]
-                                  [w (ormap (check-name 'width) attribs)]
-                                  [h (ormap (check-name 'height) attribs)])
-                             (if (and w h)
-                                 `([width ,(to-scaled-num-from-str w)]
-                                   [height ,(to-scaled-num-from-str h)])
-                                 null)))))]
-                     [else
-                      ;; Try to extract file size:
-                      (call-with-input-file*
-                       src
-                       (lambda (in)
-                         (cond
-                          [(regexp-try-match #px#"^\211PNG.{12}" in)
-                           `([width ,(to-scaled-num (read-bytes 4 in))]
-                             [height ,(to-scaled-num (read-bytes 4 in))])]
-                          [(regexp-try-match #px#"^(?=GIF8)" in)
-                           (define-values (w h rows) (gif->rgba-rows in))
-                           `([width ,(to-scaled-num w)]
-                             [height ,(to-scaled-num h)])]
-                          [else
-                           null])))])])
-           (let ([srcref (let ([p (install-file src)])
-                           (if (path? p)
-                               (url->string* (path->url (path->complete-path p)))
-                               p))])
-             `((img
-                ([src ,srcref]
-                 [alt ,(content->string (element-content e))]
-                 ,@sz
-                 ,@(attribs))))))]
+         (define src (collects-relative->path (image-element-path e)))
+         (define suffixes (image-element-suffixes e))
+         (define scale (image-element-scale e))
+         (define (to-scaled-num s)
+           (number->string
+            (inexact->exact
+             (floor (* scale (if (number? s)
+                                 s
+                                 (integer-bytes->integer s #f #t)))))))
+         (let ([src (select-suffix src suffixes '(".png" ".gif" ".svg"))])
+           (define svg? (regexp-match? #rx#"[.]svg$" (if (path? src) (path->bytes src) src)))
+           (define sz
+             (cond
+               [svg?
+                (define (to-scaled-num-from-str s)
+                  (define parts
+                    (regexp-match
+                     #rx"^([+-]?[0-9]*\\.?([0-9]+)?)(em|ex|px|in|cm|mm|pt|pc|%|)$"
+                     s))
+                  (cond
+                    [parts
+                     (string-append
+                      (number->string
+                       (* scale
+                          (string->number (list-ref parts 1))))
+                      (list-ref parts 3))]
+                    [else s]))
+                (call-with-input-file*
+                    src
+                  (lambda (in)
+                    (with-handlers ([exn:fail? (lambda (exn) 
+                                                 (log-warning
+                                                  (format "warning: error while reading SVG file for size: ~a"
+                                                          (if (exn? exn)
+                                                              (exn-message exn)
+                                                              (format "~e" exn))))
+                                                 null)])
+                      (let* ([d (xml:read-xml in)]
+                             [attribs (xml:element-attributes 
+                                       (xml:document-element d))]
+                             [check-name (lambda (n)
+                                           (lambda (a)
+                                             (and (eq? n (xml:attribute-name a))
+                                                  (xml:attribute-value a))))]
+                             [w (ormap (check-name 'width) attribs)]
+                             [h (ormap (check-name 'height) attribs)])
+                        (if (and w h)
+                            `([width ,(to-scaled-num-from-str w)]
+                              [height ,(to-scaled-num-from-str h)])
+                            null)))))]
+               [else
+                ;; Try to extract file size:
+                (call-with-input-file*
+                    src
+                  (lambda (in)
+                    (cond
+                      [(regexp-try-match #px#"^\211PNG.{12}" in)
+                       `([width ,(to-scaled-num (read-bytes 4 in))]
+                         [height ,(to-scaled-num (read-bytes 4 in))])]
+                      [(regexp-try-match #px#"^(?=GIF8)" in)
+                       (define-values (w h rows) (gif->rgba-rows in))
+                       `([width ,(to-scaled-num w)]
+                         [height ,(to-scaled-num h)])]
+                      [else
+                       null])))]))
+           (define srcref
+             (let ([p (install-file src)])
+               (if (path? p)
+                   (url->string* (path->url (path->complete-path p)))
+                   p)))
+           `((img
+              ([src ,srcref]
+               [alt ,(content->string (element-content e))]
+               ,@sz
+               ,@(attribs)))))]
         [(element-style-property-matching e script-property?)
          => 
          (lambda (v)
@@ -1370,72 +1385,72 @@
                                "section "))]
                        [else '()])
                    (a ([href
-                      ,(cond
-                        [(and ext-id external-root-url dest
-                              (let* ([ref-path (relative->path (dest-path dest))]
-                                     [rel (if (relative-path? ref-path)
-                                              #f
-                                              (find-relative-path
-                                               (find-doc-dir)
-                                               ref-path))])
-                                (and rel
-                                     (relative-path? rel)
-                                     (not (memq 'up (explode-path rel)))
-                                     rel)))
-                         => (lambda (rel)
-                              (url->string*
+                        ,(cond
+                           [(and ext-id external-root-url dest
+                                 (let* ([ref-path (relative->path (dest-path dest))]
+                                        [rel (if (relative-path? ref-path)
+                                                 #f
+                                                 (find-relative-path
+                                                  (find-doc-dir)
+                                                  ref-path))])
+                                   (and rel
+                                        (relative-path? rel)
+                                        (not (memq 'up (explode-path rel)))
+                                        rel)))
+                            => (lambda (rel)
+                                 (url->string*
+                                  (struct-copy
+                                   url
+                                   (combine-url/relative
+                                    (string->url external-root-url)
+                                    (string-join (map (lambda (s)
+                                                        (case s
+                                                          [(up) ".."]
+                                                          [(same) "."]
+                                                          [else (path-element->string s)]))
+                                                      (explode-path rel))
+                                                 "/"))
+                                   [fragment
+                                    (and (not (dest-page? dest))
+                                         (anchor-name (dest-anchor dest)))])))]
+                           [(or indirect-link?
+                                (and ext-id external-tag-path))
+                            ;; Redirected to search:
+                            (url->string*
+                             (let ([u (string->url (or external-tag-path
+                                                       (get-doc-search-url)))])
                                (struct-copy
                                 url
-                                (combine-url/relative
-                                 (string->url external-root-url)
-                                 (string-join (map (lambda (s)
-                                                     (case s
-                                                       [(up) ".."]
-                                                       [(same) "."]
-                                                       [else (path-element->string s)]))
-                                                   (explode-path rel))
-                                              "/"))
-                                [fragment
-                                 (and (not (dest-page? dest))
-                                      (anchor-name (dest-anchor dest)))])))]
-                        [(or indirect-link?
-                             (and ext-id external-tag-path))
-                         ;; Redirected to search:
-                         (url->string*
-                          (let ([u (string->url (or external-tag-path
-                                                    (get-doc-search-url)))])
-                            (struct-copy
-                             url
-                             u
-                             [query
-                              (if (string? ext-id)
-                                  (list* (cons 'doc ext-id)
-                                         (cons 'rel (or (dest->url-in-doc dest ext-id) "???"))
-                                         (url-query u))
-                                  (cons (cons 'tag (tag->query-string (link-element-tag e)))
-                                        (url-query u)))])))]
-                        [else
-                         ;; Normal link:
-                         (dest->url dest)])]
-                     ,@(attribs (if (or indirect-link?
-                                        (and ext-id external-tag-path))
-                                    '([class "Sq"])
-                                    null))
-                     [data-pltdoc "x"])
-                    ,@(if (empty-content? (element-content e))
-                          (cond
-                            [number-link? (format-number (dest-number dest) '(""))]
-                            [else
-                             (render-content (strip-aux (dest-title dest)) part ri)])
-                          (render-content (element-content e) part ri))))
-               (begin
-                 (when #f
-                   (eprintf "Undefined link: ~s\n"
-                            (tag-key (link-element-tag e) ri)))
-                 `((font ([class "badlink"])
-                     ,@(if (empty-content? (element-content e))
-                         `(,(format "~s" (tag-key (link-element-tag e) ri)))
-                         (render-plain-content e part ri))))))))]
+                                u
+                                [query
+                                 (if (string? ext-id)
+                                     (list* (cons 'doc ext-id)
+                                            (cons 'rel (or (dest->url-in-doc dest ext-id) "???"))
+                                            (url-query u))
+                                     (cons (cons 'tag (tag->query-string (link-element-tag e)))
+                                           (url-query u)))])))]
+                           [else
+                            ;; Normal link:
+                            (dest->url dest)])]
+                       ,@(attribs (if (or indirect-link?
+                                          (and ext-id external-tag-path))
+                                      '([class "Sq"])
+                                      null))
+                       [data-pltdoc "x"])
+                      ,@(if (empty-content? (element-content e))
+                            (cond
+                              [number-link? (format-number (dest-number dest) '(""))]
+                              [else
+                               (render-content (strip-aux (dest-title dest)) part ri)])
+                            (render-content (element-content e) part ri))))
+                 (begin
+                   (when #f
+                     (eprintf "Undefined link: ~s\n"
+                              (tag-key (link-element-tag e) ri)))
+                   `((font ([class "badlink"])
+                           ,@(if (empty-content? (element-content e))
+                                 `(,(format "~s" (tag-key (link-element-tag e) ri)))
+                                 (render-plain-content e part ri))))))))]
         [else 
          (render-plain-content e part ri)]))
     
@@ -1454,38 +1469,40 @@
              [else #f])
            => 
            (lambda (cvt)
-             (let* ([bstr (if (list? cvt) (first cvt) cvt)]
-                    [w (if (list? cvt)
-                           (list-ref cvt 1)
-                           (integer-bytes->integer (subbytes bstr 16 20) #f #t))]
-                    [h (if (list? cvt)
-                           (list-ref cvt 2)
-                           (integer-bytes->integer (subbytes bstr 20 24) #f #t))]
-                    [scale (lambda (v)
-                             (if (and (not (list? cvt))
-                                      (equal? request 'png@2x-bytes))
-                                 (/ v 2.0)
-                                 v))])
-               (list
-                (add-padding
-                 cvt
-                 `(img ([src ,(install-file "pict.png" bstr)]
-                        [alt "image"]
-                        [width ,(number->decimal-string (scale w))]
-                        [height ,(number->decimal-string (scale h))]))))))]
+             (define bstr (if (list? cvt) (first cvt) cvt))
+             (define w
+               (if (list? cvt)
+                   (list-ref cvt 1)
+                   (integer-bytes->integer (subbytes bstr 16 20) #f #t)))
+             (define h
+               (if (list? cvt)
+                   (list-ref cvt 2)
+                   (integer-bytes->integer (subbytes bstr 20 24) #f #t)))
+             (define (scale v)
+               (if (and (not (list? cvt))
+                        (equal? request 'png@2x-bytes))
+                   (/ v 2.0)
+                   v))
+             (list
+              (add-padding
+               cvt
+               `(img ([src ,(install-file "pict.png" bstr)]
+                      [alt "image"]
+                      [width ,(number->decimal-string (scale w))]
+                      [height ,(number->decimal-string (scale h))])))))]
           [(case request
              [(svg-bytes)
               (or (convert e 'svg-bytes+bounds8)
                   (convert e 'svg-bytes))]
              [else #f])
            => (lambda (cvt)
-                (let* ([bstr (if (list? cvt) (first cvt) cvt)])
-                  (list
-                   (add-padding
-                    cvt
-                    `(img
-                      ([src ,(install-file "pict.svg" bstr)]
-                       [type "image/svg+xml"]))))))]
+                (define bstr (if (list? cvt) (first cvt) cvt))
+                (list
+                 (add-padding
+                  cvt
+                  `(img
+                    ([src ,(install-file "pict.svg" bstr)]
+                     [type "image/svg+xml"])))))]
           [(and (equal? request 'gif-bytes) (convert e 'gif-bytes))
            =>
            (lambda (gif-bytes)
@@ -1531,34 +1548,39 @@
 
     (define/private (render-plain-content e part ri)
       (define (attribs) (content-attribs e))
-      (let* ([properties (let ([s (content-style e)])
-                           (if (style? s)
-                               (style-properties s)
-                               null))]
-             [name (let ([s (content-style e)])
-                     (if (style? s)
-                         (style-name s)
-                         s))]
-             [alt-tag
-              (let ([s (content-style e)])
-                (and (style? s)
-                     (style->tag s)))]
-             [resources (for/list ([p (in-list properties)]
-                                   #:when (install-resource? p))
-                          (install-resource-path p))]
-             [link-resource (for/or ([p (in-list properties)]
-                                     #:when (link-resource? p))
-                              (link-resource-path p))]
-             [link? (and (or (ormap target-url? properties)
-                             link-resource)
-                         (not (current-no-links)))]
-             [anchor? (ormap url-anchor? properties)]
-             [attribs
-              (append
-               (if (null? properties)
-                   null
-                   (append-map (lambda (v)
-                                 (cond
+      (define properties
+        (let ([s (content-style e)])
+          (if (style? s)
+              (style-properties s)
+              null)))
+      (define name
+        (let ([s (content-style e)])
+          (if (style? s)
+              (style-name s)
+              s)))
+      (define alt-tag
+        (let ([s (content-style e)])
+          (and (style? s)
+               (style->tag s))))
+      (define resources
+        (for/list ([p (in-list properties)]
+                   #:when (install-resource? p))
+          (install-resource-path p)))
+      (define link-resource
+        (for/or ([p (in-list properties)]
+                 #:when (link-resource? p))
+          (link-resource-path p)))
+      (define link?
+        (and (or (ormap target-url? properties)
+                 link-resource)
+             (not (current-no-links))))
+      (define anchor? (ormap url-anchor? properties))
+      (let ([attribs
+             (append
+              (if (null? properties)
+                  null
+                  (append-map (lambda (v)
+                                (cond
                                   [(target-url? v)
                                    (if (current-no-links)
                                        null
@@ -1567,50 +1589,50 @@
                                                       (from-root addr (get-dest-directory))
                                                       addr))]))]
                                   [else null]))
-                               properties))
-               (attribs))]
-             [newline? (eq? name 'newline)]
-             [check-render
-              (lambda ()
-                (when (render-element? e)
-                  ((render-element-render e) this part ri)))])
+                              properties))
+              (attribs))])
+        (define newline? (eq? name 'newline))
+        (define (check-render)
+          (when (render-element? e)
+            ((render-element-render e) this part ri)))
         (for ([r (in-list resources)])
           (install-file r))
-        (let-values ([(content) (cond
-                                 [link?
-                                  (parameterize ([current-no-links #t])
-                                    (super render-content e part ri))]
-                                 [newline? (check-render) null]
-                                 [(eq? 'hspace name)
-                                  (check-render)
-                                  (let ([str (content->string e)])
-                                    (map (lambda (c) 'nbsp) (string->list str)))]
-                                 [else
-                                  (super render-content e part ri)])])
-          (if (and (null? attribs) 
-                   (not link?)
-                   (not anchor?)
-                   (not newline?)
-                   (not alt-tag))
-              content
-              `(,@(if anchor?
-                      (append-map (lambda (v)
-                                    (if (url-anchor? v)
-                                        `((a ([name ,(url-anchor-name v)])))
-                                        null))
-                                  properties)
-                      null)
-                (,(cond
-                   [alt-tag alt-tag]
-                   [link? 'a]
-                   [newline? 'br]
-                   [else 'span]) 
-                 ,(append
-                   (if link-resource
-                       `([href ,(install-file link-resource)])
-                       null)
-                   attribs)
-                 ,@content))))))
+        (define content
+          (cond
+            [link?
+             (parameterize ([current-no-links #t])
+               (super render-content e part ri))]
+            [newline? (check-render) null]
+            [(eq? 'hspace name)
+             (check-render)
+             (define str (content->string e))
+             (map (lambda (c) 'nbsp) (string->list str))]
+            [else
+             (super render-content e part ri)]))
+        (if (and (null? attribs) 
+                 (not link?)
+                 (not anchor?)
+                 (not newline?)
+                 (not alt-tag))
+            content
+            `(,@(if anchor?
+                    (append-map (lambda (v)
+                                  (if (url-anchor? v)
+                                      `((a ([name ,(url-anchor-name v)])))
+                                      null))
+                                properties)
+                    null)
+              (,(cond
+                  [alt-tag alt-tag]
+                  [link? 'a]
+                  [newline? 'br]
+                  [else 'span]) 
+               ,(append
+                 (if link-resource
+                     `([href ,(install-file link-resource)])
+                     null)
+                 attribs)
+               ,@content)))))
 
     (define/private (element-style->attribs name style [extras null])
       (combine-class
@@ -1647,40 +1669,41 @@
                        [column-styles column-styles]
                        [first? #t])
               (cond
-               [(null? ds) null]
-               [(eq? (car ds) 'cont)
-                (loop (cdr ds) (cdr column-styles) first?)]
-               [else
-                (let ([d (car ds)] [column-style (car column-styles)])
-                  (cons
-                   `(td (,@(cond
+                [(null? ds) null]
+                [(eq? (car ds) 'cont)
+                 (loop (cdr ds) (cdr column-styles) first?)]
+                [else
+                 (define d (car ds))
+                 (define column-style (car column-styles))
+                 (cons
+                  `(td (,@(cond
                             [(not column-style) null]
                             [(memq 'right (style-properties column-style)) '([align "right"])]
                             [(memq 'left (style-properties column-style)) '([align "left"])]
                             [(memq 'center (style-properties column-style)) '([align "center"])]
                             [else null])
-                         ,@(cond
+                        ,@(cond
                             [(not column-style) null]
                             [(memq 'top (style-properties column-style)) '([valign "top"])]
                             [(memq 'baseline (style-properties column-style)) '([valign "baseline"])]
                             [(memq 'vcenter (style-properties column-style)) '([valign "center"])]
                             [(memq 'bottom (style-properties column-style)) '([valign "bottom"])]
                             [else null])
-                         ,@(if (and column-style
-                                    (string? (style-name column-style)))
-                               `([class ,(style-name column-style)])
-                               null)
-                         ,@(if (and column-style
-                                    (pair? (style-properties column-style)))
-                               (style->attribs (make-style
-                                                #f
-                                                (filter (lambda (a)
-                                                          (or (attributes? a)
-                                                              (color-property? a)
-                                                              (background-color-property? a)))
-                                                        (style-properties column-style)))
-                                               (let ([ps (style-properties column-style)])
-                                                 (cond
+                        ,@(if (and column-style
+                                   (string? (style-name column-style)))
+                              `([class ,(style-name column-style)])
+                              null)
+                        ,@(if (and column-style
+                                   (pair? (style-properties column-style)))
+                              (style->attribs (make-style
+                                               #f
+                                               (filter (lambda (a)
+                                                         (or (attributes? a)
+                                                             (color-property? a)
+                                                             (background-color-property? a)))
+                                                       (style-properties column-style)))
+                                              (let ([ps (style-properties column-style)])
+                                                (cond
                                                   [(memq 'border ps)
                                                    `([style "border: 1px solid black;"])]
                                                   [else
@@ -1693,22 +1716,22 @@
                                                     (check 'bottom-border 'bottom)
                                                     (check 'left-border 'left)
                                                     (check 'right-border 'right))])))
-                               null)
-                         ,@(if (and (pair? (cdr ds))
-                                    (eq? 'cont (cadr ds)))
-                               `([colspan
-                                  ,(number->string
-                                    (let loop ([n 2] [ds (cddr ds)])
-                                      (cond [(null? ds) n]
-                                            [(eq? 'cont (car ds))
-                                             (loop (+ n 1) (cdr ds))]
-                                            [else n])))])
-                               null))
-                        ,@(if (and (paragraph? d)
-                                   (memq 'omitable (style-properties (paragraph-style d))))
-                              (render-content (paragraph-content d) part ri)
-                              (render-block d part ri #f)))
-                   (loop (cdr ds) (cdr column-styles) #f)))]))))
+                              null)
+                        ,@(if (and (pair? (cdr ds))
+                                   (eq? 'cont (cadr ds)))
+                              `([colspan
+                                 ,(number->string
+                                   (let loop ([n 2] [ds (cddr ds)])
+                                     (cond [(null? ds) n]
+                                           [(eq? 'cont (car ds))
+                                            (loop (+ n 1) (cdr ds))]
+                                           [else n])))])
+                              null))
+                       ,@(if (and (paragraph? d)
+                                  (memq 'omitable (style-properties (paragraph-style d))))
+                             (render-content (paragraph-content d) part ri)
+                             (render-block d part ri #f)))
+                  (loop (cdr ds) (cdr column-styles) #f))]))))
       (define cell-styless (extract-table-cell-styles t))
       `((table ([cellspacing "0"]
                 [cellpadding "0"]
@@ -1724,13 +1747,15 @@
                                         null)
                                     (if (for/or ([cell-styles (in-list cell-styless)])
                                           (for/or ([cell-style (in-list cell-styles)])
-                                            (and cell-style
-                                                 (let ([ps (style-properties cell-style)])
-                                                   (or (memq 'border ps)
-                                                       (memq 'left-border ps)
-                                                       (memq 'right-border ps)
-                                                       (memq 'bottom-border ps)
-                                                       (memq 'top-border ps))))))
+                                            (cond
+                                              [(not cell-style) #f]
+                                              [else
+                                               (define ps (style-properties cell-style))
+                                               (or (memq 'border ps)
+                                                   (memq 'left-border ps)
+                                                   (memq 'right-border ps)
+                                                   (memq 'bottom-border ps)
+                                                   (memq 'top-border ps))])))
                                         `([style "border-collapse: collapse;"])
                                         '())))))
           ,@(let ([columns (ormap (lambda (p)
@@ -1771,33 +1796,35 @@
                   (super render-nested-flow t part ri starting-item?)))))
 
     (define/override (render-compound-paragraph t part ri starting-item?)
-      (let ([style (compound-paragraph-style t)])
-        `((,(or (style->tag style) 'p)
-           ,(style->attribs style)
-           ,@(super render-compound-paragraph t part ri starting-item?)))))
+      (define style (compound-paragraph-style t))
+      `((,(or (style->tag style) 'p)
+         ,(style->attribs style)
+         ,@(super render-compound-paragraph t part ri starting-item?))))
 
     (define/override (render-itemization t part ri)
-      (let ([style-str (and (string? (style-name (itemization-style t)))
-                            (style-name (itemization-style t)))])
-        `((,(if (eq? 'ordered (style-name (itemization-style t)))
-                'ol
-                'ul)
-           (,@(style->attribs (itemization-style t))
-            ,@(if (eq? 'compact (style-name (itemization-style t)))
-                  `([class "compact"])
-                  '()))
-           ,@(map (lambda (flow) `(li ,(if style-str
-                                           `([class ,(string-append style-str "Item")])
-                                           `())
-                                      ,@(render-flow flow part ri #t)))
-                  (itemization-blockss t))))))
+      (define style-str
+        (and (string? (style-name (itemization-style t)))
+             (style-name (itemization-style t))))
+      `((,(if (eq? 'ordered (style-name (itemization-style t)))
+              'ol
+              'ul)
+         (,@(style->attribs (itemization-style t))
+          ,@(if (eq? 'compact (style-name (itemization-style t)))
+                `([class "compact"])
+                '()))
+         ,@(map (lambda (flow) `(li ,(if style-str
+                                         `([class ,(string-append style-str "Item")])
+                                         `())
+                                    ,@(render-flow flow part ri #t)))
+                (itemization-blockss t)))))
 
     (define/override (render-other i part ri)
       (cond
         [(string? i)
-         (let ([m (and (extra-breaking?)
-                       (regexp-match-positions #rx"[-:/+_](?=.)|[a-z](?=[A-Z])" i))])
-           (if m
+         (define m
+           (and (extra-breaking?)
+                (regexp-match-positions #rx"[-:/+_](?=.)|[a-z](?=[A-Z])" i)))
+         (if m
              (list* (substring i 0 (cdar m))
                     ;; Most browsers wrap after a hyphen. The one that
                     ;; doesn't, Firefox, pays attention to wbr.  Some
@@ -1807,7 +1834,7 @@
                         '(wbr)
                         '(span ([class "mywbr"]) " " nbsp))
                     (render-other (substring i (cdar m)) part ri))
-             (ascii-ize i)))]
+             (ascii-ize i))]
         [(symbol? i)
          (case i
            [(mdash) '(#x2014 (wbr))] ;; <wbr> encourages breaking after rather than before
@@ -1846,14 +1873,16 @@
          (list (format "~s" i))]))
     
     (define/private (ascii-ize s)
-      (if (= (string-utf-8-length s) (string-length s))
-          (list s)
-          (let ([m (regexp-match-positions #rx"[^\u01-\u7E]" s)])
-            (if m
-                (append (ascii-ize (substring s 0 (caar m)))
-                        (list (char->integer (string-ref s (caar m))))
-                        (ascii-ize (substring s (cdar m))))
-                (list s)))))
+      (cond
+        [(= (string-utf-8-length s) (string-length s))
+         (list s)]
+        [else
+         (define m (regexp-match-positions #rx"[^\u01-\u7E]" s))
+         (if m
+             (append (ascii-ize (substring s 0 (caar m)))
+                     (list (char->integer (string-ref s (caar m))))
+                     (ascii-ize (substring s (cdar m))))
+             (list s))]))
 
     ;; ----------------------------------------
 
@@ -1880,29 +1909,33 @@
     (define/override (get-suffix) #"")
 
     (define/override (get-dest-directory [create? #f])
-      (or (and (current-subdirectory)
-               (let ([d (build-path (or (super get-dest-directory)
-                                        (current-directory))
-                                    (current-subdirectory))])
-                 (when (and create? (not (directory-exists? d)))
-                   (make-directory* d))
-                 d))
+      (or (cond
+            [(not (current-subdirectory)) #f]
+            [else
+             (define d
+               (build-path (or (super get-dest-directory)
+                               (current-directory))
+                           (current-subdirectory)))
+             (when (and create? (not (directory-exists? d)))
+               (make-directory* d))
+             d])
           (super get-dest-directory create?)))
 
     (define/private (append-part-prefixes d ci ri)
-      (let ([parents (drop-right
-                      (if ci
-                          (cons d (collect-info-parents ci))
-                          (let loop ([d d])
-                            (if d
-                                (cons d
-                                      (loop (collected-info-parent (part-collected-info d ri))))
-                                null)))
-                      1)])
-        (apply
-         string-append
-         (for/list ([p (in-list parents)])
-           (or (part-tag-prefix p) "")))))
+      (define parents
+        (drop-right
+         (if ci
+             (cons d (collect-info-parents ci))
+             (let loop ([d d])
+               (if d
+                   (cons d
+                         (loop (collected-info-parent (part-collected-info d ri))))
+                   null)))
+         1))
+      (apply
+       string-append
+       (for/list ([p (in-list parents)])
+         (or (part-tag-prefix p) ""))))
 
     (define/override (part-nesting-depth d ri)
       (min (part-depth d ri) (sub1 directory-depth)))
@@ -1914,24 +1947,26 @@
           (add1 (part-depth p ri))))
 
     (define/override (derive-filename d ci ri depth)
-      (let ([base (regexp-replace*
-                   "[^-a-zA-Z0-9_=]"
-                   (string-append
-                    (append-part-prefixes d ci ri)
-                    (let ([s (cadr (car (part-tags/nonempty d)))])
-                      (cond [(string? s) s]
-                            [(part-title-content d)
-                             (content->string (part-title-content d))]
-                            [else
-                             ;; last-ditch effort to make up a unique name:
-                             (format "???~a" (eq-hash-code d))])))
-                   "_")])
-        (let ([fn (if (depth . < . directory-depth)
-                      (path->string (build-path base "index.html"))
-                      (format "~a.html" base))])
-          (when ((string-length fn) . >= . 48)
-            (error "file name too long (need a tag):" fn))
-          fn)))
+      (define base
+        (regexp-replace*
+         "[^-a-zA-Z0-9_=]"
+         (string-append
+          (append-part-prefixes d ci ri)
+          (let ([s (cadr (car (part-tags/nonempty d)))])
+            (cond [(string? s) s]
+                  [(part-title-content d)
+                   (content->string (part-title-content d))]
+                  [else
+                   ;; last-ditch effort to make up a unique name:
+                   (format "???~a" (eq-hash-code d))])))
+         "_"))
+      (define fn
+        (if (depth . < . directory-depth)
+            (path->string (build-path base "index.html"))
+            (format "~a.html" base)))
+      (when ((string-length fn) . >= . 48)
+        (error "file name too long (need a tag):" fn))
+      fn)
 
     (define/override (include-navigation?) #t)
 
@@ -1958,28 +1993,31 @@
                   fns)))
 
     (define/private (check-duplicate-filename orig-s)
-      (let ([s (string-downcase (path->string orig-s))])
-        (when (hash-ref (current-part-files) s #f)
-          (error 'htmls-render "multiple parts have the same filename (modulo case): ~e"
-                 orig-s))
-        (hash-set! (current-part-files) s #t)))
+      (define s (string-downcase (path->string orig-s)))
+      (when (hash-ref (current-part-files) s #f)
+        (error 'htmls-render "multiple parts have the same filename (modulo case): ~e"
+               orig-s))
+      (hash-set! (current-part-files) s #t))
 
     (define/override (collect-part d parent ci number sub-init-number sub-init-numberers)
-      (let ([prev-sub (collecting-sub)])
-        (parameterize ([collecting-sub (if (part-style? d 'toc)
-                                           1 
-                                           (add1 prev-sub))]
-                       [collecting-whole-page (prev-sub . <= . 1)])
-          (if (and (current-part-whole-page? d)
-                   (not (eq? d (current-top-part))))
-              (let* ([filename (derive-filename d ci #f (length number))]
-                     [full-filename (build-path (path-only (current-output-file))
-                                                filename)])
-                (make-directory* (path-only full-filename))
-                (check-duplicate-filename full-filename)
-                (parameterize ([current-output-file full-filename])
-                  (super collect-part d parent ci number sub-init-number sub-init-numberers)))
-              (super collect-part d parent ci number sub-init-number sub-init-numberers)))))
+      (define prev-sub (collecting-sub))
+      (parameterize ([collecting-sub (if (part-style? d 'toc)
+                                         1 
+                                         (add1 prev-sub))]
+                     [collecting-whole-page (prev-sub . <= . 1)])
+        (cond
+          [(and (current-part-whole-page? d)
+                (not (eq? d (current-top-part))))
+           (define filename (derive-filename d ci #f (length number)))
+           (define full-filename
+             (build-path (path-only (current-output-file))
+                         filename))
+           (make-directory* (path-only full-filename))
+           (check-duplicate-filename full-filename)
+           (parameterize ([current-output-file full-filename])
+             (super collect-part d parent ci number sub-init-number sub-init-numberers))]
+          [else
+           (super collect-part d parent ci number sub-init-number sub-init-numberers)])))
 
     (define/override (render-top ds fns ri)
       (map (lambda (d fn)

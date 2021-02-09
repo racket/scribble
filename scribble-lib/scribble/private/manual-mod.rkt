@@ -188,19 +188,21 @@
 ;; ----------------------------------------
 
 (define (compute-packages module-path)
-  (let* ([path (with-handlers ([exn:missing-module? (lambda (exn) #f)])
-                 (and module-path
-                      (resolved-module-path-name
-                       (module-path-index-resolve (module-path-index-join module-path #f)))))]
-         [pkg (and path
-                   (path? path)
-                   (or (path->pkg path)
-                       (let ([c (path->main-collects-relative path)])
-                         (and c
-                              "base"))))])
-    (if pkg
-        (list pkg)
-        null)))
+  (define path
+    (with-handlers ([exn:missing-module? (lambda (exn) #f)])
+      (and module-path
+           (resolved-module-path-name
+            (module-path-index-resolve (module-path-index-join module-path #f))))))
+  (define pkg
+    (and path
+         (path? path)
+         (or (path->pkg path)
+             (let ([c (path->main-collects-relative path)])
+               (and c
+                    "base")))))
+  (if pkg
+      (list pkg)
+      null))
 
 ;; mflatt thinks this should not be exposed
 (define (racketpkgname pkg)
@@ -305,14 +307,14 @@
 (define the-reader-index-desc (make-reader-index-desc))
 
 (define (make-defracketmodname mn mp index-desc)
-  (let ([name-str (datum-intern-literal (element->string mn))]
-        [path-str (datum-intern-literal (element->string mp))])
-    (make-index-element #f
-                        (list mn)
-                        (intern-taglet `(mod-path ,path-str))
-                        (list name-str)
-                        (list mn)
-                        index-desc)))
+  (define name-str (datum-intern-literal (element->string mn)))
+  (define path-str (datum-intern-literal (element->string mp)))
+  (make-index-element #f
+                      (list mn)
+                      (intern-taglet `(mod-path ,path-str))
+                      (list name-str)
+                      (list mn)
+                      index-desc))
 
 (define-syntax (declare-exporting stx)
   (syntax-parse stx

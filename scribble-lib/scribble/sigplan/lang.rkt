@@ -60,25 +60,25 @@ Read here for more:
 |#
 
 (define ((post-process times? qcourier? . opts) doc)
-  (let ([options
-         (if (ormap values opts)
-             (format "[~a]" (apply string-append (add-between (filter values opts) ", ")))
-             "")])
-    (add-sigplan-styles 
-     (add-defaults doc
-                   (string->bytes/utf-8
-                    (format "\\documentclass~a{sigplanconf}\n~a~a~a"
-                            options
-                            unicode-encoding-packages
-                            (if times? 
-                                "\\usepackage{times}\n"
-                                "")
-                            (if qcourier? 
-                                "\\usepackage{qcourier}\n"
-                                "")))
-                   (scribble-file "sigplan/style.tex")
-                   (list (scribble-file "sigplan/sigplanconf.cls"))
-                   #f))))
+  (define options
+    (if (ormap values opts)
+        (format "[~a]" (apply string-append (add-between (filter values opts) ", ")))
+        ""))
+  (add-sigplan-styles 
+   (add-defaults doc
+                 (string->bytes/utf-8
+                  (format "\\documentclass~a{sigplanconf}\n~a~a~a"
+                          options
+                          unicode-encoding-packages
+                          (if times? 
+                              "\\usepackage{times}\n"
+                              "")
+                          (if qcourier? 
+                              "\\usepackage{qcourier}\n"
+                              "")))
+                 (scribble-file "sigplan/style.tex")
+                 (list (scribble-file "sigplan/sigplanconf.cls"))
+                 #f)))
 
 (define (add-sigplan-styles doc)
   ;; Ensure that "sigplan.tex" is used, since "style.tex"

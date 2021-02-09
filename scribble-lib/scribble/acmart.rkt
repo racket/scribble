@@ -255,23 +255,23 @@
                #:date [date #f]
                #:short [short #f]
                . str)
-  (let ([content (decode-content str)])
-    (make-title-decl (prefix->string prefix)
-                     (convert-tag tag content)
-                     version
-                     (let* ([s (convert-part-style 'title style)]
-                            [s (if date
-                                   (make-style (style-name s)
-                                               (cons (make-document-date date)
-                                                     (style-properties s)))
-                                   s)]
-                            [s (if short
-                                   (make-style (style-name s)
-                                               (cons (short-title short)
-                                                     (style-properties s)))
-                                   s)])
-                       s)
-                     content)))
+  (define content (decode-content str))
+  (make-title-decl (prefix->string prefix)
+                   (convert-tag tag content)
+                   version
+                   (let* ([s (convert-part-style 'title style)]
+                          [s (if date
+                                 (make-style (style-name s)
+                                             (cons (make-document-date date)
+                                                   (style-properties s)))
+                                 s)]
+                          [s (if short
+                                 (make-style (style-name s)
+                                             (cons (short-title short)
+                                                   (style-properties s)))
+                                 s)])
+                     s)
+                   content))
 
 (define (author #:orcid [orcid #f]
                 #:affiliation [affiliation '()]

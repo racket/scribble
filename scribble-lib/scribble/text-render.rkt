@@ -35,28 +35,28 @@
              format-number)
 
     (define/override (render-part d ht)
-      (let ([number (collected-info-number (part-collected-info d ht))])
-        (unless (part-style? d 'hidden)
-          (let ([s (format-number number '() #t)])
-            (unless (null? s)
-              (printf "~a~a" 
-                      (car s)
-                      (if (part-title-content d)
-                          " "
-                          "")))
-            (when (part-title-content d)
-              (render-content (part-title-content d) d ht))
-            (when (or (pair? number) (part-title-content d))
-              (newline)
-              (newline))))
-        (render-flow (part-blocks d) d ht #f)
-        (let loop ([pos 1]
-                   [secs (part-parts d)]
-                   [need-newline? (pair? (part-blocks d))])
-          (unless (null? secs)
-            (when need-newline? (newline))
-            (render-part (car secs) ht)
-            (loop (add1 pos) (cdr secs) #t)))))
+      (define number (collected-info-number (part-collected-info d ht)))
+      (unless (part-style? d 'hidden)
+        (let ([s (format-number number '() #t)])
+          (unless (null? s)
+            (printf "~a~a" 
+                    (car s)
+                    (if (part-title-content d)
+                        " "
+                        "")))
+          (when (part-title-content d)
+            (render-content (part-title-content d) d ht))
+          (when (or (pair? number) (part-title-content d))
+            (newline)
+            (newline))))
+      (render-flow (part-blocks d) d ht #f)
+      (let loop ([pos 1]
+                 [secs (part-parts d)]
+                 [need-newline? (pair? (part-blocks d))])
+        (unless (null? secs)
+          (when need-newline? (newline))
+          (render-part (car secs) ht)
+          (loop (add1 pos) (cdr secs) #t))))
 
     (define/override (render-flow f part ht starting-item?)
       (if (null? f)
@@ -233,18 +233,18 @@
             null)))
 
     (define/override (render-itemization i part ht)
-      (let ([flows (itemization-blockss i)])
-        (if (null? flows)
-            null
-            (append*
-             (begin (printf "* ")
-                    (parameterize ([current-indent (make-indent 2)])
-                      (render-flow (car flows) part ht #t)))
-             (for/list ([d (in-list (cdr flows))])
-               (indented-newline)
-               (printf "* ")
-               (parameterize ([current-indent (make-indent 2)])
-                 (render-flow d part ht #f)))))))
+      (define flows (itemization-blockss i))
+      (if (null? flows)
+          null
+          (append*
+           (begin (printf "* ")
+                  (parameterize ([current-indent (make-indent 2)])
+                    (render-flow (car flows) part ht #t)))
+           (for/list ([d (in-list (cdr flows))])
+             (indented-newline)
+             (printf "* ")
+             (parameterize ([current-indent (make-indent 2)])
+               (render-flow d part ht #f))))))
 
     (define/override (render-paragraph p part ri)
       (define o (open-output-string))
@@ -259,11 +259,13 @@
       null)
 
     (define/override (render-content i part ri)
-      (if (and (element? i)
-               (let ([s (element-style i)])
-                 (or (eq? 'hspace s)
-                     (and (style? s)
-                          (eq? 'hspace (style-name s))))))
+      (if (cond
+            [(not (element? i)) #f]
+            [else
+             (define s (element-style i))
+             (or (eq? 'hspace s)
+                 (and (style? s)
+                      (eq? 'hspace (style-name s))))])
           (parameterize ([current-preserve-spaces #t])
             (super render-content i part ri))
           (super render-content i part ri)))
