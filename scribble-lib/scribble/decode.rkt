@@ -84,11 +84,10 @@
 
 (define (spliceof c)
   (define name `(spliceof ,(contract-name c)))
-  (define p c)
   (make-flat-contract #:name name
                       #:first-order (lambda (x)
                                       (and (splice? x)
-                                           (andmap p (splice-run x))))))
+                                           (andmap c (splice-run x))))))
 (provide/contract
  [spliceof (flat-contract? . -> . flat-contract?)])
 
