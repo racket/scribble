@@ -144,7 +144,7 @@
   (make-flat-contract 
    #:name 'items/c
    #:first-order (lambda (x)
-                   ((flat-contract-predicate items/c) x))))
+                   (items/c x))))
 
 (define items/c (or/c item?
                       block?
@@ -773,7 +773,7 @@
  [index* (((listof string?) (listof any/c)) ()  #:rest (listof pre-content?) . ->* . index-element?)] ; XXX first any/c wrong in docs 
  [as-index (() () #:rest (listof pre-content?) . ->* . index-element?)]
  [section-index (() () #:rest (listof string?) . ->* . part-index-decl?)]
- [index-section (() (#:tag (or/c false/c string?)) . ->* . part?)])
+ [index-section (() (#:tag (or/c #f string?)) . ->* . part?)])
 
 (define (section-index . elems)
   (make-part-index-decl (map content->string elems) elems))

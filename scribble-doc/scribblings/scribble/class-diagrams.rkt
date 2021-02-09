@@ -444,7 +444,7 @@
 (provide/contract
  [field-spec (->* ((or/c #f string?) string?) (string? #:default string?) pict?)]
  [class-name (->* (string?) (#:spacing-word string?) pict?)]
- [class-box (-> pict? (or/c false/c (listof pict?)) (or/c false/c (listof pict?)) pict?)]
+ [class-box (-> pict? (or/c #f (listof pict?)) (or/c #f (listof pict?)) pict?)]
  [hierarchy/layout 
   (->* ((cons/c pict? (listof pict?)) (cons/c pict? (listof pict?)))
        (#:top-space 
@@ -507,8 +507,8 @@
  [add-dot (-> pict? number? number? (values pict? pict?))]
  [method-spec 
   (->* (string? string?) 
-       (#:body (or/c false/c pict?)) 
-       #:rest (listof (or/c false/c string?)) 
+       (#:body (or/c #f pict?)) 
+       #:rest (listof (or/c #f string?)) 
        pict?)]
  [java-this (-> pict?)]
  [field-arrowhead-size number?])

@@ -39,13 +39,13 @@
            (andmap pre-part? v))))
 
 (provide-structs
- [title-decl ([tag-prefix (or/c false/c string?)]
+ [title-decl ([tag-prefix (or/c #f string?)]
               [tags (listof tag?)]
-              [version (or/c string? false/c)]
+              [version (or/c string? #f)]
               [style style?]
               [content content?])]
  [part-start ([depth integer?]
-              [tag-prefix (or/c false/c string?)]
+              [tag-prefix (or/c #f string?)]
               [tags (listof tag?)]
               [style style?]
               [title content?])]
@@ -84,7 +84,7 @@
 
 (define (spliceof c)
   (define name `(spliceof ,(contract-name c)))
-  (define p (flat-contract-predicate c))
+  (define p c)
   (make-flat-contract #:name name
                       #:first-order (lambda (x)
                                       (and (splice? x)
