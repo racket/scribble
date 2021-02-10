@@ -40,8 +40,8 @@
                                            (format "q?~a" query)))
                                          null))])))]
     [else
-     (define path (build-path (find-user-doc-dir) sub))
-     (let ([path (if (file-exists? path) path (build-path (find-doc-dir) sub))])
+     (let* ([path (build-path (find-user-doc-dir) sub)]
+            [path (if (file-exists? path) path (build-path (find-doc-dir) sub))])
        (notify path)
        (cond
          [(file-exists? path)
