@@ -144,7 +144,7 @@
   (make-flat-contract 
    #:name 'items/c
    #:first-order (lambda (x)
-                   (items/c x))))
+                   ((flat-contract-predicate items/c) x))))
 
 (define items/c (or/c item?
                       block?
