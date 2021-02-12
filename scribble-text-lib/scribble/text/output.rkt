@@ -251,7 +251,8 @@
 
 ;; special constructs
 
-(define-struct special (flag contents))
+(struct special (flag contents)
+  #:extra-constructor-name make-special)
 
 (define-syntax define/provide-special
   (syntax-rules ()

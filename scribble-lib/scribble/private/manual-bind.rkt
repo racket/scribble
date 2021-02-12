@@ -33,7 +33,8 @@
 (define (gen-absolute-tag)
   `(abs ,(make-generated-tag)))
 
-(define-struct sig (id))
+(struct sig (id)
+  #:extra-constructor-name make-sig)
 
 (define-syntax-rule (sigelem sig elem)
   (*sig-elem (quote-syntax sig) 'elem))

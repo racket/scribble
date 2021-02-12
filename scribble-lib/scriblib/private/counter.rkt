@@ -8,7 +8,8 @@
          counter-ref
          counter-collect-value)
 
-(define-struct counter ([n #:mutable] name target-wrap ref-wrap))
+(struct counter ([n #:mutable] name target-wrap ref-wrap)
+  #:extra-constructor-name make-counter)
 
 (define (new-counter name
                      #:target-wrap [target-wrap (lambda (c s) c)]

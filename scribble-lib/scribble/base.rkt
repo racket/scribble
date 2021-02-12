@@ -180,7 +180,8 @@
                    (loop (append (car items) (cdr items)))]))])
     (make-itemization (convert-block-style style) flows)))
 
-(define-struct an-item (flow))
+(struct an-item (flow)
+  #:extra-constructor-name make-an-item)
 
 (define (item . str)
   (make-an-item (decode-flow str)))

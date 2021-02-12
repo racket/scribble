@@ -16,7 +16,8 @@
 (define p (make-parameter 10))
 (define q (make-parameter #f))
 
-(define-struct pt (x y))
+(struct pt (x y)
+  #:extra-constructor-name make-pt)
 (struct pn (x y))
 
 (define v 10)

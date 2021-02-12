@@ -28,11 +28,14 @@
    tag      ; for generating a Scribble link
    desc))   ; further info that depends on the kind of index entry
 
-(define-struct data+root (data root))
-(define-struct (data+root+doc-id data+root) (doc-id))
+(struct data+root (data root)
+  #:extra-constructor-name make-data+root)
+(struct data+root+doc-id data+root (doc-id)
+  #:extra-constructor-name make-data+root+doc-id)
 
 ;; Private:
-(define-struct xrefs (renderer ri))
+(struct xrefs (renderer ri)
+  #:extra-constructor-name make-xrefs)
 
 (define (xref? x) (xrefs? x))
 

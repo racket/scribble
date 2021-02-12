@@ -1197,8 +1197,9 @@
 
 ;; ----------------------------------------
 
-(define-struct demand-chain ([demands #:mutable])
+(struct demand-chain ([demands #:mutable])
   #:property prop:procedure (lambda (self key ci)
                               (for/or ([demand (in-list (demand-chain-demands self))])
-                                (demand key ci))))
+                                (demand key ci)))
+  #:extra-constructor-name make-demand-chain)
 

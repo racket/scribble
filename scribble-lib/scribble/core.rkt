@@ -6,8 +6,10 @@
 
 ;; ----------------------------------------
 
-(define-struct collect-info (fp ht ext-ht ext-demand parts tags gen-prefix relatives parents) #:transparent)
-(define-struct resolve-info (ci delays undef searches) #:transparent)
+(struct collect-info (fp ht ext-ht ext-demand parts tags gen-prefix relatives parents) #:transparent
+  #:extra-constructor-name make-collect-info)
+(struct resolve-info (ci delays undef searches) #:transparent
+  #:extra-constructor-name make-resolve-info)
 
 (define (part-collected-info part ri)
   (hash-ref (collect-info-parts (resolve-info-ci ri))
@@ -319,7 +321,7 @@
 ;; ----------------------------------------
 
 ;; Traverse block has special serialization support:
-(define-struct traverse-block (traverse)
+(struct traverse-block (traverse)
   #:property
   prop:serializable
   (make-serialize-info
@@ -332,7 +334,8 @@
    #'deserialize-traverse-block
    #f
    (or (current-load-relative-directory) (current-directory)))
-  #:transparent)
+  #:transparent
+  #:extra-constructor-name make-traverse-block)
 
 (define block-traverse-procedure/c
   (recursive-contract
@@ -369,7 +372,7 @@
 ;; ----------------------------------------
 
 ;; Traverse element has special serialization support:
-(define-struct traverse-element (traverse)
+(struct traverse-element (traverse)
   #:property
   prop:serializable
   (make-serialize-info
@@ -382,7 +385,8 @@
    #'deserialize-traverse-element
    #f
    (or (current-load-relative-directory) (current-directory)))
-  #:transparent)
+  #:transparent
+  #:extra-constructor-name make-traverse-element)
 
 (define element-traverse-procedure/c
   (recursive-contract
@@ -419,7 +423,7 @@
 ;; ----------------------------------------
 
 ;; Delayed element has special serialization support:
-(define-struct delayed-element (resolve sizer plain)
+(struct delayed-element (resolve sizer plain)
   #:property
   prop:serializable
   (make-serialize-info
@@ -437,7 +441,8 @@
    #'deserialize-delayed-element
    #f
    (or (current-load-relative-directory) (current-directory)))
-  #:transparent)
+  #:transparent
+  #:extra-constructor-name make-delayed-element)
 
 (provide/contract
  (struct delayed-element ([resolve (any/c part? resolve-info? . -> . content?)]
@@ -463,7 +468,7 @@
 ;; ----------------------------------------
 
 ;; part-relative element has special serialization support:
-(define-struct part-relative-element (collect sizer plain)
+(struct part-relative-element (collect sizer plain)
   #:property
   prop:serializable
   (make-serialize-info
@@ -482,7 +487,8 @@
    #'deserialize-part-relative-element
    #f
    (or (current-load-relative-directory) (current-directory)))
-  #:transparent)
+  #:transparent
+  #:extra-constructor-name make-part-relative-element)
 
 (provide/contract
  (struct part-relative-element ([collect (collect-info? . -> . content?)]
@@ -506,7 +512,7 @@
 
 ;; Delayed index entry also has special serialization support.
 ;; It uses the same delay -> value table as delayed-element
-(define-struct delayed-index-desc (resolve)
+(struct delayed-index-desc (resolve)
   #:mutable
   #:property
   prop:serializable 
@@ -526,7 +532,8 @@
    #'deserialize-delayed-index-desc
    #f
    (or (current-load-relative-directory) (current-directory)))
-  #:transparent)
+  #:transparent
+  #:extra-constructor-name make-delayed-index-desc)
 
 (provide/contract
  (struct delayed-index-desc ([resolve (any/c part? resolve-info? . -> . any)])))
@@ -538,7 +545,7 @@
 
 ;; ----------------------------------------
 
-(define-struct (collect-element element) (collect)
+(struct collect-element element (collect)
   #:mutable
   #:property
   prop:serializable
@@ -550,7 +557,8 @@
    #'deserialize-collect-element
    #f
    (or (current-load-relative-directory) (current-directory)))
-  #:transparent)
+  #:transparent
+  #:extra-constructor-name make-collect-element)
 
 (module+ deserialize-info
   (provide deserialize-collect-element))
@@ -564,7 +572,7 @@
 
 ;; ----------------------------------------
 
-(define-struct (render-element element) (render)
+(struct render-element element (render)
   #:property
   prop:serializable
   (make-serialize-info
@@ -575,7 +583,8 @@
    #'deserialize-render-element
    #f
    (or (current-load-relative-directory) (current-directory)))
-  #:transparent)
+  #:transparent
+  #:extra-constructor-name make-render-element)
 
 (module+ deserialize-info
   (provide deserialize-render-element))
@@ -589,7 +598,7 @@
 
 ;; ----------------------------------------
 
-(define-struct generated-tag ()
+(struct generated-tag ()
   #:property
   prop:serializable
   (make-serialize-info
@@ -600,13 +609,14 @@
                 "current-serialize-resolve-info not set"))
        (let ([t (hash-ref (collect-info-tags (resolve-info-ci ri)) g #f)])
          (if t
-           (vector t)
-           (error 'serialize-generated-tag
-                  "serialization failed (wrong resolve info?)")))))
+             (vector t)
+             (error 'serialize-generated-tag
+                    "serialization failed (wrong resolve info?)")))))
    #'deserialize-generated-tag
    #f
    (or (current-load-relative-directory) (current-directory)))
-  #:transparent)
+  #:transparent
+  #:extra-constructor-name make-generated-tag)
 
 (provide (struct-out generated-tag))
 

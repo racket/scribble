@@ -103,9 +103,11 @@
 
 (define defined-names (make-hasheq))
 
-(define-struct (sized-element element) (length))
+(struct sized-element element (length)
+  #:extra-constructor-name make-sized-element)
 
-(define-struct (spaces element) (cnt))
+(struct spaces element (cnt)
+  #:extra-constructor-name make-spaces)
 
 ;; We really don't want leading hypens (or minus signs) to
 ;; create a line break after the hyphen. For interior hyphens,
@@ -144,8 +146,10 @@
 (define id-element-cache (make-weak-hash))
 (define element-cache (make-weak-hash))
 
-(define-struct (cached-delayed-element delayed-element) (cache-key))
-(define-struct (cached-element element) (cache-key))
+(struct cached-delayed-element delayed-element (cache-key)
+  #:extra-constructor-name make-cached-delayed-element)
+(struct cached-element element (cache-key)
+  #:extra-constructor-name make-cached-element)
 
 (define qq-ellipses (string->uninterned-symbol "..."))
 
@@ -954,7 +958,7 @@
   (typeset c #t pfx1 pfx sfx color? expr? escapes? #f elem-wrap))
 
 (begin-for-syntax 
-  (define-struct variable-id (sym) 
+  (struct variable-id (sym) 
     #:omit-define-syntaxes
     #:property prop:procedure (lambda (self stx)
                                 (raise-syntax-error
@@ -962,8 +966,9 @@
                                  (string-append
                                   "misuse of an identifier (not in `racket', etc.) that is"
                                   " bound as a code-typesetting variable")
-                                 stx)))
-  (define-struct element-id-transformer (proc) 
+                                 stx))
+    #:extra-constructor-name make-variable-id)
+  (struct element-id-transformer (proc) 
     #:omit-define-syntaxes
     #:property prop:procedure (lambda (self stx)
                                 (raise-syntax-error
@@ -971,7 +976,8 @@
                                  (string-append
                                   "misuse of an identifier (not in `racket', etc.) that is"
                                   " bound as an code-typesetting element transformer")
-                                 stx))))
+                                 stx))
+    #:extra-constructor-name make-element-id-transformer))
 
 (define-syntax (define-code stx)
   (syntax-case stx ()
@@ -1080,16 +1086,25 @@
                         (loop (cons (car r) r) (sub1 i)))))
          l))))
 
-(define-struct var-id (sym))
-(define-struct shaped-parens (val shape))
-(define-struct long-boolean (val))
-(define-struct just-context (val ctx))
-(define-struct alternate-display (id string))
-(define-struct literal-syntax (stx))
-(define-struct struct-proxy (name content))
+(struct var-id (sym)
+  #:extra-constructor-name make-var-id)
+(struct shaped-parens (val shape)
+  #:extra-constructor-name make-shaped-parens)
+(struct long-boolean (val)
+  #:extra-constructor-name make-long-boolean)
+(struct just-context (val ctx)
+  #:extra-constructor-name make-just-context)
+(struct alternate-display (id string)
+  #:extra-constructor-name make-alternate-display)
+(struct literal-syntax (stx)
+  #:extra-constructor-name make-literal-syntax)
+(struct struct-proxy (name content)
+  #:extra-constructor-name make-struct-proxy)
 
-(define-struct graph-reference (bx))
-(define-struct graph-defn (r bx))
+(struct graph-reference (bx)
+  #:extra-constructor-name make-graph-reference)
+(struct graph-defn (r bx)
+  #:extra-constructor-name make-graph-defn)
 
 (define (syntax-ize v col [line 1] #:expr? [expr? #f])
   (do-syntax-ize v col line (box #hasheq()) #f (and expr? 0) #f))
@@ -1100,7 +1115,8 @@
          (set-box! ht (hash-set (unbox ht) '#%graph-count (add1 n)))
          n)))
 
-(define-struct forced-pair (car cdr))
+(struct forced-pair (car cdr)
+  #:extra-constructor-name make-forced-pair)
 
 (define (quotable? v)
   (define graph (make-hasheq))

@@ -211,8 +211,8 @@
                     (lambda () (list desc ...))
                     (list (result-value value.value) ...)))))]))
 
-(define-struct arg
-  (special? kw id optional? starts-optional? ends-optional? depth))
+(struct arg (special? kw id optional? starts-optional? ends-optional? depth)
+  #:extra-constructor-name make-arg)
 
 (define (*defproc kind link? mode within-id
                   stx-ids sym prototypes arg-contractss arg-valss result-contracts content-thunk

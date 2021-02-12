@@ -182,12 +182,13 @@
           provide/doc-transformer-proc))
 
 (begin-for-syntax
- (define-struct provide/doc-transformer (proc)
-   #:property 
-   prop:provide-pre-transformer
-   (lambda (self)
-     (lambda (stx mode)
-       (do-provide/doc stx mode)))))
+ (struct provide/doc-transformer (proc)
+    #:property 
+    prop:provide-pre-transformer
+    (lambda (self)
+      (lambda (stx mode)
+        (do-provide/doc stx mode)))
+    #:extra-constructor-name make-provide/doc-transformer))
 
 (define-syntax-rule (define-provide/doc-transformer id rhs)
   (define-syntax id

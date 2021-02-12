@@ -9,7 +9,8 @@
          "manual-utils.rkt"
          "manual-style.rkt")
 
-(define-struct a-bib-entry (key val))
+(struct a-bib-entry (key val)
+  #:extra-constructor-name make-a-bib-entry)
 
 (provide/contract
  [cite ((string?) () #:rest (listof string?) . ->* . element?)]

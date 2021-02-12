@@ -5,6 +5,7 @@
 (provide (struct-out exporting-libraries)
          current-signature)
 
-(define-struct (exporting-libraries element) (libs source-libs pkgs))
+(struct exporting-libraries element (libs source-libs pkgs)
+  #:extra-constructor-name make-exporting-libraries)
 
 (define current-signature (make-parameter #f))

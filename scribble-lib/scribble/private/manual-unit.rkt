@@ -31,7 +31,8 @@
                   (lambda () (list body ...))
                   #f)))
 
-(define-struct sig-desc (in))
+(struct sig-desc (in)
+  #:extra-constructor-name make-sig-desc)
 (define (signature-desc . l)
   (make-sig-desc l))
 

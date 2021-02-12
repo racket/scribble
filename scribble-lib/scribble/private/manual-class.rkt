@@ -40,11 +40,16 @@
 
 (define-syntax-parameter current-class #f)
 
-(define-struct decl (name super app-mixins intfs ranges mk-head body))
-(define-struct constructor (def))
-(define-struct meth (names mode def))
-(define-struct spec (def))
-(define-struct impl (def))
+(struct decl (name super app-mixins intfs ranges mk-head body)
+  #:extra-constructor-name make-decl)
+(struct constructor (def)
+  #:extra-constructor-name make-constructor)
+(struct meth (names mode def)
+  #:extra-constructor-name make-meth)
+(struct spec (def)
+  #:extra-constructor-name make-spec)
+(struct impl (def)
+  #:extra-constructor-name make-impl)
 
 (define (id-info id)
   (let ([b (identifier-label-binding id)])

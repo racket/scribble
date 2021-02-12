@@ -15,7 +15,8 @@
          (for-label racket/base
                     racket/class))
 
-(define-struct (box-splice splice) ())
+(struct box-splice splice ()
+  #:extra-constructor-name make-box-splice)
 
 (provide/contract
  [struct (box-splice splice) ([run list?])]) ; XXX ugly copying
@@ -70,7 +71,8 @@
                           (cons (attributes '((class . "RForeground")))
                                 p)))))))))
 
-(begin-for-syntax (define-struct deftogether-tag () #:omit-define-syntaxes))
+(begin-for-syntax (struct deftogether-tag () #:omit-define-syntaxes
+                    #:extra-constructor-name make-deftogether-tag))
 
 (define-syntax (with-togetherable-racket-variables stx)
   (syntax-case stx ()
