@@ -191,7 +191,10 @@ a:hover {
 }
 
 .navsettop {
-    position: absolute;
+    position: fixed;
+    z-index: 1;
+    background: #a7b0be;
+    height: auto;
     top: 0;
     left: 0;
     margin-bottom: 0;
@@ -418,7 +421,9 @@ a:hover {
 /* Table of contents, left margin */
 
 .tocset {
-    position: absolute;
+    position: fixed;
+    overflow-y: scroll;
+    height: 88%;
     float: none;
     left: 0;
     top: 0rem;
