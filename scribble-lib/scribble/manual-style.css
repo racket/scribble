@@ -423,10 +423,10 @@ a:hover {
 .tocset {
     position: fixed;
     overflow-y: scroll;
-    height: 88%;
     float: none;
     left: 0;
     top: 0rem;
+    bottom: 0;
     width: 14rem;
     padding: 0rem 0.5rem 0.5rem 0.5rem;
     background-color: hsl(216, 15%, 70%);
