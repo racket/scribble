@@ -428,9 +428,9 @@ a:hover {
     left: 0;
     top: 0rem;
     width: 14rem;
-    padding: 7rem 0.5rem 0.5rem 0.5rem;
+    padding: 0rem 0.5rem 0.5rem 0.5rem;
     background-color: hsl(216, 15%, 70%);
-    margin: 0;
+    margin: 6rem 0 0 0;
 
 }
 
