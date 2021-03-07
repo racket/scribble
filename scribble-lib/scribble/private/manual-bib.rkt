@@ -13,12 +13,12 @@
 
 (provide/contract
  [cite ((string?) () #:rest (listof string?) . ->* . element?)]
- [bib-entry ((#:key string? #:title (or/c false/c pre-content?))
-             (#:is-book? boolean? #:author (or/c false/c pre-content?) 
-                         #:location (or/c false/c pre-content?) 
-                         #:date (or/c false/c pre-content?) 
-                         #:url (or/c false/c pre-content?)
-                         #:note (or/c false/c pre-content?))
+ [bib-entry ((#:key string? #:title (or/c #f pre-content?))
+             (#:is-book? boolean? #:author (or/c #f pre-content?) 
+                         #:location (or/c #f pre-content?) 
+                         #:date (or/c #f pre-content?) 
+                         #:url (or/c #f pre-content?)
+                         #:note (or/c #f pre-content?))
              . ->* .
              a-bib-entry?)]
  [rename a-bib-entry? bib-entry? (any/c . -> . boolean?)]

@@ -38,7 +38,7 @@
        block?)]
  [category
   (->* (pre-content? pre-content? pre-content?)
-       ((or/c false/c pre-content?))
+       ((or/c #f pre-content?))
        content?)]
  [terms
   (->* () () #:rest (listof pre-content?)

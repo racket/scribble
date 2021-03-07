@@ -242,9 +242,9 @@
 ;; ----------------------------------------
 
 (provide-structs
- [part ([tag-prefix (or/c false/c string?)]
+ [part ([tag-prefix (or/c #f string?)]
         [tags (listof tag?)]
-        [title-content (or/c false/c content?)]
+        [title-content (or/c #f content?)]
         [style style?]
         [to-collect list?]
         [blocks (listof block?)]
@@ -287,8 +287,8 @@
  [style ([name (or/c string? symbol? #f)]
          [properties list?])]
  ;; properties:
- [document-version ([text (or/c string? false/c)])]
- [document-date ([text (or/c string? false/c)])]
+ [document-version ([text (or/c string? #f)])]
+ [document-date ([text (or/c string? #f)])]
  [target-url ([addr path-string?])]
  [color-property ([color (or/c string? (list/c byte? byte? byte?))])]
  [background-color-property ([color (or/c string? (list/c byte? byte? byte?))])]
@@ -302,7 +302,7 @@
             [bottom-name string?])]
 
  [collected-info ([number (listof part-number-item?)]
-                  [parent (or/c false/c part?)]
+                  [parent (or/c #f part?)]
                   [info any/c])]
 
  [known-doc ([v any/c]
@@ -804,9 +804,9 @@
 (provide/contract
  [part-collected-info (part? resolve-info? . -> . collected-info?)]
  [collect-put! (collect-info? info-key?  any/c . -> . any)]
- [resolve-get ((or/c part? false/c) resolve-info? info-key? . -> . any)]
- [resolve-get/tentative ((or/c part? false/c) resolve-info? info-key? . -> . any)]
- [resolve-get/ext? ((or/c part? false/c) resolve-info? info-key? . -> . any)]
- [resolve-get/ext-id ((or/c part? false/c) resolve-info? info-key? . -> . any)]
- [resolve-search (any/c (or/c part? false/c) resolve-info? info-key? . -> . any)]
- [resolve-get-keys ((or/c part? false/c) resolve-info? (info-key? . -> . any/c) . -> . any/c)])
+ [resolve-get ((or/c part? #f) resolve-info? info-key? . -> . any)]
+ [resolve-get/tentative ((or/c part? #f) resolve-info? info-key? . -> . any)]
+ [resolve-get/ext? ((or/c part? #f) resolve-info? info-key? . -> . any)]
+ [resolve-get/ext-id ((or/c part? #f) resolve-info? info-key? . -> . any)]
+ [resolve-search (any/c (or/c part? #f) resolve-info? info-key? . -> . any)]
+ [resolve-get-keys ((or/c part? #f) resolve-info? (info-key? . -> . any/c) . -> . any/c)])
