@@ -429,8 +429,7 @@ a:hover {
     width: 14rem;
     padding: 0rem 0.5rem 0.5rem 0.5rem;
     background-color: hsl(216, 15%, 70%);
-    margin: 6rem 0 0 0;
-
+    border-top: 6rem solid hsl(216, 15%, 70%);
 }
 
 .tocset td {
