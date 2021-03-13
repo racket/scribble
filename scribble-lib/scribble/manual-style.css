@@ -394,15 +394,8 @@ a:hover {
     right: 2em;
     height: 0em;
     width: 13em;
-    margin: 0em 0em 0em -13em;
-}
-
-@media all and (max-width:1340px) {
-    /* avoid disappearing left note if display area is narrow */
-    .refparaleft, .refelemleft {
-        margin: 0em 0em 0em 0em;
-        right: 0em;
-     }
+    margin: 0em 0em 0em 0em;
+    display: contents;
 }
 
 .refcolumnleft {
