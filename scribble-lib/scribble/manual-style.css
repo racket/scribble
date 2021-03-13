@@ -197,7 +197,7 @@ a:hover {
     top: 0;
     left: 0;
     margin-bottom: 0;
-    border-bottom: 0;
+    border-bottom: 1px solid white;
 }
 
 .navsettop a, .navsetbottom a {
