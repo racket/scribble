@@ -198,6 +198,7 @@ a:hover {
     left: 0;
     margin-bottom: 0;
     border-bottom: 1px solid white;
+    padding-bottom: .1em;
 }
 
 .navsettop a, .navsetbottom a {
@@ -442,6 +443,7 @@ a:hover {
 .tocview {
     text-align: left;
     background-color: inherit;
+    margin-top: 1em;
 }
 
 
