@@ -55,7 +55,8 @@
                 [style-extra-files null]
                 [extra-files null]
                 [image-preferences null]
-                [helper-file-prefix #f])
+                [helper-file-prefix #f]
+                [keep-existing-helper-files? #f])
 
     (define/public (current-render-mode)
       '())
@@ -1015,15 +1016,25 @@
           (let ([normalized (normal-case-path (simplify-path (path->complete-path fn)))])
             (or (and (not content)
                      (hash-ref copied-srcs normalized #f))
-                (let ([src-dir (path-only fn)]
-                      [dest-dir (get-dest-directory #t)]
-                      [fn (file-name-from-path fn)])
+                (let* ([src-dir (path-only fn)]
+                       [dest-dir (get-dest-directory #t)]
+                       [fn (file-name-from-path fn)]
+                       [dest-file-dir (or dest-dir (current-directory))])
                   (let ([src-file (build-path (or src-dir (current-directory)) fn)]
-                        [dest-file (build-path (or dest-dir (current-directory))
+                        [dest-file (build-path dest-file-dir
                                                (if (and private-name?
                                                         helper-file-prefix)
-                                                   (string-append helper-file-prefix
-                                                                  (path-element->string fn))
+                                                   (let-values ([(base name dir?) (split-path helper-file-prefix)])
+                                                     (cond
+                                                       [dir? (build-path helper-file-prefix fn)]
+                                                       [else
+                                                        (define new-fn
+                                                          (bytes->path-element
+                                                           (bytes-append (path-element->bytes name)
+                                                                         (path-element->bytes fn))))
+                                                        (if (eq? base 'relative)
+                                                            new-fn
+                                                            (build-path base new-fn))]))
                                                    fn))]
                         [next-file-name (lambda (dest)
                                           (let-values ([(base name dir?) (split-path dest)])
@@ -1072,13 +1083,14 @@
                                            [not-same
                                             (lambda (delete-dest)
                                               (cond
-                                               [(hash-ref copied-dests normalized-dest-file #f)
-                                                ;; need a different file/directory
-                                                (loop (next-file-name dest-file))]
-                                               [else
-                                                ;; replace the file/directory
-                                                (delete-dest dest-file)
-                                                (values dest-file normalized-dest-file)]))])
+                                                [(or keep-existing-helper-files?
+                                                     (hash-ref copied-dests normalized-dest-file #f))
+                                                 ;; need a different file/directory
+                                                 (loop (next-file-name dest-file))]
+                                                [else
+                                                 ;; replace the file/directory
+                                                 (delete-dest dest-file)
+                                                 (values dest-file normalized-dest-file)]))])
                                       (cond
                                        [(and (file-exists? src-file)
                                              (file-exists? dest-file))
@@ -1105,6 +1117,8 @@
                                         (values dest-file normalized-dest-file)])))])
                       (unless (or (file-exists? dest-file)
                                   (directory-exists? dest-file))
+                        (let-values ([(dir name dir?) (split-path dest-file)])
+                          (make-directory* dir))
                         (if content
                             (call-with-output-file*
                              dest-file
@@ -1113,7 +1127,8 @@
                                 (copy-directory/files src-file dest-file)
                                 (copy-file src-file dest-file))))
                       (hash-set! copied-dests normalized-dest-file #t)
-                      (let ([result (path->string (file-name-from-path dest-file))])
+                      (let ([result (path->string (find-relative-path (simplify-path dest-file-dir)
+                                                                      normalized-dest-file))])
                         (unless content
                           (hash-set! copied-srcs normalized result))
                         result))))))))

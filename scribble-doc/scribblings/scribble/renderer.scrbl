@@ -46,6 +46,7 @@ function to render a document.
                  [#:render-mixin render-mixin (class? . -> . class?) @#,html:render-mixin]
                  [#:dest-dir dest-dir (or/c #f path-string?) #f]
                  [#:helper-file-prefix helper-file-prefix (or/c #f string?) #f]
+                 [#:keep-existing-helper-files? keep-existing-helper-files? any/c #f]
                  [#:prefix-file prefix-file (or/c #f path-string?) #f]
                  [#:style-file style-file (or/c #f path-string?) #f]
                  [#:style-extra-files style-extra-files (listof path-string?) #f]
@@ -73,10 +74,10 @@ The @racket[dest-dir] argument determines the output directory, which
 is created using @racket[make-directory*] if it is non-@racket[#f] and
 does not exist already.
 
-The @racket[helper-file-prefix], @racket[prefix-file],
-@racket[style-file], @racket[style-extra-files], and
-@racket[extra-files] arguments are passed on to the @racket[render%]
-constructor.
+The @racket[helper-file-prefix], @racket[keep-existing-helper-files?],
+@racket[prefix-file], @racket[style-file], @racket[style-extra-files],
+and @racket[extra-files] arguments are passed on to the
+@racket[render%] constructor.
 
 The @racket[image-preferences] argument specified preferred formats
 for image files and conversion, where formats listed earlier in the
@@ -107,7 +108,11 @@ If @racket[warn-undefined?] is a true value, then references to
 missing cross-reference targets trigger a warning message on the
 current error port.
 
-@history[#:changed "1.4" @elem{Added the @racket[#:image-preferences] argument.}]}
+@history[#:changed "1.4" @elem{Added the @racket[#:image-preferences] argument.}
+         #:changed "1.40" @elem{Added the @DFlag{keep-existing-helper-files?}
+                                initialization argument and
+                                fixed @DFlag{helper-file-prefix} to work correctly
+                                for HTML output.}]}
 
 
 @section{Base Renderer}
@@ -269,6 +274,8 @@ Represents a renderer.
                  [style-file (or/c path-string? #f) #f]
                  [style-extra-files (listof path-string?) null]
                  [extra-files (listof path-string?) null]
+                 [helper-file-prefix (or/c path-string? #f) #f]
+                 [keep-existing-helper-files? any/c #f]
                  [image-preferences (listof (or/c 'ps 'pdf 'png 'svg 'gif)) null])]{
 
 Creates a renderer whose output will go to @racket[dest-dir]. For
@@ -297,13 +304,26 @@ information.
 The @racket[extra-files] argument names files to be copied to the
 output location, such as image files or extra configuration files.
 
+The @racket[helper-file-prefix] argument supplies a prefix that is
+used for any copied or generated files used by the main destination
+file. This prefix is not used for files listed in
+@racket[extra-files]. If @racket[keep-existing-helper-files?] is true,
+then any existing file that would otherwise be overwritten with a
+helper file is instead preserved, and the helper file is written to a
+different name, unless its content would be exactly the same as the
+existing file.
+
 The @racket[image-preferences] argument specified preferred formats
 for image files and conversion, where formats listed earlier in the
 list are more preferred. The renderer may not support all of the
 formats listed in @racket[image-preferences].
 
 @history[#:changed "1.4" @elem{Added the @racket[image-preferences]
-                               initialization argument.}]}
+                               initialization argument.}
+         #:changed "1.40" @elem{Added the @DFlag{keep-existing-helper-files?}
+                                initialization argument and
+                                fixed @DFlag{helper-file-prefix} to work correctly
+                                for HTML output.}]}
 
 @defmethod[(traverse [parts (listof part?)]
                      [dests (listof path-string?)])

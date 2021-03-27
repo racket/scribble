@@ -60,7 +60,11 @@ Use @DFlag{dest-name} to specify a @|fn| other than the default name,
 but only when a single source file is provided. Use the @DFlag{dest}
 flag to specify a destination directory (for any number of source
 files). Use @DFlag{dest-base} to add a prefix to the name of each
-support file that is generated or copied to the destination.
+support file that is generated or copied to the destination; the prefix
+can contain a directory path, and a non-directory ending element is
+used as a prefix on a support-file name. Use @DFlag{keep-at-dest-base}
+to avoid overwriting existing files with support files (but existing
+files are used when the content matches what would be written otherwise).
 
 After all flags, provide one or more document sources, where each
 source declares a module. The module should either have a @racket[doc]
@@ -78,7 +82,10 @@ documents that are built separately.
 
 @history[#:changed "1.4" @elem{Added @DFlag{dvipdf}.}
          #:changed "1.18" @elem{Added @DFlag{doc-binding}.}
-         #:changed "1.19" @elem{Added @DFlag{xelatex}.}]
+         #:changed "1.19" @elem{Added @DFlag{xelatex}.}
+         #:changed "1.40" @elem{Added @DFlag{keep-at-dest-base} and
+                                fixed @DFlag{dest-base} to work correctly
+                                for HTML output.}]
 
 @section{Extra and Format-Specific Files}
 

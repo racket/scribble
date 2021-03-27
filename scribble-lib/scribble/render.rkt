@@ -15,6 +15,7 @@
            (class? . -> . class?)
            #:dest-dir (or/c #f path-string?)
            #:helper-file-prefix (or/c #f string?)
+           #:keep-existing-helper-files? any/c
            #:prefix-file (or/c #f path-string?)
            #:style-file (or/c #f path-string?)
            #:style-extra-files (listof path-string?)
@@ -35,6 +36,7 @@
                 #:render-mixin [render-mixin html:render-mixin]
                 #:dest-dir [dest-dir #f]
                 #:helper-file-prefix [helper-file-prefix #f]
+                #:keep-existing-helper-files? [keep-existing-helper-files? #f]
                 #:prefix-file [prefix-file #f]
                 #:style-file [style-file #f]
                 #:style-extra-files [style-extra-files null]
@@ -56,7 +58,8 @@
                        [style-extra-files style-extra-files]
                        [extra-files extra-files]
                        [image-preferences image-preferences]
-                       [helper-file-prefix helper-file-prefix])])
+                       [helper-file-prefix helper-file-prefix]
+                       [keep-existing-helper-files? keep-existing-helper-files?])])
     (when redirect
       (send renderer set-external-tag-path redirect))
     (when redirect-main
