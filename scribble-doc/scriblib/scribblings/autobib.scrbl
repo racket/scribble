@@ -291,3 +291,11 @@ same way as by @racket[make-bib].}
   
   @history[#:added "1.5"]
 }
+
+@defparam[url-rendering rendering-function (-> string? any)]{
+  Accepts a URL as a string and renders it for use in a bibliography entry.
+  
+  Defaults to @racket[(λ (url) (link url (make-element 'url (list url))))].
+  
+  @history[#:added "1.39"]
+}

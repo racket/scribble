@@ -33,9 +33,13 @@
            (->* [any/c] [#:pages (or/c (list/c any/c any/c) #f) #:series any/c #:volume any/c #:publisher any/c] element?)])
          other-authors
          editor
-         abbreviate-given-names)
+         abbreviate-given-names
+         
+         #; (String[url] -> Element)
+         url-rendering)
 
 (define abbreviate-given-names (make-parameter #f))
+(define url-rendering (make-parameter (λ (url) (link url (make-element 'url (list url))))))
 
 (define autobib-style-extras
   (let ([abs (lambda (s)
@@ -380,7 +384,7 @@
                                   (decode-content (list (render-date-bib date))))
                             ".")
                      null)
-                 (if url `(" " ,(link url (make-element 'url (list url)))) null)
+                 (if url `(" " ,[(url-rendering) url]) null)
                  (if note `(" " ,note) null))))
 
 (define-syntax (define-cite stx)
@@ -454,7 +458,7 @@
                                  (list title)
                                  (if location (decode-content (list location)) null)
                                  (if date (decode-content (list (default-render-date-bib parsed-date))) null)
-                                 (if url (list (link url (make-element 'url (list url)))) null)
+                                 (if url (list [(url-rendering) url]) null)
                                  (if note (list note) null))))
                  ""))
 
