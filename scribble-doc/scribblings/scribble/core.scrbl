@@ -1115,10 +1115,10 @@ eventually produce @tech{content}, rather than a @tech{block}.}
                             [sizer (-> any/c)]
                             [plain (-> any/c)])]{
 
-The @racket[render] procedure's arguments are the same as for
+The @racket[resolve] procedure's arguments are the same as for
 @racket[delayed-block], but the result is @techlink{content}. 
 Unlike @racket[delayed-block], the
-result of the @racket[render] procedure's argument is remembered on
+result of the @racket[resolve] procedure's argument is remembered on
 the first call for re-use for a particular resolve pass.
 
 The @racket[sizer] field is a procedure that produces a substitute
