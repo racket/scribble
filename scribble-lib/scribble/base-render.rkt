@@ -1127,7 +1127,7 @@
                                 (copy-directory/files src-file dest-file)
                                 (copy-file src-file dest-file))))
                       (hash-set! copied-dests normalized-dest-file #t)
-                      (let ([result (path->string (find-relative-path (simplify-path dest-file-dir)
+                      (let ([result (path->string (find-relative-path (simplify-path (path->complete-path dest-file-dir))
                                                                       normalized-dest-file))])
                         (unless content
                           (hash-set! copied-srcs normalized result))
