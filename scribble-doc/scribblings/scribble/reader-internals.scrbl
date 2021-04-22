@@ -65,34 +65,24 @@ attached to the result.  This property can be used to give different
 meanings to expressions from the datum and the body parts, for
 example, implicitly quoted keywords:
 
-@; FIXME: a bit of code duplication here
 @def+int[
   #:eval read-eval
-  (define-syntax (foo stx)
-    (let ([p (syntax-property stx 'scribble)])
-      (printf ">>> ~s\n" (syntax->datum stx))
-      (syntax-case stx ()
-        [(_ x ...)
-         (and (pair? p) (eq? (car p) 'form) (even? (cadr p)))
-         (let loop ([n (/ (cadr p) 2)]
-                    [as '()]
-                    [xs (syntax->list #'(x ...))])
-           (if (zero? n)
-             (with-syntax ([attrs (reverse as)]
-                           [(x ...) xs])
-               #'(list 'foo `attrs x ...))
-             (loop (sub1 n)
-                   (cons (with-syntax ([key (car xs)]
-                                       [val (cadr xs)])
-                           #'(key ,val))
-                         as)
-                   (cddr xs))))])))
+  (define-syntax-parse-rule (foo x ...)
+    #:do
+    [(match-define (list 'form (? even? datum-count) _)
+      (syntax-property this-syntax 'scribble))
+    (printf ">>> ~s\n" (syntax->datum this-syntax))]
+
+    #:with (non-attr-x ...) (drop (syntax->list #'(x ...)) datum-count)
+    #:with ((~seq key val) ...) (take (syntax->list #'(x ...)) datum-count)
+
+    (list 'foo `((key ,val) ...) non-attr-x ...))
   (eval:alts
    (code:line
     @#,tt["@foo[x 1 y (* 2 3)]{blah}"])
     ;; Unfortunately, expressions are preserved by `def+int'
     ;; using `quote', not `quote-syntax' (which would create all sorts
-    ;; or binding trouble), so we manually re-attach the property:
+    ;; of binding trouble), so we manually re-attach the property:
     (eval (syntax-property #'@foo[x 1 y (* 2 3)]{blah}
                            'scribble '(form 4 1))))
 ]
@@ -109,26 +99,18 @@ implement a verbatim environment: drop indentation strings, and use
 the original source strings instead of the single-newline string.  Here
 is an example of this.
 
-@; FIXME: a bit of code duplication here
 @def+int[
   #:eval read-eval
-  (define-syntax (verb stx)
-    (syntax-case stx ()
-      [(_ cmd item ...)
-       #`(cmd
-          #,@(let loop ([items (syntax->list #'(item ...))])
-               (if (null? items)
-                 '()
-                 (let* ([fst  (car items)]
-                        [prop (syntax-property fst 'scribble)]
-                        [rst  (loop (cdr items))])
-                   (cond [(eq? prop 'indentation) rst]
-                         [(not (and (pair? prop)
-                                    (eq? (car prop) 'newline)))
-                          (cons fst rst)]
-                         [else (cons (datum->syntax-object
-                                      fst (cadr prop) fst)
-                                     rst)])))))]))
+(define-syntax-parse-rule (verb cmd item ...)
+  #:with (item-or-original-line ...)
+  (for*/list ([item (in-syntax #'(item ...))]
+              [prop (in-value (syntax-property item 'scribble))]
+              #:unless (equal? prop 'indentation))
+    (match prop
+      [(list 'newline original-line)
+       (datum->syntax item original-line item)]
+      [_ item]))
+  (cmd item-or-original-line ...))
   (eval:alts
    (code:line
     @#,tt["@verb[string-append]{"]
