@@ -5,7 +5,8 @@
                               use-at-readtable)))
 
 @(define read-eval (make-base-eval))
-@(interaction-eval #:eval read-eval (require (for-syntax racket/base)))
+@(interaction-eval #:eval read-eval (require (for-syntax racket/base)
+                                             syntax/parse/define))
 
 @title[#:tag "reader-internals"]{@"@" Reader Internals}
 
