@@ -60,7 +60,7 @@
   (define plain-strs (fetch-strs-for-single-tag tag cache))
   (cond
     [(and plain-strs (definition-tag? tag))
-     (define constructor-strs 
+     (define constructor-strs
        (fetch-strs-for-single-tag
         (class/interface-tag->constructor-tag
          (definition-tag->class/interface-tag tag))
@@ -119,9 +119,9 @@
     (set-blueboxes-cache-method->tags! cache mtd-table)
     (set-blueboxes-cache-info-or-paths! cache the-cache)))
 
-(: compute-methods-table : (Listof Bluebox-Info) -> (HashTable Symbol (Listof Method-Tag)))
+(: compute-methods-table : (Listof Bluebox-Info) -> (Mutable-HashTable Symbol (Listof Method-Tag)))
 (define (compute-methods-table lst)
-  (: meth-ht : (HashTable Symbol (Listof Method-Tag)))
+  (: meth-ht : (Mutable-HashTable Symbol (Listof Method-Tag)))
   (define meth-ht (make-hash))
   (for ([a-bluebox-info (in-list lst)])
     (match a-bluebox-info
@@ -163,7 +163,7 @@
          (port-count-lines! port)
          (define first-line (read-line port))
          (define pos (file-position port))
-         (define desed 
+         (define desed
            (with-handlers ([exn:fail? (λ ([x : exn:fail])
                                         (log-warning "Failed to deserialize ~a: ~a"
                                                      x
@@ -195,4 +195,3 @@
    Tag
    (Listof (Pairof Natural
                    Natural))))
-
