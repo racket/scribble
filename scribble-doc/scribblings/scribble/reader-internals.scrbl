@@ -5,7 +5,9 @@
                               use-at-readtable)))
 
 @(define read-eval (make-base-eval))
-@(interaction-eval #:eval read-eval (require (for-syntax racket/base)
+@(interaction-eval #:eval read-eval (require (for-syntax racket/base
+                                                         racket/match
+                                                         racket/list)
                                              syntax/parse/define))
 
 @title[#:tag "reader-internals"]{@"@" Reader Internals}
@@ -102,16 +104,16 @@ is an example of this.
 
 @def+int[
   #:eval read-eval
-(define-syntax-parse-rule (verb cmd item ...)
-  #:with (item-or-original-line ...)
-  (for*/list ([item (in-syntax #'(item ...))]
-              [prop (in-value (syntax-property item 'scribble))]
-              #:unless (equal? prop 'indentation))
-    (match prop
-      [(list 'newline original-line)
-       (datum->syntax item original-line item)]
-      [_ item]))
-  (cmd item-or-original-line ...))
+  (define-syntax-parse-rule (verb cmd item ...)
+    #:with (item-or-original-line ...)
+    (for*/list ([item (in-syntax #'(item ...))]
+                [prop (in-value (syntax-property item 'scribble))]
+                #:unless (equal? prop 'indentation))
+      (match prop
+        [(list 'newline original-line)
+        (datum->syntax item original-line item)]
+        [_ item]))
+    (cmd item-or-original-line ...))
   (eval:alts
    (code:line
     @#,tt["@verb[string-append]{"]
