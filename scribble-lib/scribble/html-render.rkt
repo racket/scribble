@@ -2065,9 +2065,15 @@
   ;; going in (or if d is #f)
   (if (not (and d (cond
                     [(equal? p-in? d-in?) #t]
-                    [d-in? (error 'from-root
-                                  "got a link from the PLT tree going out; ~e"
-                                  p)]
+                    [d-in?
+                     #f
+                     ;; This sanity check can be useful, but it doesn't work
+                     ;; with layered installations and 'doc-search-dirs
+                     ;; configuration
+                     #;
+                     (error 'from-root
+                            "got a link from the PLT tree going out; ~e"
+                            p)]
                     [else #f])
 		  ;; On Windows, need to be on the same drive, at least:
 		  (equal? (normalize (car e-d))
