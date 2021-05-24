@@ -778,7 +778,7 @@ and as the rendered forms of the keys within the index.}
 @defproc[(index-section [#:tag tag (or/c #f string?) "doc-index"])
          part?]{
 
-Produces a part that shows the index the enclosing document. The
+Produces a part that shows the index of the enclosing document. The
 optional @racket[tag] argument is used as the index section's tag.}
 
 
