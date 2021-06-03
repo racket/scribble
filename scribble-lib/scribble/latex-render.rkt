@@ -1324,6 +1324,11 @@
                                 [else
                                  (cond
                                   [(char<=? #\uAC00 c #\uD7AF) ; Korean Hangul
+                                   ;; This likely will not work right if it shows up in a section
+                                   ;; title as a table-of-contents entry. Originally, this approach
+                                   ;; was paired with the `tocstyle` package, which may have made it
+                                   ;; work, but that package is now deprecated and does not seem to
+                                   ;; solve the problem.
                                    (format "\\begin{CJK}{UTF8}{mj}~a\\end{CJK}" c)]
                                   [else
                                    ;; Detect characters that can be formed with combining characters
