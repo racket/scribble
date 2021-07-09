@@ -7,7 +7,8 @@
          (prefix-in markdown: "markdown-render.rkt")
          (prefix-in html:     "html-render.rkt")
          (prefix-in latex:    "latex-render.rkt")
-         (prefix-in pdf:      "pdf-render.rkt"))
+         (prefix-in pdf:      "pdf-render.rkt")
+         (prefix-in odt:      "odt-render.rkt"))
 
 (module test racket/base)
 
@@ -80,6 +81,9 @@
       (unless (exact-nonnegative-integer? v)
         (raise-user-error 'scribble (format "bad section depth: ~a" n)))
       (current-render-mixin (latex:make-render-part-mixin v)))]
+   [("--odt") "generate Open Document Format word processor file"
+    (current-html #f)
+    (current-render-mixin odt:render-mixin)]
    [("--text") "generate text-format output"
     (current-html #f)
     (current-render-mixin text:render-mixin)]
