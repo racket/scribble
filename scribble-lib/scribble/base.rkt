@@ -669,7 +669,7 @@
 (define (margin-note #:left? [left? #f] . c)
   (make-nested-flow
    (make-style (if left? "refparaleft" "refpara")
-               '(command never-indents))
+               (cons (alt-tag "aside") '(command never-indents)))
    (list
     (make-nested-flow
      (make-style (if left? "refcolumnleft" "refcolumn")
