@@ -1267,7 +1267,8 @@
                                 [(#\⋈) "$\\bowtie$"]
                                 [(#\⊆) "$\\subseteq$"]
                                 [(#\⊇) "$\\supseteq$"]
-                                [(#\≌) "$\\cong$"]
+                                [(#\≌) "$\\cong$"] ;; this is wrong but left in for backwards compatibility
+                                [(#\≅) "$\\cong$"]
                                 [(#\⊏) "$\\sqsubset$"]
                                 [(#\⊐) "$\\sqsupset$"]
                                 [(#\≠) "$\\neq$"]
