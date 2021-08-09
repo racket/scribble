@@ -1,6 +1,13 @@
 # Scribble
 
-This the source for the Racket packages: "scribble", "scribble-doc", "scribble-html-lib", "scribble-lib", "scribble-test", "scribble-text-lib".
+
+Scribble: The Racket Documentation Tool
+Matthew Flatt and Eli Barzilay
+Scribble is a collection of tools for creating prose documents—papers, books, library documentation, etc.—in HTML or PDF (via Latex) form. More generally, Scribble helps you write programs that are rich in textual content, whether the content is prose to be typeset or any other form of text to be generated programmatically.
+
+For mor information see the [Scribble documentation](https://docs.racket-lang.org/scribble/index.html).
+
+This repository includes the source for the Racket packages: "scribble", "scribble-doc", "scribble-html-lib", "scribble-lib", "scribble-test", "scribble-text-lib".
 
 ### Contributing
 
