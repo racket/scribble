@@ -200,6 +200,10 @@
                      (flow-paragraphs (decode-flow (splice-run s)))
                      (list s))))
 
+(define-syntax (defsubidform stx)
+  (syntax-case stx ()
+    [(_ . rest) #'(into-blockquote (defidform . rest))]))
+
 (define-syntax (defsubform stx)
   (syntax-case stx ()
     [(_ . rest) #'(into-blockquote (defform . rest))]))
