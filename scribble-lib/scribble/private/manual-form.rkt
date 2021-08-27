@@ -20,7 +20,7 @@
          specform specform/subs
          specsubform specsubform/subs specspecsubform specspecsubform/subs
          specsubform/inline
-         defsubform defsubform*
+         defsubidform defsubform defsubform*
          racketgrammar racketgrammar*
          (rename-out [racketgrammar schemegrammar]
                      [racketgrammar* schemegrammar*])
