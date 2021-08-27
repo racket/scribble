@@ -1185,7 +1185,7 @@ Like @racket[defidform], but @racket[id] (or the result of
 inline element. Use this form sparingly, because the typeset form does
 not stand out to the reader as a specification of @racket[id].}
 
-@defform[(defsubidform id)]{
+@defform[(defsubidform id pre-flow ...)]{
 
 Like @racket[defidform], but with indenting on the left for both the specification and the @racket[pre-flow]s.}
 
