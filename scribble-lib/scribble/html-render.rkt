@@ -2057,7 +2057,8 @@
 (define (explode p) (explode-path p))
 
 (define in-plt?
-  (let ([roots (map explode (filter values (list (find-doc-dir) (find-collects-dir))))])
+  ;; temporarily allow user docs to use relative paths
+  (let ([roots (map explode (filter values (list (find-doc-dir) (find-user-doc-dir) (find-user-pkgs-dir) (find-collects-dir))))])
     (lambda (path)
       (for/or ([root (in-list roots)])
         (let loop ([path  path] [root root])
