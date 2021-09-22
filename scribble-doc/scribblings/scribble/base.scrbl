@@ -663,7 +663,7 @@ to link to the section.
                  [#:doc module-path (or/c module-path? #f) #f]
                  [#:tag-prefixes prefixes (or/c (listof string?) #f) #f]
                  [#:underline? underline? any/c #t]
-                 [#:link-render-style ref-style (or/c link-render-style? #f)])
+                 [#:link-render-style ref-style (or/c link-render-style? #f) #f])
          element?]{
 
 Like @racket[secref], but if the rendered form of the reference starts
