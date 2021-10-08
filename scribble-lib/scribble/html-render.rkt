@@ -1018,14 +1018,16 @@
                   "../index.html")
          `[onclick . ,(format "return GotoPLTRoot(\"~a\");" (version))]))
       (define tocset-toggle
-        (make-element
-         (make-style "tocsettoggle"
-                     (list
-                      (make-target-url "javascript:void(0);")
-                      (make-attributes
-                       '([title . "show/hide table of contents"]
-                         [onclick . "TocsetToggle();"]))))
-         "contents"))
+        (make-element "tocsettoggle"
+                      (list
+                       sep-element
+                       (make-element
+                        (make-style #f (list
+                                        (make-target-url "javascript:void(0);")
+                                        (make-attributes
+                                         '([title . "show/hide table of contents"]
+                                           [onclick . "TocsetToggle();"]))))
+                        "contents"))))
       (define navleft
         `(span ([class "navleft"])
            ,@(if search-box?
@@ -1033,7 +1035,7 @@
                  (list `(div ([class "nosearchform"]))))
            ,@(render
               sep-element
-              (and up-path (list (make-element top-link top-content) sep-element))
+              (and up-path (make-element top-link top-content))
               tocset-toggle
               ;; sep-element
               ;; (make-element
