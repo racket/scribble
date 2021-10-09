@@ -16,3 +16,6 @@
 (define pkg-authors '(mflatt eli))
 (define build-deps '("racket-index"))
 (define update-implies '("scribble-lib"))
+
+(define license
+  '(Apache-2.0 OR MIT))

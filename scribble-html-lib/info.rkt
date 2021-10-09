@@ -9,3 +9,6 @@
 (define pkg-desc "Language for HTML with embedded Racket code")
 
 (define pkg-authors '(mflatt eli))
+
+(define license
+  '(Apache-2.0 OR MIT))

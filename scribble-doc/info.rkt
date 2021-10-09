@@ -26,3 +26,6 @@
 (define pkg-desc "documentation part of \"scribble\"")
 
 (define pkg-authors '(mflatt eli))
+
+(define license
+  '(Apache-2.0 OR MIT))
