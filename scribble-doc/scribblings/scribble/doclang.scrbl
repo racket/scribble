@@ -28,7 +28,7 @@ doc
 }|
 
 The behavior of @racketmodname[scribble/doclang2] can be customized by
-providing @racket[#:id], @racket[#:post-process], and @racket[#:exprs]
+providing @racket[#:id], @racket[#:post-process], @racket[#:begin], and @racket[#:exprs]
 arguments at the very beginning of the module.
 
 @itemize[
@@ -39,8 +39,14 @@ is @racket[doc].}
 @item{@racket[#:post-process] processes the body of the module after
 @racket[decode].  By default, this is @racket[values].}
 
+@item{@racket[#:begin] prepends an additional sequence of expressions to the
+beginning of the module's body outside of consideration for the document content.
+For example, the default @racket[configure-runtime] submodule might be replaced
+using @racket[#:begin], because using @racket[#:exprs] nests the replacement too
+deeply to work as an override. By default, this is the empty sequence @racket[()].}
+
 @item{@racket[#:exprs] prepends an additional sequence of expressions to the
-beginning of the module's body.  By default, this is the empty sequence
+beginning of the module's body, but after @racket[#:begin].  By default, this is the empty sequence
 @racket[()].}
 
 ]
@@ -85,13 +91,15 @@ also adds an additional binding with a count of the parts in the document:
 number-of-parts
 documentation
 }|
-}
+
+
+@history[#:changed "1.41" @elem{Added @racket[#:begin].}]}
 
 
 
 @section{@racketmodname[scribble/doclang]}
 @defmodulelang[scribble/doclang]{The @racketmodname[scribble/doclang] language
-provides the same functionality as @racketmodname[scribble/doclang2], where the
+provides most of the same functionality as @racketmodname[scribble/doclang2], where the
 configuration options are positional and mandatory.  The first three elements
 in the @racket[#%module-begin]'s body must be the @racket[id],
 @racket[post-process], and @racket[exprs] arguments.

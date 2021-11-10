@@ -1,9 +1,9 @@
 #lang racket/base
 
 ;; A slightly nicer version of doclang where the parameters are keyword-based
-;; rather than positional.  Delegates off to the original doclang.
+;; rather than positional.
 
-(require (prefix-in doclang: "doclang.rkt")
+(require "private/doc-begin.rkt"
          (for-syntax racket/base
                      syntax/parse)) 
 
@@ -16,7 +16,8 @@
   (syntax-parse stx
     [(_ (~or (~optional (~seq #:id id))
              (~optional (~seq #:post-process post-process))
-             (~optional (~seq #:exprs exprs)))
+             (~optional (~seq #:exprs exprs))
+             (~optional (~seq #:begin (decl ...))))
         ...
         . body)
      (with-syntax ([id (or (attribute id) 
@@ -25,4 +26,6 @@
                                      #'values)]
                    [exprs (or (attribute exprs)
                               #'())])
-       #'(doclang:#%module-begin id post-process exprs . body))]))
+       #'(#%module-begin
+          (~? (~@ decl ...))
+          (doc-begin id post-process exprs . body)))]))
