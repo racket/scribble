@@ -11,4 +11,5 @@
   (syntax-case stx ()
     [(_ id post-process exprs . body)
      #'(#%module-begin
+        (module configure-runtime racket/base (require scribble/base/lang/configure-runtime))
         (doc-begin id post-process exprs . body))]))

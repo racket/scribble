@@ -17,6 +17,9 @@
 
 ;; ----------------------------------------
 
+(module configure-runtime racket/base
+  (require scribble/base/lang/configure-runtime))
+
 (define-syntax-rule (title-like-contract)
   (->* ()
        (#:tag (or/c #f string? (listof string?))

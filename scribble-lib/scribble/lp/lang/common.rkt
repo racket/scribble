@@ -130,6 +130,7 @@
          [(module name lang (mb . stuff))
           (begin (extract-chunks #'stuff)
                  #`(#%module-begin
+                    (module configure-runtime racket/base (require scribble/base/lang/configure-runtime))
                     (tangle body0)
                     ;; The `doc` submodule allows a `scribble/lp` module
                     ;; to be provided to `scribble`:
