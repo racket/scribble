@@ -40,7 +40,7 @@
 
 (define-syntax-parameter current-class #f)
 
-(define-struct decl (name super app-mixins intfs ranges mk-head body))
+(define-struct decl (name super app-mixins intfs intfs/no-inherit ranges mk-head body))
 (define-struct constructor (def))
 (define-struct meth (names mode def))
 (define-struct spec (def))
@@ -78,6 +78,7 @@
                                  (and key
                                       (cons key (lookup-cls/intf d ri key)))))
                              (append
+                              ;; we skip cls/intf-intfs/no-inherit here
                               (reverse (cls/intf-intfs (cdr super)))
                               (if (cls/intf-super (cdr super))
                                 (list (cls/intf-super (cdr super)))
@@ -142,6 +143,7 @@
                                                   (decl-super decl)))
                     (id-info (decl-super decl)))
                (map id-info (decl-intfs decl))
+               (map id-info (decl-intfs/no-inherit decl))
                (append-map (lambda (m)
                              (let loop ([l (meth-names m)])
                                (cond [(null? l) null]
@@ -186,7 +188,11 @@
           (flow-paragraphs
            (decode-flow (build-body decl post)))))))))))
 
-(define (*class-doc kind stx-id super intfs ranges whole-page? make-index-desc link?)
+(define (*class-doc kind stx-id super all-intfs ranges whole-page? make-index-desc link?)
+  (define intfs (for/list ([intf (in-list all-intfs)])
+                  (syntax-case intf ()
+                    [(#:no-inherit intf) #'intf]
+                    [_ intf])))
   (make-table
    boxed-style
    (append
@@ -276,25 +282,42 @@
           [(splice? (car l)) (append (splice-run (car l)) (loop (cdr l)))]
           [else (cons (car l) (loop (cdr l)))])))
 
+(define (make-decl* name super app-mixins intfs ranges mk-head body)
+  (define normal-intfs (for/list ([intf (in-list intfs)]
+                                  #:when (identifier? intf))
+                         intf))
+  (define no-inherit-intfs (for/list ([intf (in-list intfs)]
+                                      #:unless (identifier? intf))
+                             (syntax-case intf ()
+                               [(#:no-inherit intf) #'intf])))
+  (make-decl name
+             super
+             app-mixins
+             normal-intfs
+             no-inherit-intfs
+             ranges
+             mk-head
+             body))
+
 (define-syntax-rule (*defclass *include-class link-target? name super (intf ...) body ...)
   (let ([link? link-target?])
     (*include-class
      (syntax-parameterize ([current-class (quote-syntax name)])
-       (make-decl (quote-syntax/loc name)
-                  (extract-super super)
-                  (extract-app-mixins super)
-                  (list (quote-syntax/loc intf) ...)
-                  null
-                  (lambda (whole-page?)
-                    (list (*class-doc 'class
-                                      (quote-syntax/loc name)
-                                      (quote-syntax/loc super)
-                                      (list (quote-syntax intf) ...)
-                                      null
-                                      whole-page?
-                                      make-class-index-desc
-                                      link?)))
-                  (flatten-splices (list body ...))))
+       (make-decl* (quote-syntax/loc name)
+                   (extract-super super)
+                   (extract-app-mixins super)
+                   (list (quote-syntax/loc intf) ...)
+                   null
+                   (lambda (whole-page?)
+                     (list (*class-doc 'class
+                                       (quote-syntax/loc name)
+                                       (quote-syntax/loc super)
+                                       (list (quote-syntax intf) ...)
+                                       null
+                                       whole-page?
+                                       make-class-index-desc
+                                       link?)))
+                   (flatten-splices (list body ...))))
      link?)))
 
 (define-syntax defclass
@@ -315,22 +338,22 @@
   (let ([link? #t])
     (*include-class
      (syntax-parameterize ([current-class (quote-syntax name)])
-       (make-decl (quote-syntax/loc name)
-                  #f
-                  null
-                  (list (quote-syntax/loc intf) ...)
-                  null
-                  (lambda (whole-page?)
-                    (list
-                     (*class-doc 'interface
-                                 (quote-syntax/loc name)
-                                 #f
-                                 (list (quote-syntax intf) ...)
-                                 null
-                                 whole-page?
-                                 make-interface-index-desc
-                                 link?)))
-                  (list body ...)))
+       (make-decl* (quote-syntax/loc name)
+                   #f
+                   null
+                   (list (quote-syntax/loc intf) ...)
+                   null
+                   (lambda (whole-page?)
+                     (list
+                      (*class-doc 'interface
+                                  (quote-syntax/loc name)
+                                  #f
+                                  (list (quote-syntax intf) ...)
+                                  null
+                                  whole-page?
+                                  make-interface-index-desc
+                                  link?)))
+                   (list body ...)))
      link?)))
 
 (define-syntax-rule (definterface name (intf ...) body ...)
@@ -344,22 +367,22 @@
   (let ([link? #t])
     (*include-class
      (syntax-parameterize ([current-class (quote-syntax name)])
-       (make-decl (quote-syntax/loc name)
-                  #f
-                  null
-                  (list (quote-syntax/loc domain) ...)
-                  (list (quote-syntax/loc range) ...)
-                  (lambda (whole-page?)
-                    (list
-                     (*class-doc 'mixin
-                                 (quote-syntax/loc name)
-                                 #f
-                                 (list (quote-syntax domain) ...)
-                                 (list (quote-syntax range) ...)
-                                 whole-page?
-                                 make-mixin-index-desc
-                                 link?)))
-                  (list body ...)))
+       (make-decl* (quote-syntax/loc name)
+                   #f
+                   null
+                   (list (quote-syntax/loc domain) ...)
+                   (list (quote-syntax/loc range) ...)
+                   (lambda (whole-page?)
+                     (list
+                      (*class-doc 'mixin
+                                  (quote-syntax/loc name)
+                                  #f
+                                  (list (quote-syntax domain) ...)
+                                  (list (quote-syntax range) ...)
+                                  whole-page?
+                                  make-mixin-index-desc
+                                  link?)))
+                   (list body ...)))
      link?)))
 
 (define-syntax-rule (defmixin name (domain ...) (range ...) body ...)
@@ -533,4 +556,4 @@
 
 (define (lookup-cls/intf d ri tag)
   (let ([v (resolve-get d ri `(cls/intf ,(cadr tag)))])
-    (or v (make-cls/intf "unknown" null #f null null))))
+    (or v (make-cls/intf "unknown" null #f null null null))))
