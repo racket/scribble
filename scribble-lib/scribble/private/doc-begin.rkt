@@ -56,10 +56,14 @@
 (define-syntax (pre-part stx)
   (syntax-case stx ()
     [(_ s e)
-     (if (string? (syntax-e #'s))
+     (if (string? (syntax-case #'s (quote #%expression)
+                    [(quote s) (syntax-e #'s)]
+                    [(#%expression (quote s)) (syntax-e #'s)]
+                    [(#%expression s) (syntax-e #'s)]
+                    [_ (syntax-e #'s)]))
          #'s
          (with-syntax ([loc (datum->syntax #f 'loc #'e)])
-           #'(check-pre-part e (quote-syntax loc))))]))
+           #'(check-pre-part s (quote-syntax loc))))]))
 
 (define (check-pre-part v loc-stx)
   (if (pre-part? v)

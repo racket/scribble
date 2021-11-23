@@ -56,6 +56,9 @@
                      make-element-id-transformer
                      element-id-transformer?))
 
+(module+ id-element
+  (provide make-id-element))
+
 (define (make-racket-style s 
                            #:tt? [tt? #t]
                            #:extras [extras null])
