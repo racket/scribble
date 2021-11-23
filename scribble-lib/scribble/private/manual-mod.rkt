@@ -243,7 +243,9 @@
       (let-values ([(make-desc index-desc)
                     (case lang
                       [(#f)
-                       (values (lambda (modname) (list (racket (#,req #,modname))))
+                       (values (if (procedure? req)
+                                   req
+                                   (lambda (modname) (list (racket (#,req #,modname)))))
                                the-module-path-index-desc)]
                       [(#t)
                        (values (lambda (modname) (list (hash-lang) spacer modname))

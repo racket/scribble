@@ -616,7 +616,7 @@ corresponding @racketidfont{racket...} binding.}
 
 @defform/subs[(defmodule maybe-req one-or-multi option ... pre-flow ...)
               ([maybe-req code:blank
-                          (code:line #:require-form content-expr)]
+                          (code:line #:require-form content-or-proc-expr)]
                [one-or-multi module-spec
                              (code:line #:multi (module-spec ...+))]
                [module-spec module-path
@@ -644,8 +644,10 @@ a @racket[#:module-paths] clause, which provides a plain
 
 If a @racket[#:require-form] clause is provided and if @racket[#:lang]
 and @racket[#:reader] are not provided, the given expression produces
-content to use instead of @racket[require] for the declaration of the
-module. The @racket[#:require-form] clause is useful to suggest a
+either content to use instead of @racket[require] for the declaration of the
+module, or a procedure that takes the typeset module name as an element and
+returns an element to use for the @racket[require] form. The
+@racket[#:require-form] clause is useful to suggest a
 different way of accessing the module instead of through
 @racket[require].
 
@@ -699,7 +701,9 @@ Each @racket[option] form can appear at most once, and @racket[#:lang]
 and @racket[#:reader] are mutually exclusive.
 
 The @tech{decode}d @racket[pre-flow]s introduce the module, but need
-not include all of the module content.}
+not include all of the module content.
+
+@history[#:changed "1.43" @elem{Support a procedure value for @racket[#:require-form].}]}
 
 
 @defform[#:literals (unquote)
