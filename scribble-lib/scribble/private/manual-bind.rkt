@@ -137,13 +137,13 @@
     (and lib (module-path-index->taglet
               (module-path-index-join lib #f)))))
 
-(define (id-to-target-maker id dep?)
-  (*id-to-target-maker 'def id dep?))
+(define (id-to-target-maker id dep? #:space [space #f])
+  (*id-to-target-maker 'def id dep? #:space space))
 
-(define (id-to-form-target-maker id dep?)
-  (*id-to-target-maker 'form id dep?))
+(define (id-to-form-target-maker id dep? #:space [space #f])
+  (*id-to-target-maker 'form id dep? #:space space))
 
-(define (*id-to-target-maker sym id dep?)
+(define (*id-to-target-maker sym id dep? #:space [space #f])
   (let ([sig (current-signature)])
     (lambda (content mk)
       (make-part-relative-element
@@ -174,10 +174,11 @@
                                   sym)
                                 `(,lib-taglet
                                   ,@(if sig (list (syntax-e (sig-id sig))) null)
-                                  ,(syntax-e id))))])
+                                  ,(syntax-e id)
+                                  ,@(if space (list space) null))))])
                (if (or sig (not dep?))
                    (mk tag)
-                   (make-dep (list lib-taglet (syntax-e id))
+                   (make-dep (list* lib-taglet (syntax-e id) (if space (list space) null))
                              (mk tag))))
              content)))
        (lambda () content)

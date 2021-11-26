@@ -23,7 +23,10 @@
   (with-handlers* ([exn:fail? (lambda (exn) (fail-thunk))])
     (thunk)))
 
-(define (find-racket-tag part ri stx/binding phase-level)
+(define (find-racket-tag part ri stx/binding phase-level
+                         ;; used as part of the tag to find, while assuming
+                         ;; that `stx/binding` has a suitable scope, if any
+                         #:space [space #f])
   ;; The phase-level argument is used only when `stx/binding'
   ;; is an identifier.
   ;;
@@ -84,9 +87,9 @@
           (let ([queue (cdr queue)])
             (define rmp (module-path-index-resolve mod))
             (define eb
-              (and ;; GONE: (equal? 0 export-phase) ;; look for the phase-0 export; good idea?
-               (list (module-path-index->taglet mod)
-                     id)))
+              (list* (module-path-index->taglet mod)
+                     id
+                     (if space (list space) null)))
             (when (and eb
                        (not search-key))
               (set! search-key eb))

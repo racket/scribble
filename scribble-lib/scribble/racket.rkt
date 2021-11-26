@@ -152,7 +152,7 @@
 
 (define qq-ellipses (string->uninterned-symbol "..."))
 
-(define (make-id-element c s defn?)
+(define (make-id-element c s defn? #:space [space #f])
   (let* ([key (and id-element-cache
                    (let ([b (identifier-label-binding c)])
                      (vector (syntax-e c)
@@ -160,14 +160,15 @@
                              (cadddr b)
                              (list-ref b 5)
                              (syntax-property c 'display-string)
-                             defn?)))])
+                             defn?
+                             space)))])
     (or (and key
              (let ([b (hash-ref id-element-cache key #f)])
                (and b
                     (weak-box-value b))))
         (let ([e (make-cached-delayed-element
                   (lambda (renderer sec ri)
-                    (let* ([tag (find-racket-tag sec ri c #f)])
+                    (let* ([tag (find-racket-tag sec ri c #f #:space space)])
                       (if tag
                           (let ([tag (intern-taglet tag)])
                             (list
