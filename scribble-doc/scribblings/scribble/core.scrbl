@@ -1616,7 +1616,12 @@ checking, such as when using @exec{racket setup} to re-build
 documentation, all attempts are recorded (in case external changes
 mean that an earlier attempt would succeed next time).
 
-}
+The @racket[dep-key] can be any value, but when it is a pair with
+@racket[#f] as its @racket[car], then a failed search (possibly after
+re-builds) is not reported for the key.
+
+@history[#:changed "1.43" @elem{Added the convention to suppress reporting
+                                for a @racket[dep-key] starts with @racket[#f].}]}
 
 @defproc[(resolve-get/tentative [p (or/c part? #f)] [ri resolve-info?] [key info-key?])
          any/c]{

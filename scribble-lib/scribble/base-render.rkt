@@ -414,9 +414,11 @@
                  #:unless (or (eq? v 'found)
                               (and v
                                    ;; v is a search key; see if any key in the set was resolved:
-                                   (let ([ht (hash-ref (resolve-info-searches ri) v)])
-                                     (for/or ([k2 (in-hash-keys ht)])
-                                       (eq? 'found (hash-ref (resolve-info-undef ri) k2 #f)))))))
+                                   (or
+                                    (not (car v)) ; search key where failure was an option
+                                    (let ([ht (hash-ref (resolve-info-searches ri) v)])
+                                      (for/or ([k2 (in-hash-keys ht)])
+                                        (eq? 'found (hash-ref (resolve-info-undef ri) k2 #f))))))))
         k))
 
     (define/public (transfer-info ci src-ci)

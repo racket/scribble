@@ -152,7 +152,9 @@
 
 (define qq-ellipses (string->uninterned-symbol "..."))
 
-(define (make-id-element c s defn? #:space [space #f])
+(define (make-id-element c s defn?
+                         #:space [space #f]
+                         #:unlinked-ok? [unlinked-ok? #f])
   (let* ([key (and id-element-cache
                    (let ([b (identifier-label-binding c)])
                      (vector (syntax-e c)
@@ -168,26 +170,32 @@
                     (weak-box-value b))))
         (let ([e (make-cached-delayed-element
                   (lambda (renderer sec ri)
-                    (let* ([tag (find-racket-tag sec ri c #f #:space space)])
-                      (if tag
-                          (let ([tag (intern-taglet tag)])
-                            (list
-                             (case (car tag)
-                               [(form)
-                                (make-link-element (if defn?
-                                                       syntax-def-color
-                                                       syntax-link-color)
-                                                   (nonbreak-leading-hyphens s) 
-                                                   tag)]
-                               [else
-                                (make-link-element (if defn?
-                                                       value-def-color
-                                                       value-link-color)
-                                                   (nonbreak-leading-hyphens s)
-                                                   tag)])))
-                          (list 
-                           (make-element "badlink"
-                                         (make-element value-link-color s))))))
+                    (let* ([tag (find-racket-tag sec ri c #f
+                                                 #:space space
+                                                 #:unlinked-ok? unlinked-ok?)])
+                      (cond
+                        [tag
+                         (let ([tag (intern-taglet tag)])
+                           (list
+                            (case (car tag)
+                              [(form)
+                               (make-link-element (if defn?
+                                                      syntax-def-color
+                                                      syntax-link-color)
+                                                  (nonbreak-leading-hyphens s) 
+                                                  tag)]
+                              [else
+                               (make-link-element (if defn?
+                                                      value-def-color
+                                                      value-link-color)
+                                                  (nonbreak-leading-hyphens s)
+                                                  tag)])))]
+                        [unlinked-ok?
+                         (list (make-element symbol-color s))]
+                        [else
+                         (list 
+                          (make-element "badlink"
+                                        (make-element value-link-color s)))])))
                   (lambda () s)
                   (lambda () s)
                   (intern-taglet key))])
