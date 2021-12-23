@@ -53,7 +53,12 @@ documentation extraction.
 Typically, a library that uses @racketmodname[scribble/srcdoc]
 includes at least @racket[(require (for-doc scribble/base scribble/manual))]
 to get core Racket forms and basic Scribble functions to use in
-documentation expressions.}
+documentation expressions.
+
+Each @racket[require-spec] is used in a submodule relative to the
+enclosing submodule. To access other submodules of the enclosing
+module, use a module path of the form @racket[(submod ".." _name
+...)].}
 
 @defform*/subs[#:literals (-> ->* case->)
                [(proc-doc/names id contract arg-specs (desc-expr ...))]

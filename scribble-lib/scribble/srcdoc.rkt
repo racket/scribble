@@ -50,7 +50,7 @@
                                (build-path (or (current-load-relative-directory)
                                                (current-directory))
                                            "here.rkt"))])
-          #'((relative-in rel-to spec) ...)))
+          #'((relative-in (submod rel-to doc) spec) ...)))
        (add-requires! specs)))
 
  (define (add-requires! specs)
