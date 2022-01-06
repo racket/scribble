@@ -1,7 +1,8 @@
 #lang scribble/manual
 @(require "utils.rkt"
           scribble/bnf
-          (for-label setup/xref))
+          (for-label setup/xref
+                     compiler/cm))
 
 @(define fn (italic "fn"))
 
@@ -231,10 +232,18 @@ and rendered, which could affect the content that
 @itemlist[
  @item{@DFlag{quiet} --- suppress output-file and undefined-tag reporting}
 
+ @item{@DFlag{make} or @Flag{y} --- Enable automatic generation and
+       update of compiled @filepath{.zo} files when loading document
+       modules. Specifically, the result of
+       @racket[(make-compilation-manager-load/use-compiled-handler)]
+       is installed as the value of @racket[current-load/use-compiled]
+       while loading a module.}
+
  @item{@DFlag{doc-binding} @nonterm{id} --- render document
        provided as @nonterm{id} instead of @racket[doc]}
 
  @item{@DFlag{errortrace} --- enable @racketmodname[errortrace #:indirect]}
 ]
 
-@history[#:changed "1.38" @elem{Added the @DFlag{errortrace} flag.}]
+@history[#:changed "1.38" @elem{Added the @DFlag{errortrace} flag.}
+         #:changed "1.44" @elem{Added the @DFlag{make}/@Flag{y} flag.}]

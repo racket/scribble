@@ -7,7 +7,8 @@
          (prefix-in markdown: "markdown-render.rkt")
          (prefix-in html:     "html-render.rkt")
          (prefix-in latex:    "latex-render.rkt")
-         (prefix-in pdf:      "pdf-render.rkt"))
+         (prefix-in pdf:      "pdf-render.rkt")
+         compiler/cm)
 
 (module test racket/base)
 
@@ -42,6 +43,7 @@
 
 (define (run)
   (define doc-binding 'doc)
+  (define make? #f)
   (command-line
    #:program (short-program+command-name)
    #:once-any
@@ -148,6 +150,8 @@
    [("--doc-binding") id
     "render document provided as <id> instead of `doc`"
     (set! doc-binding (string->symbol id))]
+   [("--make" "-y") "enable automatic update of compiled files"
+    (set! make? #t)]
    [("--errortrace") "enable errortrace"
     (with-handlers ([exn:fail:filesystem:missing-module?
                      (λ (e)
@@ -156,15 +160,22 @@
                         "errortrace not installed"))])
       (dynamic-require 'errortrace #f))]
    #:args (file . another-file)
-   (let ([files (cons file another-file)])
+   (let ([files (cons file another-file)]
+         [maker (and make?
+                     (make-compilation-manager-load/use-compiled-handler))])
      (parameterize ([current-command-line-arguments
                      (list->vector (reverse (doc-command-line-arguments)))])
-       (build-docs (map (lambda (file) 
-                          ;; Try `doc' submodule, first:
-                          (if (module-declared? `(submod (file ,file) ,doc-binding) #t)
-                            (dynamic-require `(submod (file ,file) ,doc-binding)
-                                             doc-binding)
-                            (dynamic-require `(file ,file) doc-binding)))
+       (build-docs (map (lambda (file)
+                          (define (go)
+                            ;; Try `doc' submodule, first:
+                            (if (module-declared? `(submod (file ,file) ,doc-binding) #t)
+                                (dynamic-require `(submod (file ,file) ,doc-binding)
+                                                 doc-binding)
+                                (dynamic-require `(file ,file) doc-binding)))
+                          (if maker
+                              (parameterize ([current-load/use-compiled maker])
+                                (go))
+                              (go)))
                         files)
                    files)))))
 
