@@ -1942,20 +1942,42 @@ mode if none are supplied via @DFlag{prefix} and @DFlag{style} (where
 byte-string value is used directly like file content, and a path can
 be a result of @racket[path->main-collects-relative].
 
-Languages (used with @hash-lang[]) like
-@racketmodname[scribble/manual] and @racketmodname[scribble/sigplan]
-add this property to a document to specify appropriate files for Latex
-rendering.
+ Languages (used with @hash-lang[]) like
+ @racketmodname[scribble/manual] and
+ @racketmodname[scribble/sigplan] add this property to a
+ document to specify appropriate files for Latex rendering.
+ With @racketmodname[scribble/base], not specifying a
+ @racket[latex-defaults] struct is equivalent to using this
+ one:
+ @racketblock[
+ (latex-defaults
+  (list 'collects #"scribble" #"scribble-prefix.tex")
+  (list 'collects #"scribble" #"scribble-style.tex")
+  '())]
 
 See also @racketmodname[scribble/latex-prefix].}
 
 @defstruct[(latex-defaults+replacements latex-defaults)
            ([replacements (hash/c string? (or/c bytes? path-string?
                                                 (cons/c 'collects (listof bytes?))))])]{
-  Like @racket[latex-defaults] but it allows for more configuration. For example if
-  the @racket[replacements] maps @racket["scribble-load-replace.tex"] to @racket["my-scribble.tex"],
-  then the @racket["my-scribble.tex"] file in the current directory will we used in place
-  of the standard scribble package inclusion header.
+  Like @racket[latex-defaults] but it allows for more configuration.
+
+ For example if the @racket[replacements] maps
+ @racket["scribble-load-replace.tex"] to
+ @racket["my-scribble.tex"], then the
+ @racket["my-scribble.tex"] file in the current directory
+ will we used in place of the standard scribble package
+ inclusion header. Using @racket["scribble-load-replace.tex"]
+ can disable the use of possibly-conflicting packages in the
+ LaTeX output. The file
+ @racket[(collection-file-path "scribble" "scribble.tex")]
+ contains a number of macros of the form @tt{\packageMathabx}
+ that will, by default, load the corresponding packages. Use
+ a @racket["scribble-load-replace.tex"] replacement
+ with content like
+ @racket[#"\\renewcommand{\\packageMathabx}{\\relax}\n"] to
+ disable the loading of those packages.
+
 }
 
 
