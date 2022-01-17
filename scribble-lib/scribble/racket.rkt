@@ -483,12 +483,7 @@
 
     #; {Syntax Init-line! Srcless-step String -> Comment}
     [define (make-comment c init-line! srcless-step comment-string)
-      (let ([l (syntax->list c)])
-        (unless (and l (= 2 (length l)))
-          (raise-syntax-error
-           #f
-           "does not have a single sub-form"
-           c)))
+      (check-1-c c)
       (advance c init-line! srcless-step)
       (out comment-string comment-color)
       (out 'nbsp comment-color)
@@ -502,37 +497,47 @@
                  (paragraph-content v))
             (out (no-fancy-chars v) comment-color)))]
 
+    #; {Syntax Init-line! Srcless-step String String -> Contract}
+    (define (make-contract c init-line! srcless-step start-comment continue-comment)
+      (advance c init-line! srcless-step)
+      (out start-comment comment-color)
+      (let* ([l (cdr (syntax->list c))]
+             [s-col (or (syntax-column (car l)) src-col)])
+        (set! src-col s-col)
+        (for-each/i (loop (lambda ()
+                            (set! src-col s-col)
+                            (set! dest-col 0)
+                            (out continue-comment comment-color))
+                          0
+                          expr?
+                          #f)
+                    l
+                    #f)))
+
+    #; {Syntax -> Void}
+    (define (check-1-c c)
+      (let ([l (syntax->list c)])
+        (unless (and l (= 2 (length l)))
+          (raise-syntax-error #f "does not have a single sub-form" c))))
+
     (define (loop init-line! quote-depth expr? no-cons?)
       (lambda (c srcless-step)
         (cond
           [(and escapes? (eq? 'code:blank (syntax-e c)))
            (advance c init-line! srcless-step)]
           [(and escapes? (pair? (syntax-e c)) (eq? (syntax-e (car (syntax-e c))) 'code:comment))
-           (define comment-string ";")
-           (make-comment c init-line! srcless-step comment-string)]
+           (make-comment c init-line! srcless-step  ";")]
           [(and escapes? (pair? (syntax-e c)) (eq? (syntax-e (car (syntax-e c))) 'code:comment2))
-           (define comment-string ";;")
-           (make-comment c init-line! srcless-step comment-string)]
+           (make-comment c init-line! srcless-step ";;")]
           [(and escapes? (pair? (syntax-e c)) (eq? (syntax-e (car (syntax-e c))) 'code:comment#))
-           (define comment-string "#;")
-           (make-comment c init-line! srcless-step comment-string)]
-          [(and escapes?
-                (pair? (syntax-e c))
-                (eq? (syntax-e (car (syntax-e c))) 'code:contract))
-           (advance c init-line! srcless-step)
-           (out "; " comment-color)
-           (let* ([l (cdr (syntax->list c))]
-                  [s-col (or (syntax-column (car l)) src-col)])
-             (set! src-col s-col)
-             (for-each/i (loop (lambda ()
-                                 (set! src-col s-col)
-                                 (set! dest-col 0)
-                                 (out "; " comment-color))
-                               0
-                               expr?
-                               #f)
-                         l
-                         #f))]
+           (make-comment c init-line! srcless-step "#;")]
+          [(and escapes? (pair? (syntax-e c)) (eq? (syntax-e (car (syntax-e c))) 'code:contract))
+            (make-contract c init-line! srcless-step "; " "; ")]
+          [(and escapes? (pair? (syntax-e c)) (eq? (syntax-e (car (syntax-e c))) 'code:contract#))
+            (check-1-c c)
+            ;; shape is
+            #; (code:comment# {Natural -> [Listof Natural]})
+            (make-contract c init-line! srcless-step "#; " "    ")]
           [(and escapes?
                 (pair? (syntax-e c))
                 (eq? (syntax-e (car (syntax-e c))) 'code:line))
