@@ -535,7 +535,7 @@
             (make-contract c init-line! srcless-step "; " "; ")]
           [(and escapes? (pair? (syntax-e c)) (eq? (syntax-e (car (syntax-e c))) 'code:contract#))
             (check-1-c c)
-            ;; shape is
+            ;; shape is (for eample)
             #; (code:comment# {Natural -> [Listof Natural]})
             (make-contract c init-line! srcless-step "#; " "    ")]
           [(and escapes?
