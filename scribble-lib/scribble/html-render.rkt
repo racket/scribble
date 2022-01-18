@@ -302,6 +302,12 @@
                        (collects-relative->path p))
                    alt-paths))
 
+    (define/private (install-file/as-url fn [content #f])
+      (define p (install-file fn content))
+      (if (relative-path? p)
+          (relative-path->relative-url-string p)
+          (url->string* (path->url (path->complete-path p)))))
+
     ;; ----------------------------------------
 
     (inherit path->root-relative
@@ -852,10 +858,10 @@
               (install-file style-file)))
           (define scribble-css-path
             (or (lookup-path scribble-css alt-paths) 
-                (install-file scribble-css)))
+                (install-file/as-url scribble-css)))
           (define script-file-path
             (or (lookup-path script-file alt-paths) 
-                (install-file script-file)))
+                (install-file/as-url script-file)))
           (if (bytes? prefix-file)
               (display prefix-file)
               (call-with-input-file*
@@ -878,7 +884,7 @@
                             (if (or (bytes? style-file) (url? style-file))
                                 (scribble-css-contents style-file #f dir-depth)
                                 (let ([p (or (lookup-path style-file alt-paths)
-                                             (install-file style-file))])
+                                             (install-file/as-url style-file))])
                                   (scribble-css-contents style-file p dir-depth))))
                           (append (extract css-addition? css-addition-path)
                                   (list style-file)
@@ -891,7 +897,7 @@
                             (if (or (bytes? script-file) (url? script-file))
                                 (scribble-js-contents script-file #f dir-depth)
                                 (let ([p (or (lookup-path script-file alt-paths)
-                                             (install-file script-file))])
+                                             (install-file/as-url script-file))])
                                   (scribble-js-contents script-file p dir-depth))))
                           (append
                            (extract js-addition? js-addition-path)
@@ -1326,10 +1332,7 @@
                              [height ,(to-scaled-num h)])]
                           [else
                            null])))])])
-           (let ([srcref (let ([p (install-file src)])
-                           (if (path? p)
-                               (url->string* (path->url (path->complete-path p)))
-                               p))])
+           (let ([srcref (install-file/as-url src)])
              `((img
                 ([src ,srcref]
                  [alt ,(content->string (element-content e))]
@@ -1484,7 +1487,7 @@
                (list
                 (add-padding
                  cvt
-                 `(img ([src ,(install-file "pict.png" bstr)]
+                 `(img ([src ,(install-file/as-url "pict.png" bstr)]
                         [alt "image"]
                         [width ,(number->decimal-string (scale w))]
                         [height ,(number->decimal-string (scale h))]))))))]
@@ -1499,12 +1502,12 @@
                    (add-padding
                     cvt
                     `(img
-                      ([src ,(install-file "pict.svg" bstr)]
+                      ([src ,(install-file/as-url "pict.svg" bstr)]
                        [type "image/svg+xml"]))))))]
           [(and (equal? request 'gif-bytes) (convert e 'gif-bytes))
            =>
            (lambda (gif-bytes)
-             (define gif-src (install-file "pict.gif" gif-bytes))
+             (define gif-src (install-file/as-url "pict.gif" gif-bytes))
 
              ;; GIFs store their width and height in the first 4 bytes of the logical screen
              ;; descriptor, which comes after the 6-byte long header block. The width and height are
@@ -1622,7 +1625,7 @@
                    [else 'span]) 
                  ,(append
                    (if link-resource
-                       `([href ,(install-file link-resource)])
+                       `([href ,(install-file/as-url link-resource)])
                        null)
                    attribs)
                  ,@content))))))
