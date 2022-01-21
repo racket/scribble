@@ -304,14 +304,14 @@ A few other escapes are recognized symbolically:
       code:@racket[comment], but uses two semi-colons to prefix the comment.}
 
  @item{@racket[(#,(indexed-racket code:comment#) _content)] is like
-      code:@racket[comment], but uses #; to prefix comment.}
+      code:@racket[comment], but uses #; to prefix the comment.}
 
  @item{@racket[(#,(indexed-racket code:contract) _datum ...)] typesets like
       the sequence of @racket[_datum]s (including its coloring), but prefixed with a
       semi-colon.}
 
  @item{@racket[(#,(indexed-racket code:contract#) _datum ...)] is like
-       code:@racket[comment], but uses #; to prefix the contract.}
+       @racket[code:contract], but uses #; to prefix the contract.}
 
  @item{@as-index[@racketidfont{code:blank}] typesets as a blank space.}
 
