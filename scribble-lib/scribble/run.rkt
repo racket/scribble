@@ -73,6 +73,9 @@
    [("--xelatex") "generate PDF-format output (via XeLaTeX)"
     (current-html #f)
     (current-render-mixin pdf:xelatex-render-mixin)]
+   [("--lualatex") "generate PDF-format output (via LuaLaTeX)"
+    (current-html #f)
+    (current-render-mixin pdf:lualatex-render-mixin)]
    [("--dvipdf") "generate PDF-format output (via LaTeX, dvips, and pstopdf)"
     (current-html #f)
     (current-render-mixin pdf:dvi-render-mixin)]

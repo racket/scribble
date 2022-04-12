@@ -5,7 +5,8 @@
 
 (provide render-mixin
          dvi-render-mixin
-         xelatex-render-mixin)
+         xelatex-render-mixin
+         lualatex-render-mixin)
 
 (define render-mixin
   (make-indirect-renderer-mixin
@@ -21,3 +22,8 @@
   (make-indirect-renderer-mixin
    (λ (%) (latex:render-mixin % #:image-mode 'pdf)) #".tex" #".pdf"
    run-xelatex))
+
+(define lualatex-render-mixin
+  (make-indirect-renderer-mixin
+   (λ (%) (latex:render-mixin % #:image-mode 'pdf)) #".tex" #".pdf"
+   run-lualatex))

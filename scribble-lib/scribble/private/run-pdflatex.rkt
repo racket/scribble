@@ -2,7 +2,7 @@
 
 (require racket/system racket/port)
 
-(provide run-pdflatex run-dvipdf-latex run-xelatex)
+(provide run-pdflatex run-dvipdf-latex run-xelatex run-lualatex)
 
 (define (run-pdflatex file [notify void]) (run file notify 'pdflatex))
 (define (run-dvipdf-latex file [notify void]) 
@@ -11,12 +11,16 @@
 (define (run-xelatex file [notify void])
   (parameterize ([function-name 'run-xelatex])
     (run file notify 'xelatex)))
+(define (run-lualatex file [notify void])
+  (parameterize ([function-name 'run-lualatex])
+    (run file notify 'lualatex)))
 
 (define max-runs 5)
 (define (run file notify type)
   (define latex-cmd-name (cond [(equal? type 'pdflatex) "pdflatex"]
                                [(equal? type 'dvipdf) "latex"]
                                [(equal? type 'xelatex) "xelatex"]
+                               [(equal? type 'lualatex) "lualatex"]
                                [else (err "unknown run type ~a" type)]))
   (define cmd
     (list (get-latex-binary latex-cmd-name)
