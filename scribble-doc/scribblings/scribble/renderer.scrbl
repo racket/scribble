@@ -740,6 +740,12 @@ Like @racket[render-mixin], but generates PDF output via @exec{xelatex}.
 
 @history[#:added "1.19"]}
 
+@defmixin[lualatex-render-mixin (render<%>) ()]{
+
+Like @racket[render-mixin], but generates PDF output via @exec{lualatex}.
+
+@history[#:added "1.45"]}
+
 @; ----------------------------------------
 
 @section{Contract (Blue boxes) Renderer}

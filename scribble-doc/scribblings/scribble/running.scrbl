@@ -39,6 +39,9 @@ its file suffix:
  @item{@DFlag{xelatex} --- PDF @filepath{@|fn|.pdf} that is generated
        via @exec{xelatex}}
 
+ @item{@DFlag{lualatex} --- PDF @filepath{@|fn|.pdf} that is generated
+       via @exec{lualatex}}
+
  @item{@DFlag{dvipdf} --- PDF @filepath{@|fn|.pdf} that is generated
        via @exec{latex}, @exec{dvips}, and @exec{pstopdf}}
 
@@ -86,7 +89,8 @@ documents that are built separately.
          #:changed "1.19" @elem{Added @DFlag{xelatex}.}
          #:changed "1.40" @elem{Added @DFlag{keep-at-dest-base} and
                                 fixed @DFlag{dest-base} to work correctly
-                                for HTML output.}]
+                                for HTML output.}
+         #:changed "1.45" @elem{Added @DFlag{lualatex}.}]
 
 @section{Extra and Format-Specific Files}
 
