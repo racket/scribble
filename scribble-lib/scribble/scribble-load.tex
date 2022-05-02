@@ -19,7 +19,15 @@
 % acmart.cls is also using the one from newtxmath.
 \newcommand{\packageTxfonts}{
   \let\widering\relax
-  \usepackage{newtxmath}}
+  \let\oldwidebar\widebar
+  \let\widebar\relax
+  \usepackage{newtxmath}
+  % if newtxmath is before version 1.7.0,
+  % then we are still going to use widebar from mathabx
+  \ifx\widebar\relax
+    \let\widebar\oldwidebar
+  \fi
+}
 \newcommand{\packageTextcomp}{\usepackage{textcomp}}
 \newcommand{\packageFramed}{\usepackage{framed}}
 \newcommand{\packageHyphenat}{\usepackage[htt]{hyphenat}}
