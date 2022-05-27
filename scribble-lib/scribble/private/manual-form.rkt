@@ -315,9 +315,9 @@
                  (list ref-content)
                  (with-exporting-libraries
                   (lambda (libs)
-                    (make-form-index-desc* (syntax-e kw-id)
-                                           libs
-                                           kind))))
+                    (make-exported-index-desc* (syntax-e kw-id)
+                                               libs
+                                               (list kind)))))
                 content)
             tag
             ref-content)))

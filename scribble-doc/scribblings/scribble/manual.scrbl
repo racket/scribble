@@ -2185,55 +2185,74 @@ correspond to the documented name of the binding and the primary
 modules that export the documented name (but this list is not
 exhaustive, because new modules can re-export the binding).}
 
+@defstruct[(exported-index-desc* exported-index-desc) ([kind (listof (or/c string? (list/c 'code string?)))])]{
+
+Like @racket[exported-index-desc], but with the @racket[kind] information.
+Common values for @racket[kind] include:
+@racket['("procedure")], @racket['("syntax")], @racket['("value")].
+For the purpose of typesetting, the strings in @racket[kind] will be
+concatenated together, but those tagged with @racket['code]
+will be typeseted as code.
+
+The @racket[exported-index-desc*] struct is preferable over
+other index entry descriptions below.
+
+@history[#:added "1.46"]}
+
 @defstruct[(form-index-desc exported-index-desc) ()]{
+
+@deprecated[#:what "struct" @racket[exported-index-desc*]]
 
 Indicates that the index entry corresponds to the definition of a
 syntactic form via @racket[defform] and company.}
 
-@defstruct[(form-index-desc* form-index-desc) ([kind string?])]{
-
-Like @racket[form-index-desc], but adds the kind information.}
 
 @defstruct[(procedure-index-desc exported-index-desc) ()]{
+
+@deprecated[#:what "struct" @racket[exported-index-desc*]]
 
 Indicates that the index entry corresponds to the definition of a
 procedure binding via @racket[defproc] and company.}
 
-@defstruct[(procedure-index-desc* exported-index-desc) ([kind string?])]{
-
-Like @racket[procedure-index-desc], but adds the kind information.}
-
 @defstruct[(thing-index-desc exported-index-desc) ()]{
+
+@deprecated[#:what "struct" @racket[exported-index-desc*]]
 
 Indicates that the index entry corresponds to the definition of a
 binding via @racket[defthing] and company.}
 
-@defstruct[(thing-index-desc* exported-index-desc) ([kind string?])]{
-
-Like @racket[thing-index-desc], but adds the kind information.}
-
 @defstruct[(struct-index-desc exported-index-desc) ()]{
+
+@deprecated[#:what "struct" @racket[exported-index-desc*]]
 
 Indicates that the index entry corresponds to the definition of a
 structure type via @racket[defstruct] and company.}
 
 @defstruct[(class-index-desc exported-index-desc) ()]{
 
+@deprecated[#:what "struct" @racket[exported-index-desc*]]
+
 Indicates that the index entry corresponds to the definition of a
 class via @racket[defclass] and company.}
 
 @defstruct[(interface-index-desc exported-index-desc) ()]{
+
+@deprecated[#:what "struct" @racket[exported-index-desc*]]
 
 Indicates that the index entry corresponds to the definition of an
 interface via @racket[definterface] and company.}
 
 @defstruct[(mixin-index-desc exported-index-desc) ()]{
 
+@deprecated[#:what "struct" @racket[exported-index-desc*]]
+
 Indicates that the index entry corresponds to the definition of a
 mixin via @racket[defmixin] and company.}
 
 @defstruct[(method-index-desc exported-index-desc) ([method-name symbol?]
                                                     [class-tag tag?])]{
+
+@deprecated[#:what "struct" @racket[exported-index-desc*]]
 
 Indicates that the index entry corresponds to the definition of an
 method via @racket[defmethod] and company. The @racket[_name] field
@@ -2243,6 +2262,8 @@ The @racket[class-tag] field provides a pointer to the start of the
 documentation for the method's class or interface.}
 
 @defstruct[(constructor-index-desc exported-index-desc) ([class-tag tag?])]{
+
+@deprecated[#:what "struct" @racket[exported-index-desc*]]
 
 Indicates that the index entry corresponds to a constructor
 via @racket[defconstructor] and company. The @racket[_name] field
