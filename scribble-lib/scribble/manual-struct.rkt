@@ -13,9 +13,12 @@
                                            [class-tag tag?])]
  [(constructor-index-desc exported-index-desc) ([class-tag tag?])]
  [(procedure-index-desc exported-index-desc) ()]
+ [(procedure-index-desc* procedure-index-desc) ([kind string?])]
  [(thing-index-desc exported-index-desc) ()]
+ [(thing-index-desc* thing-index-desc) ([kind string?])]
  [(struct-index-desc exported-index-desc) ()]
  [(form-index-desc exported-index-desc) ()]
+ [(form-index-desc* form-index-desc) ([kind string?])]
  [(class-index-desc exported-index-desc) ()]
  [(interface-index-desc exported-index-desc) ()]
  [(mixin-index-desc exported-index-desc) ()])

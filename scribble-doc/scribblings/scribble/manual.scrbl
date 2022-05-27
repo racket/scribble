@@ -2190,15 +2190,27 @@ exhaustive, because new modules can re-export the binding).}
 Indicates that the index entry corresponds to the definition of a
 syntactic form via @racket[defform] and company.}
 
+@defstruct[(form-index-desc* form-index-desc) ([kind string?])]{
+
+Like @racket[form-index-desc], but adds the kind information.}
+
 @defstruct[(procedure-index-desc exported-index-desc) ()]{
 
 Indicates that the index entry corresponds to the definition of a
 procedure binding via @racket[defproc] and company.}
 
+@defstruct[(procedure-index-desc* exported-index-desc) ([kind string?])]{
+
+Like @racket[procedure-index-desc], but adds the kind information.}
+
 @defstruct[(thing-index-desc exported-index-desc) ()]{
 
 Indicates that the index entry corresponds to the definition of a
 binding via @racket[defthing] and company.}
+
+@defstruct[(thing-index-desc* exported-index-desc) ([kind string?])]{
+
+Like @racket[thing-index-desc], but adds the kind information.}
 
 @defstruct[(struct-index-desc exported-index-desc) ()]{
 
