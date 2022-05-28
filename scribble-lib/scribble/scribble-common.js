@@ -19,7 +19,17 @@ var page_args =
 
 function GetPageArg(key, def) {
   for (var i=0; i<page_args.length; i++)
-    if (page_args[i][0] == key) return decodeURIComponent(page_args[i][1]);
+    if (page_args[i][0] === key) {
+      try {
+        return decodeURIComponent(page_args[i][1]);
+      } catch (e) {
+        if (e instanceof URIError) {
+          return page_args[i][1];
+        } else {
+          throw e;
+        }
+      }
+    }
   return def;
 }
 
