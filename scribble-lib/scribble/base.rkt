@@ -143,17 +143,14 @@
 
 (define (item? x) (an-item? x))
 
-(define recur-items/c
-  (make-flat-contract 
-   #:name 'items/c
-   #:first-order (lambda (x)
-                   ((flat-contract-predicate items/c) x))))
+(define items/c
+  (flat-rec-contract
+   items/c
+   item?
+   block?
+   (listof items/c)
+   (spliceof items/c)))
 
-(define items/c (or/c item?
-                      block?
-                      (listof recur-items/c)
-                      (spliceof recur-items/c)))
-                       
 (provide items/c)
 
 (provide/contract 
