@@ -60,6 +60,7 @@ span.RktValDef, span.RktStxDef, span.RktSymDef
 .RktIn {
   color: #cc6633;
   background-color: #eee;
+  white-space: pre;
 }
 
 .RktInBG {
