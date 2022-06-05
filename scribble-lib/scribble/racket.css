@@ -47,6 +47,7 @@
 .RktIn {
   color: #cc6633;
   background-color: #eeeeee;
+  white-space: pre;
 }
 
 .RktInBG {
