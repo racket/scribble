@@ -247,11 +247,33 @@
                  (render-flow d part ht #f)))))))
 
     (define/override (render-paragraph p part ri)
-      (define o (open-output-string))
-      (parameterize ([current-output-port o])
-        (super render-paragraph p part ri))
-      (define to-wrap (regexp-replace* #rx"\n" (get-output-string o) " "))
-      (define lines (wrap-line (string-trim to-wrap) (- 72 (current-indent))))
+      (define in
+        (let-values ([(in out)
+                      (make-pipe-with-specials)])
+          (parameterize ([current-output-port out])
+            (super render-paragraph p part ri))
+          (close-output-port out)
+          in))
+      (define (port->lines o)
+        ;; n.b. wrap-line always returns a non-empty list
+        (define to-wrap (regexp-replace* #rx"\n" (get-output-string o) " "))
+        (wrap-line (string-trim to-wrap) (- 72 (current-indent))))
+      (define lines
+        (let loop ([o (open-output-string)])
+          (define ch (read-char-or-special in))
+          (cond
+            [(char? ch)
+             (write-char ch o)
+             (loop o)]
+            [(eof-object? ch)
+             (port->lines o)]
+            [(eq? 'newline ch)
+             (append (port->lines o)
+                     (loop (open-output-string)))]
+            [else
+             (raise-arguments-error 'render-paragraph
+                                    "unsupported special"
+                                    "given" ch)])))
       (write-string (car lines))
       (for ([line (in-list (cdr lines))])
         (newline) (indent) (write-string line))
@@ -259,14 +281,21 @@
       null)
 
     (define/override (render-content i part ri)
-      (if (and (element? i)
-               (let ([s (element-style i)])
-                 (or (eq? 'hspace s)
-                     (and (style? s)
-                          (eq? 'hspace (style-name s))))))
-          (parameterize ([current-preserve-spaces #t])
-            (super render-content i part ri))
-          (super render-content i part ri)))
+      (define style
+        (and (element? i)
+             (let ([s (element-style i)])
+               (if (style? s)
+                   (style-name s)
+                   s))))
+      (cond
+        [(eq? 'hspace style)
+         (parameterize ([current-preserve-spaces #t])
+           (super render-content i part ri))]
+        [(eq? 'newline style)
+         (write-special 'newline)
+         '("\n")]
+        [else
+         (super render-content i part ri)]))
 
     (define/override (render-nested-flow i part ri starting-item?)
       (define s (nested-flow-style i))
