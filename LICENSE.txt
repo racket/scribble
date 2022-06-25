@@ -1,0 +1,36 @@
+This component of Racket is distributed under the under the Apache 2.0
+and MIT licenses. The user can choose the license under which they
+will be using the software. There may be other licenses within the
+distribution with which the user must also comply.
+
+See the files
+  https://github.com/racket/racket/blob/master/racket/src/LICENSE-APACHE.txt
+and
+  https://github.com/racket/racket/blob/master/racket/src/LICENSE-MIT.txt
+for the full text of the licenses.
+
+The scribble-lib package contains LaTeX code for use by rendered
+documents, some of which is under additional licenses. Specifically:
+
+  * scribble-lib/scribble/scribble.tex contains the default style
+    configuration for Scribble-generated LaTeX. It includes
+    pltstabular, a modification of the stabular environment by Sigitas
+    Tolušis. The pltstabular implementation is distributed under the
+    LaTeX Project Public License, either version 1 of the license, or
+    (at your option) any later version. For the full text of this
+    license, see https://www.latex-project.org/lppl/lppl-1-0/.
+
+  * scribble-lib/scribble/acmart/acmart.cls is a class file by the
+    Association for Computing Machinery for typesetting publications
+    in the ACM's formats. It is used by documents written in the
+    scribble/acmart language. This file is distributed under the LaTeX
+    Project Public License, either version 1.3c of the license or (at
+    your option) any later version. For the full text of this license,
+    see https://www.latex-project.org/lppl/lppl-1-3c/.
+
+  * scribble-lib/scribble/sigplan/sigplanconf.cls is a class file for
+    SIGPLAN conference proceedings by Paul C. Anagnostopoulos. It is
+    used by documents written in the scribble/sigplan language. This
+    file is distributed under the Creative Commons Attribution 3.0
+    Unported license (CC-BY-3.0). For the full text of this license,
+    see https://creativecommons.org/licenses/by/3.0/.

@@ -19,7 +19,7 @@ IRC or Slack channels.
 
 ### License
 
-Racket, including these packages, is free software, see [LICENSE]
+Racket, including these packages, is free software, see [LICENSE.txt]
 for more details.
 
 By making a contribution, you are agreeing that your contribution
@@ -30,4 +30,4 @@ is licensed under the [Apache 2.0] license and the [MIT] license.
 [pull request]: https://github.com/racket/scribble/pulls
 [issue]: https://github.com/racket/scribble/issues
 [development mailing list]: https://lists.racket-lang.org
-[LICENSE]: LICENSE
+[LICENSE.txt]: LICENSE.txt
