@@ -26,4 +26,10 @@
 (define version "1.45")
 
 (define license
-  '(Apache-2.0 OR MIT))
+  '((Apache-2.0 OR MIT)
+    AND
+    (CC-BY-3.0 ;; sigplanconf.cls
+     AND
+     (LPPL-1.3c+ ;; acmart.cls
+      AND
+      LPPL-1.0+)))) ;; pltstabular
