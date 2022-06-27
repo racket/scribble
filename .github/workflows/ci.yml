@@ -16,20 +16,17 @@ jobs:
           distribution: full
           variant: ${{ matrix.racket-variant }}
           version: current
+          dest: '"${HOME}/racketdist-${{ matrix.racket-variant }}"'
+          local_catalogs: $GITHUB_WORKSPACE
+          sudo: never
 
-      # This next step was copied from the CI config for Typed Racket:
-      # https://github.com/racket/typed-racket/blob/master/.github/workflows/ci.yml
       - run: |
-             sudo raco pkg install --auto -i --no-setup --skip-installed scribble-test
-             racket -l- pkg/dirs-catalog --link --check-metadata pkgs-catalog .
-             echo file://`pwd`/pkgs-catalog/ > catalog-config.txt
-             raco pkg config catalogs >> catalog-config.txt
-             sudo raco pkg config --set catalogs `cat catalog-config.txt`
-             sudo raco pkg update -i --auto --no-setup scribble-text-lib/ scribble-html-lib/ scribble-lib/ scribble-doc/ scribble-test/
+          raco pkg install -i --auto --no-setup --skip-installed scribble-test
+          raco pkg update --auto --no-setup scribble-text-lib scribble-html-lib scribble-lib scribble-doc scribble-test
 
       # This uses --pkgs so that we don't have to figure out which collections
       # each package adds modules to.
-      - run: sudo raco setup --check-pkg-deps --pkgs scribble-text-lib scribble-html-lib scribble-lib scribble-doc scribble-test
+      - run: raco setup --check-pkg-deps --pkgs scribble-text-lib scribble-html-lib scribble-lib scribble-doc scribble-test
 
       # Tests are run with --drdr to help keep racket's CI systems consistent
       # with each other.
