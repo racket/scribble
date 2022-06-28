@@ -2,6 +2,7 @@
 (require racket/contract/base
          "../decode.rkt"
          "../struct.rkt"
+         (only-in "../core.rkt" style)
          "manual-utils.rkt"
          "manual-style.rkt")
 
@@ -14,14 +15,16 @@
         (#:doc (or/c module-path? #f) 
          #:tag-prefixes (or/c (listof string?) #f) 
          #:key (or/c string? #f)
-         #:normalize? any/c)
+         #:normalize? any/c
+         #:indirect? any/c)
         #:rest (listof pre-content?) 
         . ->* . element?)]
  [techlink (() 
             (#:doc (or/c module-path? #f) 
              #:tag-prefixes (or/c (listof string?) #f) 
              #:key (or/c string? #f)
-             #:normalize? any/c)
+             #:normalize? any/c
+             #:indirect? any/c)
             #:rest (listof pre-content?) 
             . ->* . element?)])
 
@@ -54,14 +57,17 @@
                         (list e)
                         'tech)))
 
-(define (tech #:doc [doc #f] 
-              #:tag-prefixes [prefix #f] 
-              #:key [key #f] 
-              #:normalize? [normalize? #t] 
+(define (tech #:doc [doc #f]
+              #:tag-prefixes [prefix #f]
+              #:key [key #f]
+              #:normalize? [normalize? #t]
+              #:indirect? [indirect? #f]
               . s)
-  (*tech (lambda (style c tag)
+  (*tech (lambda (sty c tag)
            (make-link-element
-            style
+            (if indirect?
+                (style sty '(indirect-link))
+                sty)
             (list (make-element "techinside" c))
             tag))
          "techoutside"
@@ -71,6 +77,16 @@
 (define (techlink #:doc [doc #f] 
                   #:tag-prefixes [prefix #f] 
                   #:key [key #f] 
-                  #:normalize? [normalize? #t] 
+                  #:normalize? [normalize? #t]
+                  #:indirect? [indirect? #t]
                   . s)
-  (*tech make-link-element #f doc prefix s key normalize?))
+  (*tech (lambda (sty c tag)
+           (make-link-element
+            (if indirect?
+                (style sty '(indirect-link))
+                sty)
+            c
+            tag))
+         #f
+         doc prefix s key
+         normalize?))

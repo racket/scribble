@@ -1871,7 +1871,8 @@ If @racket[style?] is true, then @racket[defterm] is used on
                [#:key key (or/c string? #f) #f]
                [#:normalize? normalize? any/c #t]
                [#:doc module-path (or/c module-path? #f) #f]
-               [#:tag-prefixes prefixes (or/c (listof string?) #f) #f])
+               [#:tag-prefixes prefixes (or/c (listof string?) #f) #f]
+               [#:indirect? indirect? any/c #f])
          element?]{
 
 Produces an element for the @tech{decode}d @racket[pre-content], and
@@ -1887,6 +1888,8 @@ For example:
 
 creates a link to @tech[#:doc '(lib "scribblings/reference/reference.scrbl")]{blame object} in
 @other-doc['(lib "scribblings/reference/reference.scrbl")].
+If @racket[indirect?] is not @racket[#f], the link’s resolution in HTML
+is potentially delayed; see @racket['indirect-link] for @racket[link-element].
 
 With the default style files, the hyperlink created by @racket[tech]
 is somewhat quieter than most hyperlinks: the underline in HTML output
@@ -1897,18 +1900,27 @@ In some cases, combining both natural-language uses of a term and
 proper linking can require some creativity, even with the
 normalization performed on the term. For example, if ``bind'' is
 defined, but a sentence uses the term ``binding,'' the latter can be
-linked to the former using @racketfont["@tech{bind}ing"].}
+linked to the former using @racketfont["@tech{bind}ing"].
+
+ @history[
+ #:changed "1.46" @elem{Added @racket[#:indirect?] argument.}
+ ]}
 
 @defproc[(techlink [pre-content pre-content?] ...
                    [#:key key (or/c string? #f) #f]
                    [#:normalize? normalize? any/c #t]
                    [#:doc module-path (or/c module-path? #f) #f]
-                   [#:tag-prefixes prefixes (or/c (listof string?) #f) #f]) 
+                   [#:tag-prefixes prefixes (or/c (listof string?) #f) #f]
+                   [#:indirect? indirect? any/c #f])
          element?]{
 
 Like @racket[tech], but the link is not quiet. For example, in HTML
 output, a hyperlink underline appears even when the mouse is not over
-the link.}
+the link.
+
+ @history[
+ #:changed "1.46" @elem{Added @racket[#:indirect?] argument.}
+ ]}
 
 @; ------------------------------------------------------------------------
 @section[#:tag "manual-indexing"]{Indexing}

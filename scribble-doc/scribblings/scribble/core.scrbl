@@ -1057,7 +1057,13 @@ properties for all @racket[element]s:
        provide an external-link URL, then the resolution of the
        hyperlink can be deferred until the link is clicked (or, in
        some cases, patched by JavaScript when the documentation is
-       viewed in a browser).}
+       viewed in a browser).
+
+       Note that deferred resolution relies on cooperation with the page
+       pointed to by the external-link URL, and arbitrary tags are not supported.
+       Functions and forms like @racket[seclink], @racket[other-doc],
+       @racket[racketmodname], @racket[tech], and @racket[techlink] provide
+       higher-level interfaces for creating supported kinds of indirect links.}
 
 ]
 
