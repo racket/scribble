@@ -439,7 +439,7 @@ See also @racket[literal].}
                [#:style style (or/c style? string? symbol? #f) #f])
         element?]{
 
-Wraps the @tech{decode}d @racket[pre-content] as an element with style
+Wraps the @tech{decode}d @racket[pre-content] as an @racket[element] with style
 @racket[style].}
 
 
