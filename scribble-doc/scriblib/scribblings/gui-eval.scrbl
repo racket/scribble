@@ -5,10 +5,10 @@
 
 @defmodule[scriblib/gui-eval]{The
 @racketmodname[scriblib/gui-eval] library support example
-evaluations that use @racketmodname[racket/gui] facilities (as opposed
-to just @racketmodname[racket/draw]) to generate text and image results.}
+evaluations that use @racketmodname[racket/gui #:indirect] facilities (as opposed
+to just @racketmodname[racket/draw #:indirect]) to generate text and image results.}
 
-The trick is that @racketmodname[racket/gui] is not generally
+The trick is that @racketmodname[racket/gui #:indirect] is not generally
 available when rendering documentation, because it requires a GUI
 context. Text and image output is rendered to an image file when the
 @envvar{MREVAL} environment variable is set, so run the enclosing
@@ -58,8 +58,8 @@ generated image.
 The first option of each of the above is
 like @racket[interaction], etc., but actually evaluating the forms
 only when the @envvar{MREVAL} environment variable is set, and then in
-an evaluator that is initialized with @racketmodname[racket/gui/base]
-and @racketmodname[slideshow].
+an evaluator that is initialized with @racketmodname[racket/gui/base #:indirect]
+and @racketmodname[slideshow #:indirect].
 
 The second option of each allows you to specify your own evaluator via
 the @racket[the-eval] argument and then to specify four thunks that

@@ -771,13 +771,13 @@ Use @racket[#:use-sources] sparingly, but it is needed when
 ]
 
 For example, the @racket[parameterize] binding of
-@racketmodname[mzscheme] is documented as re-exported from
+@racketmodname[mzscheme #:indirect] is documented as re-exported from
 @racketmodname[racket/base], but @racket[parameterize] happens to be
 implemented in a private module and re-exported by both
-@racketmodname[racket/base] and @racketmodname[mzscheme].  Importing
-@racket[parameterize] from @racketmodname[mzscheme] does not go
+@racketmodname[racket/base] and @racketmodname[mzscheme #:indirect].  Importing
+@racket[parameterize] from @racketmodname[mzscheme #:indirect] does not go
 through @racketmodname[racket/base], so a search for documentation on
-@racket[parameterize] in @racketmodname[mzscheme] would not
+@racket[parameterize] in @racketmodname[mzscheme #:indirect] would not
 automatically connect to the documentation of
 @racketmodname[racket/base]. To make the connection, the documentation
 of @racketmodname[racket/base] declares the private module to be a

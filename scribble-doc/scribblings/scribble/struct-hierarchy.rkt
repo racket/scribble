@@ -379,6 +379,7 @@
 (define (dotted-right-right-reference p0 a b c d [count 1])
   (right-right-reference p0 a b c d count #:connect-dots connect-circly-dots))
 
+#;
 (module+ slideshow
   (require slideshow)
   (define p (inset (mk-diagram) 0 0 0 1))
