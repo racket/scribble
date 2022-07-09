@@ -78,7 +78,7 @@
                   #:tag-prefixes [prefix #f] 
                   #:key [key #f] 
                   #:normalize? [normalize? #t]
-                  #:indirect? [indirect? #t]
+                  #:indirect? [indirect? #f]
                   . s)
   (*tech (lambda (sty c tag)
            (make-link-element
