@@ -191,7 +191,7 @@ As an example,
           (my-sqr 42)]
 }|
 
-uses an evaluator whose language is @racketmodname[typed/racket/base].}
+uses an evaluator whose language is @racketmodname[typed/racket/base #:indirect].}
 
 
 @defproc[(make-base-eval [#:pretty-print? pretty-print? any/c #t]

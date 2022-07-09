@@ -15,7 +15,7 @@
                "sandbox-lib"
                "typed-racket-lib"
                ))
-(define build-deps '("rackunit-lib"))
+(define build-deps '("rackunit-lib")) ; for embedded module+ test
 
 (define implies '("scribble-html-lib"))
 
