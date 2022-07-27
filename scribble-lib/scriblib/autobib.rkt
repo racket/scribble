@@ -36,10 +36,19 @@
          abbreviate-given-names
          
          #; (String[url] -> Element)
-         url-rendering)
+         url-rendering
+
+         doi-rendering)
 
 (define abbreviate-given-names (make-parameter #f))
 (define url-rendering (make-parameter (λ (url) (link url (make-element 'url (list url))))))
+(define doi-rendering
+  (make-parameter (λ (doi) (list (make-element "pseudodoi"
+                                               (list "doi:"
+                                                     (link (string-append
+                                                            "https://doi.org"
+                                                            doi) doi)))
+                                 (make-element "doi" doi)))))
 
 (define autobib-style-extras
   (let ([abs (lambda (s)
@@ -57,7 +66,7 @@
 (define colbibnumber-style (make-style "Autocolbibnumber" autobib-style-extras))
 (define colbibentry-style (make-style "Autocolbibentry" autobib-style-extras))
 
-(define-struct auto-bib (author date title location url note is-book? key specific))
+(define-struct auto-bib (author date title location url note is-book? doi key specific))
 (define-struct bib-group (ht))
 
 (define-struct (author-element element) (names cite))
@@ -352,14 +361,15 @@
              null))
 
 (define (bib->entry bib style disambiguation render-date-bib i)
-  (define-values (author date title location url note is-book?)
+  (define-values (author date title location url note is-book? doi)
     (values (auto-bib-author bib)
             (auto-bib-date bib)
             (auto-bib-title bib)
             (auto-bib-location bib)
             (auto-bib-url bib)
             (auto-bib-note bib)
-            (auto-bib-is-book? bib)))
+            (auto-bib-is-book? bib)
+            (auto-bib-doi bib)))
   (make-element (send style entry-style)
                 (append
                  (if author
@@ -385,7 +395,8 @@
                                   (decode-content (list (render-date-bib date))))
                             ".")
                      null)
-                 (if url `(" " ,[(url-rendering) url]) null)
+                 (if (and (not doi) url) `(" " ,[(url-rendering) url]) null)
+                 (if doi `(" " ,[(doi-rendering) doi]) null)
                  (if note `(" " ,note) null))))
 
 (define-syntax (define-cite stx)
@@ -445,13 +456,14 @@
                   #:location [location #f]
                   #:date [date #f]
                   #:url [url #f]
+                  #:doi [doi #f]
                   #:note [note #f])
   (define author*
     (cond [(not author) #f]
           [(author-element? author) author]
           [else (parse-author author)]))
   (define parsed-date (understand-date date))
-  (make-auto-bib author* parsed-date title location url note is-book?
+  (make-auto-bib author* parsed-date title location url note is-book? doi
                  (content->string
                   (make-element #f
                                 (append
@@ -459,7 +471,8 @@
                                  (list title)
                                  (if location (decode-content (list location)) null)
                                  (if date (decode-content (list (default-render-date-bib parsed-date))) null)
-                                 (if url (list [(url-rendering) url]) null)
+                                 (if (and (not doi) url) (list [(url-rendering) url]) null)
+                                 (if doi (list [(doi-rendering) doi]) null)
                                  (if note (list note) null))))
                  ""))
 
@@ -472,6 +485,7 @@
    (auto-bib-url bib)
    (auto-bib-note bib)
    (auto-bib-is-book? bib)
+   (auto-bib-doi bib)
    (auto-bib-key bib)
    ;; "where" is the only specific part of auto-bib elements currently.
    (string-append (auto-bib-specific bib) where)))
