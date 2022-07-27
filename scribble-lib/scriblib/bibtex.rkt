@@ -465,13 +465,15 @@
                   (make-bib #:title (support-escapes (raw-attr "title"))
                             #:author (parse-author (raw-attr "author"))
                             #:date (raw-attr "year")
-                            #:url (raw-attr "url"))]
+                            #:url (raw-attr "url")
+                            #:doi (raw-attr "doi"))]
                  ["book"
                   (make-bib #:title (support-escapes (raw-attr "title"))
                             #:author (parse-author (raw-attr "author"))
                             #:date (raw-attr "year")
                             #:is-book? #t
-                            #:url (raw-attr "url"))]
+                            #:url (raw-attr "url")
+                            #:doi (raw-attr "doi"))]
                  ["article"
                   (make-bib #:title (support-escapes (raw-attr "title"))
                             #:author (parse-author (raw-attr "author"))
@@ -480,31 +482,36 @@
                                                          #:pages (parse-pages (raw-attr "pages"))
                                                          #:number (raw-attr "number")
                                                          #:volume (raw-attr "volume"))
-                            #:url (raw-attr "url"))]
+                            #:url (raw-attr "url")
+                            #:doi (raw-attr "doi"))]
                  ["inproceedings"
                   (make-bib #:title (support-escapes (raw-attr "title"))
                             #:author (parse-author (raw-attr "author"))
                             #:date (raw-attr "year")
                             #:location (proceedings-location (raw-attr "booktitle"))
-                            #:url (raw-attr "url"))]
+                            #:url (raw-attr "url")
+                            #:doi (raw-attr "doi"))]
                  ["webpage"
                   (make-bib #:title (support-escapes (raw-attr "title"))
                             #:author (parse-author (raw-attr "author"))
                             #:date (raw-attr "year")
-                            #:url (raw-attr "url"))]
+                            #:url (raw-attr "url")
+                            #:doi (raw-attr "doi"))]
                  ["mastersthesis"
                   (make-bib #:title (support-escapes (raw-attr "title"))
                             #:author (parse-author (raw-attr "author"))
                             #:date (raw-attr "year")
                             #:location (raw-attr "school")
-                            #:url (raw-attr "url"))]
+                            #:url (raw-attr "url")
+                            #:doi (raw-attr "doi"))]
                  ["phdthesis"
                   (make-bib #:title (support-escapes (raw-attr "title"))
                             #:author (parse-author (raw-attr "author"))
                             #:date (raw-attr "year")
                             #:location (dissertation-location #:institution (raw-attr "school")
                                                               #:degree "PhD")
-                            #:url (raw-attr "url"))]
+                            #:url (raw-attr "url")
+                            #:doi (raw-attr "doi"))]
                  ["techreport"
                   (make-bib #:title (support-escapes (raw-attr "title"))
                             #:author (parse-author (raw-attr "author"))
@@ -515,7 +522,8 @@
                               [(l #f) @elem{@|l|}]
                               [(#f n) @elem{@|n|}]
                               [(l n) @elem{@|l|, @|n|}])
-                            #:url (raw-attr "url"))]
+                            #:url (raw-attr "url")
+                            #:doi (raw-attr "doi"))]
                  [_
                   (make-bib #:title (format "~v" the-raw))]))))
 

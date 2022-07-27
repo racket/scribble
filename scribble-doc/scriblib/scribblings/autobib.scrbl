@@ -168,12 +168,13 @@ Returns @racket[#t] if @racket[v] is a value produced by
                    [#:is-book? is-book? any/c #f]
                    [#:location location any/c #f]
                    [#:date date (or/c #f date? exact-nonnegative-integer? string?) #f]
-                   [#:url url string? #f]
+                   [#:url url (or/c #f string?) #f]
+                   [#:doi doi (or/c #f string?) #f]
                    [#:note note any/c #f])
          bib?]{
 
 Produces a value that represents a document to cite. Except for
-@racket[is-book?] and @racket[url], the arguments are used as
+@racket[is-book?], @racket[url], and @racket[doi], the arguments are used as
 content, except that @racket[#f] means that the information is not
 supplied. Functions like @racket[proceedings-location],
 @racket[author-name], and @racket[authors] help produce elements in a
@@ -187,7 +188,9 @@ first, last names, and name suffixes separately, so that names can be
 ordered and rendered correctly. When a string is provided as an author
 name, the last non-empty sequence of alphabetic characters or
 @litchar["-"] after a space is treated as the author name, and the
-rest is treated as the first name.}
+rest is treated as the first name.
+
+@history[#:changed "1.49" @elem{Added @racket[#:doi].}]}
 
 @defproc[(in-bib [orig bib?] [where string?]) bib?]{
 
