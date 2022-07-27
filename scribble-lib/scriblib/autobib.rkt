@@ -43,12 +43,11 @@
 (define abbreviate-given-names (make-parameter #f))
 (define url-rendering (make-parameter (λ (url) (link url (make-element 'url (list url))))))
 (define doi-rendering
-  (make-parameter (λ (doi) (list (make-element "pseudodoi"
-                                               (list "doi:"
-                                                     (link (string-append
-                                                            "https://doi.org"
-                                                            doi) doi)))
-                                 (make-element "doi" doi)))))
+  (make-parameter (λ (doi) (make-element "pseudodoi"
+                                         (list "doi:"
+                                               (link (string-append
+                                                      "https://doi.org"
+                                                      doi) doi))))))
 
 (define autobib-style-extras
   (let ([abs (lambda (s)
