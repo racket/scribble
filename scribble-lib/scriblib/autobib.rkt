@@ -46,7 +46,7 @@
   (make-parameter (λ (doi) (make-element "pseudodoi"
                                          (list "doi:"
                                                (link (string-append
-                                                      "https://doi.org"
+                                                      "https://doi.org/"
                                                       doi) doi))))))
 
 (define autobib-style-extras
