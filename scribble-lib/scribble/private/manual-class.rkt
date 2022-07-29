@@ -188,7 +188,7 @@
           (flow-paragraphs
            (decode-flow (build-body decl post)))))))))))
 
-(define (*class-doc kind stx-id super all-intfs ranges whole-page? make-index-desc link?)
+(define (*class-doc kind stx-id super all-intfs ranges whole-page? link?)
   (define intfs (for/list ([intf (in-list all-intfs)])
                   (syntax-case intf ()
                     [(#:no-inherit intf) #'intf]
@@ -224,7 +224,10 @@
                                 (list ref-content)
                                 (with-exporting-libraries
                                  (lambda (libs)
-                                   (make-index-desc (syntax-e stx-id) libs)))))
+                                   (make-exported-index-desc*
+                                    (syntax-e stx-id)
+                                    libs
+                                    (list (symbol->string kind)))))))
                               tag)))
                           content))
                     (to-element stx-id))
@@ -315,7 +318,6 @@
                                        (list (quote-syntax intf) ...)
                                        null
                                        whole-page?
-                                       make-class-index-desc
                                        link?)))
                    (flatten-splices (list body ...))))
      link?)))
@@ -351,7 +353,6 @@
                                   (list (quote-syntax intf) ...)
                                   null
                                   whole-page?
-                                  make-interface-index-desc
                                   link?)))
                    (list body ...)))
      link?)))
@@ -380,7 +381,6 @@
                                   (list (quote-syntax domain) ...)
                                   (list (quote-syntax range) ...)
                                   whole-page?
-                                  make-mixin-index-desc
                                   link?)))
                    (list body ...)))
      link?)))

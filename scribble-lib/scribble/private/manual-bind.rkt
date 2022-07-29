@@ -256,11 +256,12 @@
                                                  syntax-link-color
                                                  value-link-color)
                                              (list str)))))
-                                         ((if form?
-                                              make-form-index-desc
-                                              make-procedure-index-desc)
+                                         (make-exported-index-desc*
                                           id
-                                          (list mod-path)))))))))
+                                          (list mod-path)
+                                          (list (if form?
+                                                    "syntax"
+                                                    "procedure"))))))))))
       redirects))))
 
 

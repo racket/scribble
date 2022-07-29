@@ -360,9 +360,10 @@
                                   content
                                   (with-exporting-libraries
                                    (lambda (libs)
-                                     (make-constructor-index-desc
+                                     (make-exported-index-desc*
                                       (syntax-e within-id)
-                                      libs ctag)))))
+                                      libs
+                                      (list (get-label)))))))
                            tag))))
                      (car content)))
                (car content)))
@@ -392,9 +393,11 @@
                                    (list ref-content)
                                    (with-exporting-libraries
                                     (lambda (libs)
-                                      (make-method-index-desc
-                                       (syntax-e within-id)
-                                       libs mname ctag)))))
+                                      (define sym (syntax-e within-id))
+                                      (make-exported-index-desc*
+                                       sym
+                                       libs
+                                       (list "method of " `(code ,(symbol->string sym))))))))
                             tag
                             ref-content))))
                       content))
@@ -415,7 +418,7 @@
                     (list ref-content)
                     (with-exporting-libraries
                      (lambda (libs)
-                       (make-procedure-index-desc the-id libs))))
+                       (make-exported-index-desc* the-id libs (list (get-label))))))
                    tag
                    ref-content)))
                content))]
@@ -1084,6 +1087,7 @@
 (define (*defthing kind link? stx-ids names form? result-contracts content-thunk
                    [result-values (map (lambda (x) #f) result-contracts)])
   (define max-proto-width (current-display-width))
+  (define kind* (or kind "value"))
   (make-box-splice
    (cons
     (make-blockquote
@@ -1136,7 +1140,10 @@
                                       (list (datum-intern-literal (symbol->string name)))
                                       (list ref-content)
                                       (with-exporting-libraries
-                                       (lambda (libs) (make-thing-index-desc name libs))))
+                                        (lambda (libs) (make-exported-index-desc*
+                                                        name
+                                                        libs
+                                                        (list kind*)))))
                                      tag
                                      ref-content)))
                                  content))]
@@ -1147,7 +1154,7 @@
             (append
              (list
               (list
-               ((if (zero? i) (add-background-label (or kind "value")) values)
+               ((if (zero? i) (add-background-label kind*) values)
                 (top-align
                  make-table-if-necessary
                  "argcontract"
@@ -1214,9 +1221,12 @@
               (with-exporting-libraries
                (lambda (libs)
                  (let ([name (string->symbol name)])
-                   (if (eq? 'info (caar wrappers))
-                       (make-struct-index-desc name libs)
-                       (make-procedure-index-desc name libs))))))
+                   (make-exported-index-desc*
+                    name
+                    libs
+                    (list (if (eq? 'info (caar wrappers))
+                              "struct"
+                              "procedure")))))))
              tag)))
          content))
      (cdr wrappers))))
