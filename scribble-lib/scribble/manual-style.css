@@ -300,7 +300,7 @@ a:hover {
     font-size: inherit;
 }
 .version:before, .versionNoNav:before {
-    content: "v.";
+    content: "v";
 }
 
 
