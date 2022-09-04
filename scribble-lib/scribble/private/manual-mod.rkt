@@ -281,8 +281,8 @@
        (if pkg-spec
            (if ((+ (flow-width (caar libs-specs))
                    (flow-width pkg-spec)
-                   8)
-                . < . (current-display-width))
+                   6)
+                . <= . (current-display-width))
                (cons
                 (cons (car (car libs-specs))
                       (list pkg-spec))
