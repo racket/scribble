@@ -189,6 +189,19 @@ in @filepath{a.scrbl} and @filepath{b.scrbl}, then
 builds @filepath{c.html} with cross-reference links into
 @filepath{a.html} and @filepath{b.html}.
 
+When building a document that is normally installed as part of a
+package, referring to the document by its filesystem path may produce
+different cross-reference linking than running the document via
+@exec{raco setup}. The difference is in the way relative-path imports
+are resolved, especially with @racket[for-label]. A relative-path
+reference counts as a filesystem-path reference when starting from a
+mofule that is itself referenced through a filesystem path, or it
+counts as collection-based module path when referenced from a module
+that is itself referenced using a collection-based path. Use the
+@DFlag{lib}/@Flag{l} flag to refer to a document with a module path
+instead of a filesystem path.
+
+@history[#:changed "1.47" @elem{Added the @DFlag{lib}/@Flag{l} flag.}]
 
 @section{Selecting an Image Format}
 

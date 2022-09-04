@@ -29,6 +29,7 @@
 (define current-redirect           (make-parameter #f))
 (define current-redirect-main      (make-parameter #f))
 (define current-directory-depth    (make-parameter 0))
+(define current-lib-mode           (make-parameter #f))
 (define current-quiet              (make-parameter #f))
 (define helper-file-prefix         (make-parameter #f))
 (define keep-existing-helper-files? (make-parameter #f))
@@ -92,6 +93,8 @@
     (current-html #f)
     (current-render-mixin markdown:render-mixin)]
    #:once-each
+   [("--lib" "-l") "treat argument <file>s as library paths instead of filesystem paths"
+    (current-lib-mode #t)]
    [("--dest") dir "write output in <dir>"
     (current-dest-directory dir)]
    [("--dest-name") name "write output as <name>"
@@ -170,11 +173,14 @@
                      (list->vector (reverse (doc-command-line-arguments)))])
        (build-docs (map (lambda (file)
                           (define (go)
-                            ;; Try `doc' submodule, first:
-                            (if (module-declared? `(submod (file ,file) ,doc-binding) #t)
-                                (dynamic-require `(submod (file ,file) ,doc-binding)
-                                                 doc-binding)
-                                (dynamic-require `(file ,file) doc-binding)))
+                            (let ([mp (if (current-lib-mode)
+                                          `(lib ,file)
+                                          `(file ,file))])
+                              ;; Try `doc' submodule, first:
+                              (if (module-declared? `(submod ,mp ,doc-binding) #t)
+                                  (dynamic-require `(submod ,mp ,doc-binding)
+                                                   doc-binding)
+                                  (dynamic-require mp doc-binding))))
                           (if maker
                               (parameterize ([current-load/use-compiled maker])
                                 (go))
