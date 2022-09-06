@@ -53,6 +53,7 @@
 (define bib-columns-style (make-style #f autobib-style-extras))
 
 (define bibentry-style (make-style "Autobibentry" autobib-style-extras))
+(define bibentrytarget-style (make-style "Autobibtarget" autobib-style-extras))
 (define colbibnumber-style (make-style "Autocolbibnumber" autobib-style-extras))
 (define colbibentry-style (make-style "Autocolbibentry" autobib-style-extras))
 
@@ -310,7 +311,7 @@
               bibliography-line
               i
               (make-paragraph plain
-                              (list (make-collect-element #f collect-target collect)))))
+                              (list (make-collect-element bibentrytarget-style collect-target collect)))))
       ;; create the bibliography with disambiguations added.
       (define-values (last num-ambiguous rev-disambiguated*)
         (for/fold ([last #f] [num-ambiguous 0] [rev-disambiguated '()]) ([bib (in-list bibs)]
