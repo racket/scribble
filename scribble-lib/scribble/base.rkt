@@ -600,9 +600,13 @@
                      (make-section-tag s #:doc doc #:tag-prefixes prefix)))
 (define (Secref s #:underline? [u? #t] #:doc [doc #f] #:tag-prefixes [prefix #f]
                 #:link-render-style [link-style #f])
-  (let ([le (secref s #:underline? u? #:doc doc #:tag-prefixes prefix)])
+  (let ([le (secref s #:underline? u? #:doc doc #:tag-prefixes prefix
+                    #:link-render-style link-style)])
     (make-link-element
-     (make-style (element-style le) '(uppercase))
+     (style (style-name (element-style le))
+            (cons 'uppercase (if link-style
+                                 (list link-style)
+                                 '())))
      (element-content le)
      (link-element-tag le))))
 
