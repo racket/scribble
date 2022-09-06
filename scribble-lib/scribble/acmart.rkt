@@ -286,8 +286,9 @@
                                   (make-element #f
                                                 (if orcid
                                                     (make-element
-                                                     (make-style "SAuthorOrcid" multicommand-props)
-                                                     (decode-content (list orcid)))
+                                                     (make-style "SAuthorOrcid" (cons 'exact-chars multicommand-props))
+                                                     ;; not decoding, since we want exact chars
+                                                     orcid)
                                                     '()))
                                   (make-element #f
                                                 (cond
