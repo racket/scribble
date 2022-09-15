@@ -20,7 +20,7 @@
          specform specform/subs
          specsubform specsubform/subs specspecsubform specspecsubform/subs
          specsubform/inline
-         defsubform defsubform*
+         defsubidform defsubform defsubform*
          racketgrammar racketgrammar*
          (rename-out [racketgrammar schemegrammar]
                      [racketgrammar* schemegrammar*])
@@ -199,6 +199,10 @@
                    (if (splice? s)
                      (flow-paragraphs (decode-flow (splice-run s)))
                      (list s))))
+
+(define-syntax (defsubidform stx)
+  (syntax-case stx ()
+    [(_ . rest) #'(into-blockquote (defidform . rest))]))
 
 (define-syntax (defsubform stx)
   (syntax-case stx ()
