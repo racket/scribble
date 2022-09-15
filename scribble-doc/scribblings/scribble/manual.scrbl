@@ -1198,10 +1198,6 @@ Like @racket[defidform], but @racket[id] (or the result of
 inline element. Use this form sparingly, because the typeset form does
 not stand out to the reader as a specification of @racket[id].}
 
-@defform[(defsubidform id pre-flow ...)]{
-
-Like @racket[defidform], but with indenting on the left for both the specification and the @racket[pre-flow]s.}
-
 @deftogether[(
 @defform[(defsubform options form-datum
             maybe-grammar maybe-contracts
@@ -1214,6 +1210,13 @@ Like @racket[defidform], but with indenting on the left for both the specificati
 Like @racket[defform] and @racket[defform*], but with
 indenting on the left for both the specification and the
 @racket[pre-flow]s.}
+
+@defform[(defsubidform id pre-flow ...)]{
+
+Like @racket[defidform], but with indenting on the left for both the
+specification and the @racket[pre-flow]s.
+
+@history[#:added "1.48"]}
 
 
 @defform[(specform maybe-literals datum maybe-grammar maybe-contracts
