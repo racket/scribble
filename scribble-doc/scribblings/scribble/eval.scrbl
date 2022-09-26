@@ -40,7 +40,7 @@ Like @|new-examples| from @racketmodname[scribble/example], except that
 
 @itemlist[
 
- @item{the ``Examples:'' label is always supressed,}
+ @item{the ``Examples:'' label is always suppressed,}
 
  @item{exceptions raised during the evaluation of a @racket[datum] are
        always rendered as errors, unless @racket[#:no-errors?] is
