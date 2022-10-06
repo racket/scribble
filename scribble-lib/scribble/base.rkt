@@ -603,10 +603,8 @@
   (let ([le (secref s #:underline? u? #:doc doc #:tag-prefixes prefix
                     #:link-render-style link-style)])
     (make-link-element
-     (style (style-name (element-style le))
-            (cons 'uppercase (if link-style
-                                 (list link-style)
-                                 '())))
+     (let ([es (or (element-style le) plain)])
+       (style (style-name es) (cons 'uppercase (style-properties es))))
      (element-content le)
      (link-element-tag le))))
 
