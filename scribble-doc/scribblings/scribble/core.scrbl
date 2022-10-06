@@ -504,6 +504,9 @@ The recognized @tech{style properties} are as follows:
        content for the @tt{<head>} tag when the part corresponds to
        its own HTML page.}
 
+ @item{@racket[head-addition] structure --- Like @racket[head-extra],
+        but also propagated to enclosing and nested HTML pages.}
+
  @item{@racket[color-property] structure --- For HTML, applies a color
        to the part title.}
 
@@ -535,6 +538,10 @@ The recognized @tech{style properties} are as follows:
        @racket[paragraph] with the @racket['pretitle] style. The
        wrapper is not used around a subpart that is rendered on a
        different HTML page.}
+
+ @item{@racket[part-link-redirect] structure --- For HTML, redirects
+       hyperlinks that would otherwise go to the part so that they
+       refer to a different URL.}
 
  @item{@racket['enable-index-merge] --- On an index parts or one of
        its enclosing parts for Latex output, causes index entries to
