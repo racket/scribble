@@ -1151,22 +1151,24 @@
                                                 (eq? 'part (car t))
                                                 (= 2 (length t))
                                                 (cadr t)))])
-                             (if (and src taglet)
-                                 `([x-source-module ,(format "~s" src)]
-                                   ,@(let* ([path (resolved-module-path-name
-                                                   (module-path-index-resolve
-                                                    (module-path-index-join src #f)))]
-                                            [pkg (and (path? path)
-                                                      (path->pkg path #:cache pkg-cache))])
-                                       (if pkg
-                                           `([x-source-pkg ,pkg])
-                                           null))
-                                   ,@(let ([prefixes (current-tag-prefixes)])
-                                       (if (null? prefixes)
-                                           null
-                                           `([x-part-prefixes ,(format "~s" prefixes)])))
-                                   [x-part-tag ,(format "~s" taglet)])
-                                 '()))
+                             (append
+                              (if (and src taglet)
+                                  `([x-source-module ,(format "~s" src)]
+                                    ,@(let* ([path (resolved-module-path-name
+                                                    (module-path-index-resolve
+                                                     (module-path-index-join src #f)))]
+                                             [pkg (and (path? path)
+                                                       (path->pkg path #:cache pkg-cache))])
+                                        (if pkg
+                                            `([x-source-pkg ,pkg])
+                                            null))
+                                    ,@(let ([prefixes (current-tag-prefixes)])
+                                        (if (null? prefixes)
+                                            null
+                                            `([x-part-prefixes ,(format "~s" prefixes)])))
+                                    [x-part-tag ,(format "~s" taglet)])
+                                  '())
+                              (style->attribs (part-style d))))
                           ,@(format-number number '((tt nbsp)))
                           ,@(map (lambda (t)
                                    `(a ([name ,(format "~a" (anchor-name
