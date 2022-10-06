@@ -1114,79 +1114,88 @@
       (for/or ([v (in-list (style-properties (part-style d)))])
         (and (render-convertible-as? v)
              (render-convertible-as-types v))))
-    
+
     (define/override (render-part-content d ri)
       (parameterize ([current-render-convertible-requests (or (extract-render-convertible-as d) 
                                                               (current-render-convertible-requests))])
+        (define (add-title-and-content-wrapper l)
+          (define w (ormap (lambda (v) (and (part-title-and-content-wrapper? v) v))
+                           (style-properties (part-style d))))
+          (cond
+            [w `((,(string->symbol (part-title-and-content-wrapper-tag w))
+                  ,(part-title-and-content-wrapper-attribs w)
+                  ,@l))]
+            [else l]))
         (let ([number (collected-info-number (part-collected-info d ri))])
-          `(,@(let ([pres (extract-pretitle d)])
-                (append-map (lambda (pre)
-                              (do-render-paragraph pre d ri #f #t))
-                            pres))
-            ,@(cond
-                [(and (not (part-title-content d)) (null? number)) null]
-                [(part-style? d 'hidden)
-                 (map (lambda (t)
-                        `(a ((name ,(format "~a" (anchor-name 
-                                                  (add-current-tag-prefix
-                                                   (tag-key t ri))))))))
-                      (part-tags d))]
-                [else `((,(case (number-depth number)
-                            [(0) 'h2]
-                            [(1) 'h3]
-                            [(2) 'h4]
-                            [else 'h5])
-                         ,(let ([src (extract-part-source d ri)]
-                                [taglet (for/or ([t (in-list (part-tags d))])
-                                          (and (pair? t)
-                                               (eq? 'part (car t))
-                                               (= 2 (length t))
-                                               (cadr t)))])
-                            (if (and src taglet)
-                                `([x-source-module ,(format "~s" src)]
-                                  ,@(let* ([path (resolved-module-path-name
-                                                  (module-path-index-resolve
-                                                   (module-path-index-join src #f)))]
-                                           [pkg (and (path? path)
-                                                     (path->pkg path #:cache pkg-cache))])
-                                      (if pkg
-                                          `([x-source-pkg ,pkg])
-                                          null))
-                                  ,@(let ([prefixes (current-tag-prefixes)])
-                                      (if (null? prefixes)
-                                          null
-                                          `([x-part-prefixes ,(format "~s" prefixes)])))
-                                  [x-part-tag ,(format "~s" taglet)])
-                                '()))
-                         ,@(format-number number '((tt nbsp)))
-                         ,@(map (lambda (t)
-                                  `(a ([name ,(format "~a" (anchor-name
-                                                            (add-current-tag-prefix
-                                                             (tag-key t ri))))])))
-                                (part-tags d))
-                         ,@(if (part-title-content d)
-                               (render-content (part-title-content d) d ri)
-                               null)))])
-            ,@(let ([auths (extract-authors d)])
-                (if (null? auths)
-                    null
-                    `((div ([class "SAuthorListBox"])
-                           (span ([class "SAuthorList"])
-                                 ,@(apply
-                                    append
-                                    (for/list ([auth (in-list auths)]
-                                               [pos (in-naturals)])
-                                      (let ([v (do-render-paragraph auth d ri #f #t)])
-                                        (if (zero? pos)
-                                            v
-                                            (cons '(span ([class "SAuthorSep"]) (br)) v))))))))))
-            ,@(render-flow* (part-blocks d) d ri #f #f)
-            ,@(let loop ([pos 1]
-                         [secs (part-parts d)])
-                (if (null? secs)
-                    null
-                    (append (render-part (car secs) ri)
-                            (loop (add1 pos) (cdr secs)))))))))
+          (add-title-and-content-wrapper
+           `(,@(let ([pres (extract-pretitle d)])
+                 (append-map (lambda (pre)
+                               (do-render-paragraph pre d ri #f #t))
+                             pres))
+             ,@(cond
+                 [(and (not (part-title-content d)) (null? number)) null]
+                 [(part-style? d 'hidden)
+                  (map (lambda (t)
+                         `(a ((name ,(format "~a" (anchor-name 
+                                                   (add-current-tag-prefix
+                                                    (tag-key t ri))))))))
+                       (part-tags d))]
+                 [else `((,(case (number-depth number)
+                             [(0) 'h2]
+                             [(1) 'h3]
+                             [(2) 'h4]
+                             [else 'h5])
+                          ,(let ([src (extract-part-source d ri)]
+                                 [taglet (for/or ([t (in-list (part-tags d))])
+                                           (and (pair? t)
+                                                (eq? 'part (car t))
+                                                (= 2 (length t))
+                                                (cadr t)))])
+                             (if (and src taglet)
+                                 `([x-source-module ,(format "~s" src)]
+                                   ,@(let* ([path (resolved-module-path-name
+                                                   (module-path-index-resolve
+                                                    (module-path-index-join src #f)))]
+                                            [pkg (and (path? path)
+                                                      (path->pkg path #:cache pkg-cache))])
+                                       (if pkg
+                                           `([x-source-pkg ,pkg])
+                                           null))
+                                   ,@(let ([prefixes (current-tag-prefixes)])
+                                       (if (null? prefixes)
+                                           null
+                                           `([x-part-prefixes ,(format "~s" prefixes)])))
+                                   [x-part-tag ,(format "~s" taglet)])
+                                 '()))
+                          ,@(format-number number '((tt nbsp)))
+                          ,@(map (lambda (t)
+                                   `(a ([name ,(format "~a" (anchor-name
+                                                             (add-current-tag-prefix
+                                                              (tag-key t ri))))])))
+                                 (part-tags d))
+                          ,@(if (part-title-content d)
+                                (render-content (part-title-content d) d ri)
+                                null)))])
+             ,@(let ([auths (extract-authors d)])
+                 (if (null? auths)
+                     null
+                     `((div ([class "SAuthorListBox"])
+                            (span ([class "SAuthorList"])
+                                  ,@(apply
+                                     append
+                                     (for/list ([auth (in-list auths)]
+                                                [pos (in-naturals)])
+                                       (let ([v (do-render-paragraph auth d ri #f #t)])
+                                         (if (zero? pos)
+                                             v
+                                             (cons '(span ([class "SAuthorSep"]) (br)) v))))))))))
+             ,@(render-flow* (part-blocks d) d ri #f #f)
+             ,@(let loop ([pos 1]
+                          [secs (part-parts d)])
+                 (if (null? secs)
+                     null
+                     (append (render-part (car secs) ri)
+                             (loop (add1 pos) (cdr secs))))))))))
 
     (define/private (render-flow* p part ri starting-item? special-last?)
       ;; Wrap each table with <p>, except for a trailing table

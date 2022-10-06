@@ -529,6 +529,13 @@ The recognized @tech{style properties} are as follows:
        section. See also @racket[link-element] and
        @racket[current-link-render-style].}
 
+ @item{@racket[part-title-and-content-wrapper] structure --- For HTML,
+       adds a tag with attributes around the part title and its
+       content, including any content before the title from a
+       @racket[paragraph] with the @racket['pretitle] style. The
+       wrapper is not used around a subpart that is rendered on a
+       different HTML page.}
+
  @item{@racket['enable-index-merge] --- On an index parts or one of
        its enclosing parts for Latex output, causes index entries to
        be merged when they have the same content, with multiple
@@ -1886,6 +1893,17 @@ via @racket[head-addition] appear before additions via @racket[head-extra].
 
 As a @tech{style property} on a @tech{part}, causes hyperiinks to the
 part to be redirected to @racket[url] instead of the rendered part.}
+
+
+@defstruct[part-title-and-content-wrapper ([tag string?]
+                                           [attribs (listof (list/c symbol? string?))])]{
+
+Used as a @tech{style property} on a @racket[part] to add a tag with
+attributes around a part title and its content that is rendered on the
+same HTML page.
+
+@history[#:added "1.49"]}
+
 
 @defstruct[link-resource ([path path-string?])]{
 

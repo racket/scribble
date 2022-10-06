@@ -26,6 +26,8 @@
  [column-attributes ([assoc (listof (cons/c symbol? string?))])]
 
  [part-link-redirect ([url url?])]
+ [part-title-and-content-wrapper ([tag string?]
+                                  [attribs (listof (list/c symbol? string?))])]
  [install-resource ([path path-string?])]
  [link-resource ([path path-string?])]
 
