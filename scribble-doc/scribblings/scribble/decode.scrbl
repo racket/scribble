@@ -180,7 +180,7 @@ otherwise.}
 
 
 @defstruct[title-decl ([tag-prefix (or/c #f string?)]
-                       [tags (listof string?)]
+                       [tags (listof tag?)]
                        [version (or/c string? #f)]
                        [style style?]
                        [content content?])]{
@@ -194,7 +194,7 @@ it is propagated as a @racket[document-version] style property on the
 
 @defstruct[part-start ([depth integer?]
                        [tag-prefix (or/c #f string?)]
-                       [tags (listof string?)]
+                       [tags (listof tag?)]
                        [style style?]
                        [title content?])]{
 
