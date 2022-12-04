@@ -126,13 +126,14 @@
             (list f)
             f)))
 (define (exec . str)
-  (if (andmap string? str)
-    (make-element 'tt str)
-    (make-element #f (map (lambda (s)
-                            (if (string? s)
-                              (make-element 'tt (list s))
-                              s))
-                          str))))
+  (let loop ([str str])
+    (cond
+      [(string? str) (make-element 'tt (list str))]
+      [(list? str) (if (andmap string? str)
+                       (make-element 'tt str)
+                       (map loop str))]
+      [else str])))
+
 (define (Flag . str)
   (make-element 'no-break
                 (list (make-element 'tt (cons "-" (decode-content str))))))
