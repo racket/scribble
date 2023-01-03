@@ -2270,7 +2270,7 @@ rendering.
 A @racket[html-defaults] @tech{style property} is added to
 @racket[doc], unless @racket[doc]'s style already has a
 @racket[html-defaults] @tech{style property} (e.g., supplied to
-@racket[title]). Similarly, a @racket[latex-default] @tech{style
+@racket[title]). Similarly, a @racket[latex-defaults] @tech{style
 property} is added if one is not already present. Finally, an
 @racket[css-style-addition] property is always added.
 
