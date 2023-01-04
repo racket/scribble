@@ -204,7 +204,7 @@ as XHTML.
 
 @defproc[(script/inline [v outputable/c] ...) procedure?]{
 
-Procedures a value that renders as an inline script.
+Produces a value that renders as an inline script.
 
 @examples[#:eval html-eval
 (output-xml (script/inline type: "text/javascript" "var x = 5;"))]}
@@ -212,7 +212,7 @@ Procedures a value that renders as an inline script.
 
 @defproc[(style/inline [v outputable/c] ...) procedure?]{
 
-Procedures a value that renders as an inline style sheet.
+Produces a value that renders as an inline style sheet.
 
 @examples[#:eval html-eval
 (output-xml (style/inline type: "text/css"
