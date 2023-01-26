@@ -24,9 +24,11 @@
     (thunk)))
 
 (define (find-racket-tag part ri stx/binding phase-level
-                         ;; used as part of the tag to find, while assuming
-                         ;; that `stx/binding` has a suitable scope, if any
+                         ;; assume that `stx/binding` has a suitable scope, if any,
+                         ;; already; currently used only for the default suffix
                          #:space [space #f]
+                         ;; used as part of the tag to find
+                         #:suffix [suffix space]
                          #:unlinked-ok? [unlinked-ok? #f])
   ;; The phase-level argument is used only when `stx/binding'
   ;; is an identifier.
@@ -90,7 +92,7 @@
             (define eb
               (list* (module-path-index->taglet mod)
                      id
-                     (if space (list space) null)))
+                     (if suffix (list suffix) null)))
             (when (not search-key)
               (set! search-key (if unlinked-ok?
                                    (cons #f eb)

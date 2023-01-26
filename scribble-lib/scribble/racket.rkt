@@ -157,6 +157,7 @@
                          #:unlinked-ok? [unlinked-ok? #f])
   (let* ([key (and id-element-cache
                    (let ([b (identifier-label-binding c)])
+                     (unless b (error 'make-id-element "no for-label binding for identifier: ~s" c))
                      (vector (syntax-e c)
                              (module-path-index->taglet (caddr b))
                              (cadddr b)

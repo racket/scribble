@@ -104,7 +104,17 @@
 
 (define checkers (make-hash))
 
-(define (libs->taglet id libs source-libs)
+(define (libs->taglet id libs source-libs [space-in #f])
+  (define space
+    ;; temporary hack: accomodate a "space" that is actually a suffix
+    ;; ending in a space
+    (if (list? space-in)
+        (car (reverse space-in))
+        space-in))
+  (define intro
+    (if space
+        (make-interned-syntax-introducer space)
+        (lambda (x add) x)))
   (let ([lib
          (or (ormap (lambda (lib)
                       (let ([checker
@@ -125,25 +135,25 @@
                                            (namespace-require `(just-meta 0 (for-label ,lib)))
                                            (namespace-syntax-introduce (datum->syntax #f 'x))))])
                                   (let ([checker
-                                         (lambda (id)
+                                         (lambda (id intro)
                                            (free-label-identifier=?
-                                            (datum->syntax ns-id (syntax-e id))
-                                            id))])
+                                            (intro (datum->syntax ns-id (syntax-e id)) 'add)
+                                            (intro id 'add)))])
                                     (hash-set! checkers lib checker)
                                     checker))))])
-                        (and (checker id) lib)))
+                        (and (checker id intro) lib)))
                     (or source-libs null))
              (and (pair? libs) (car libs)))])
     (and lib (module-path-index->taglet
               (module-path-index-join lib #f)))))
 
-(define (id-to-target-maker id dep? #:space [space #f])
-  (*id-to-target-maker 'def id dep? #:space space))
+(define (id-to-target-maker id dep? #:space [space #f] #:suffix [suffix space])
+  (*id-to-target-maker 'def id dep? #:space space #:suffix suffix))
 
-(define (id-to-form-target-maker id dep? #:space [space #f])
-  (*id-to-target-maker 'form id dep? #:space space))
+(define (id-to-form-target-maker id dep? #:space [space #f] #:suffix [suffix space])
+  (*id-to-target-maker 'form id dep? #:space space #:suffix suffix))
 
-(define (*id-to-target-maker sym id dep? #:space [space #f])
+(define (*id-to-target-maker sym id dep? #:space space #:suffix suffix)
   (let ([sig (current-signature)])
     (lambda (content mk)
       (make-part-relative-element
@@ -165,7 +175,8 @@
              (let* ([lib-taglet (libs->taglet
                                  (if sig (sig-id sig) id)
                                  (exporting-libraries-libs e)
-                                 (exporting-libraries-source-libs e))]
+                                 (exporting-libraries-source-libs e)
+                                 space)]
                     [tag (intern-taglet
                           (list (if sig
                                   (case sym
@@ -175,10 +186,10 @@
                                 `(,lib-taglet
                                   ,@(if sig (list (syntax-e (sig-id sig))) null)
                                   ,(syntax-e id)
-                                  ,@(if space (list space) null))))])
+                                  ,@(if suffix (list suffix) null))))])
                (if (or sig (not dep?))
                    (mk tag)
-                   (make-dep (list* lib-taglet (syntax-e id) (if space (list space) null))
+                   (make-dep (list* lib-taglet (syntax-e id) (if suffix (list suffix) null))
                              (mk tag))))
              content)))
        (lambda () content)
