@@ -81,7 +81,7 @@
     [(_ k:kind-kw lt:link-target?-kw d:id-kw l:literals-kw [spec spec1 ...]
         g:grammar
         c:contracts-kw
-        desc ...)
+        desc:expr ...)
      (with-syntax* ([defined-id (if (syntax-e #'d.defined-id)
                                     #'d.defined-id
                                     (syntax-case #'spec ()
@@ -122,7 +122,7 @@
 (define-syntax (defform* stx)
   (syntax-parse stx
     [(_ k:kind-kw lt:link-target?-kw d:id-kw l:literals-kw [spec ...+]
-        subs:subs-kw c:contracts-kw desc ...)
+        subs:subs-kw c:contracts-kw desc:expr ...)
      (syntax/loc stx
        (defform*/subs #:kind k.kind 
          #:link-target? lt.expr
@@ -133,7 +133,7 @@
 (define-syntax (defform stx)
   (syntax-parse stx
     [(_ k:kind-kw lt:link-target?-kw d:id-kw l:literals-kw spec
-        subs:subs-kw c:contracts-kw desc ...)
+        subs:subs-kw c:contracts-kw desc:expr ...)
      (syntax/loc stx
        (defform*/subs #:kind k.kind
          #:link-target? lt.expr
@@ -143,7 +143,7 @@
 
 (define-syntax (defform/subs stx)
   (syntax-parse stx
-    [(_ k:kind-kw lt:link-target?-kw d:id-kw l:literals-kw spec subs desc ...)
+    [(_ k:kind-kw lt:link-target?-kw d:id-kw l:literals-kw spec subs desc:expr ...)
      (syntax/loc stx
        (defform*/subs #:kind k.kind 
          #:link-target? lt.expr
@@ -153,7 +153,7 @@
 
 (define-syntax (defform/none stx)
   (syntax-parse stx
-    [(_ k:kind-kw lt:link-target?-kw l:literals-kw spec subs:subs-kw c:contracts-kw desc ...)
+    [(_ k:kind-kw lt:link-target?-kw l:literals-kw spec subs:subs-kw c:contracts-kw desc:expr ...)
      (syntax/loc stx
        (with-togetherable-racket-variables
         (l.lit ...)
@@ -182,7 +182,7 @@
 
 (define-syntax (defidform stx)
   (syntax-parse stx
-    [(_ k:kind-kw lt:link-target?-kw spec-id desc ...)
+    [(_ k:kind-kw lt:link-target?-kw spec-id desc:expr ...)
      #'(with-togetherable-racket-variables
         ()
         ()
@@ -216,7 +216,7 @@
   (syntax-parse stx
     [(_ has-kw? l:literals-kw spec g:grammar
         c:contracts-kw
-        desc ...)
+        desc:expr ...)
      (syntax/loc stx
        (with-racket-variables
         (l.lit ...)
@@ -235,13 +235,13 @@
 
 (define-syntax (specsubform stx)
   (syntax-parse stx
-    [(_ l:literals-kw spec subs:subs-kw c:contracts-kw desc ...)
+    [(_ l:literals-kw spec subs:subs-kw c:contracts-kw desc:expr ...)
      (syntax/loc stx
        (spec?form/subs #f #:literals (l.lit ...) spec subs.g #:contracts c.cs desc ...))]))
 
 (define-syntax (specsubform/subs stx)
   (syntax-parse stx
-    [(_ l:literals-kw spec g:grammar desc ...)
+    [(_ l:literals-kw spec g:grammar desc:expr ...)
      (syntax/loc stx
        (spec?form/subs #f #:literals (l.lit ...) spec 
                        ([g.non-term-id g.non-term-form ...] ...) 
@@ -262,7 +262,7 @@
 (define-syntax (specform/subs stx)
   (syntax-parse stx
     [(_ l:literals-kw spec g:grammar
-        desc ...)
+        desc:expr ...)
      (syntax/loc stx
        (spec?form/subs #t #:literals (l.lit ...) spec ([g.non-term-id g.non-term-form ...] ...)
                        desc ...))]))

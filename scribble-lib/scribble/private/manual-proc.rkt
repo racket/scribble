@@ -176,7 +176,7 @@
         (id arg ...)
         result
         value:value-kw
-        desc ...)
+        desc:expr ...)
      (syntax/loc stx
        (defproc*
          #:kind kind.kind
@@ -193,7 +193,7 @@
         mode:mode-kw
         within:within-kw
         [[proto result value:value-kw] ...+]
-        desc ...)
+        desc:expr ...)
      (syntax/loc stx
        (with-togetherable-racket-variables
         ()
@@ -650,19 +650,19 @@
 
 (define-syntax (defparam stx)
   (syntax-parse stx
-    [(_ lt:link-target?-kw id arg contract value:value-kw desc ...)
+    [(_ lt:link-target?-kw id arg contract value:value-kw desc:expr ...)
      #'(defproc* #:kind "parameter" #:link-target? lt.expr
          ([(id) contract] [(id [arg contract]) void? #:value value.value]) 
          desc ...)]))
 (define-syntax (defparam* stx)
   (syntax-parse stx
-    [(_ lt:link-target?-kw id arg in-contract out-contract value:value-kw desc ...)
+    [(_ lt:link-target?-kw id arg in-contract out-contract value:value-kw desc:expr ...)
      #'(defproc* #:kind "parameter" #:link-target? lt.expr
          ([(id) out-contract] [(id [arg in-contract]) void? #:value value.value])
          desc ...)]))
 (define-syntax (defboolparam stx)
   (syntax-parse stx
-    [(_ lt:link-target?-kw id arg value:value-kw desc ...)
+    [(_ lt:link-target?-kw id arg value:value-kw desc:expr ...)
      #'(defproc* #:kind "parameter" #:link-target? lt.expr
          ([(id) boolean?] [(id [arg any/c]) void? #:value value.value])
          desc ...)]))
@@ -733,7 +733,7 @@
      (syntax-parse stx
        [(_ lt:link-target?-kw name fields 
            m:mutable-kw o:opacity-kw c:constructor-kw 
-           desc ...)
+           desc:expr ...)
         #`(**defstruct lt.expr name fields 
                        m.immutable? o.opacity
                        c.id c.given? c.extra? default-extra? c.omit?
@@ -1056,7 +1056,7 @@
         id 
         result 
         value:value-kw
-        desc ...)
+        desc:expr ...)
      #'(with-togetherable-racket-variables
         ()
         ()
@@ -1070,7 +1070,7 @@
 
 (define-syntax (defthing* stx)
   (syntax-parse stx
-    [(_ kind:kind-kw lt:link-target?-kw ([id result value:value-kw] ...+) desc ...)
+    [(_ kind:kind-kw lt:link-target?-kw ([id result value:value-kw] ...+) desc:expr ...)
      #'(with-togetherable-racket-variables
         ()
         ()
