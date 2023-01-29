@@ -241,10 +241,11 @@
 
 (define-syntax (specsubform/subs stx)
   (syntax-parse stx
-    [(_ l:literals-kw spec g:grammar desc:expr ...)
+    [(_ l:literals-kw spec g:grammar c:contracts-kw desc:expr ...)
      (syntax/loc stx
        (spec?form/subs #f #:literals (l.lit ...) spec 
-                       ([g.non-term-id g.non-term-form ...] ...) 
+                       ([g.non-term-id g.non-term-form ...] ...)
+                       #:contracts c.cs
                        desc ...))]))
 
 (define-syntax-rule (specspecsubform spec desc ...)
@@ -261,10 +262,11 @@
 
 (define-syntax (specform/subs stx)
   (syntax-parse stx
-    [(_ l:literals-kw spec g:grammar
+    [(_ l:literals-kw spec g:grammar c:contracts-kw
         desc:expr ...)
      (syntax/loc stx
        (spec?form/subs #t #:literals (l.lit ...) spec ([g.non-term-id g.non-term-form ...] ...)
+                       #:contracts c.cs
                        desc ...))]))
 
 (define-syntax-rule (specsubform/inline spec desc ...)
