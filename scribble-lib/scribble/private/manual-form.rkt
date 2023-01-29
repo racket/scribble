@@ -143,13 +143,13 @@
 
 (define-syntax (defform/subs stx)
   (syntax-parse stx
-    [(_ k:kind-kw lt:link-target?-kw d:id-kw l:literals-kw spec subs desc:expr ...)
+    [(_ k:kind-kw lt:link-target?-kw d:id-kw l:literals-kw spec subs c:contracts-kw desc:expr ...)
      (syntax/loc stx
        (defform*/subs #:kind k.kind 
          #:link-target? lt.expr
          #:id [d.defined-id d.defined-id-expr] 
          #:literals (l.lit ...)
-         [spec] subs desc ...))]))
+         [spec] subs #:contracts c.cs desc ...))]))
 
 (define-syntax (defform/none stx)
   (syntax-parse stx
