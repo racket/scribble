@@ -1057,7 +1057,7 @@
           (let ([len (string-length s)])
             (let loop ([i 0])
               (unless (= i len)
-                (display
+                (define to-display
                  (let char-loop ([c (string-ref s i)])
                    (case c
                      [(#\\) (if (rendering-tt)
@@ -1116,7 +1116,19 @@
                                         c)]
                                    [else c])]))
                           c)])))
-                (loop (add1 i))))))]))
+                (cond
+                  [(and (< (+ i 1) len)
+                        (latex-combiner (string-ref s (+ i 1))))
+                   =>
+                   ;; sometimes, the call to `string-normalize-nfc` still leaves
+                   ;; something we can combine via `latex-combiner` in the string, uncombined
+                   ;; this check here detects and uses it
+                   (λ (fmt)
+                     (display (format fmt to-display))
+                     (loop (+ i 2)))]
+                  [else
+                   (display to-display)
+                   (loop (add1 i))])))))]))
     
     
     (define/private (box-character c [line-thickness 1])
