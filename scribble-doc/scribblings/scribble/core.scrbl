@@ -415,7 +415,7 @@ The recognized @tech{style properties} are as follows:
        part acts like a ``part'' in a book where chapter numbering is
        continuous across parts.}
 
- @item{@tech{numberer} --- A @tech{numberer} created with
+ @item{@tech{numberer} instance --- A @tech{numberer} created with
        @racket[make-numberer] determines a representation of the
        part's section number as an extension of it's parent's number.
        A @tech{numberer} overrides the default representation, which
