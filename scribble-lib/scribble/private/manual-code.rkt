@@ -77,23 +77,24 @@
          [(null? tokens) (split-lines default-color (substring bstr pos))]
          [(eq? (caar tokens) 'white-space) (loop pos (cdr tokens))]
          [(= pos (cadar tokens))
-          (append (let ([style (caar tokens)]
-                        [get-str (lambda ()
-                                   (substring bstr (cadar tokens) (caddar tokens)))])
-                    (cond
-                      [(symbol? style)
-                       (let ([scribble-style
-                              (case style
-                                [(symbol) symbol-color]
-                                [(parenthesis hash-colon-keyword) paren-color]
-                                [(constant string) value-color]
-                                [(comment) comment-color]
-                                [else default-color])])
-                         (split-lines scribble-style (get-str)))]
-                      [(procedure? style)
-                       (list (style (get-str)))]
-                      [else (list style)]))
-                  (loop (caddar tokens) (cdr tokens)))]
+          (define next
+            (let ([style (caar tokens)]
+                  [get-str (lambda ()
+                             (substring bstr (cadar tokens) (caddar tokens)))])
+              (cond
+                [(symbol? style)
+                 (let ([scribble-style
+                        (case style
+                          [(symbol) symbol-color]
+                          [(parenthesis hash-colon-keyword) paren-color]
+                          [(constant string) value-color]
+                          [(comment) comment-color]
+                          [else default-color])])
+                   (split-lines scribble-style (get-str)))]
+                [(procedure? style)
+                 (list (style (get-str)))]
+                [else (list style)])))
+          (append next (loop (caddar tokens) (cdr tokens)))]
          [(> pos (cadar tokens))
           (loop pos (cdr tokens))]
          [else (append
