@@ -165,7 +165,7 @@
                              (list-ref b 5)
                              (syntax-property c 'display-string)
                              defn?
-                             space)))])
+                             suffix)))])
     (or (and key
              (let ([b (hash-ref id-element-cache key #f)])
                (and b

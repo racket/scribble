@@ -110,7 +110,7 @@
     (raise-argument-error 'libs->taglet "(or/c #f symbol?)" space))
   (define intro
     (if space
-        (identifier-label-binding (intro id 'add))
+        (make-interned-syntax-introducer space)
         (lambda (x add) x)))
   (let ([lib
          (or (ormap (lambda (lib)
