@@ -154,6 +154,7 @@
 
 (define (make-id-element c s defn?
                          #:space [space #f]
+                         #:suffix [suffix space]
                          #:unlinked-ok? [unlinked-ok? #f])
   (let* ([key (and id-element-cache
                    (let ([b (identifier-label-binding c)])
@@ -173,6 +174,7 @@
                   (lambda (renderer sec ri)
                     (let* ([tag (find-racket-tag sec ri c #f
                                                  #:space space
+                                                 #:suffix suffix
                                                  #:unlinked-ok? unlinked-ok?)])
                       (cond
                         [tag

@@ -104,16 +104,13 @@
 
 (define checkers (make-hash))
 
-(define (libs->taglet id libs source-libs [space-in #f])
-  (define space
-    ;; temporary hack: accomodate a "space" that is actually a suffix
-    ;; ending in a space
-    (if (list? space-in)
-        (car (reverse space-in))
-        space-in))
+(define (libs->taglet id libs source-libs [space #f])
+  (unless (or (not space)
+              (symbol? space))
+    (raise-argument-error 'libs->taglet "(or/c #f symbol?)" space))
   (define intro
     (if space
-        (make-interned-syntax-introducer space)
+        (identifier-label-binding (intro id 'add))
         (lambda (x add) x)))
   (let ([lib
          (or (ormap (lambda (lib)
