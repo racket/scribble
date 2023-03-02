@@ -82,14 +82,14 @@
                                    (substring bstr (cadar tokens) (caddar tokens)))])
                     (cond
                       [(symbol? style)
-                       (let ([scribble-style
-                              (case style
-                                [(symbol) symbol-color]
-                                [(parenthesis hash-colon-keyword) paren-color]
-                                [(constant string) value-color]
-                                [(comment) comment-color]
-                                [else default-color])])
-                         (split-lines scribble-style (get-str)))]
+                       (define scribble-style
+                         (case style
+                           [(symbol) symbol-color]
+                           [(parenthesis hash-colon-keyword) paren-color]
+                           [(constant string) value-color]
+                           [(comment) comment-color]
+                           [else default-color]))
+                       (split-lines scribble-style (get-str))]
                       [(procedure? style)
                        (list (style (get-str)))]
                       [else (list style)]))
@@ -110,123 +110,123 @@
 ;; the third 0 if T is a symbol, and 1 or greater if its a function or element
 ;; the tokens are sorted by the start end end positions
 (define (get-tokens strs context expand)
-  (let* ([xstr (apply string-append strs)]
-         [bstr (regexp-replace* #rx"(?m:^$)" xstr "\xA0")]
-         [in (open-input-string bstr)])
-    (port-count-lines! in)
-    (let* ([tokens
-            (let loop ([mode #f])
-              (let-values ([(lexeme type data start end backup-delta mode)
-                            (module-lexer in 0 mode)])
-                (if (equal? type 'eof)
-                    null
-                    (cons (list type (sub1 start) (sub1 end) 0)
-                          (loop (if (dont-stop? mode)
-                                    (dont-stop-val mode)
-                                    mode))))))]
-           ;; use a source that both identifies the original code
-           ;; and is unique wrt eq? as used below
-           [program-source (or context bstr)]
-           [e (parameterize ([read-accept-reader #t])
-                ((or expand 
-                     (lambda (stx) 
-                       (if context
-                           (replace-context context stx)
-                           stx)))
-                 (let ([p (open-input-string bstr)])
-                   (port-count-lines! p)
-                   (let loop ()
-                     (let ([v (read-syntax program-source p)])
-                       (cond
-                        [expand v]
-                        [(eof-object? v) null]
-                        [else (datum->syntax #f (cons v (loop)) v v)]))))))]
-           [ids (let loop ([e e])
-                  (cond
-                   [(and (identifier? e)
-                         (syntax-original? e)
-                         (syntax-position e)
-                         (eq? program-source (syntax-source e)))
-                    (let ([pos (sub1 (syntax-position e))])
-                      (list (list (lambda (str)
-                                    (to-element (syntax-property
-                                                 e
-                                                 'display-string
-                                                 str)
-                                                #:escapes? #f))
-                                  pos
-                                  (+ pos (syntax-span e))
-                                  1)))]
-                   [(syntax? e) (append (loop (syntax-e e))
-                                        (loop (or (syntax-property e 'origin)
-                                                  null))
-                                        (loop (or (syntax-property e 'disappeared-use)
-                                                  null)))]
-                   [(pair? e) (append (loop (car e)) (loop (cdr e)))]
+  (define xstr (apply string-append strs))
+  (define bstr (regexp-replace* #rx"(?m:^$)" xstr "\xA0"))
+  (define in (open-input-string bstr))
+  (port-count-lines! in)
+  (let* ([tokens
+          (let loop ([mode #f])
+            (let-values ([(lexeme type data start end backup-delta mode)
+                          (module-lexer in 0 mode)])
+              (if (equal? type 'eof)
+                  null
+                  (cons (list type (sub1 start) (sub1 end) 0)
+                        (loop (if (dont-stop? mode)
+                                  (dont-stop-val mode)
+                                  mode))))))]
+         ;; use a source that both identifies the original code
+         ;; and is unique wrt eq? as used below
+         [program-source (or context bstr)]
+         [e (parameterize ([read-accept-reader #t])
+              ((or expand 
+                   (lambda (stx) 
+                     (if context
+                         (replace-context context stx)
+                         stx)))
+               (let ([p (open-input-string bstr)])
+                 (port-count-lines! p)
+                 (let loop ()
+                   (define v (read-syntax program-source p))
+                   (cond
+                     [expand v]
+                     [(eof-object? v) null]
+                     [else (datum->syntax #f (cons v (loop)) v v)])))))]
+         [ids (let loop ([e e])
+                (cond
+                  [(and (identifier? e)
+                        (syntax-original? e)
+                        (syntax-position e)
+                        (eq? program-source (syntax-source e)))
+                   (define pos (sub1 (syntax-position e)))
+                   (list (list (lambda (str)
+                                 (to-element (syntax-property
+                                              e
+                                              'display-string
+                                              str)
+                                             #:escapes? #f))
+                               pos
+                               (+ pos (syntax-span e))
+                               1))]
+                  [(syntax? e) (append (loop (syntax-e e))
+                                       (loop (or (syntax-property e 'origin)
+                                                 null))
+                                       (loop (or (syntax-property e 'disappeared-use)
+                                                 null)))]
+                  [(pair? e) (append (loop (car e)) (loop (cdr e)))]
+                  [else null]))]
+         [link-mod (lambda (mp-stx priority #:orig? [always-orig? #f])
+                     (if (or always-orig?
+                             (syntax-original? mp-stx))
+                         (let ([mp (syntax->datum mp-stx)]
+                               [pos (sub1 (syntax-position mp-stx))])
+                           (list (list (racketmodname #,mp)
+                                       pos
+                                       (+ pos (syntax-span mp-stx))
+                                       priority)))
+                         null))]
+         ;; This makes sense when `expand' actually expands, and
+         ;; probably not otherwise:
+         [mods (let loop ([e e])
+                 (syntax-case e (module #%require begin)
+                   [(module name lang (mod-beg form ...))
+                    (apply append
+                           (link-mod #'lang 2)
+                           (map loop (syntax->list #'(form ...))))]
+                   [(#%require spec ...)
+                    (apply append
+                           (map (lambda (spec)
+                                  ;; Need to add support for renaming forms, etc.:
+                                  (if (module-path? (syntax->datum spec))
+                                      (link-mod spec 2)
+                                      null))
+                                (syntax->list #'(spec ...))))]
+                   [(begin form ...)
+                    (apply append
+                           (map loop (syntax->list #'(form ...))))]
                    [else null]))]
-           [link-mod (lambda (mp-stx priority #:orig? [always-orig? #f])
-                       (if (or always-orig?
-                               (syntax-original? mp-stx))
-                           (let ([mp (syntax->datum mp-stx)]
-                                 [pos (sub1 (syntax-position mp-stx))])
-                             (list (list (racketmodname #,mp)
-                                         pos
-                                         (+ pos (syntax-span mp-stx))
-                                         priority)))
-                           null))]
-           ;; This makes sense when `expand' actually expands, and
-           ;; probably not otherwise:
-           [mods (let loop ([e e])
-                   (syntax-case e (module #%require begin)
-                     [(module name lang (mod-beg form ...))
-                      (apply append
-                             (link-mod #'lang 2)
-                             (map loop (syntax->list #'(form ...))))]
-                     [(#%require spec ...)
-                      (apply append
-                             (map (lambda (spec)
-                                    ;; Need to add support for renaming forms, etc.:
-                                    (if (module-path? (syntax->datum spec))
-                                        (link-mod spec 2)
-                                        null))
-                                  (syntax->list #'(spec ...))))]
-                     [(begin form ...)
-                      (apply append
-                             (map loop (syntax->list #'(form ...))))]
-                     [else null]))]
-           [has-hash-lang? (regexp-match? #rx"^#lang " bstr)]
-           [hash-lang (if has-hash-lang?
-                          (list (list (hash-lang)
-                                      0
-                                      5
-                                      1)
-                                (list 'white-space 5 6 0))
-                          null)]
-           [language (if has-hash-lang?
-                         (let ([m (regexp-match #rx"^#lang ([-0-9a-zA-Z/._+]+)" bstr)])
-                           (if m
-                               (link-mod
-                                #:orig? #t
-                                (datum->syntax #f
-                                               (string->symbol (cadr m))
-                                               (vector 'in 1 6 7 (string-length (cadr m))))
-                                3)
-                               null))
-                         null)]
-           [tokens (sort (append ids
-                                 mods
-                                 hash-lang
-                                 language
-                                 (filter (lambda (x) (not (eq? (car x) 'symbol)))
-                                         (if has-hash-lang?
-                                             ;; Drop #lang entry:
-                                             (cdr tokens)
-                                             tokens)))
-                         (lambda (a b)
-                           (or (< (cadr a) (cadr b))
-                               (and (= (cadr a) (cadr b))
-                                    (> (cadddr a) (cadddr b))))))])
-      (values tokens bstr))))
+         [has-hash-lang? (regexp-match? #rx"^#lang " bstr)]
+         [hash-lang (if has-hash-lang?
+                        (list (list (hash-lang)
+                                    0
+                                    5
+                                    1)
+                              (list 'white-space 5 6 0))
+                        null)]
+         [language (if has-hash-lang?
+                       (let ([m (regexp-match #rx"^#lang ([-0-9a-zA-Z/._+]+)" bstr)])
+                         (if m
+                             (link-mod
+                              #:orig? #t
+                              (datum->syntax #f
+                                             (string->symbol (cadr m))
+                                             (vector 'in 1 6 7 (string-length (cadr m))))
+                              3)
+                             null))
+                       null)]
+         [tokens (sort (append ids
+                               mods
+                               hash-lang
+                               language
+                               (filter (lambda (x) (not (eq? (car x) 'symbol)))
+                                       (if has-hash-lang?
+                                           ;; Drop #lang entry:
+                                           (cdr tokens)
+                                           tokens)))
+                       (lambda (a b)
+                         (or (< (cadr a) (cadr b))
+                             (and (= (cadr a) (cadr b))
+                                  (> (cadddr a) (cadddr b))))))])
+    (values tokens bstr)))
 
 (define (typeset-code-line context expand lang-line . strs)
   (typeset-code
