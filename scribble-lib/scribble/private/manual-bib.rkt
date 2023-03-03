@@ -21,7 +21,7 @@
                          #:note (or/c #f pre-content?))
              . ->* .
              a-bib-entry?)]
- [rename a-bib-entry? bib-entry? (any/c . -> . boolean?)]
+ [rename a-bib-entry? bib-entry? predicate/c]
  [bibliography (() (#:tag string?) #:rest (listof a-bib-entry?) . ->* . part?)]) 
 
 (define (cite key . keys)
@@ -82,11 +82,11 @@
      (make-table
       bib-style
       (map (lambda (c)
-             (let ([key (a-bib-entry-key c)]
-                   [val (a-bib-entry-val c)])
-               (list
-                (to-flow (make-target-element #f `("[" ,key "]") `(cite ,key)))
-                flow-spacer
-                (to-flow val))))
+             (define key (a-bib-entry-key c))
+             (define val (a-bib-entry-val c))
+             (list
+              (to-flow (make-target-element #f `("[" ,key "]") `(cite ,key)))
+              flow-spacer
+              (to-flow val)))
            citations))))
    null))

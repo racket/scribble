@@ -165,15 +165,16 @@
                   [(pair? e) (append (loop (car e)) (loop (cdr e)))]
                   [else null]))]
          [link-mod (lambda (mp-stx priority #:orig? [always-orig? #f])
-                     (if (or always-orig?
-                             (syntax-original? mp-stx))
-                         (let ([mp (syntax->datum mp-stx)]
-                               [pos (sub1 (syntax-position mp-stx))])
-                           (list (list (racketmodname #,mp)
-                                       pos
-                                       (+ pos (syntax-span mp-stx))
-                                       priority)))
-                         null))]
+                     (cond
+                       [(or always-orig?
+                            (syntax-original? mp-stx))
+                        (define mp (syntax->datum mp-stx))
+                        (define pos (sub1 (syntax-position mp-stx)))
+                        (list (list (racketmodname #,mp)
+                                    pos
+                                    (+ pos (syntax-span mp-stx))
+                                    priority))]
+                       [else null]))]
          ;; This makes sense when `expand' actually expands, and
          ;; probably not otherwise:
          [mods (let loop ([e e])
@@ -202,17 +203,18 @@
                                     1)
                               (list 'white-space 5 6 0))
                         null)]
-         [language (if has-hash-lang?
-                       (let ([m (regexp-match #rx"^#lang ([-0-9a-zA-Z/._+]+)" bstr)])
-                         (if m
-                             (link-mod
-                              #:orig? #t
-                              (datum->syntax #f
-                                             (string->symbol (cadr m))
-                                             (vector 'in 1 6 7 (string-length (cadr m))))
-                              3)
-                             null))
-                       null)]
+         [language (cond
+                     [has-hash-lang?
+                      (define m (regexp-match #rx"^#lang ([-0-9a-zA-Z/._+]+)" bstr))
+                      (if m
+                          (link-mod
+                           #:orig? #t
+                           (datum->syntax #f
+                                          (string->symbol (cadr m))
+                                          (vector 'in 1 6 7 (string-length (cadr m))))
+                           3)
+                          null)]
+                     [else null])]
          [tokens (sort (append ids
                                mods
                                hash-lang

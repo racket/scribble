@@ -37,8 +37,8 @@
   (if (identifier? id/tag)
       (make-delayed-element
        (λ (ren p ri)
-         (let ([tag (find-scheme-tag p ri id/tag #f)])
-           (if tag (list (mk tag)) content)))
+         (define tag (find-scheme-tag p ri id/tag #f))
+         (if tag (list (mk tag)) content))
        (λ () (car content))
        (λ () (car content)))
       (mk id/tag)))
