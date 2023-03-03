@@ -45,17 +45,18 @@
           #:normalize? [normalize? #t] 
           #:key [key #f]
           . s)
-  (let* ([e (if style?
-                (apply defterm s)
-                (make-element #f (decode-content s)))]
-         [t (*tech make-target-element #f #f #f (list e) key normalize?)])
-    (make-index-element #f
-                        (list t)
-                        (target-element-tag t)
-                        (list (datum-intern-literal
-                               (clean-up-index-string (element->string e))))
-                        (list e)
-                        'tech)))
+  (define e
+    (if style?
+        (apply defterm s)
+        (make-element #f (decode-content s))))
+  (define t (*tech make-target-element #f #f #f (list e) key normalize?))
+  (make-index-element #f
+                      (list t)
+                      (target-element-tag t)
+                      (list (datum-intern-literal
+                             (clean-up-index-string (element->string e))))
+                      (list e)
+                      'tech))
 
 (define (tech #:doc [doc #f]
               #:tag-prefixes [prefix #f]

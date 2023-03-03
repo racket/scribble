@@ -26,11 +26,12 @@
 (define flow-empty-line (to-flow (tt 'nbsp)))
 
 (define (make-table-if-necessary style content)
-  (if (= 1 (length content))
-    (let ([paras (append-map flow-paragraphs (car content))])
-      (if (andmap paragraph? paras)
-        (list (make-omitable-paragraph (append-map paragraph-content paras)))
-        (list (make-table style content))))
-    (list (make-table style content))))
+  (cond
+    [(= 1 (length content))
+     (define paras (append-map flow-paragraphs (car content)))
+     (if (andmap paragraph? paras)
+         (list (make-omitable-paragraph (append-map paragraph-content paras)))
+         (list (make-table style content)))]
+    [else (list (make-table style content))]))
 
 (define current-display-width (make-parameter 65))
