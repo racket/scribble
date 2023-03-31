@@ -985,8 +985,8 @@
           (cond
             [command? (printf "}")]
             [multicommand? (void)]
-            [else (printf "\\end{~a}" kind)])
-          null)))
+            [else (printf "\\end{~a}" kind)]))
+        null))
 
     (define/override (render-nested-flow t part ri starting-item?)
       (do-render-nested-flow t part ri #f #f #f))
