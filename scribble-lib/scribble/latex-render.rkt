@@ -1530,6 +1530,8 @@
         [(#\ℜ) "$\\mathfrak{R}$"]
         [(#\ℨ) "$\\mathfrak{Z}$"]
         [(#\ℭ) "$\\mathfrak{C}$"]
+        [(#\«) "\\guillemetleft"]
+        [(#\») "\\guillemetright"]
         [else #f]))
 
     ;; ----------------------------------------
