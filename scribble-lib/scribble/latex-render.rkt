@@ -1530,8 +1530,8 @@
         [(#\ℜ) "$\\mathfrak{R}$"]
         [(#\ℨ) "$\\mathfrak{Z}$"]
         [(#\ℭ) "$\\mathfrak{C}$"]
-        [(#\«) "\\guillemetleft"]
-        [(#\») "\\guillemetright"]
+        [(#\«) "\\guillemotleft"]  ; the correct spelling is guillemet,
+        [(#\») "\\guillemotright"] ; but guillemot works in older LaTeX versions
         [else #f]))
 
     ;; ----------------------------------------
