@@ -164,7 +164,7 @@ installation's documentation (not user-scope documentation) to a given URL, such
 @tt{http://docs.racket-lang.org/}. Beware that documentation links
 sometimes change (although Scribble generates HTML paths and anchors
 in a relatively stable way), so
-@tt{http://download.racket-lang.org/docs/@italic{version}/html/} may be
+@tt{http://download.racket-lang.org/releases/@italic{version}/doc/} may be
 more reliable when building with an installation for @italic{version}.
 The @DFlag{redirect-main} flag is ignored for non-HTML output.
 
