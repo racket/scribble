@@ -1061,8 +1061,8 @@
                 sep-element
                 (make-element
                  (cond [(not parent) "nonavigation"]
-                       [prev (titled-url "backward" prev)]
-                       [else (titled-url "backward" "index.html"
+                       [prev (titled-url "backward" prev '[rel . "prev"])]
+                       [else (titled-url "backward" "index.html" '[rel . "prev"]
                                          #:title-from
                                          (and (part? parent) parent))])
                  prev-content)
@@ -1083,7 +1083,7 @@
                  up-content)
                 sep-element
                 (make-element
-                 (if next (titled-url "forward" next) "nonavigation")
+                 (if next (titled-url "forward" next '[rel . "next"]) "nonavigation")
                  next-content)))))
       (define navbar
         `(div ([class ,(if top? "navsettop" "navsetbottom")])
