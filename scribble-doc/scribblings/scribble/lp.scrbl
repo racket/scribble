@@ -53,11 +53,11 @@ looks like this:
 @defmodulelang[scribble/lp2 #:use-sources (scribble/lp)]{The
 @racketmodname[scribble/lp] language provides core support for
 literate programming. It is read like a @racketmodname[scribble/base]
-program, but its bindings extend @racketmodname[racket/base] with two
+program, but its bindings extend @racketmodname[scribble/base] with two
 forms: @racket[chunk] and @racket[CHUNK].}
 
 More precisely, a module in @racketmodname[scribble/lp2] has its
-@racketmodname[racket/base]-like content in a @racketidfont{doc}
+@racketmodname[scribble/base]-like content in a @racketidfont{doc}
 submodule, which is recognized by tools such as @exec{raco scribble}.
 The content of the @racket[chunk] and @racket[CHUNK] forms is
 stitched together as the immediate content of the module.
