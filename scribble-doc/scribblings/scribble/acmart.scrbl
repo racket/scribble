@@ -179,7 +179,7 @@ Specifies a subtitle.}
 }|
 }
 
-@defproc[(authornote [text pre-content?] ...)]{
+@defproc[(authornote [text pre-content?] ...) block?]{
   Attaches a footnote to an author name.
 }
 
