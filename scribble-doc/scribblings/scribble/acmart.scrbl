@@ -179,6 +179,10 @@ Specifies a subtitle.}
 }|
 }
 
+@defproc[(authornote [text pre-content?] ...) block?]{
+  Attaches a footnote to an author name.
+}
+
 @deftogether[(
 @defproc[(acmJournal [journal pre-content?] ...) block?]
 @defproc[(acmConference [name pre-content?] [date pre-content?] [venue pre-content?]) block?]
