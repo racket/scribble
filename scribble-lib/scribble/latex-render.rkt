@@ -1469,6 +1469,8 @@
         [(#\⋈) "$\\bowtie$"]
         [(#\⊆) "$\\subseteq$"]
         [(#\⊇) "$\\supseteq$"]
+        [(#\⊈) "$\\nsubseteq$"]
+        [(#\⊊) "$\\subsetneq$"]
         [(#\≌) "$\\cong$"] ;; this is wrong but left in for backwards compatibility
         [(#\≅) "$\\cong$"]
         [(#\⊏) "$\\sqsubset$"]
