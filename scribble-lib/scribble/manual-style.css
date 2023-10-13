@@ -31,6 +31,30 @@
     font-size: 1rem;
 }
 
+/** Begin headings */
+
+/* Hide the button group by default, but show them on hovering the heading title */
+.heading:hover > .button-group {
+    visibility: visible;
+}
+.button-group {
+    visibility: hidden;
+}
+
+.heading-anchor {
+    font-size: 60%;
+    /* A trick to color an emoji from https://stackoverflow.com/questions/32413731/color-for-unicode-emoji */
+    color: transparent;
+    text-shadow: 0 0 0 gray;
+    vertical-align: 5%;
+}
+.heading-source {
+    cursor: pointer;
+    user-select: none;
+    color: gray;
+}
+/** End headings */
+
 /* embolden the "Racket Guide" and "Racket Reference" links on the TOC */
 /* there isn't an obvious tag in the markup that designates the top TOC page, which is called "start.scrbl" */
 /* nor a tag that designates these two links as special */

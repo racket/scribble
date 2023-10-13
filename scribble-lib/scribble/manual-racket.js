@@ -236,12 +236,15 @@ function AddPartTitleOnClick(elem) {
         else
             elem.parentNode.appendChild(info);
 
-        /* Clicking the header shows the explanation element: */
-        elem.onclick = function () {
-            if (info.style.display == "none")
+        /* Clicking the information button shows the explanation element: */
+        const heading = elem.querySelector('.heading-source');
+        if (heading) {
+          heading.onclick = function () {
+            if (info.style.display === "none")
                 info.style.display = "block";
             else
                 info.style.display = "none";
+          }
         }
     }
 }
