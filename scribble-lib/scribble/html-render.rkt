@@ -4,6 +4,7 @@
          "html-properties.rkt"
          "private/literal-anchor.rkt"
          racket/class
+         racket/match
          racket/path
          racket/file
          racket/port
@@ -1154,6 +1155,7 @@
                              (append
                               (if (and src taglet)
                                   `([x-source-module ,(format "~s" src)]
+                                    [class "heading"]
                                     ,@(let* ([path (resolved-module-path-name
                                                     (module-path-index-resolve
                                                      (module-path-index-join src #f)))]
@@ -1170,14 +1172,32 @@
                                   '())
                               (style->attribs (part-style d))))
                           ,@(format-number number '((tt nbsp)))
-                          ,@(map (lambda (t)
-                                   `(a ([name ,(format "~a" (anchor-name
-                                                             (add-current-tag-prefix
-                                                              (tag-key t ri))))])))
-                                 (part-tags d))
                           ,@(if (part-title-content d)
                                 (render-content (part-title-content d) d ri)
-                                null)))])
+                                null)
+                          " "
+                          (span ([class "button-group"])
+                                ,@(let ([make-anchor
+                                         (lambda (t #:content [content '()])
+                                           `(a ([name ,(format "~a" (anchor-name
+                                                                     (add-current-tag-prefix
+                                                                      (tag-key t ri))))]
+                                                [href ,(format "#~a" (anchor-name
+                                                                      (add-current-tag-prefix
+                                                                       (tag-key t ri))))])
+                                               ,@content))])
+                                    (match (part-tags d)
+                                      ['() '()]
+                                      [(cons t ts)
+                                       (cons (make-anchor t
+                                                          #:content
+                                                          (list `(span ([class "heading-anchor"]
+                                                                        [title "Link here"])
+                                                                       "🔗")))
+                                             (map make-anchor ts))]))
+                                " "
+                                (a ([class "heading-source"]
+                                    [title "Internal Scribble link and Scribble source"]) "ℹ"))))])
              ,@(let ([auths (extract-authors d)])
                  (if (null? auths)
                      null
