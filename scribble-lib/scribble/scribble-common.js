@@ -3,67 +3,24 @@
 // Page Parameters ------------------------------------------------------------
 
 var page_query_string = location.search.substring(1);
-
-var page_args =
-  ((function(){
-      if (!page_query_string) return [];
-      var args = page_query_string.split(/[&;]/);
-      for (var i=0; i<args.length; i++) {
-        var a = args[i];
-        var p = a.indexOf('=');
-        if (p >= 0) args[i] = [a.substring(0,p), a.substring(p+1)];
-        else args[i] = [a, false];
-      }
-      return args;
-    })());
+const page_args = new URLSearchParams(location.search);
 
 function GetPageArg(key, def) {
-  for (var i=0; i<page_args.length; i++)
-    if (page_args[i][0] === key) {
-      try {
-        return decodeURIComponent(page_args[i][1]);
-      } catch (e) {
-        if (e instanceof URIError) {
-          return page_args[i][1];
-        } else {
-          throw e;
-        }
-      }
-    }
-  return def;
+  return page_args.get(key) || def;
 }
 
 function MergePageArgsIntoLink(a) {
-  if (page_args.length == 0 ||
-      (!a.attributes["data-pltdoc"]) || (a.attributes["data-pltdoc"].value == ""))
-    return;
+  if (page_args.size === 0 || !a.dataset.pltdoc) return;
   a.href = MergePageArgsIntoUrl(a.href);
 }
 
 function MergePageArgsIntoUrl(href) {
-    var mtch = href.match(/^([^?#]*)(?:\?([^#]*))?(#.*)?$/);
-    if (mtch == undefined) { // I think this never happens
-        return "?" + page_query_string;
-    }
-    if (!mtch[2]) {
-        return mtch[1] + "?" + page_query_string + (mtch[3] || "");
-    }
-    // need to merge here, precedence to arguments that exist in `a'
-    var i, j;
-    var prefix = mtch[1], str = mtch[2] || "", suffix = mtch[3] || "";
-    var args = str.split(/[&;]/);
-    for (i=0; i<args.length; i++) {
-      j = args[i].indexOf('=');
-      if (j) args[i] = args[i].substring(0,j);
-    }
-    var additions = "";
-    for (i=0; i<page_args.length; i++) {
-      var exists = false;
-      for (j=0; j<args.length; j++)
-        if (args[j] == page_args[i][0]) { exists = true; break; }
-      if (!exists) str += "&" + page_args[i][0] + "=" + page_args[i][1];
-    }
-    return prefix + "?" + str + suffix;
+  const url = new URL(href, window.location.href);
+  for (const [key, val] of page_args) {
+    if (url.searchParams.has(key)) continue;
+    url.searchParams.append(key, val)
+  }
+  return url.href;
 }
 
 // Cookies --------------------------------------------------------------------
