@@ -1533,6 +1533,13 @@
         [(#\ℭ) "$\\mathfrak{C}$"]
         [(#\«) "\\guillemotleft{}"]  ; the correct spelling is guillemet,
         [(#\») "\\guillemotright{}"] ; but guillemot works in older LaTeX versions
+        [(#\∠) "$\\angle$"]
+        [(#\∬) "$\\iint$"]
+        [(#\∭) "$\\iiint$"]
+        [(#\∯) "$\\oiint$"]
+        [(#\∰) "$\\oiiint$"]
+        [(#\ℜ) "$\\Re$"]
+        [(#\ℑ) "$\\Im$"]
         [else #f]))
 
     ;; ----------------------------------------
