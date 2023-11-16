@@ -1093,6 +1093,7 @@
                           ;; first, try user-defined conversions
                           (or (convs c)
                               (convert-to-latex c)
+                              (convert-bb-bold c)
                               (cond
                                 [(char<=? #\uAC00 c #\uD7AF) ; Korean Hangul
                                  ;; This likely will not work right if it shows up in a section
@@ -1293,6 +1294,37 @@
         [(#\u328) "\\k{~a}"]
         [else #f]))
 
+    (define/private (convert-bb-bold c)
+      (define (mathbb c) (format "$\\mathbb{~a}$" c))
+      (cond
+        [(char<=? #\𝕒 c #\𝕫)
+         (mathbb (+ (- (char->integer c)
+                       (char->integer #\𝕒))
+                    (char->integer #\a)))]
+        [(and (char<=? #\𝔸 c #\𝕐)
+              ;; the blackboard bold C, H, N, P, Q, R, and Z
+              ;; are not in this range so handle them specially, below
+              (not (member c '(#\U0001D53A
+                               #\U0001D53F
+                               #\U0001D545
+                               #\U0001D547
+                               #\U0001D548
+                               #\U0001D549))))
+         (mathbb (+ (- (char->integer c)
+                       (char->integer #\𝔸))
+                    (char->integer #\A)))]
+        [else
+         (case c
+           [(#\U2102) (mathbb "C")]
+           [(#\U1D554) (mathbb "C")]
+           [(#\U210D) (mathbb "H")]
+           [(#\U2115) (mathbb "N")]
+           [(#\U2119) (mathbb "P")]
+           [(#\U211A) (mathbb "Q")]
+           [(#\U211D) (mathbb "R")]
+           [(#\U2124) (mathbb "Z")]
+           [else #f])]))           
+    
     (define/private (convert-to-latex c)
       ;; latex-prefix.rkt enables utf8 input, but this does not work for
       ;; all the characters below (e.g. ∞). Some parts of the table
