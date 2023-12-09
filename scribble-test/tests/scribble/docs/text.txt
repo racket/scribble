@@ -18,6 +18,16 @@ Here’s some Racket code:
                  (x x)))  
   (x x)                   
 
+We should be able to use racketblock without having source location.
+
+  #(1 2 3 4)
+  (1 2 3 4) 
+  '(1 2 3 4)
+
+Spaces inside lists should be preserved.
+
+  ( a   b   c)
+
 1.2. Another Subsection
 
  (require racket/base) package: base
