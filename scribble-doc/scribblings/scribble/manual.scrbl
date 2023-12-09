@@ -2,6 +2,7 @@
 @(require scribble/manual "utils.rkt"
           (for-syntax racket/base)
           (for-label scribble/manual-struct
+                     racket/list
                      version/utils
                      syntax/quote))
 
@@ -1308,7 +1309,7 @@ Examples:
 
 @defform[(defparam maybe-link id arg-id
            contract-expr-datum
-           maybe-value
+           maybe-auto-value
            pre-flow ...)]{
 
 Like @racket[defproc], but for a parameter. The
@@ -1324,19 +1325,30 @@ Examples:
   A parameter that defines the current sandwich for operations that
   involve eating a sandwich. Default value is the empty sandwich.
 }
+
+@(require (for-label racket/base))
+
+@defparam[current-readtable v any/c #:auto-value]{
+  A parameter to hold a readtable.
+}
 }|
 @doc-render-examples[
   @defparam[#:link-target? #f
             current-sandwich sandwich sandwich? #:value empty-sandwich]{
     A parameter that defines the current sandwich for operations that
     involve eating a sandwich. Default value is the empty sandwich.
-  }]
+  }
+  @defparam[#:link-target? #f
+            current-readtable v any/c #:auto-value]{
+    A parameter to hold a readtable.
+  }
+]
 }
 
 
 @defform[(defparam* maybe-link id arg-id 
            in-contract-expr-datum out-contract-expr-datum
-           maybe-value
+           maybe-auto-value
            pre-flow ...)]{
 
 Like @racket[defparam], but with separate contracts for when the parameter is being
@@ -1346,7 +1358,7 @@ coerces values matching a more flexible contract to a more restrictive one;
 
 
 @defform[(defboolparam maybe-link id arg-id
-           maybe-value
+           maybe-auto-value
            pre-flow ...)]{
 
 Like @racket[defparam], but the contract on a parameter argument is
@@ -1354,7 +1366,7 @@ Like @racket[defparam], but the contract on a parameter argument is
 @racket[boolean?].}
 
 
-@defform/subs[(defthing options id contract-expr-datum maybe-value
+@defform/subs[(defthing options id contract-expr-datum maybe-auto-value
                 pre-flow ...)
               ([options (code:line maybe-kind maybe-link maybe-id)]
                [maybe-kind code:blank
@@ -1363,8 +1375,9 @@ Like @racket[defparam], but the contract on a parameter argument is
                            (code:line #:link-target? link-target?-expr)]
                [maybe-id code:blank
                          (code:line #:id id-expr)]
-               [maybe-value code:blank
-                            (code:line #:value value-expr-datum)])]{
+               [maybe-auto-value code:blank
+                            (code:line #:value value-expr-datum)
+                            #:auto-value])]{
 
 Like @racket[defproc], but for a non-procedure binding.
 
@@ -1379,6 +1392,11 @@ If @racket[#:value value-expr-datum] is given, @racket[value-expr-datum]
 is typeset using @racket[racketblock0] and included in the documentation.
 Wide values are put on a separate line.
 
+The option @racket[#:auto-value] is the same as @racket[#:value value-expr-datum]
+where @racket[value-expr-datum] is automatically queried from the for-label binding.
+@racket[#:auto-value] can only be used when the value is marshalable
+(e.g., if the value is a struct, it must be a prefab struct of marshalable values).
+
 Examples:
 @codeblock[#:keep-lang-line? #f]|{
 #lang scribble/manual
@@ -1389,6 +1407,12 @@ Examples:
 @defthing[empty-sandwich sandwich? #:value (make-sandwich empty)]{
   The empty sandwich.
 }
+
+@(require (for-label racket/list))
+
+@defthing[empty any/c #:auto-value]{
+  The empty list.
+}
 }|
 @doc-render-examples[
   @defthing[#:link-target? #f
@@ -1398,10 +1422,15 @@ Examples:
   @defthing[#:link-target? #f
             empty-sandwich sandwich? #:value (make-sandwich empty)]{
     The empty sandwich.
-  }]
+  }
+  @defthing[#:link-target? #f
+            empty any/c #:auto-value]{
+    The empty list.
+  }
+]
 }
 
-@defform[(defthing* options ([id contract-expr-datum maybe-value] ...+)
+@defform[(defthing* options ([id contract-expr-datum maybe-auto-value] ...+)
            pre-flow ...)]{
 
 Like @racket[defthing], but for multiple non-procedure bindings.

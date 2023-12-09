@@ -52,6 +52,9 @@ A function, again, not a link target, documented to return @racket[10] using a d
 
 @defparam[#:link-target? #f p k integer? #:value 10]{A parameter, again, with a documented default value.}
 
+@defparam[#:link-target? #f val:param k any/c #:auto-value]{A parameter with auto-value.}
+
+
 @defparam*[#:link-target? #f p k real? integer?]{A parameter, yet again.}
 
 @defparam*[#:link-target? #f p k real? integer? #:value 10]{A parameter, yet again, with a documented default value.}
@@ -71,6 +74,12 @@ A function, again, not a link target, documented to return @racket[10] using a d
 
 @defthing[#:link-target? #f v integer? #:value 12345678901234567890123456789012345678901234567890]{A thing, again, with a documented value that's too wide to fit on one line.}
 
+@defthing[#:link-target? #f val:flvector any/c #:auto-value]{Test auto-value flvector reading.}
+@defthing[#:link-target? #f val:fxvector any/c #:auto-value]{Test auto-value fxvector reading.}
+@defthing[#:link-target? #f val:extflonum any/c #:auto-value]{Test auto-value extflonum reading.}
+@defthing[#:link-target? #f val:kw any/c #:auto-value]{Test auto-value keyword reading.}
+@defthing[#:link-target? #f val:list any/c #:auto-value]{Test auto-value list reading.}
+@defthing[#:link-target? #f val:vector any/c #:auto-value]{Test auto-value vector reading.}
 
 @defstruct[pt ([x real?] [y real?])]{A structure type with extra name.}
 

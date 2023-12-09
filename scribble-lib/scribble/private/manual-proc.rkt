@@ -21,7 +21,8 @@
          racket/list
          racket/contract
          (for-syntax racket/base
-                     syntax/parse)
+                     syntax/parse
+                     "marshal.rkt")
          (for-label racket/base
                     racket/contract
                     racket/class))
@@ -140,6 +141,28 @@
    #:description "#:value keyword"
    (pattern (~optional (~seq #:value value)
                        #:defaults ([value #'no-value]))))
+
+ (define-splicing-syntax-class (autoable-value-kw name proc)
+   #:description "#:value or #:auto-value keyword"
+   (pattern (~seq #:value extracted))
+   (pattern (~seq #:auto-value)
+            #:do [(define binding-info (identifier-binding name #f))
+                  (unless (list? binding-info)
+                    (raise-syntax-error #f "not imported for-label" name))
+                  ;; the first result is from-mod, which is what we want
+                  (define mod (car binding-info))
+                  (define val (proc (dynamic-require mod (syntax-e name))))
+                  (define not-marshalable (check-marshalable val))
+                  (when not-marshalable
+                    (raise-syntax-error #f "not a marshalable value" name #f '()
+                                        (format "\n  found: ~s" not-marshalable)))]
+            ;; avoid quote if the value is self-quoting
+            #:with extracted (syntax-parse val
+                               [(xs ...) #''(xs ...)]
+                               [x:id #''x]
+                               [x:keyword #''x]
+                               [_ this-syntax]))
+   (pattern (~seq) #:with extracted #'no-value))
  
  (define-splicing-syntax-class link-target?-kw
    #:description "#:link-target? keyword"
@@ -660,23 +683,32 @@
           (= i 0))))))
     (content-thunk))))
 
+(begin-for-syntax
+  (define ((extract-parameter who id) p)
+    (unless (parameter? p)
+      (raise-syntax-error who "not a parameter" id #f '() (format "\n  got: ~s" p)))
+    (p)))
+
 (define-syntax (defparam stx)
   (syntax-parse stx
-    [(_ lt:link-target?-kw id arg contract value:value-kw desc:expr ...)
+    [(_ lt:link-target?-kw id arg contract
+        {~var value (autoable-value-kw #'id (extract-parameter 'defparam #'id))} desc:expr ...)
      #'(defproc* #:kind "parameter" #:link-target? lt.expr
-         ([(id) contract] [(id [arg contract]) void? #:value value.value]) 
+         ([(id) contract] [(id [arg contract]) void? #:value value.extracted])
          desc ...)]))
 (define-syntax (defparam* stx)
   (syntax-parse stx
-    [(_ lt:link-target?-kw id arg in-contract out-contract value:value-kw desc:expr ...)
+    [(_ lt:link-target?-kw id arg in-contract out-contract
+        {~var value (autoable-value-kw #'id (extract-parameter 'defparam* #'id))} desc:expr ...)
      #'(defproc* #:kind "parameter" #:link-target? lt.expr
-         ([(id) out-contract] [(id [arg in-contract]) void? #:value value.value])
+         ([(id) out-contract] [(id [arg in-contract]) void? #:value value.extracted])
          desc ...)]))
 (define-syntax (defboolparam stx)
   (syntax-parse stx
-    [(_ lt:link-target?-kw id arg value:value-kw desc:expr ...)
+    [(_ lt:link-target?-kw id arg
+        {~var value (autoable-value-kw #'id (extract-parameter 'defboolparam #'id))} desc:expr ...)
      #'(defproc* #:kind "parameter" #:link-target? lt.expr
-         ([(id) boolean?] [(id [arg any/c]) void? #:value value.value])
+         ([(id) boolean?] [(id [arg any/c]) void? #:value value.extracted])
          desc ...)]))
 
 (define top-align-styles (make-hash))
@@ -1067,7 +1099,7 @@
                    #:defaults ([id-expr #'#f]))
         id 
         result 
-        value:value-kw
+        {~var value (autoable-value-kw #'id values)}
         desc:expr ...)
      #'(with-togetherable-racket-variables
         ()
@@ -1078,20 +1110,24 @@
                      (list (or id-val (quote-syntax/loc id))) (list (if (identifier? id-val) (syntax-e id-val) 'id)) #f
                      (list (racketblock0 result))
                      (lambda () (list desc ...))
-                     (list (result-value value.value)))))]))
+                     (list (result-value value.extracted)))))]))
 
 (define-syntax (defthing* stx)
+  (define-syntax-class clause
+    (pattern [id result {~var value (autoable-value-kw #'id values)}]
+             #:with extracted #'value.extracted))
+
   (syntax-parse stx
-    [(_ kind:kind-kw lt:link-target?-kw ([id result value:value-kw] ...+) desc:expr ...)
+    [(_ kind:kind-kw lt:link-target?-kw (c:clause ...+) desc:expr ...)
      #'(with-togetherable-racket-variables
         ()
         ()
         (*defthing kind.kind
                    lt.expr
-                   (list (quote-syntax/loc id) ...) (list 'id ...) #f
-                   (list (racketblock0 result) ...)
+                   (list (quote-syntax/loc c.id) ...) (list 'c.id ...) #f
+                   (list (racketblock0 c.result) ...)
                    (lambda () (list desc ...))
-                   (list (result-value value.value) ...)))]))
+                   (list (result-value c.extracted) ...)))]))
 
 (define (*defthing kind link? stx-ids names form? result-contracts content-thunk
                    [result-values (map (lambda (x) #f) result-contracts)])
