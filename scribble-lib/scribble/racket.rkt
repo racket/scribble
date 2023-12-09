@@ -673,11 +673,30 @@
                  (unless (and expr? (zero? quote-depth))
                    (let ([vec (syntax-e c)])
                      (out "#" p-color)
+                     ;; A vector literal looks like "#(  x   y   z  )".
+                     ;; At this point we want to advance src-col past "#".
+                     ;; However, after this we will need to advance src-loc to
+                     ;; account for "(" and spaces to reach the first element.
+                     ;; The "(" component is handled by unconditionally adding 1 below.
+                     ;; For simplicity, we will handle the spaces component right now
+                     ;; along with advancing src-col past "#",
+                     ;; even though it's technically not the right place to do it.
                      (if (zero? (vector-length vec))
-                         (set! src-col (+ src-col (- (syntax-span c) 2)))
-                         (set! src-col (+ src-col (- (syntax-column (vector-ref vec 0))
-                                                     (syntax-column c)
-                                                     1)))))))
+                         ;; assume no srcloc means "#()"
+                         (set! src-col
+                               (+ src-col
+                                  (- (or (syntax-span c) 3) 2)))
+                         ;; assume no srcloc means "#(x ...)";
+                         ;; first element appears at the third character
+                         (set! src-col
+                               (+ src-col
+                                  (cond
+                                    [(and (syntax-column (vector-ref vec 0))
+                                          (syntax-column c))
+                                     (- (syntax-column (vector-ref vec 0))
+                                        (syntax-column c)
+                                        1)]
+                                    [else 1])))))))
                (when (struct? (syntax-e c))
                  (unless (and expr? (zero? quote-depth))
                    (out "#s" p-color)

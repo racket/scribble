@@ -24,6 +24,22 @@ Here's some Racket code:
  (x x)
 ]
 
+We should be able to use @racket[racketblock] without having source location.
+
+@(require (for-syntax racket/base))
+
+@(define-syntax (test stx)
+   (with-syntax ([(xs ...) '(1 2 3 4)])
+     #'@racketblock[#(xs ...)
+                    (xs ...)
+                    '(xs ...)]))
+
+@(test)
+
+Spaces inside lists should be preserved.
+
+@racketblock[( a   b   c)]
+
 @subsection{Another Subsection}
 
 @defmodule[racket/base]
