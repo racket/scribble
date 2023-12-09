@@ -1,5 +1,7 @@
 #lang racket/base
-(require (for-syntax racket/base))
+(require (for-syntax racket/base)
+         racket/fixnum
+         racket/flonum)
 
 (provide (all-defined-out))
 
@@ -20,3 +22,11 @@
 (struct pn (x y))
 
 (define v 10)
+
+(define val:flvector (flvector 1.0 2.0))
+(define val:fxvector (fxvector 1 2))
+(define val:extflonum 1.0t0)
+(define val:kw '#:foo)
+(define val:list '(1 2 3 4))
+(define val:vector #(1 2 3 4))
+(define val:param (make-parameter 'foo))

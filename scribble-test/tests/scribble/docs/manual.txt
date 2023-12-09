@@ -105,6 +105,13 @@ A parameter, again.
 
 A parameter, again, with a documented default value.
 
+(val:param) -> any/c  
+(val:param k) -> void?
+  k : any/c           
+ = 'foo               
+
+A parameter with auto-value.
+
 (p) -> integer?
 (p k) -> void? 
   k : real?    
@@ -154,6 +161,30 @@ v : integer?
 
 A thing, again, with a documented value that’s too wide to fit on one
 line.
+
+val:flvector : any/c = #fl(1.0 2.0)
+
+Test auto-value flvector reading.
+
+val:fxvector : any/c = #fx(1 2)
+
+Test auto-value fxvector reading.
+
+val:extflonum : any/c = 1.0t0
+
+Test auto-value extflonum reading.
+
+val:kw : any/c = '#:foo
+
+Test auto-value keyword reading.
+
+val:list : any/c = '(1 2 3 4)
+
+Test auto-value list reading.
+
+val:vector : any/c = #(1 2 3 4)
+
+Test auto-value vector reading.
 
 (struct pt (x y)                     
     #:extra-constructor-name make-pt)
