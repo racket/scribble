@@ -1297,10 +1297,6 @@
     (define/private (convert-bb-bold c)
       (define (mathbb c) (format "$\\mathbb{~a}$" c))
       (cond
-        [(char<=? #\𝕒 c #\𝕫)
-         (mathbb (+ (- (char->integer c)
-                       (char->integer #\𝕒))
-                    (char->integer #\a)))]
         [(and (char<=? #\𝔸 c #\𝕐)
               ;; the blackboard bold C, H, N, P, Q, R, and Z
               ;; are not in this range so handle them specially, below
