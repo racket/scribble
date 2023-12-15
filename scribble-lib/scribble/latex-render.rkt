@@ -1306,9 +1306,10 @@
                                #\U0001D547
                                #\U0001D548
                                #\U0001D549))))
-         (mathbb (+ (- (char->integer c)
-                       (char->integer #\𝔸))
-                    (char->integer #\A)))]
+         (mathbb (integer->char
+                  (+ (- (char->integer c)
+                        (char->integer #\𝔸))
+                     (char->integer #\A))))]
         [else
          (case c
            [(#\U2102) (mathbb "C")]
