@@ -514,3 +514,35 @@ ol ol ol ol { list-style-type: upper-alpha; }
     margin-left: 0;
   }
 }
+
+/** Begin headings */
+
+/* Hide the button group by default, but show them on hovering the heading title */
+.button-group {
+    padding-left: 0.3em;
+    visibility: hidden;
+    position: absolute;
+}
+.heading:hover > .button-group {
+    visibility: visible;
+}
+
+.button-group > a {
+    margin: 0 0.25em;
+}
+
+.button-group > a, .button-group > a:hover {
+    text-decoration: none;
+}
+
+.heading-anchor {
+    font-size: 60%;
+    /* A trick to color an emoji from https://stackoverflow.com/questions/32413731/color-for-unicode-emoji */
+    color: transparent;
+    text-shadow: 0 0 0 gray;
+    vertical-align: 5%;
+}
+
+.heading-source {
+    visibility: hidden;
+}

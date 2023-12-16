@@ -1141,63 +1141,62 @@
                                                    (add-current-tag-prefix
                                                     (tag-key t ri))))))))
                        (part-tags d))]
-                 [else `((,(case (number-depth number)
-                             [(0) 'h2]
-                             [(1) 'h3]
-                             [(2) 'h4]
-                             [else 'h5])
-                          ,(let ([src (extract-part-source d ri)]
-                                 [taglet (for/or ([t (in-list (part-tags d))])
-                                           (and (pair? t)
-                                                (eq? 'part (car t))
-                                                (= 2 (length t))
-                                                (cadr t)))])
-                             (append
-                              (if (and src taglet)
-                                  `([x-source-module ,(format "~s" src)]
-                                    [class "heading"]
-                                    ,@(let* ([path (resolved-module-path-name
-                                                    (module-path-index-resolve
-                                                     (module-path-index-join src #f)))]
-                                             [pkg (and (path? path)
-                                                       (path->pkg path #:cache pkg-cache))])
-                                        (if pkg
-                                            `([x-source-pkg ,pkg])
-                                            null))
-                                    ,@(let ([prefixes (current-tag-prefixes)])
-                                        (if (null? prefixes)
-                                            null
-                                            `([x-part-prefixes ,(format "~s" prefixes)])))
-                                    [x-part-tag ,(format "~s" taglet)])
-                                  '())
-                              (style->attribs (part-style d))))
-                          ,@(format-number number '((tt nbsp)))
-                          ,@(if (part-title-content d)
-                                (render-content (part-title-content d) d ri)
-                                null)
-                          " "
-                          (span ([class "button-group"])
-                                ,@(let ([make-anchor
-                                         (lambda (t #:content [content '()])
-                                           `(a ([name ,(format "~a" (anchor-name
-                                                                     (add-current-tag-prefix
-                                                                      (tag-key t ri))))]
-                                                [href ,(format "#~a" (anchor-name
-                                                                      (add-current-tag-prefix
-                                                                       (tag-key t ri))))])
-                                               ,@content))])
-                                    (match (part-tags d)
-                                      ['() '()]
-                                      [(cons t ts)
-                                       (cons (make-anchor t
-                                                          #:content
-                                                          (list `(span ([class "heading-anchor"]
-                                                                        [title "Link here"])
-                                                                       "🔗")))
-                                             (map make-anchor ts))]))
-                                " "
-                                (a ([class "heading-source"]
-                                    [title "Internal Scribble link and Scribble source"]) "ℹ"))))])
+                 [else
+                  (define src (extract-part-source d ri))
+                  (define taglet
+                    (for/or ([t (in-list (part-tags d))])
+                      (and (pair? t)
+                           (eq? 'part (car t))
+                           (= 2 (length t))
+                           (cadr t))))
+                  `((,(case (number-depth number)
+                        [(0) 'h2]
+                        [(1) 'h3]
+                        [(2) 'h4]
+                        [else 'h5])
+                     ,(append
+                       (if (and src taglet)
+                           `([x-source-module ,(format "~s" src)]
+                             ,@(let* ([path (resolved-module-path-name
+                                             (module-path-index-resolve
+                                              (module-path-index-join src #f)))]
+                                      [pkg (and (path? path)
+                                                (path->pkg path #:cache pkg-cache))])
+                                 (if pkg
+                                     `([x-source-pkg ,pkg])
+                                     null))
+                             ,@(let ([prefixes (current-tag-prefixes)])
+                                 (if (null? prefixes)
+                                     null
+                                     `([x-part-prefixes ,(format "~s" prefixes)])))
+                             [x-part-tag ,(format "~s" taglet)])
+                           '())
+                       (list '[class "heading"])
+                       (style->attribs (part-style d)))
+                     ,@(format-number number '((tt nbsp)))
+                     ,@(map (lambda (t)
+                              `(a ([name ,(format "~a" (anchor-name (add-current-tag-prefix (tag-key t ri))))])))
+                            (part-tags d))
+                     ,@(if (part-title-content d)
+                           (render-content (part-title-content d) d ri)
+                           null)
+                     (span ([class "button-group"])
+                           ,@(match (part-tags d)
+                               ['() '()]
+                               [(cons t _)
+                                (list `(a ([href ,(format "#~a" (anchor-name
+                                                                 (add-current-tag-prefix
+                                                                  (tag-key t ri))))]
+                                           [class "heading-anchor"]
+                                           [title "Link to here"])
+                                          "🔗"))])
+                           ,@(if (and src taglet)
+                                 (list '(a ([class "heading-source"]
+                                            [title "Internal Scribble link and Scribble source"]) "ℹ"))
+                                 '())
+                           ;; this is a dummy node so that the line height of heading-anchor
+                           ;; and heading-source are correct (even when their font size is not 100%)
+                           (span ([style "visibility: hidden"]) " "))))])
              ,@(let ([auths (extract-authors d)])
                  (if (null? auths)
                      null
