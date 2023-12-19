@@ -650,14 +650,13 @@
                   (unless no-cons?
                     (out (let ([s (cond
                                     [(pair? (syntax-e c))
-                                     (if (syntax->list c)
-                                         "list"
-                                         (if (let ([d (cdr (syntax-e c))])
-                                               (or (pair? d)
-                                                   (and (syntax? d)
-                                                        (pair? (syntax-e d)))))
-                                             "list*"
-                                             "cons"))]
+                                     (cond
+                                       [(syntax->list c) "list"]
+                                       [(let ([d (cdr (syntax-e c))])
+                                          (or (pair? d)
+                                              (and (syntax? d)
+                                                   (pair? (syntax-e d))))) "list*"]
+                                       [else "cons"])]
                                     [(vector? (syntax-e c)) "vector"]
                                     [(mpair? (syntax-e c)) "mcons"]
                                     [else (iformat "~a"
