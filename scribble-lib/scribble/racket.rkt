@@ -1176,15 +1176,14 @@
                (prefab-struct-key v))
           (andmap quotable? (vector->list (struct->vector v)))]
          [(struct? v)
-          (if (custom-write? v)
-              (case (or (and (custom-print-quotable? v)
-                             (custom-print-quotable-accessor v))
-                        'self)
-                [(self always) #t]
-                [(never) #f]
-                [(maybe)
-                 (andmap quotable? (vector->list (struct->vector v)))])
-              #f)]
+          (and (custom-write? v)
+               (case (or (and (custom-print-quotable? v)
+                              (custom-print-quotable-accessor v))
+                         'self)
+                 [(self always) #t]
+                 [(never) #f]
+                 [(maybe)
+                  (andmap quotable? (vector->list (struct->vector v)))]))]
          [(struct-proxy? v) #f]
          [(mpair? v) #f]
          [else #t])])))
