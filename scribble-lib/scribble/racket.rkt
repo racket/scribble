@@ -566,6 +566,7 @@
           [(and escapes?
                 (pair? (syntax-e c))
                 (eq? (syntax-e (car (syntax-e c))) 'code:quote))
+           (check-1-c c)
            (advance c init-line! srcless-step)
            (let ([quote-depth (to-quoted c expr? quote-depth out color? inc-src-col)])
              (out "(" (if (positive? quote-depth) value-color paren-color))
