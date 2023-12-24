@@ -114,28 +114,28 @@
 ;; create a line break after the hyphen. For interior hyphens,
 ;; line breaking is usually fine.
 (define (nonbreak-leading-hyphens s)
-  (let ([m (regexp-match-positions #rx"^-+" s)])
-    (if m
-        (if (= (cdar m) (string-length s))
-            (make-element 'no-break s)
-            (let ([len (add1 (cdar m))])
-              (make-element #f (list (make-element 'no-break (substring s 0 len))
-                                     (substring s len)))))
-        s)))
+  (define m (regexp-match-positions #rx"^-+" s))
+  (if m
+      (if (= (cdar m) (string-length s))
+          (make-element 'no-break s)
+          (let ([len (add1 (cdar m))])
+            (make-element #f (list (make-element 'no-break (substring s 0 len))
+                                   (substring s len)))))
+      s))
 
 (define (literalize-spaces i [leading? #f])
-  (let ([m (regexp-match-positions #rx"  +" i)])
-    (if m
-        (let ([cnt (- (cdar m) (caar m))])
-          (make-spaces #f
-                       (list
-                        (literalize-spaces (substring i 0 (caar m)) #t)
-                        (hspace cnt)
-                        (literalize-spaces (substring i (cdar m))))
-                       cnt))
-        (if leading?
-            (nonbreak-leading-hyphens i)
-            i))))
+  (define m (regexp-match-positions #rx"  +" i))
+  (if m
+      (let ([cnt (- (cdar m) (caar m))])
+        (make-spaces #f
+                     (list
+                      (literalize-spaces (substring i 0 (caar m)) #t)
+                      (hspace cnt)
+                      (literalize-spaces (substring i (cdar m))))
+                     cnt))
+      (if leading?
+          (nonbreak-leading-hyphens i)
+          i)))
 
 
 (define line-breakable-space (make-element 'tt " "))
@@ -156,7 +156,7 @@
                          #:space [space #f]
                          #:suffix [suffix space]
                          #:unlinked-ok? [unlinked-ok? #f])
-  (let* ([key (and id-element-cache
+  (define key (and id-element-cache
                    (let ([b (identifier-label-binding c)])
                      (unless b (error 'make-id-element "no for-label binding for identifier: ~s" c))
                      (vector (syntax-e c)
@@ -166,46 +166,46 @@
                              (syntax-property c 'display-string)
                              defn?
                              suffix
-                             s)))])
-    (or (and key
-             (let ([b (hash-ref id-element-cache key #f)])
-               (and b
-                    (weak-box-value b))))
-        (let ([e (make-cached-delayed-element
-                  (lambda (renderer sec ri)
-                    (let* ([tag (find-racket-tag sec ri c #f
-                                                 #:space space
-                                                 #:suffix suffix
-                                                 #:unlinked-ok? unlinked-ok?)])
-                      (cond
-                        [tag
-                         (let ([tag (intern-taglet tag)])
-                           (list
-                            (case (car tag)
-                              [(form)
-                               (make-link-element (if defn?
-                                                      syntax-def-color
-                                                      syntax-link-color)
-                                                  (nonbreak-leading-hyphens s) 
-                                                  tag)]
-                              [else
-                               (make-link-element (if defn?
-                                                      value-def-color
-                                                      value-link-color)
-                                                  (nonbreak-leading-hyphens s)
-                                                  tag)])))]
-                        [unlinked-ok?
-                         (list (make-element symbol-color s))]
-                        [else
-                         (list 
-                          (make-element "badlink"
-                                        (make-element value-link-color s)))])))
-                  (lambda () s)
-                  (lambda () s)
-                  (intern-taglet key))])
-          (when key
-            (hash-set! id-element-cache key (make-weak-box e)))
-          e))))
+                             s))))
+  (or (and key
+           (let ([b (hash-ref id-element-cache key #f)])
+             (and b
+                  (weak-box-value b))))
+      (let ([e (make-cached-delayed-element
+                (lambda (renderer sec ri)
+                  (define tag (find-racket-tag sec ri c #f
+                                               #:space space
+                                               #:suffix suffix
+                                               #:unlinked-ok? unlinked-ok?))
+                  (cond
+                    [tag
+                     (let ([tag (intern-taglet tag)])
+                       (list
+                        (case (car tag)
+                          [(form)
+                           (make-link-element (if defn?
+                                                  syntax-def-color
+                                                  syntax-link-color)
+                                              (nonbreak-leading-hyphens s)
+                                              tag)]
+                          [else
+                           (make-link-element (if defn?
+                                                  value-def-color
+                                                  value-link-color)
+                                              (nonbreak-leading-hyphens s)
+                                              tag)])))]
+                    [unlinked-ok?
+                     (list (make-element symbol-color s))]
+                    [else
+                     (list
+                      (make-element "badlink"
+                                    (make-element value-link-color s)))]))
+                (lambda () s)
+                (lambda () s)
+                (intern-taglet key))])
+        (when key
+          (hash-set! id-element-cache key (make-weak-box e)))
+        e)))
 
 (define (make-element/cache style content)
   (if (and element-cache 
@@ -412,28 +412,28 @@
                                    (+ src-col srcless-step)
                                    0)))]
                [l (syntax-line c)])
-           (let ([new-line? (and l (l . > . line))])
-             (when new-line?
-               (for ([i (in-range (- l line))])
-                 (out "\n" #f))
-               (set! line l)
-               (set! col-map next-col-map)
-               (set! next-col-map (make-hash))
-               (init-line!))
-             (let ([d-col (let ([def-val (+ dest-col (- c src-col))])
-                            (if new-line?
-                                (hash-ref col-map c def-val)
-                                def-val))])
-               (let ([amt (- d-col dest-col)])
-                 (when (positive? amt)
-                   (let ([old-dest-col dest-col])
-                     (out (if (and (= 1 amt) (not multi-line?))
-                              line-breakable-space ; allows a line break to replace the space
-                              (hspace amt))
-                          #f)
-                     (set! dest-col (+ old-dest-col amt))))))
-             (set! src-col c)
-             (hash-set! next-col-map src-col dest-col)))]
+           (define new-line? (and l (l . > . line)))
+           (when new-line?
+             (for ([i (in-range (- l line))])
+               (out "\n" #f))
+             (set! line l)
+             (set! col-map next-col-map)
+             (set! next-col-map (make-hash))
+             (init-line!))
+           (let ([d-col (let ([def-val (+ dest-col (- c src-col))])
+                          (if new-line?
+                              (hash-ref col-map c def-val)
+                              def-val))])
+             (define amt (- d-col dest-col))
+             (when (positive? amt)
+               (define old-dest-col dest-col)
+               (out (if (and (= 1 amt) (not multi-line?))
+                        line-breakable-space ; allows a line break to replace the space
+                        (hspace amt))
+                    #f)
+               (set! dest-col (+ old-dest-col amt))))
+           (set! src-col c)
+           (hash-set! next-col-map src-col dest-col))]
         [(c init-line! srcless-step) (advance c init-line! srcless-step 0)]
         [(c init-line!) (advance c init-line! #f 0)]))
     (define (for-each/i f l v)
@@ -441,45 +441,45 @@
         (f (car l) v)
         (for-each/i f (cdr l) 1)))
     (define (convert-infix c quote-depth expr?)
-      (let ([l (syntax->list c)])
-        (and l
-             ((length l) . >= . 3)
-             ((or (syntax-position (car l)) -inf.0)
-              . > .
-              (or (syntax-position (cadr l)) +inf.0))
-             (let ([a (car l)])
-               (let loop ([l (cdr l)]
-                          [prev null])
-                 (cond
-                   [(null? l) #f] ; couldn't unwind
-                   [else (let ([p2 (syntax-position (car l))])
-                           (if (and p2
-                                    (p2 . > . (syntax-position a)))
-                               (datum->syntax c
-                                              (append 
-                                               (reverse prev)
-                                               (list
-                                                (datum->syntax 
-                                                 a
-                                                 (let ([val? (positive? quote-depth)])
-                                                   (make-sized-element 
-                                                    (if val? value-color #f)
-                                                    (list
-                                                     (make-element/cache (if val? value-color paren-color) '". ")
-                                                     (typeset a #f "" "" "" (not val?) expr? escapes? defn? elem-wrap)
-                                                     (make-element/cache (if val? value-color paren-color) '" ."))
-                                                    (+ (syntax-span a) 4)))
-                                                 (list (syntax-source a)
-                                                       (syntax-line a)
-                                                       (- (syntax-column a) 2)
-                                                       (- (syntax-position a) 2)
-                                                       (+ (syntax-span a) 4))
-                                                 a))
-                                               l)
-                                              c
-                                              c)
-                               (loop (cdr l)
-                                     (cons (car l) prev))))]))))))
+      (define l (syntax->list c))
+      (and l
+           ((length l) . >= . 3)
+           ((or (syntax-position (car l)) -inf.0)
+            . > .
+            (or (syntax-position (cadr l)) +inf.0))
+           (let ([a (car l)])
+             (let loop ([l (cdr l)]
+                        [prev null])
+               (cond
+                 [(null? l) #f] ; couldn't unwind
+                 [else (let ([p2 (syntax-position (car l))])
+                         (if (and p2
+                                  (p2 . > . (syntax-position a)))
+                             (datum->syntax c
+                                            (append
+                                             (reverse prev)
+                                             (list
+                                              (datum->syntax
+                                               a
+                                               (let ([val? (positive? quote-depth)])
+                                                 (make-sized-element
+                                                  (if val? value-color #f)
+                                                  (list
+                                                   (make-element/cache (if val? value-color paren-color) '". ")
+                                                   (typeset a #f "" "" "" (not val?) expr? escapes? defn? elem-wrap)
+                                                   (make-element/cache (if val? value-color paren-color) '" ."))
+                                                  (+ (syntax-span a) 4)))
+                                               (list (syntax-source a)
+                                                     (syntax-line a)
+                                                     (- (syntax-column a) 2)
+                                                     (- (syntax-position a) 2)
+                                                     (+ (syntax-span a) 4))
+                                               a))
+                                             l)
+                                            c
+                                            c)
+                             (loop (cdr l)
+                                   (cons (car l) prev))))])))))
     (define (no-fancy-chars s)
       (cond
         [(eq? s 'rsquo) "'"]
@@ -491,38 +491,38 @@
       (advance c init-line! srcless-step)
       (out comment-string comment-color)
       (out 'nbsp comment-color)
-      (let ([v (syntax->datum (cadr (syntax->list c)))])
-        (if (paragraph? v)
-            (map (lambda (v) 
-                   (let ([v (no-fancy-chars v)])
-                     (if (or (string? v) (symbol? v))
-                         (out v comment-color)
-                         (out v #f))))
-                 (paragraph-content v))
-            (out (no-fancy-chars v) comment-color)))]
+      (define v (syntax->datum (cadr (syntax->list c))))
+      (if (paragraph? v)
+          (map (lambda (v)
+                 (let ([v (no-fancy-chars v)])
+                   (if (or (string? v) (symbol? v))
+                       (out v comment-color)
+                       (out v #f))))
+               (paragraph-content v))
+          (out (no-fancy-chars v) comment-color))]
 
     #; {Syntax Init-line! Srcless-step String String -> Contract}
     (define (make-contract c init-line! srcless-step start-comment continue-comment)
       (advance c init-line! srcless-step)
       (out start-comment comment-color)
-      (let* ([l (cdr (syntax->list c))]
-             [s-col (or (syntax-column (car l)) src-col)])
-        (set! src-col s-col)
-        (for-each/i (loop (lambda ()
-                            (set! src-col s-col)
-                            (set! dest-col 0)
-                            (out continue-comment comment-color))
-                          0
-                          expr?
-                          #f)
-                    l
-                    #f)))
+      (define l (cdr (syntax->list c)))
+      (define s-col (or (syntax-column (car l)) src-col))
+      (set! src-col s-col)
+      (for-each/i (loop (lambda ()
+                          (set! src-col s-col)
+                          (set! dest-col 0)
+                          (out continue-comment comment-color))
+                        0
+                        expr?
+                        #f)
+                  l
+                  #f))
 
     #; {Syntax -> Void}
     (define (check-1-c c)
-      (let ([l (syntax->list c)])
-        (unless (and l (= 2 (length l)))
-          (raise-syntax-error #f "does not have a single sub-form" c))))
+      (define l (syntax->list c))
+      (unless (and l (= 2 (length l)))
+        (raise-syntax-error #f "does not have a single sub-form" c)))
 
     (define (loop init-line! quote-depth expr? no-cons?)
       (lambda (c srcless-step)
