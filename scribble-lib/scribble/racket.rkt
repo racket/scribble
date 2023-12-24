@@ -135,10 +135,8 @@
                    (hspace cnt)
                    (literalize-spaces (substring i (cdar m))))
                   cnt)]
-    [else
-     (if leading?
-         (nonbreak-leading-hyphens i)
-         i)]))
+    [leading? (nonbreak-leading-hyphens i)]
+    [else i]))
 
 
 (define line-breakable-space (make-element 'tt " "))
