@@ -810,17 +810,18 @@
                (out ")" paren-color)))]
           [(hash? (syntax-e c))
            (advance c init-line! srcless-step)
-           (let ([equal-table? (hash-equal? (syntax-e c))]
-                 [eqv-table? (hash-eqv? (syntax-e c))]
-                 [quote-depth (to-quoted c expr? quote-depth out color? inc-src-col)])
+           (define hash-type
+             (cond
+               [(hash-equal? (syntax-e c)) 'hash]
+               [(hash-eqv? (syntax-e c)) 'hasheqv]
+               [(hash-eq? (syntax-e c)) 'hasheq]
+               [(hash-equal-always? (syntax-e c)) 'hashalw]
+               [else (error 'typeset "unexpected hash table type: ~s" (syntax-e c))]))
+           (let ([quote-depth (to-quoted c expr? quote-depth out color? inc-src-col)])
              (unless (and expr? (zero? quote-depth))
-               (out (if equal-table?
-                        "#hash"
-                        (if eqv-table?
-                            "#hasheqv"
-                            "#hasheq"))
-                    value-color))
-             (let ([delta (+ 5 (if equal-table? 0 (if eqv-table? 3 2))
+               (out (iformat "#~a" hash-type) value-color))
+             (let ([delta (+ 1
+                             (string-length (symbol->string hash-type))
                              (if (and expr? (zero? quote-depth)) 1 0))]
                    [orig-col src-col])
                (set! src-col (+ src-col delta))
@@ -880,18 +881,13 @@
                                            (reverse l2)))])
                         (datum->syntax 
                          #f
-                         (cons (let ([s (if equal-table?
-                                            'hash
-                                            (if eqv-table?
-                                                'hasheqv
-                                                'hasheq))])
-                                 (datum->syntax #f 
-                                                s
-                                                (vector (syntax-source c)
-                                                        (syntax-line c)
-                                                        (+ (syntax-column c) 1)
-                                                        (+ (syntax-position c) 1)
-                                                        (string-length (symbol->string s)))))
+                         (cons (datum->syntax #f
+                                              hash-type
+                                              (vector (syntax-source c)
+                                                      (syntax-line c)
+                                                      (+ (syntax-column c) 1)
+                                                      (+ (syntax-position c) 1)
+                                                      (string-length (symbol->string hash-type))))
                                l)
                          c))
                       ;; quoted:
@@ -1076,7 +1072,9 @@
                  [(hash? v) `(,(cond
                                  [(hash-eq? v) 'make-immutable-hasheq]
                                  [(hash-eqv? v) 'make-immutable-hasheqv]
-                                 [else 'make-immutable-hash])
+                                 [(hash-equal? v) 'make-immutable-hash]
+                                 [(hash-equal-always? v) 'make-immutable-hashalw]
+                                 [else (error 'define-code "unexpected hash table type: ~s" v)])
                               (list
                                ,@(hash-map
                                   v
