@@ -28,6 +28,10 @@ Spaces inside lists should be preserved.
 
   ( a   b   c)
 
+Hash tables should work.
+
+  #hashalw((1 . 2))
+
 1.2. Another Subsection
 
  (require racket/base) package: base

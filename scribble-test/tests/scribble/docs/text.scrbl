@@ -40,6 +40,10 @@ Spaces inside lists should be preserved.
 
 @racketblock[( a   b   c)]
 
+Hash tables should work.
+
+@racketblock[#hashalw([1 . 2])]
+
 @subsection{Another Subsection}
 
 @defmodule[racket/base]
