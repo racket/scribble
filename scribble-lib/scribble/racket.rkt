@@ -116,26 +116,29 @@
 (define (nonbreak-leading-hyphens s)
   (define m (regexp-match-positions #rx"^-+" s))
   (if m
-      (if (= (cdar m) (string-length s))
-          (make-element 'no-break s)
-          (let ([len (add1 (cdar m))])
-            (make-element #f (list (make-element 'no-break (substring s 0 len))
-                                   (substring s len)))))
+      (cond
+        [(= (cdar m) (string-length s)) (make-element 'no-break s)]
+        [else
+         (define len (add1 (cdar m)))
+         (make-element #f (list (make-element 'no-break (substring s 0 len))
+                                (substring s len)))])
       s))
 
 (define (literalize-spaces i [leading? #f])
   (define m (regexp-match-positions #rx"  +" i))
-  (if m
-      (let ([cnt (- (cdar m) (caar m))])
-        (make-spaces #f
-                     (list
-                      (literalize-spaces (substring i 0 (caar m)) #t)
-                      (hspace cnt)
-                      (literalize-spaces (substring i (cdar m))))
-                     cnt))
-      (if leading?
-          (nonbreak-leading-hyphens i)
-          i)))
+  (cond
+    [m
+     (define cnt (- (cdar m) (caar m)))
+     (make-spaces #f
+                  (list
+                   (literalize-spaces (substring i 0 (caar m)) #t)
+                   (hspace cnt)
+                   (literalize-spaces (substring i (cdar m))))
+                  cnt)]
+    [else
+     (if leading?
+         (nonbreak-leading-hyphens i)
+         i)]))
 
 
 (define line-breakable-space (make-element 'tt " "))
@@ -208,15 +211,15 @@
         e)))
 
 (define (make-element/cache style content)
-  (if (and element-cache 
-           (string? content))
-      (let ([key (vector style content)])
-        (let ([b (hash-ref element-cache key #f)])
-          (or (and b (weak-box-value b))
-              (let ([e (make-cached-element style content key)])
-                (hash-set! element-cache key (make-weak-box e))
-                e))))
-      (make-element style content)))
+  (cond
+    [(and element-cache (string? content))
+     (define key (vector style content))
+     (let ([b (hash-ref element-cache key #f)])
+       (or (and b (weak-box-value b))
+           (let ([e (make-cached-element style content key)])
+             (hash-set! element-cache key (make-weak-box e))
+             e)))]
+    [else (make-element style content)]))
 
 (define (to-quoted obj expr? quote-depth out color? inc!)
   (if (and expr? 
@@ -300,12 +303,14 @@
                             color?
                             (quote-depth . <= . 0)
                             (not (or it? is-var?)))
-                       (if (pair? (identifier-label-binding c))
-                           (make-id-element c s defn?)
-                           (let ([c (nonbreak-leading-hyphens s)])
-                             (if defn?
-                                 (make-element symbol-def-color c)
-                                 c)))
+                       (cond
+                         [(pair? (identifier-label-binding c))
+                          (make-id-element c s defn?)]
+                         [else
+                          (define c (nonbreak-leading-hyphens s))
+                          (if defn?
+                              (make-element symbol-def-color c)
+                              c)])
                        (literalize-spaces s #t))
                    (cond
                      [(positive? quote-depth) value-color]
