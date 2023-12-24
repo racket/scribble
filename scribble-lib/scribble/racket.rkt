@@ -220,22 +220,22 @@
     [else (make-element style content)]))
 
 (define (to-quoted obj expr? quote-depth out color? inc!)
-  (if (and expr? 
-           (zero? quote-depth)
-           (quotable? obj))
-      (begin
-        (out "'" (and color? value-color))
-        (inc!)
-        (add1 quote-depth))
-      quote-depth))
+  (cond
+    [(and expr?
+          (zero? quote-depth)
+          (quotable? obj))
+     (out "'" (and color? value-color))
+     (inc!)
+     (add1 quote-depth)]
+    [else quote-depth]))
 
 (define (to-unquoted expr? quote-depth out color? inc!)
-  (if (or (not expr?) (zero? quote-depth))
-      quote-depth
-      (begin
-        (out "," (and color? meta-color))
-        (inc!)
-        (to-unquoted expr? (sub1 quote-depth) out color? inc!))))
+  (cond
+    [(or (not expr?) (zero? quote-depth)) quote-depth]
+    [else
+     (out "," (and color? meta-color))
+     (inc!)
+     (to-unquoted expr? (sub1 quote-depth) out color? inc!)]))
 
 (define iformat
   (case-lambda
@@ -391,11 +391,11 @@
               (out (cadr (element-content v)) #f 0)
               (out (caddr (element-content v)) cls len)]
              [(equal? v "\n")
-              (if multi-line?
-                  (begin
-                    (finish-line!)
-                    (out prefix cls))
-                  (out " " cls))]
+              (cond
+                [multi-line?
+                 (finish-line!)
+                 (out prefix cls)]
+                [else (out " " cls)])]
              [else
               (set! content (cons (elem-wrap
                                    ((if highlight?
@@ -1158,34 +1158,34 @@
 (define (quotable? v)
   (define graph (make-hasheq))
   (let quotable? ([v v])
-    (if (hash-ref graph v #f)
-        #t
-        (begin
-          (hash-set! graph v #t)
-          (cond
-            [(syntax? v) (quotable? (syntax-e v))]
-            [(pair? v) (and (quotable? (car v))
-                            (quotable? (cdr v)))]
-            [(vector? v) (andmap quotable? (vector->list v))]
-            [(hash? v) (for/and ([(k v) (in-hash v)])
-                         (and (quotable? k)
-                              (quotable? v)))]
-            [(box? v) (quotable? (unbox v))]
-            [(and (struct? v)
-                  (prefab-struct-key v))
-             (andmap quotable? (vector->list (struct->vector v)))]
-            [(struct? v) (if (custom-write? v)
-                             (case (or (and (custom-print-quotable? v)
-                                            (custom-print-quotable-accessor v))
-                                       'self)
-                               [(self always) #t]
-                               [(never) #f]
-                               [(maybe)
-                                (andmap quotable? (vector->list (struct->vector v)))])
-                             #f)]
-            [(struct-proxy? v) #f]
-            [(mpair? v) #f]
-            [else #t])))))
+    (cond
+      [(hash-ref graph v #f) #t]
+      [else
+       (hash-set! graph v #t)
+       (cond
+         [(syntax? v) (quotable? (syntax-e v))]
+         [(pair? v) (and (quotable? (car v))
+                         (quotable? (cdr v)))]
+         [(vector? v) (andmap quotable? (vector->list v))]
+         [(hash? v) (for/and ([(k v) (in-hash v)])
+                      (and (quotable? k)
+                           (quotable? v)))]
+         [(box? v) (quotable? (unbox v))]
+         [(and (struct? v)
+               (prefab-struct-key v))
+          (andmap quotable? (vector->list (struct->vector v)))]
+         [(struct? v) (if (custom-write? v)
+                          (case (or (and (custom-print-quotable? v)
+                                         (custom-print-quotable-accessor v))
+                                    'self)
+                            [(self always) #t]
+                            [(never) #f]
+                            [(maybe)
+                             (andmap quotable? (vector->list (struct->vector v)))])
+                          #f)]
+         [(struct-proxy? v) #f]
+         [(mpair? v) #f]
+         [else #t])])))
 
 (define (do-syntax-ize v col line ht graph? qq no-cons?)
   (cond
