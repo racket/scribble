@@ -212,11 +212,11 @@
   (cond
     [(and element-cache (string? content))
      (define key (vector style content))
-     (let ([b (hash-ref element-cache key #f)])
-       (or (and b (weak-box-value b))
-           (let ([e (make-cached-element style content key)])
-             (hash-set! element-cache key (make-weak-box e))
-             e)))]
+     (define b (hash-ref element-cache key #f))
+     (or (and b (weak-box-value b))
+         (let ([e (make-cached-element style content key)])
+           (hash-set! element-cache key (make-weak-box e))
+           e))]
     [else (make-element style content)]))
 
 (define (to-quoted obj expr? quote-depth out color? inc!)
@@ -455,34 +455,35 @@
                         [prev null])
                (cond
                  [(null? l) #f] ; couldn't unwind
-                 [else (let ([p2 (syntax-position (car l))])
-                         (if (and p2
-                                  (p2 . > . (syntax-position a)))
-                             (datum->syntax c
-                                            (append
-                                             (reverse prev)
-                                             (list
-                                              (datum->syntax
-                                               a
-                                               (let ([val? (positive? quote-depth)])
-                                                 (make-sized-element
-                                                  (if val? value-color #f)
-                                                  (list
-                                                   (make-element/cache (if val? value-color paren-color) '". ")
-                                                   (typeset a #f "" "" "" (not val?) expr? escapes? defn? elem-wrap)
-                                                   (make-element/cache (if val? value-color paren-color) '" ."))
-                                                  (+ (syntax-span a) 4)))
-                                               (list (syntax-source a)
-                                                     (syntax-line a)
-                                                     (- (syntax-column a) 2)
-                                                     (- (syntax-position a) 2)
-                                                     (+ (syntax-span a) 4))
-                                               a))
-                                             l)
-                                            c
-                                            c)
-                             (loop (cdr l)
-                                   (cons (car l) prev))))])))))
+                 [else
+                  (define p2 (syntax-position (car l)))
+                  (if (and p2
+                           (p2 . > . (syntax-position a)))
+                      (datum->syntax c
+                                     (append
+                                      (reverse prev)
+                                      (list
+                                       (datum->syntax
+                                        a
+                                        (let ([val? (positive? quote-depth)])
+                                          (make-sized-element
+                                           (if val? value-color #f)
+                                           (list
+                                            (make-element/cache (if val? value-color paren-color) '". ")
+                                            (typeset a #f "" "" "" (not val?) expr? escapes? defn? elem-wrap)
+                                            (make-element/cache (if val? value-color paren-color) '" ."))
+                                           (+ (syntax-span a) 4)))
+                                        (list (syntax-source a)
+                                              (syntax-line a)
+                                              (- (syntax-column a) 2)
+                                              (- (syntax-position a) 2)
+                                              (+ (syntax-span a) 4))
+                                        a))
+                                      l)
+                                     c
+                                     c)
+                      (loop (cdr l)
+                            (cons (car l) prev)))])))))
     (define (no-fancy-chars s)
       (cond
         [(eq? s 'rsquo) "'"]
@@ -1199,17 +1200,17 @@
                     (and (long-boolean-val v) #t) 
                     (vector #f line col (+ 1 col) (if (long-boolean-val v) 5 6)))]
     [(just-context? v)
-     (let ([s (do-syntax-ize (just-context-val v) col line ht #f qq #f)])
-       (datum->syntax (just-context-ctx v)
-                      (syntax-e s)
-                      s
-                      s
-                      (just-context-ctx v)))]
+     (define s (do-syntax-ize (just-context-val v) col line ht #f qq #f))
+     (datum->syntax (just-context-ctx v)
+                    (syntax-e s)
+                    s
+                    s
+                    (just-context-ctx v))]
     [(alternate-display? v)
-     (let ([s (do-syntax-ize (alternate-display-id v) col line ht #f qq #f)])
-       (syntax-property s
-                        'display-string
-                        (alternate-display-string v)))]
+     (define s (do-syntax-ize (alternate-display-id v) col line ht #f qq #f))
+     (syntax-property s
+                      'display-string
+                      (alternate-display-string v))]
     [(hash-ref (unbox ht) v #f)
      => (lambda (m)
           (unless (unbox m)
@@ -1229,14 +1230,14 @@
           (quotable? v)
           (not no-cons?))
      ;; Add a quote:
-     (let ([l (do-syntax-ize v (add1 col) line ht #f 1 #f)])
-       (datum->syntax #f
-                      (syntax-e l)
-                      (vector (syntax-source l)
-                              (syntax-line l)
-                              (sub1 (syntax-column l))
-                              (max 0 (sub1 (syntax-position l)))
-                              (add1 (syntax-span l)))))]
+     (define l (do-syntax-ize v (add1 col) line ht #f 1 #f))
+     (datum->syntax #f
+                    (syntax-e l)
+                    (vector (syntax-source l)
+                            (syntax-line l)
+                            (sub1 (syntax-column l))
+                            (max 0 (sub1 (syntax-position l)))
+                            (add1 (syntax-span l))))]
     [(and (list? v)
           (pair? v)
           (or (not qq)
@@ -1268,168 +1269,171 @@
                        (not (convertible? v))
                        (not (element? v)))
                   (prefab-struct-key v))))
-     (let ([orig-ht (unbox ht)]
-           [graph-box (box (graph-count ht graph?))])
-       (set-box! ht (hash-set (unbox ht) v graph-box))
-       (let* ([graph-sz (if graph? 
-                            (+ 2 (string-length (format "~a" (unbox graph-box)))) 
-                            0)]
-              [vec-sz (cond
-                        [(vector? v)
-                         (if (and qq (zero? qq)) 0 1)]
-                        [(struct? v)
-                         (if (and (prefab-struct-key v)
-                                  (or (not qq) (positive? qq)))
-                             2
-                             0)]
-                        [else 0])]
-              [delta (if (and qq (zero? qq))
-                         (cond
-                           [(vector? v) 8] ; `(vector '
-                           [(struct? v) 1] ; '('
-                           [no-cons? 1]    ; '('
-                           [else 6])       ; `(list '
-                         1)]
-              [r (let ([l (let loop ([col (+ col delta vec-sz graph-sz)]
-                                     [v (cond
-                                          [(vector? v)
-                                           (vector->short-list v values)]
-                                          [(struct? v)
-                                           (cons (let ([pf (prefab-struct-key v)])
-                                                   (if pf
-                                                       (prefab-struct-key v)
-                                                       (object-name v)))
-                                                 (cdr (vector->list (struct->vector v qq-ellipses))))]
-                                          [else v])])
-                            (if (null? v)
-                                null
-                                (let ([i (do-syntax-ize (car v) col line ht #f qq #f)])
-                                  (cons i
-                                        (loop (+ col 1 (syntax-span i)) (cdr v))))))])
-                   (datum->syntax #f
-                                  (cond
-                                    [(vector? v) (short-list->vector v l)]
-                                    [(struct? v) 
-                                     (let ([pf (prefab-struct-key v)])
-                                       (if pf
-                                           (apply make-prefab-struct (prefab-struct-key v) (cdr l))
-                                           (make-struct-proxy (car l) (cdr l))))]
-                                    [else l])
-                                  (vector #f line 
-                                          (+ graph-sz col) 
-                                          (+ 1 graph-sz col) 
-                                          (+ 1
-                                             vec-sz
-                                             delta
-                                             (if (zero? (length l))
-                                                 0
-                                                 (sub1 (length l)))
-                                             (apply + (map syntax-span l))))))])
-         (unless graph?
-           (set-box! ht (hash-set (unbox ht) v #f)))
-         (cond
-           [graph? (datum->syntax #f
-                                  (make-graph-defn r graph-box)
-                                  (vector #f (syntax-line r)
-                                          (- (syntax-column r) graph-sz)
-                                          (- (syntax-position r) graph-sz)
-                                          (+ (syntax-span r) graph-sz)))]
-           [(unbox graph-box)
-            ;; Go again, this time knowing that there will be a graph:
-            (set-box! ht orig-ht)
-            (do-syntax-ize v col line ht #t qq #f)]
-           [else r])))]
+     (define orig-ht (unbox ht))
+     (define graph-box (box (graph-count ht graph?)))
+     (set-box! ht (hash-set (unbox ht) v graph-box))
+     (define graph-sz (if graph?
+                          (+ 2 (string-length (format "~a" (unbox graph-box))))
+                          0))
+     (define vec-sz (cond
+                      [(vector? v)
+                       (if (and qq (zero? qq)) 0 1)]
+                      [(struct? v)
+                       (if (and (prefab-struct-key v)
+                                (or (not qq) (positive? qq)))
+                           2
+                           0)]
+                      [else 0]))
+     (define delta (if (and qq (zero? qq))
+                       (cond
+                         [(vector? v) 8] ; `(vector '
+                         [(struct? v) 1] ; '('
+                         [no-cons? 1]    ; '('
+                         [else 6])       ; `(list '
+                       1))
+     (define r (let ([l (let loop ([col (+ col delta vec-sz graph-sz)]
+                                   [v (cond
+                                        [(vector? v)
+                                         (vector->short-list v values)]
+                                        [(struct? v)
+                                         (cons (let ([pf (prefab-struct-key v)])
+                                                 (if pf
+                                                     (prefab-struct-key v)
+                                                     (object-name v)))
+                                               (cdr (vector->list (struct->vector v qq-ellipses))))]
+                                        [else v])])
+                          (if (null? v)
+                              null
+                              (let ([i (do-syntax-ize (car v) col line ht #f qq #f)])
+                                (cons i
+                                      (loop (+ col 1 (syntax-span i)) (cdr v))))))])
+                 (datum->syntax #f
+                                (cond
+                                  [(vector? v) (short-list->vector v l)]
+                                  [(struct? v)
+                                   (define pf (prefab-struct-key v))
+                                   (if pf
+                                       (apply make-prefab-struct (prefab-struct-key v) (cdr l))
+                                       (make-struct-proxy (car l) (cdr l)))]
+                                  [else l])
+                                (vector #f line
+                                        (+ graph-sz col)
+                                        (+ 1 graph-sz col)
+                                        (+ 1
+                                           vec-sz
+                                           delta
+                                           (if (zero? (length l))
+                                               0
+                                               (sub1 (length l)))
+                                           (apply + (map syntax-span l)))))))
+     (unless graph?
+       (set-box! ht (hash-set (unbox ht) v #f)))
+     (cond
+       [graph? (datum->syntax #f
+                              (make-graph-defn r graph-box)
+                              (vector #f (syntax-line r)
+                                      (- (syntax-column r) graph-sz)
+                                      (- (syntax-position r) graph-sz)
+                                      (+ (syntax-span r) graph-sz)))]
+       [(unbox graph-box)
+        ;; Go again, this time knowing that there will be a graph:
+        (set-box! ht orig-ht)
+        (do-syntax-ize v col line ht #t qq #f)]
+       [else r])]
     [(or (pair? v)
          (mpair? v)
          (forced-pair? v))
-     (let ([carv (if (pair? v) (car v) (if (mpair? v) (mcar v) (forced-pair-car v)))]
-           [cdrv (if (pair? v) (cdr v) (if (mpair? v) (mcdr v) (forced-pair-cdr v)))]
-           [orig-ht (unbox ht)]
-           [graph-box (box (graph-count ht graph?))])
-       (set-box! ht (hash-set (unbox ht) v graph-box))
-       (let* ([delta (if (and qq (zero? qq) (not no-cons?))
-                         (if (mpair? v)
-                             7 ; "(mcons "
-                             (if (or (list? cdrv)
-                                     (not (pair? cdrv)))
-                                 6 ; "(cons "
-                                 7)) ; "(list* "
-                         1)]
-              [inc (if graph? 
-                       (+ 2 (string-length (format "~a" (unbox graph-box)))) 
-                       0)]
-              [a (do-syntax-ize carv (+ col delta inc) line ht #f qq #f)]
-              [sep (if (and (pair? v)
-                            (pair? cdrv)
-                            ;; FIXME: what if it turns out to be a graph reference?
-                            (not (hash-ref (unbox ht) cdrv #f)))
-                       0 
-                       (if (and qq (zero? qq))
-                           1
-                           3))]
-              [b (do-syntax-ize cdrv (+ col delta inc (syntax-span a) sep) line ht #f qq #t)])
-         (let ([r (datum->syntax #f
-                                 (if (mpair? v)
-                                     (mcons a b)
-                                     (cons a b))
-                                 (vector #f line (+ col inc) (+ delta col inc)
-                                         (+ 1 delta
-                                            (if (and qq (zero? qq)) 1 0)
-                                            sep (syntax-span a) (syntax-span b))))])
-           (unless graph?
-             (set-box! ht (hash-set (unbox ht) v #f)))
-           (cond
-             [graph? (datum->syntax #f
-                                    (make-graph-defn r graph-box)
-                                    (vector #f line col (+ delta col)
-                                            (+ inc (syntax-span r))))]
-             [(unbox graph-box)
-              ;; Go again...
-              (set-box! ht orig-ht)
-              (do-syntax-ize v col line ht #t qq #f)]
-             [else r]))))]
+     (define carv (if (pair? v) (car v) (if (mpair? v) (mcar v) (forced-pair-car v))))
+     (define cdrv (if (pair? v) (cdr v) (if (mpair? v) (mcdr v) (forced-pair-cdr v))))
+     (define orig-ht (unbox ht))
+     (define graph-box (box (graph-count ht graph?)))
+     (set-box! ht (hash-set (unbox ht) v graph-box))
+     (define delta (if (and qq (zero? qq) (not no-cons?))
+                       (if (mpair? v)
+                           7 ; "(mcons "
+                           (if (or (list? cdrv)
+                                   (not (pair? cdrv)))
+                               6 ; "(cons "
+                               7)) ; "(list* "
+                       1))
+     (define inc (if graph?
+                     (+ 2 (string-length (format "~a" (unbox graph-box))))
+                     0))
+     (define a (do-syntax-ize carv (+ col delta inc) line ht #f qq #f))
+     (define sep (if (and (pair? v)
+                          (pair? cdrv)
+                          ;; FIXME: what if it turns out to be a graph reference?
+                          (not (hash-ref (unbox ht) cdrv #f)))
+                     0
+                     (if (and qq (zero? qq))
+                         1
+                         3)))
+     (define b (do-syntax-ize cdrv (+ col delta inc (syntax-span a) sep) line ht #f qq #t))
+     (define r (datum->syntax #f
+                              (if (mpair? v)
+                                  (mcons a b)
+                                  (cons a b))
+                              (vector #f line (+ col inc) (+ delta col inc)
+                                      (+ 1 delta
+                                         (if (and qq (zero? qq)) 1 0)
+                                         sep (syntax-span a) (syntax-span b)))))
+     (unless graph?
+       (set-box! ht (hash-set (unbox ht) v #f)))
+     (cond
+       [graph? (datum->syntax #f
+                              (make-graph-defn r graph-box)
+                              (vector #f line col (+ delta col)
+                                      (+ inc (syntax-span r))))]
+       [(unbox graph-box)
+        ;; Go again...
+        (set-box! ht orig-ht)
+        (do-syntax-ize v col line ht #t qq #f)]
+       [else r])]
     [(box? v)
-     (let* ([delta (if (and qq (zero? qq))
+     (define delta (if (and qq (zero? qq))
                        5 ; "(box "
-                       2)] ; "#&"
-            [a (do-syntax-ize (unbox v) (+ col delta) line ht #f qq #f)])
-       (datum->syntax #f
-                      (box a)
-                      (vector #f line col (+ 1 col)
-                              (+ delta (if (and qq (zero? qq)) 1 0) (syntax-span a)))))]
+                       2)) ; "#&"
+     (define a (do-syntax-ize (unbox v) (+ col delta) line ht #f qq #f))
+     (datum->syntax #f
+                    (box a)
+                    (vector #f line col (+ 1 col)
+                            (+ delta (if (and qq (zero? qq)) 1 0) (syntax-span a))))]
     [(hash? v)
-     (let* ([delta (cond
-                     [(hash-eq? v) 7]
-                     [(hash-eqv? v) 8]
-                     [else 6])]
-            [undelta (if (and qq (zero? qq))
-                         (- delta 1)
-                         0)]
-            [pairs (if (and qq (zero? qq))
-                       (let ([ls (do-syntax-ize (apply append (hash-map v (lambda (k v) (list k v))))
-                                                (+ col delta -1) line ht #f qq #t)])
-                         (datum->syntax 
-                          #f
-                          (let loop ([l (syntax->list ls)])
-                            (if (null? l)
-                                null
-                                (cons (cons (car l) (cadr l)) (loop (cddr l)))))
-                          ls))
-                       (do-syntax-ize (hash-map v make-forced-pair) (+ col delta) line ht #f qq #f))])
-       (datum->syntax #f
-                      ((cond
-                         [(hash-eq? v) make-immutable-hasheq]
-                         [(hash-eqv? v) make-immutable-hasheqv]
-                         [else make-immutable-hash])
-                       (map (lambda (p)
-                              (let ([p (syntax-e p)])
-                                (cons (syntax->datum (car p))
-                                      (cdr p))))
-                            (syntax->list pairs)))
-                      (vector (syntax-source pairs)
-                              (syntax-line pairs)
-                              (max 0 (- (syntax-column pairs) undelta))
-                              (max 1 (- (syntax-position pairs) undelta))
-                              (+ (syntax-span pairs) undelta))))]
+     (define delta
+       (cond
+         [(hash-eq? v) 7]
+         [(hash-eqv? v) 8]
+         [else 6]))
+     (define undelta
+       (if (and qq (zero? qq))
+           (- delta 1)
+           0))
+     (define pairs
+       (if (and qq (zero? qq))
+           (let ([ls (do-syntax-ize (apply append (hash-map v (lambda (k v) (list k v))))
+                                    (+ col delta -1) line ht #f qq #t)])
+             (datum->syntax
+              #f
+              (let loop ([l (syntax->list ls)])
+                (if (null? l)
+                    null
+                    (cons (cons (car l) (cadr l)) (loop (cddr l)))))
+              ls))
+           (do-syntax-ize (hash-map v make-forced-pair) (+ col delta) line ht #f qq #f)))
+     (datum->syntax #f
+                    ((cond
+                       [(hash-eq? v) make-immutable-hasheq]
+                       [(hash-eqv? v) make-immutable-hasheqv]
+                       [else make-immutable-hash])
+                     (map (lambda (p)
+                            (let ([p (syntax-e p)])
+                              (cons (syntax->datum (car p))
+                                    (cdr p))))
+                          (syntax->list pairs)))
+                    (vector (syntax-source pairs)
+                            (syntax-line pairs)
+                            (max 0 (- (syntax-column pairs) undelta))
+                            (max 1 (- (syntax-position pairs) undelta))
+                            (+ (syntax-span pairs) undelta)))]
     [else
      (datum->syntax #f v (vector #f line col (+ 1 col) 1))]))
