@@ -342,7 +342,7 @@
          [first (if escapes?
                     (syntax-case c (code:line)
                       [(code:line e . rest) #'e]
-                      [else c])
+                      [_ c])
                     c)]
          [init-col (or (syntax-column first) 0)]
          [src-col init-col]
@@ -1052,7 +1052,7 @@
                                 (and (identifier? #'esc)
                                      (free-identifier=? #'esc uncode-id))
                                 #'e]
-                               [else (stx->loc-s-expr (syntax-e v))]))])
+                               [_ (stx->loc-s-expr (syntax-e v))]))])
                     (let ([prop (syntax-property v 'paren-shape)])
                       (if prop
                           `(,#'stx-prop ,mk 'paren-shape ,prop)
