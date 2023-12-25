@@ -151,70 +151,81 @@
 
 (define qq-ellipses (string->uninterned-symbol "..."))
 
+;; Extract/record a value from a weak hash table mapping to weak boxes
+;; proc :: (-> (not/c #f))
+(define (hash-weak-ref! ht key proc)
+  ;; unwrap-weak-box :: (-> (or/c #f weak-box?) (or/c #f (not/c #f)))
+  ;; It returns #f when either the weak box is gone,
+  ;; or there's no key-value association
+  (define (unwrap-weak-box v)
+    (cond
+      [v (weak-box-value v)]
+      [else #f]))
+  (cond
+    [(unwrap-weak-box (hash-ref ht key #f))]
+    [else
+     ;; bind to v first so that the GC can't collect it
+     (define v (proc))
+     (hash-set! ht key (make-weak-box v))
+     v]))
+
 (define (make-id-element c s defn?
                          #:space [space #f]
                          #:suffix [suffix space]
                          #:unlinked-ok? [unlinked-ok? #f])
-  (define key (and id-element-cache
-                   (let ([b (identifier-label-binding c)])
-                     (unless b (error 'make-id-element "no for-label binding for identifier: ~s" c))
-                     (vector (syntax-e c)
-                             (module-path-index->taglet (caddr b))
-                             (cadddr b)
-                             (list-ref b 5)
-                             (syntax-property c 'display-string)
-                             defn?
-                             suffix
-                             s))))
-  (or (and key
-           (let ([b (hash-ref id-element-cache key #f)])
-             (and b
-                  (weak-box-value b))))
-      (let ([e (make-cached-delayed-element
-                (lambda (renderer sec ri)
-                  (define tag (find-racket-tag sec ri c #f
-                                               #:space space
-                                               #:suffix suffix
-                                               #:unlinked-ok? unlinked-ok?))
-                  (cond
-                    [tag
-                     (let ([tag (intern-taglet tag)])
-                       (list
-                        (case (car tag)
-                          [(form)
-                           (make-link-element (if defn?
-                                                  syntax-def-color
-                                                  syntax-link-color)
-                                              (nonbreak-leading-hyphens s)
-                                              tag)]
-                          [else
-                           (make-link-element (if defn?
-                                                  value-def-color
-                                                  value-link-color)
-                                              (nonbreak-leading-hyphens s)
-                                              tag)])))]
-                    [unlinked-ok?
-                     (list (make-element symbol-color s))]
-                    [else
-                     (list
-                      (make-element "badlink"
-                                    (make-element value-link-color s)))]))
-                (lambda () s)
-                (lambda () s)
-                (intern-taglet key))])
-        (when key
-          (hash-set! id-element-cache key (make-weak-box e)))
-        e)))
+  (define b (identifier-label-binding c))
+  (unless b (error 'make-id-element "no for-label binding for identifier: ~s" c))
+  (define key
+    (vector (syntax-e c)
+            (module-path-index->taglet (caddr b))
+            (cadddr b)
+            (list-ref b 5)
+            (syntax-property c 'display-string)
+            defn?
+            suffix
+            s))
+  (define (do-make-cached-delayed-element)
+    (make-cached-delayed-element
+     (lambda (renderer sec ri)
+       (define tag (find-racket-tag sec ri c #f
+                                    #:space space
+                                    #:suffix suffix
+                                    #:unlinked-ok? unlinked-ok?))
+       (cond
+         [tag
+          (let ([tag (intern-taglet tag)])
+            (list
+             (case (car tag)
+               [(form)
+                (make-link-element (if defn?
+                                       syntax-def-color
+                                       syntax-link-color)
+                                   (nonbreak-leading-hyphens s)
+                                   tag)]
+               [else
+                (make-link-element (if defn?
+                                       value-def-color
+                                       value-link-color)
+                                   (nonbreak-leading-hyphens s)
+                                   tag)])))]
+         [unlinked-ok?
+          (list (make-element symbol-color s))]
+         [else
+          (list
+           (make-element "badlink"
+                         (make-element value-link-color s)))]))
+     (lambda () s)
+     (lambda () s)
+     (intern-taglet key)))
+  (hash-weak-ref! id-element-cache key do-make-cached-delayed-element))
 
 (define (make-element/cache style content)
   (cond
-    [(and element-cache (string? content))
+    [(string? content)
      (define key (vector style content))
-     (define b (hash-ref element-cache key #f))
-     (or (and b (weak-box-value b))
-         (let ([e (make-cached-element style content key)])
-           (hash-set! element-cache key (make-weak-box e))
-           e))]
+     (define (do-make-cached-element)
+       (make-cached-element style content key))
+     (hash-weak-ref! element-cache key do-make-cached-element)]
     [else (make-element style content)]))
 
 (define (to-quoted obj expr? quote-depth out color? inc!)
