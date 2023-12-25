@@ -1205,8 +1205,7 @@
      (datum->syntax (just-context-ctx v)
                     (syntax-e s)
                     s
-                    s
-                    (just-context-ctx v))]
+                    s)]
     [(alternate-display? v)
      (define s (do-syntax-ize (alternate-display-id v) col line ht #f qq #f))
      (syntax-property s
