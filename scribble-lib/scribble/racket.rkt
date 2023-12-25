@@ -548,24 +548,24 @@
         [(and escapes?
               (pair? (syntax-e c))
               (eq? (syntax-e (car (syntax-e c))) 'code:line))
-         (let ([l (cdr (syntax->list c))])
-           (for-each/i (loop init-line! quote-depth expr? #f)
-                       l
-                       #f))]
+         (define l (cdr (syntax->list c)))
+         (for-each/i (loop init-line! quote-depth expr? #f)
+                     l
+                     #f)]
         [(and escapes?
               (pair? (syntax-e c))
               (eq? (syntax-e (car (syntax-e c))) 'code:hilite))
-         (let ([l (syntax->list c)]
-               [h? highlight?])
-           (unless (and l (= 2 (length l)))
-             (error "bad code:redex: ~.s" (syntax->datum c)))
-           (advance c init-line! srcless-step)
-           (set! src-col (syntax-column (cadr l)))
-           (hash-set! next-col-map src-col dest-col)
-           (set! highlight? #t)
-           ((loop init-line! quote-depth expr? #f) (cadr l) #f)
-           (set! highlight? h?)
-           (set! src-col (add1 src-col)))]
+         (define l (syntax->list c))
+         (define h? highlight?)
+         (unless (and l (= 2 (length l)))
+           (error "bad code:redex: ~.s" (syntax->datum c)))
+         (advance c init-line! srcless-step)
+         (set! src-col (syntax-column (cadr l)))
+         (hash-set! next-col-map src-col dest-col)
+         (set! highlight? #t)
+         ((loop init-line! quote-depth expr? #f) (cadr l) #f)
+         (set! highlight? h?)
+         (set! src-col (add1 src-col))]
         [(and escapes?
               (pair? (syntax-e c))
               (eq? (syntax-e (car (syntax-e c))) 'code:quote))
@@ -717,28 +717,28 @@
                               [(vector? (syntax-e c))
                                (vector->short-list (syntax-e c) syntax-e)]
                               [(struct? (syntax-e c))
-                               (let ([l (vector->list (struct->vector (syntax-e c)))])
-                                 ;; Need to build key datum, syntax-ize it internally, and
-                                 ;;  set the overall width to fit right:
-                                 (if (and expr? (zero? quote-depth))
-                                     (cdr l)
-                                     (cons (let ([key (syntax-ize (prefab-struct-key (syntax-e c))
-                                                                  (+ 3 (or (syntax-column c) 0))
-                                                                  (or (syntax-line c) 1))]
-                                                 [end (if (pair? (cdr l))
-                                                          (and (equal? (syntax-line c) (syntax-line (cadr l)))
-                                                               (syntax-column (cadr l)))
-                                                          (and (syntax-column c)
-                                                               (+ (syntax-column c) (syntax-span c))))])
-                                             (if end
-                                                 (datum->syntax #f
-                                                                (syntax-e key)
-                                                                (vector #f (syntax-line key)
-                                                                        (syntax-column key)
-                                                                        (syntax-position key)
-                                                                        (max 1 (- end 1 (syntax-column key)))))
-                                                 end))
-                                           (cdr l))))]
+                               (define l (vector->list (struct->vector (syntax-e c))))
+                               ;; Need to build key datum, syntax-ize it internally, and
+                               ;;  set the overall width to fit right:
+                               (if (and expr? (zero? quote-depth))
+                                   (cdr l)
+                                   (cons (let ([key (syntax-ize (prefab-struct-key (syntax-e c))
+                                                                (+ 3 (or (syntax-column c) 0))
+                                                                (or (syntax-line c) 1))]
+                                               [end (if (pair? (cdr l))
+                                                        (and (equal? (syntax-line c) (syntax-line (cadr l)))
+                                                             (syntax-column (cadr l)))
+                                                        (and (syntax-column c)
+                                                             (+ (syntax-column c) (syntax-span c))))])
+                                           (if end
+                                               (datum->syntax #f
+                                                              (syntax-e key)
+                                                              (vector #f (syntax-line key)
+                                                                      (syntax-column key)
+                                                                      (syntax-position key)
+                                                                      (max 1 (- end 1 (syntax-column key)))))
+                                               end))
+                                         (cdr l)))]
                               [(struct-proxy? (syntax-e c))
                                (struct-proxy-content (syntax-e c))]
                               [(forced-pair? (syntax-e c))
@@ -910,13 +910,13 @@
          (set! src-col (+ src-col (syntax-span c)))]
         [(graph-defn? (syntax-e c))
          (advance c init-line! srcless-step)
-         (let ([bx (graph-defn-bx (syntax-e c))])
-           (out (iformat "#~a=" (unbox bx))
-                (if (positive? quote-depth)
-                    value-color
-                    paren-color))
-           (set! src-col (+ src-col 3))
-           ((loop init-line! quote-depth expr? #f) (graph-defn-r (syntax-e c)) #f))]
+         (define bx (graph-defn-bx (syntax-e c)))
+         (out (iformat "#~a=" (unbox bx))
+              (if (positive? quote-depth)
+                  value-color
+                  paren-color))
+         (set! src-col (+ src-col 3))
+         ((loop init-line! quote-depth expr? #f) (graph-defn-r (syntax-e c)) #f)]
         [(and (keyword? (syntax-e c)) expr?)
          (advance c init-line! srcless-step)
          (let ([quote-depth (to-quoted c expr? quote-depth out color? inc-src-col)])
