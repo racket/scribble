@@ -651,14 +651,14 @@
                (unless no-cons?
                  (out (let ([s (cond
                                  [(pair? (syntax-e c))
-                                  (if (syntax->list c)
-                                      "list"
-                                      (if (let ([d (cdr (syntax-e c))])
-                                            (or (pair? d)
-                                                (and (syntax? d)
-                                                     (pair? (syntax-e d)))))
-                                          "list*"
-                                          "cons"))]
+                                  (cond
+                                    [(syntax->list c) "list"]
+                                    [(let ([d (cdr (syntax-e c))])
+                                       (or (pair? d)
+                                           (and (syntax? d)
+                                                (pair? (syntax-e d)))))
+                                     "list*"]
+                                    [else "cons"])]
                                  [(vector? (syntax-e c)) "vector"]
                                  [(mpair? (syntax-e c)) "mcons"]
                                  [else (iformat "~a"
@@ -1342,31 +1342,39 @@
     [(or (pair? v)
          (mpair? v)
          (forced-pair? v))
-     (define carv (if (pair? v) (car v) (if (mpair? v) (mcar v) (forced-pair-car v))))
-     (define cdrv (if (pair? v) (cdr v) (if (mpair? v) (mcdr v) (forced-pair-cdr v))))
+     (define carv
+       (cond
+         [(pair? v) (car v)]
+         [(mpair? v) (mcar v)]
+         [else (forced-pair-car v)]))
+     (define cdrv
+       (cond
+         [(pair? v) (cdr v)]
+         [(mpair? v) (mcdr v)]
+         [else (forced-pair-cdr v)]))
      (define orig-ht (unbox ht))
      (define graph-box (box (graph-count ht graph?)))
      (set-box! ht (hash-set (unbox ht) v graph-box))
-     (define delta (if (and qq (zero? qq) (not no-cons?))
-                       (if (mpair? v)
-                           7 ; "(mcons "
-                           (if (or (list? cdrv)
-                                   (not (pair? cdrv)))
-                               6 ; "(cons "
-                               7)) ; "(list* "
-                       1))
+     (define delta
+       (if (and qq (zero? qq) (not no-cons?))
+           (cond
+             [(mpair? v) 7] ; "(mcons "
+             [(or (list? cdrv) (not (pair? cdrv))) 6] ; "(cons "
+             [else 7]) ; "(list* "
+           1))
      (define inc (if graph?
                      (+ 2 (string-length (format "~a" (unbox graph-box))))
                      0))
      (define a (do-syntax-ize carv (+ col delta inc) line ht #f qq #f))
-     (define sep (if (and (pair? v)
-                          (pair? cdrv)
-                          ;; FIXME: what if it turns out to be a graph reference?
-                          (not (hash-ref (unbox ht) cdrv #f)))
-                     0
-                     (if (and qq (zero? qq))
-                         1
-                         3)))
+     (define sep
+       (cond
+         [(and (pair? v)
+               (pair? cdrv)
+               ;; FIXME: what if it turns out to be a graph reference?
+               (not (hash-ref (unbox ht) cdrv #f)))
+          0]
+         [(and qq (zero? qq)) 1]
+         [else 3]))
      (define b (do-syntax-ize cdrv (+ col delta inc (syntax-span a) sep) line ht #f qq #t))
      (define r (datum->syntax #f
                               (if (mpair? v)
