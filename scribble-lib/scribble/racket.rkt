@@ -874,31 +874,33 @@
                                              (values (cons elem l2)
                                                      (+ (syntax-column elem) (syntax-span elem) 2)
                                                      (syntax-line elem))))])
-              (if (and expr? (zero? quote-depth))
-                  ;; constructed:
-                  (let ([l (apply append
+              (cond
+                ;; constructed:
+                [(and expr? (zero? quote-depth))
+                 (define l (apply append
                                   (map (lambda (p)
                                          (let ([p (syntax-e p)])
                                            (list (forced-pair-car p)
                                                  (forced-pair-cdr p))))
-                                       (reverse l2)))])
-                    (datum->syntax
-                     #f
-                     (cons (datum->syntax #f
-                                          hash-type
-                                          (vector (syntax-source c)
-                                                  (syntax-line c)
-                                                  (+ (syntax-column c) 1)
-                                                  (+ (syntax-position c) 1)
-                                                  (string-length (symbol->string hash-type))))
-                           l)
-                     c))
-                  ;; quoted:
-                  (datum->syntax #f (reverse l2) (vector (syntax-source c)
-                                                         (syntax-line c)
-                                                         (+ (syntax-column c) delta)
-                                                         (+ (syntax-position c) delta)
-                                                         (max 1 (- (syntax-span c) delta))))))
+                                       (reverse l2))))
+                 (datum->syntax
+                  #f
+                  (cons (datum->syntax #f
+                                       hash-type
+                                       (vector (syntax-source c)
+                                               (syntax-line c)
+                                               (+ (syntax-column c) 1)
+                                               (+ (syntax-position c) 1)
+                                               (string-length (symbol->string hash-type))))
+                        l)
+                  c)]
+                ;; quoted:
+                [else
+                 (datum->syntax #f (reverse l2) (vector (syntax-source c)
+                                                        (syntax-line c)
+                                                        (+ (syntax-column c) delta)
+                                                        (+ (syntax-position c) delta)
+                                                        (max 1 (- (syntax-span c) delta))))]))
             #f)
            (set! src-col (+ orig-col (syntax-span c))))]
         [(graph-reference? (syntax-e c))
@@ -1301,11 +1303,11 @@
                                                      (object-name v)))
                                                (cdr (vector->list (struct->vector v qq-ellipses))))]
                                         [else v])])
-                          (if (null? v)
-                              null
-                              (let ([i (do-syntax-ize (car v) col line ht #f qq #f)])
-                                (cons i
-                                      (loop (+ col 1 (syntax-span i)) (cdr v))))))])
+                          (cond
+                            [(null? v) null]
+                            [else
+                             (define i (do-syntax-ize (car v) col line ht #f qq #f))
+                             (cons i (loop (+ col 1 (syntax-span i)) (cdr v)))]))])
                  (datum->syntax #f
                                 (cond
                                   [(vector? v) (short-list->vector v l)]
@@ -1416,17 +1418,18 @@
            (- delta 1)
            0))
      (define pairs
-       (if (and qq (zero? qq))
-           (let ([ls (do-syntax-ize (apply append (hash-map v (lambda (k v) (list k v))))
-                                    (+ col delta -1) line ht #f qq #t)])
-             (datum->syntax
-              #f
-              (let loop ([l (syntax->list ls)])
-                (if (null? l)
-                    null
-                    (cons (cons (car l) (cadr l)) (loop (cddr l)))))
-              ls))
-           (do-syntax-ize (hash-map v make-forced-pair) (+ col delta) line ht #f qq #f)))
+       (cond
+         [(and qq (zero? qq))
+          (define ls (do-syntax-ize (apply append (hash-map v (lambda (k v) (list k v))))
+                                    (+ col delta -1) line ht #f qq #t))
+          (datum->syntax
+           #f
+           (let loop ([l (syntax->list ls)])
+             (if (null? l)
+                 null
+                 (cons (cons (car l) (cadr l)) (loop (cddr l)))))
+           ls)]
+         [else (do-syntax-ize (hash-map v make-forced-pair) (+ col delta) line ht #f qq #f)]))
      (datum->syntax #f
                     ((cond
                        [(hash-eq? v) make-immutable-hasheq]
