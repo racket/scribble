@@ -104,8 +104,6 @@
 (define current-meta-list 
   (make-parameter null))
 
-(define defined-names (make-hasheq))
-
 (define-struct (sized-element element) (length))
 
 (define-struct (spaces element) (cnt))
