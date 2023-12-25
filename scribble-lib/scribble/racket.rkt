@@ -798,15 +798,15 @@
         [(box? (syntax-e c))
          (advance c init-line! srcless-step)
          (let ([quote-depth (to-quoted c expr? quote-depth out color? inc-src-col)])
-           (if (and expr? (zero? quote-depth))
-               (begin
-                 (out "(" paren-color)
-                 (out "box" symbol-color)
-                 (out " " #f)
-                 (set! src-col (+ src-col 5)))
-               (begin
-                 (out "#&" value-color)
-                 (set! src-col (+ src-col 2))))
+           (cond
+             [(and expr? (zero? quote-depth))
+              (out "(" paren-color)
+              (out "box" symbol-color)
+              (out " " #f)
+              (set! src-col (+ src-col 5))]
+             [else
+              (out "#&" value-color)
+              (set! src-col (+ src-col 2))])
            (hash-set! next-col-map src-col dest-col)
            ((loop init-line! (if expr? quote-depth +inf.0) expr? #f) (unbox (syntax-e c)) #f)
            (when (and expr? (zero? quote-depth))
