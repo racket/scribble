@@ -241,99 +241,97 @@
     [(str . vals) (datum-intern-literal (apply format str vals))]))
 
 (define (typeset-atom c out color? quote-depth expr? escapes? defn?)
-  (if (and (var-id? (syntax-e c))
-           (zero? quote-depth))
-      (out (iformat "~s" (let ([v (var-id-sym (syntax-e c))])
-                           (if (syntax? v)
-                               (syntax-e v)
-                               v)))
-           variable-color)
-      (let*-values ([(is-var?) (and (identifier? c)
-                                    (memq (syntax-e c) (current-variable-list)))]
-                    [(s it? sub?)
-                     (let ([sc (syntax-e c)])
-                       (let ([s (cond
-                                  [(syntax-property c 'display-string) => values]
-                                  [(literal-syntax? sc) (iformat "~s" (literal-syntax-stx sc))]
-                                  [(var-id? sc) (iformat "~s" (var-id-sym sc))]
-                                  [(eq? sc #t) 
-                                   (if (equal? (syntax-span c) 5)
-                                       "#true"
-                                       "#t")]
-                                  [(eq? sc #f) 
-                                   (if (equal? (syntax-span c) 6)
-                                       "#false"
-                                       "#f")]
-                                  [(and (number? sc)
-                                        (inexact? sc))
-                                   (define s (iformat "~s" sc))
-                                   (if (= (string-length s)
-                                          (- (syntax-span c) 2))
-                                       ;; There's no way to know whether the source used #i,
-                                       ;; but it should be ok to include it:
-                                       (string-append "#i" s)
-                                       s)]
-                                  [else (iformat "~s" sc)])])
-                         (if (and escapes?
-                                  (symbol? sc)
-                                  ((string-length s) . > . 1)
-                                  (char=? (string-ref s 0) #\_)
-                                  (not (or (identifier-label-binding c)
-                                           is-var?)))
-                             (values (substring s 1) #t #f)
-                             (values s #f #f))))])
-        (let ([quote-depth (if (and expr? (identifier? c) (not (eq? qq-ellipses (syntax-e c))))
-                               (let ([quote-depth
-                                      (if (and (quote-depth . < . 2)
-                                               (memq (syntax-e c) '(unquote unquote-splicing)))
-                                          (to-unquoted expr? quote-depth out color? void)
-                                          quote-depth)])
-                                 (to-quoted c expr? quote-depth out color? void))
-                               quote-depth)])
-          (if (or (element? (syntax-e c))
-                  (delayed-element? (syntax-e c))
-                  (part-relative-element? (syntax-e c))
-                  (convertible? (syntax-e c)))
-              (out (syntax-e c) #f)
-              (out (if (and (identifier? c)
-                            color?
-                            (quote-depth . <= . 0)
-                            (not (or it? is-var?)))
-                       (cond
-                         [(pair? (identifier-label-binding c))
-                          (make-id-element c s defn?)]
-                         [else
-                          (define c (nonbreak-leading-hyphens s))
-                          (if defn?
-                              (make-element symbol-def-color c)
-                              c)])
-                       (literalize-spaces s #t))
+  (cond
+    [(and (var-id? (syntax-e c)) (zero? quote-depth))
+     (define v (var-id-sym (syntax-e c)))
+     (out (iformat "~s" (if (syntax? v) (syntax-e v) v))
+          variable-color)]
+    [else
+     (define is-var? (and (identifier? c) (memq (syntax-e c) (current-variable-list))))
+     (define sc (syntax-e c))
+     (define s-tentative
+       (cond
+         [(syntax-property c 'display-string) => values]
+         [(literal-syntax? sc) (iformat "~s" (literal-syntax-stx sc))]
+         [(var-id? sc) (iformat "~s" (var-id-sym sc))]
+         [(eq? sc #t)
+          (if (equal? (syntax-span c) 5)
+              "#true"
+              "#t")]
+         [(eq? sc #f)
+          (if (equal? (syntax-span c) 6)
+              "#false"
+              "#f")]
+         [(and (number? sc)
+               (inexact? sc))
+          (define s (iformat "~s" sc))
+          (if (= (string-length s)
+                 (- (syntax-span c) 2))
+              ;; There's no way to know whether the source used #i,
+              ;; but it should be ok to include it:
+              (string-append "#i" s)
+              s)]
+         [else (iformat "~s" sc)]))
+     (define-values (s it?)
+       (if (and escapes?
+                (symbol? sc)
+                ((string-length s-tentative) . > . 1)
+                (char=? (string-ref s-tentative 0) #\_)
+                (not (or (identifier-label-binding c) is-var?)))
+           (values (substring s-tentative 1) #t)
+           (values s-tentative #f)))
+     (let ([quote-depth (if (and expr? (identifier? c) (not (eq? qq-ellipses (syntax-e c))))
+                            (let ([quote-depth
+                                   (if (and (quote-depth . < . 2)
+                                            (memq (syntax-e c) '(unquote unquote-splicing)))
+                                       (to-unquoted expr? quote-depth out color? void)
+                                       quote-depth)])
+                              (to-quoted c expr? quote-depth out color? void))
+                            quote-depth)])
+       (if (or (element? (syntax-e c))
+               (delayed-element? (syntax-e c))
+               (part-relative-element? (syntax-e c))
+               (convertible? (syntax-e c)))
+           (out (syntax-e c) #f)
+           (out (if (and (identifier? c)
+                         color?
+                         (quote-depth . <= . 0)
+                         (not (or it? is-var?)))
+                    (cond
+                      [(pair? (identifier-label-binding c))
+                       (make-id-element c s defn?)]
+                      [else
+                       (define c (nonbreak-leading-hyphens s))
+                       (if defn?
+                           (make-element symbol-def-color c)
+                           c)])
+                    (literalize-spaces s #t))
+                (cond
+                  [(positive? quote-depth) value-color]
+                  [(let ([v (syntax-e c)])
+                     (or (number? v)
+                         (string? v)
+                         (bytes? v)
+                         (char? v)
+                         (regexp? v)
+                         (byte-regexp? v)
+                         (boolean? v)
+                         (extflonum? v)))
+                   value-color]
+                  [(identifier? c)
                    (cond
-                     [(positive? quote-depth) value-color]
-                     [(let ([v (syntax-e c)])
-                        (or (number? v)
-                            (string? v)
-                            (bytes? v)
-                            (char? v)
-                            (regexp? v)
-                            (byte-regexp? v)
-                            (boolean? v)
-                            (extflonum? v)))
-                      value-color]
-                     [(identifier? c) 
-                      (cond
-                        [is-var?
-                         variable-color]
-                        [(and (identifier? c)
-                              (memq (syntax-e c) (current-keyword-list)))
-                         keyword-color]
-                        [(and (identifier? c)
-                              (memq (syntax-e c) (current-meta-list)))
-                         meta-color]
-                        [it? variable-color]
-                        [else symbol-color])]
-                     [else paren-color])
-                   (string-length s)))))))
+                     [is-var?
+                      variable-color]
+                     [(and (identifier? c)
+                           (memq (syntax-e c) (current-keyword-list)))
+                      keyword-color]
+                     [(and (identifier? c)
+                           (memq (syntax-e c) (current-meta-list)))
+                      meta-color]
+                     [it? variable-color]
+                     [else symbol-color])]
+                  [else paren-color])
+                (string-length s))))]))
 
 (define omitable (make-style #f '(omitable)))
 
