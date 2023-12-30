@@ -713,7 +713,7 @@ and @racket[#:reader] are mutually exclusive.
 The @tech{decode}d @racket[pre-flow]s introduce the module, but need
 not include all of the module content.
 
-@history[#:changed "1.43" @elem{Support a procedure value for @racket[#:require-form].}]}
+@history[#:changed "1.43" @elem{Supported a procedure value for @racket[#:require-form].}]}
 
 
 @defform[#:literals (unquote)
