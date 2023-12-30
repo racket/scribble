@@ -1343,6 +1343,8 @@ Examples:
     A parameter to hold a readtable.
   }
 ]
+
+@history[#:changed "1.51" @elem{Added support for @racket[#:auto-value].}]
 }
 
 
@@ -1354,7 +1356,10 @@ Examples:
 Like @racket[defparam], but with separate contracts for when the parameter is being
 set versus when it is being retrieved (for the case that a parameter guard
 coerces values matching a more flexible contract to a more restrictive one;
-@racket[current-directory] is an example).}
+@racket[current-directory] is an example).
+
+@history[#:changed "1.51" @elem{Added support for @racket[#:auto-value].}]
+}
 
 
 @defform[(defboolparam maybe-link id arg-id
@@ -1363,7 +1368,10 @@ coerces values matching a more flexible contract to a more restrictive one;
 
 Like @racket[defparam], but the contract on a parameter argument is
 @racket[any/c], and the contract on the parameter result is
-@racket[boolean?].}
+@racket[boolean?].
+
+@history[#:changed "1.51" @elem{Added support for @racket[#:auto-value].}]
+}
 
 
 @defform/subs[(defthing options id contract-expr-datum maybe-auto-value
@@ -1428,6 +1436,8 @@ Examples:
     The empty list.
   }
 ]
+
+@history[#:changed "1.51" @elem{Added support for @racket[#:auto-value].}]
 }
 
 @defform[(defthing* options ([id contract-expr-datum maybe-auto-value] ...+)
@@ -1451,6 +1461,8 @@ Examples:
   Predefined sandwiches.
 }
 ]
+
+@history[#:changed "1.51" @elem{Added support for @racket[#:auto-value].}]
 }
 
 
