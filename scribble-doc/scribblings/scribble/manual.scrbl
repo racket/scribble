@@ -1467,16 +1467,20 @@ Examples:
 
 
 @deftogether[(
-@defform[       (defstruct* maybe-link struct-name ([field-name contract-expr-datum] ...)
+@defform[       (defstruct* maybe-link struct-name ([field contract-expr-datum] ...)
                   maybe-mutable maybe-non-opaque maybe-constructor
                   pre-flow ...)]
-@defform/subs[  (defstruct maybe-link struct-name ([field-name contract-expr-datum] ...)
+@defform/subs[  (defstruct maybe-link struct-name ([field contract-expr-datum] ...)
                   maybe-mutable maybe-non-opaque maybe-constructor
                   pre-flow ...)
                ([maybe-link code:blank
                             (code:line #:link-target? link-target?-expr)]
                 [struct-name id
                              (id super-id)]
+                [field field-id
+                       (field-id field-option ...)]
+                [field-option #:mutable
+                              #:auto]
                 [maybe-mutable code:blank
                                #:mutable]
                 [maybe-non-opaque code:blank
@@ -1498,18 +1502,18 @@ Examples:
 An example using @racket[defstruct]:
 @codeblock[#:keep-lang-line? #f]|{
 #lang scribble/manual
-@defstruct[sandwich ([protein ingredient?] [sauce ingredient?])]{
+@defstruct[sandwich ([(protein #:mutable) ingredient?] [sauce ingredient?])]{
   A structure type for sandwiches. Sandwiches are a pan-human foodstuff
   composed of a partially-enclosing bread material and various
-  ingredients.
+  ingredients. The @racketid[protein] field is mutable.
 }
 }|
 @doc-render-examples[
   @defstruct[#:link-target? #f
-             sandwich ([protein ingredient?] [sauce ingredient?])]{
+             sandwich ([(protein #:mutable) ingredient?] [sauce ingredient?])]{
     A structure type for sandwiches. Sandwiches are a pan-human foodstuff
     composed of a partially-enclosing bread material and various
-    ingredients.
+    ingredients. The @racketid[protein] field is mutable.
   }]
 
 Additionally, an example using @racket[defstruct*]:
