@@ -17,6 +17,7 @@
          "manual-method.rkt"
          "manual-ex.rkt"
          "on-demand.rkt"
+         racket/match
          racket/string
          racket/list
          racket/contract
@@ -897,10 +898,15 @@
                                (append (if (pair? name) name (list name))
                                        (map field-name fields)))
                           (map (lambda (f)
-                                 (if (pair? (car f))
-                                     (+ 3 2 (string-length (keyword->string
-                                                            (cadar f))))
-                                     0))
+                                 (match (car f)
+                                   [(? symbol?) 0]
+                                   [(list name) 2] ;; the extra [ ]
+                                   [(list* name field-opts)
+                                    ;; '[' ']'
+                                    (apply + 2
+                                           (for/list ([field-opt (in-list field-opts)])
+                                             ;; and " #:"
+                                             (+ 3 (string-length (keyword->string field-opt)))))]))
                                fields)))])
             (cond
               [(and (short-width . < . max-proto-width)
