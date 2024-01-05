@@ -99,6 +99,14 @@ A function, again, not a link target, documented to return @racket[10] using a d
 
 @defstruct[#:link-target? #f pt ([x real?] [y real?]) #:mutable]{A mutable structure type with extra name, again.}
 
+@defstruct*[#:link-target? #f counter ([name symbol?] [(count) exact-nonnegative-integer?])]{A struct with an (empty) list of field options.}
+
+@defstruct*[counter ([name symbol?] [(count #:mutable) exact-nonnegative-integer?])]{Another struct with a mutable field.}
+
+@defstruct*[#:link-target? #f counter ([name symbol?] [(count #:auto) exact-nonnegative-integer?])]{A struct with an automatic field.}
+
+@defstruct*[#:link-target? #f counter ([name symbol?] [(count #:auto #:mutable) exact-nonnegative-integer?])]{A struct with both.}
+
 @defstruct[a-struct-with-an-extremely-long-name-and-no-fields ()]{Used to raise error, taking car of empty fields list. Reported by Carlos Lopez, 2017-03-11.}
 
 

@@ -248,6 +248,30 @@ A structure type with extra name, again.
 
 A mutable structure type with extra name, again.
 
+(struct counter (name [count]))     
+  name : symbol?                    
+  count : exact-nonnegative-integer?
+
+A struct with an (empty) list of field options.
+
+(struct counter (name [count #:mutable]))
+  name : symbol?                         
+  count : exact-nonnegative-integer?     
+
+Another struct with a mutable field.
+
+(struct counter (name [count #:auto]))
+  name : symbol?                      
+  count : exact-nonnegative-integer?  
+
+A struct with an automatic field.
+
+(struct counter (name [count #:auto #:mutable]))
+  name : symbol?                                
+  count : exact-nonnegative-integer?            
+
+A struct with both.
+
 (struct a-struct-with-an-extremely-long-name-and-no-fields ()
     #:extra-constructor-name                                 
     make-a-struct-with-an-extremely-long-name-and-no-fields) 

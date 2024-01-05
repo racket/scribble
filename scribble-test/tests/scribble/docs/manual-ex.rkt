@@ -20,6 +20,7 @@
 
 (define-struct pt (x y))
 (struct pn (x y))
+(struct counter (name [count #:mutable]))
 
 (define v 10)
 
