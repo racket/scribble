@@ -161,7 +161,10 @@
  [item (->* () 
             () 
             #:rest (listof pre-flow?)
-            item?)])
+            item?)]
+ [ordered (->* ()
+               (#:start exact-nonnegative-integer?)
+               style?)])
 (provide/contract
  [item? (any/c . -> . boolean?)])
 
@@ -184,6 +187,9 @@
 
 (define (item . str)
   (make-an-item (decode-flow str)))
+
+(define (ordered #:start [start 1])
+  (make-style 'ordered (list (itemization-ordered start))))
 
 ;; ----------------------------------------
 

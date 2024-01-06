@@ -74,6 +74,48 @@ Run the scribble command(s) from the old section again. You may notice
 the curly double-quotes in the output, and the --- turned into an em
 dash.
 
+Ordered itemization is supported, too, and it can be started at a
+specified number. Here, we start at 10.
+
+10) Run
+
+      scribble --pdf mouse.scrbl
+
+    to generate PDF as "mouse.pdf". This will work only if you have
+    pdflatex installed. If you’d like to see the intermediate Latex, try
+
+      scribble --latex mouse.scrbl
+
+    to generate "mouse.tex".
+
+11) Run
+
+      scribble --html mouse.scrbl
+
+    to generate HTML as "mouse.html".  You may notice that the
+    apostrophe in “he’s” turned into a curly apostrophe.
+
+Subsequent ordered itemization should not continue the earlier
+itemization.
+
+1) Run
+
+     scribble --pdf mouse.scrbl
+
+   to generate PDF as "mouse.pdf". This will work only if you have
+   pdflatex installed. If you’d like to see the intermediate Latex, try
+
+     scribble --latex mouse.scrbl
+
+   to generate "mouse.tex".
+
+2) Run
+
+     scribble --html mouse.scrbl
+
+   to generate HTML as "mouse.html".  You may notice that the apostrophe
+   in “he’s” turned into a curly apostrophe.
+
 3. C
 
 3.1. Inside C

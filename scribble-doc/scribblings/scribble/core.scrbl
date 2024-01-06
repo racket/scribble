@@ -717,6 +717,9 @@ The following @tech{style properties} are currently recognized:
  @item{@indexed-racket['never-indents] --- For Latex and @tech{compound
        paragraphs}; see @racket[compound-paragraph].}
 
+ @item{@racket[itemization-ordered] structure --- Indicates the starting number.
+       This property should always be used with the @racket['ordered] style name.}
+
 ]}
 
 
@@ -1262,6 +1265,13 @@ latter case)or cell in a @racket[table].}
 
 Like @racket[color-property], but sets the background color.}
 
+@defstruct[itemization-ordered ([start number?])]{
+
+Used as a @tech{style property} for an @racket[itemization] to indicate
+that the ordered itemization should start with @racket[_start].
+The associated style name @bold{must} be @racket['ordered].
+The function @racket[ordered] creates a style with
+both @racket['ordered] style name and @racket[itemization-ordered] style property.}
 
 @defstruct[table-cells ([styless (listof (listof style?))])]{
 

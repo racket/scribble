@@ -293,6 +293,7 @@
  [color-property ([color (or/c string? (list/c byte? byte? byte?))])]
  [background-color-property ([color (or/c string? (list/c byte? byte? byte?))])]
  [numberer-property ([numberer numberer?] [argument any/c])]
+ [itemization-ordered ([start number?])]
 
  [table-columns ([styles (listof style?)])]
  [table-cells ([styless (listof (listof style?))])]
