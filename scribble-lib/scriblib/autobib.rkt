@@ -30,7 +30,9 @@
           [dissertation-location
            (->* [#:institution any/c] [#:degree any/c] element?)]
           [book-chapter-location
-           (->* [any/c] [#:pages (or/c (list/c any/c any/c) #f) #:series any/c #:volume any/c #:publisher any/c] element?)])
+           (->* [any/c] [#:pages (or/c (list/c any/c any/c) #f) #:series any/c #:volume any/c #:publisher any/c] element?)]
+          [webpage-location
+           (->* (string?) (#:accessed string?) element?)])
          other-authors
          editor
          abbreviate-given-names
@@ -549,6 +551,13 @@
                 s)]
          [s (if pages
                 @elem{@|s|, pp. @(to-string (car pages))--@(to-string (cadr pages))}
+                s)])
+    s))
+
+(define (webpage-location url #:accessed [accessed #f])
+  (let* ([s ((url-rendering) url)]
+         [s (if accessed
+                @elem{@|s| (accessed @accessed)}
                 s)])
     s))
 
