@@ -239,6 +239,13 @@ describing a technical report's location.}
 Combines elements to generate an element that is suitable for
 describing a dissertation.}
 
+@defproc[(webpage-location [url string?]
+                           [#:accessed accessed any/c #f])
+         element?]{
+ Combines elements to generate an element that is suitable for
+ describing a web page.
+}
+
 
 @defproc[(book-chapter-location [title any/c]
                            [#:pages pages (or (list/c any/c any/c) #f) #f]
