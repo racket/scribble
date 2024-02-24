@@ -28,7 +28,7 @@ submodule to be separately loadable from the enclosing module.
 
 For an example use, see
 @hyperlink["https://blog.racket-lang.org/2012/06/submodules.html"]{this post}
-at @url{blog.racket-lang.org}.
+at @hyperlink["https://blog.racket-lang.org"]{the Racket blog}.
 
 
 @; ----------------------------------------
