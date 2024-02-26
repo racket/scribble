@@ -38,7 +38,7 @@
 
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesClass{acmart}
-[2023/12/29 v2.01 Typesetting articles for the Association for Computing Machinery]
+[2024/02/04 v2.03 Typesetting articles for the Association for Computing Machinery]
 \def\@classname{acmart}
 \InputIfFileExists{acmart-preload-hook.tex}{%
   \ClassWarning{\@classname}{%
@@ -179,6 +179,7 @@
 \newif\if@ACM@manuscript
 \newif\if@ACM@journal
 \newif\if@ACM@journal@bibstrip
+\newif\if@ACM@journal@bibstrip@or@tog
 \newif\if@ACM@sigchiamode
 \newif\if@ACM@engage
 \@ACM@engagefalse
@@ -224,6 +225,7 @@
   \@ACM@journaltrue
 \or % acmtog
   \@ACM@journaltrue
+  \@ACM@journal@bibstrip@or@togtrue
 \or % sigconf
   \@ACM@journalfalse
 \or % siggraph
@@ -244,7 +246,8 @@
   \AtBeginDocument{\@ACM@printacmreffalse}%
 \fi
 \if@ACM@journal
- \@ACM@journal@bibstriptrue
+  \@ACM@journal@bibstriptrue
+  \@ACM@journal@bibstrip@or@togtrue
 \else
  \@ACM@journal@bibstripfalse
 \fi
@@ -1201,7 +1204,7 @@
   \def\@journalNameShort{ACM J. Data Inform. Quality}%
   \def\@permissionCodeOne{1936-1955}%
 \or % JDS
-  \def\@journalName{ACM/JMS Journal of Data Science}%
+  \def\@journalName{ACM/IMS Journal of Data Science}%
   \def\@journalNameShort{ACM/IMS J. Data Sci.}%
   \def\@permissionCodeOne{2831-3194}%
   \def\@permissionCodeTwo{2831-3194}%
@@ -1462,7 +1465,8 @@
   \ClassError{\@classname}{Incorrect journal #1}%
 }%
 \def\acmJournal#1{\setkeys{ACM}{acmJournal=#1}%
-  \global\@ACM@journal@bibstriptrue}
+  \global\@ACM@journal@bibstriptrue
+  \global\@ACM@journal@bibstrip@or@togtrue}
 \def\@journalCode@nr{0}
 \def\@journalName{}%
 \def\@journalNameShort{\@journalName}%
@@ -1477,6 +1481,11 @@
     \gdef\acmConference@shortname{#2}%
   \fi
   \global\@ACM@journal@bibstripfalse
+  \ifx\@acmBooktitle\@empty\relax
+    \acmBooktitle{Proceedings of \acmConference@name
+      \ifx\acmConference@name\acmConference@shortname\else
+      \ (\acmConference@shortname)\fi}%
+  \fi
 }
 \if@ACM@journal\else
 \acmConference[Conference'17]{ACM Conference}{July 2017}{Washington,
@@ -1484,11 +1493,6 @@
 \fi
 \def\acmBooktitle#1{\gdef\@acmBooktitle{#1}}
 \acmBooktitle{}
-\ifx\acmConference@name\@undefined\else
-\acmBooktitle{Proceedings of \acmConference@name
-       \ifx\acmConference@name\acmConference@shortname\else
-       \ (\acmConference@shortname)\fi}
-\fi
 \def\@editorsAbbrev{(Ed.)}
 \def\@acmEditors{}
 \def\editor#1{\ifx\@acmEditors\@empty
@@ -2160,7 +2164,7 @@
   \if@ACM@acmcp\else
     \ifx\@empty\@authorsaddresses\else
        \if@ACM@anonymous\else
-         \if@ACM@journal@bibstrip
+         \if@ACM@journal@bibstrip@or@tog
            \footnotetextauthorsaddresses{%
              \def\par{\let\par\@par}\parindent\z@\@setauthorsaddresses}%
          \fi
@@ -2962,7 +2966,7 @@
       \@acmArticle\if@ACM@printfolios:\thepage\fi%
     \fi%
   }%
-  \if@ACM@journal@bibstrip
+  \if@ACM@journal@bibstrip@or@tog
     \ifcase\ACM@format@nr
     \relax % manuscript
       \fancyhead[LE]{\ACM@linecountL\if@ACM@printfolios\thepage\fi}%
@@ -2998,9 +3002,15 @@
       \fancyhead[RE]{\ACM@linecountR}%
       \fancyhead[RO]{\@headfootfont
         \shorttitle\quad\textbullet\quad\@acmArticlePage\ACM@linecountR}%
-      \if@ACM@nonacm\else%
-        \fancyfoot[RO,LE]{\footnotesize \@journalNameShort, Vol. \@acmVolume, No.
-        \@acmNumber, Article \@acmArticle.  Publication date: \@acmPubDate.}%
+      \if@ACM@nonacm\else
+        \if@ACM@journal@bibstrip
+          \fancyfoot[RO,LE]{\footnotesize \@journalNameShort,
+            Vol. \@acmVolume, No.~\@acmNumber, Article \@acmArticle.
+            Publication date: \@acmPubDate.}%
+        \else
+          \fancyfoot[RO,LE]{\footnotesize \acmConference@shortname,
+            \acmConference@date, \acmConference@venue.}%
+         \fi
       \fi
     \else % Proceedings
       \fancyfoot[C]{\if@ACM@printfolios\footnotesize\thepage\fi}%
@@ -3079,7 +3089,7 @@
   \fancyhf{}%
   \renewcommand{\headrulewidth}{\z@}%
   \renewcommand{\footrulewidth}{\z@}%
-  \if@ACM@journal@bibstrip
+  \if@ACM@journal@bibstrip@or@tog
     \ifcase\ACM@format@nr
     \relax % manuscript
       \fancyhead[L]{\ACM@linecountL\@acmBadgeL}%
@@ -3110,9 +3120,14 @@
       \fancyhead[LO]{\ACM@linecountL\@acmBadgeL}%
     \or % acmtog
       \if@ACM@nonacm\else%
-        \fancyfoot[RO,LE]{\footnotesize \@journalNameShort, Vol. \@acmVolume, No.
-        \@acmNumber, Article \@acmArticle.  Publication date:
-        \@acmPubDate.}%
+        \if@ACM@journal@bibstrip
+          \fancyfoot[RO,LE]{\footnotesize \@journalNameShort,
+            Vol. \@acmVolume, No.~\@acmNumber, Article \@acmArticle.
+            Publication date: \@acmPubDate.}%
+        \else
+          \fancyfoot[RO,LE]{\footnotesize \acmConference@shortname,
+            \acmConference@date, \acmConference@venue.}%
+         \fi
       \fi%
       \fancyhead[L]{\ACM@linecountL\@acmBadgeL}%
       \fancyhead[R]{\@acmBadgeR\ACM@linecountR}%

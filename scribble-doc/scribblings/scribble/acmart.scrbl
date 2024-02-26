@@ -12,6 +12,7 @@ language is like @racketmodname[scribble/base], but configured with
 LaTeX style defaults to use the @hyperlink[acmart-url]{@tt{acmart}}
 class for typesetting publications for the Association of Computing
 Machinery.}
+@margin-note{@tt{acmart} documentation: @link["https://portalparts.acm.org/hippo/latex_templates/acmart.pdf"]{[link]}}
 
 @bold{Note:} a @racketmodname[scribble/acmart] document must include a
 @racket[title] and @racket[author].
@@ -79,9 +80,9 @@ number of options may be used:
 
 If multiple font size options are used, all but the last are ignored.
 
-The @link["https://www.acm.org/binaries/content/assets/publications/consolidated-tex-template/acmart.pdf"
- ]{ACM documentation} (version 1.54, 2018-07-16, by Boris
-Veytsman) provides these defaults and descriptions:
+The latest @link["https://github.com/borisveytsman/acmart/releases/tag/v2.03"]{@tt{acmart} release}
+(version 2.03, 2024-02-04, by Boris Veytsman)
+provides these defaults and descriptions:
 
 @tabular[#:style 'boxed
          #:sep @hspace[1]
@@ -92,7 +93,7 @@ Veytsman) provides these defaults and descriptions:
           (list "review" "false"
                 "A review version: lines are numbered and\
  hyperlinks are colored")
-          (list "screen" "see text"
+          (list "screen" @link["https://portalparts.acm.org/hippo/latex_templates/acmart.pdf"]{"see text"}
                 "A screen version: hyperlinks are colored")
           (list "natbib" "true"
                 "Whether to use the natbib package")
@@ -103,8 +104,6 @@ Veytsman) provides these defaults and descriptions:
                 "false"
                 "Whether to generate a special version\
  for the authors’ personal use or posting")
-          ;; these options are documented in ACM docs but don't
-          ;; appear to exist in the scribble acmart format:
           (list "nonacm" "false"
                 "Use the class typesetting options for a non-ACM\
  document, which will not include the conference/journal\
@@ -115,7 +114,16 @@ Veytsman) provides these defaults and descriptions:
           (list "authordraft" "false"
                 "Whether author’s-draft mode is enabled")
           (list "acmthm" "true"
-                "Whether to define theorem-like environments"))]
+                "Whether to define theorem-like environments")
+          (list "balance" "true"
+                "Whether to balance the last page in\
+ two column mode")
+          (list "pbalance" "false"
+                "Whether to balance the last page in\
+ two column mode using pbalance package"
+                )
+          (list "urlbreakonhyphens" "true"
+                "Whether to break urls on hyphens"))]
 
 Further details for some of these are provided by the full
 documentation for the acmart LaTeX class.

@@ -144,7 +144,8 @@
 (defopts manuscript acmsmall acmlarge acmtog sigconf siggraph sigplan sigchi sigchi-a
   dtrap pacmcgit tiot tdsci)
 ; boolean options
-(defopts review screen natbib anonymous authorversion 9pt 10pt 11pt 12pt)
+(defopts review screen natbib anonymous authorversion nonacm timestamp authordraft
+  acmthm balance pbalance urlbreakonhyphens 9pt 10pt 11pt 12pt)
 
 (define acmart-extras
   (let ([abs (lambda (s)
