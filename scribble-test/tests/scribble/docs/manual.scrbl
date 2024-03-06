@@ -133,9 +133,9 @@ A function, again, not a link target, documented to return @racket[10] using a d
 
 @(math "f_{-1}}}")
 
-@(math "f_{_{_{-1}")
+@(math "f_{^{_{-1}")
 
-@(math "f_{-1}}}")
+@(math "f^{_{^{-1}")
 
 @section{Sub2}
 @defmodule["manual-ex2.rkt" #:no-declare #:packages ()]
