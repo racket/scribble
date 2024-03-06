@@ -293,6 +293,20 @@ g01234
 
 ABC
 
+ABC
+
+ABC
+
+ABC
+
+f{{-1
+
+f-1}}
+
+f_{_{-1
+
+f-1}}
+
 1. Sub2
 
  (require "manual-ex2.rkt")

@@ -121,7 +121,21 @@ A function, again, not a link target, documented to return @racket[10] using a d
 
 @math{g_0^1_2^3_4}
 
+@math{A_{B_{C}}}
+
 @math{A_{B^{C}}}
+
+@math{A^{B_{C}}}
+
+@math{A^{B^{C}}}
+
+@(math "f_{{{-1}")
+
+@(math "f_{-1}}}")
+
+@(math "f_{_{_{-1}")
+
+@(math "f_{-1}}}")
 
 @section{Sub2}
 @defmodule["manual-ex2.rkt" #:no-declare #:packages ()]

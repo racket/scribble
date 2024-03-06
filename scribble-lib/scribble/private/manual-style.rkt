@@ -230,26 +230,21 @@
            (match i
              [(pregexp #px"^(.*)(_|\\^)\\{(.*)\\}(.*)$")
               (define len (string-length i))
-              (let loop ([num 0] [curr 0] [start #f] [end #f])
+              (let loop ([num 0] [curr 0] [start #f] [end #f] [last #f])
                 (cond
-                  [(and start end)
+                  [end
                    (typeset (substring i 0 start)
                             (substring i start (+ start 1))
                             (substring i (+ start 2) end)
                             (substring i (+ end 1) len))]
+                  [(>= curr len) (loop num curr start last last)]
                   [(and (or (eq? (string-ref i curr) #\_)
                             (eq? (string-ref i curr) #\^))
                         (eq? (string-ref i (add1 curr)) #\{))
-                   (loop (add1 num)
-                         (+ curr 2)
-                         (or start curr)
-                         end)]
+                   (loop (add1 num) (+ curr 2) (or start curr) end last)]
                   [(and start (eq? (string-ref i curr) #\}))
-                   (loop (sub1 num)
-                         (+ curr 1)
-                         start
-                         (if (= num 1) curr end))]
-                  [else (loop num (+ curr 1) start end)]))]
+                   (loop (sub1 num) (+ curr 1) start (if (= num 1) curr end) curr)]
+                  [else (loop num (+ curr 1) start end last)]))]
              [(pregexp #px"^(.*)(_|\\^)([[:alnum:]]+)(.*)$"
                        (list _ s1 _/^ s2 s3))
               (typeset s1 _/^ s2 s3)]
