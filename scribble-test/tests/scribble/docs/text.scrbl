@@ -85,6 +85,47 @@ Run the @exec{scribble} command(s) from the old section
 again. You may notice the curly double-quotes in the output, and
 the @litchar{---} turned into an em dash.
 
+Ordered itemization is supported, too, and it can be started at a specified number.
+Here, we start at 10.
+
+       @itemlist[
+         #:style (ordered #:start 10)
+
+         @item{Run
+                @commandline{scribble --pdf mouse.scrbl}
+               to generate PDF as @filepath{mouse.pdf}. This will
+               work only if you have @exec{pdflatex} installed.
+               If you'd like to see the intermediate Latex, try
+                @commandline{scribble --latex mouse.scrbl}
+               to generate @filepath{mouse.tex}.}
+
+         @item{Run
+               @commandline{scribble --html mouse.scrbl}
+              to generate HTML as @filepath{mouse.html}.  You may
+              notice that the apostrophe in ``he's'' turned into a
+              curly apostrophe.}
+          ]
+
+Subsequent ordered itemization should not continue the earlier itemization.
+
+       @itemlist[
+         #:style (ordered)
+
+         @item{Run
+                @commandline{scribble --pdf mouse.scrbl}
+               to generate PDF as @filepath{mouse.pdf}. This will
+               work only if you have @exec{pdflatex} installed.
+               If you'd like to see the intermediate Latex, try
+                @commandline{scribble --latex mouse.scrbl}
+               to generate @filepath{mouse.tex}.}
+
+         @item{Run
+               @commandline{scribble --html mouse.scrbl}
+              to generate HTML as @filepath{mouse.html}.  You may
+              notice that the apostrophe in ``he's'' turned into a
+              curly apostrophe.}
+          ]
+
 @section{C}
 
 @subsection{Inside C}
