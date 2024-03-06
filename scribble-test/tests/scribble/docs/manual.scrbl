@@ -114,6 +114,14 @@ A function, again, not a link target, documented to return @racket[10] using a d
 @defmodule["manual-ex0.rkt" #:lang #:no-declare #:link-target? #f #:packages ()]
 @defmodule["manual-ex0.rkt" #:reader #:no-declare #:link-target? #f #:packages ()]
 
+
+@math{id_{a} = id_{a}^{-1} = (id_{a}^{-1})^{-1}}
+
+@math{f_{1}^{m+n} = f_1^m × f_1^n}
+
+@math{g_0^1_2^3_4}
+
+
 @section{Sub2}
 @defmodule["manual-ex2.rkt" #:no-declare #:packages ()]
 
