@@ -219,26 +219,55 @@
         (cond
           [(string? i)
            (cond
-             [(regexp-match #px"^(.*)_([a-zA-Z0-9]+)(.*)$" i)
+             [(regexp-match #px"^(.*)\\^\\{(.*)\\}_\\{(.*)\\}(.*)$" i)
               => (lambda (m)
-                   (append (loop (cadr m))
-                           (list (make-element 'subscript
-                                               (loop (caddr m))))
-                           (loop (cadddr m))))]
-             [(regexp-match #px"^(.*)\\^([a-zA-Z0-9]+)(.*)$" i)
+                   (let* ([m (cdr m)] [s1 (car m)]
+                          [m (cdr m)] [s2 (car m)]
+                          [m (cdr m)] [s3 (car m)]
+                          [m (cdr m)] [s4 (car m)])
+                     (append (loop s1)
+                             (list (make-element 'superscript (loop s2))
+                                   (make-element 'subscript   (loop s3)))
+                             (loop s4))))]
+             [(regexp-match #px"^(.*)_\\{(.*)\\}\\^\\{(.*)\\}(.*)$" i)
               => (lambda (m)
-                   (append (loop (cadr m))
-                           (list (make-element 'superscript
-                                               (loop (caddr m))))
-                           (loop (cadddr m))))]
+                   (let* ([m (cdr m)] [s1 (car m)]
+                          [m (cdr m)] [s2 (car m)]
+                          [m (cdr m)] [s3 (car m)]
+                          [m (cdr m)] [s4 (car m)])
+                     (append (loop s1)
+                             (list (make-element 'subscript   (loop s2))
+                                   (make-element 'superscript (loop s3)))
+                             (loop s4))))]
+             [(or (regexp-match #px"^(.*)_\\{(.*)\\}(.*)$"     i)
+                  (regexp-match #px"^(.*)_([a-zA-Z0-9]+)(.*)$" i))
+              => (lambda (m)
+                   (let* ([m (cdr m)] [s1 (car m)]
+                          [m (cdr m)] [s2 (car m)]
+                          [m (cdr m)] [s3 (car m)])
+                     (append (loop s1)
+                             (list (make-element 'subscript (loop s2)))
+                             (loop s3))))]
+             [(or (regexp-match #px"^(.*)\\^\\{(.*)\\}(.*)$"     i)
+                  (regexp-match #px"^(.*)\\^([a-zA-Z0-9]+)(.*)$" i))
+              => (lambda (m)
+                   (let* ([m (cdr m)] [s1 (car m)]
+                          [m (cdr m)] [s2 (car m)]
+                          [m (cdr m)] [s3 (car m)])
+                     (append (loop s1)
+                             (list (make-element 'superscript (loop s2)))
+                             (loop s3))))]
              [(regexp-match #px"^(.*)([()0-9{}\\[\\]\u03C0])(.*)$" i)
               => (lambda (m)
-                   (append (loop (cadr m))
-                           (list (caddr m))
-                           (loop (cadddr m))))]
+                   (let* ([m (cdr m)] [s1 (car m)]
+                          [m (cdr m)] [s2 (car m)]
+                          [m (cdr m)] [s3 (car m)])
+                     (append (loop s1)
+                             (list s2)
+                             (loop s3))))]
              [else
               (list (make-element 'italic (list i)))])]
-          [(eq? i 'rsquo) (list 'prime)]
+          [(eq? i 'rsquo) '(prime)]
           [else (list i)])))
     c)))
 

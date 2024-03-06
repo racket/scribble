@@ -2183,10 +2183,12 @@ An alias for @racket[centered] for backward compatibility.}
         italicized.}
 
   @item{When @litchar{_} appears before a non-empty sequence of numbers
-        and letters, the sequence is typeset as a subscript.}
+        and letters, or a sequence within @litchar{{}}, the sequence is
+        typeset as a subscript.}
 
   @item{When @litchar{^} appears before a non-empty sequence of numbers
-        and letters, the sequence is typeset as a superscript.}
+        and letters, or a sequence within @litchar{{}}, the sequence is
+        typeset as a superscript.}
 
  ]}
 
