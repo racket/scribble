@@ -121,6 +121,7 @@ A function, again, not a link target, documented to return @racket[10] using a d
 
 @math{g_0^1_2^3_4}
 
+@math{A_{B^{C}}}
 
 @section{Sub2}
 @defmodule["manual-ex2.rkt" #:no-declare #:packages ()]

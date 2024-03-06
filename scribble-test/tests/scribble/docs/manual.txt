@@ -291,6 +291,8 @@ f1m+n = f1m × f1n
 
 g01234
 
+ABC
+
 1. Sub2
 
  (require "manual-ex2.rkt")
