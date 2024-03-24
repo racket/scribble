@@ -11,6 +11,7 @@
          "on-demand.rkt"
          "manual-sprop.rkt"
          racket/list
+         racket/match
          racket/contract/base
          racket/string)
 
@@ -216,29 +217,42 @@
    (append-map
     (lambda (i)
       (let loop ([i i])
+        (define (typeset s1 _/^ s2 s3)
+          (append (loop s1)
+                  (list (make-element
+                         (if (string=? _/^ "_")
+                             'subscript
+                             'superscript)
+                         (loop s2)))
+                  (loop s3)))
         (cond
           [(string? i)
-           (cond
-             [(regexp-match #px"^(.*)_([a-zA-Z0-9]+)(.*)$" i)
-              => (lambda (m)
-                   (append (loop (cadr m))
-                           (list (make-element 'subscript
-                                               (loop (caddr m))))
-                           (loop (cadddr m))))]
-             [(regexp-match #px"^(.*)\\^([a-zA-Z0-9]+)(.*)$" i)
-              => (lambda (m)
-                   (append (loop (cadr m))
-                           (list (make-element 'superscript
-                                               (loop (caddr m))))
-                           (loop (cadddr m))))]
-             [(regexp-match #px"^(.*)([()0-9{}\\[\\]\u03C0])(.*)$" i)
-              => (lambda (m)
-                   (append (loop (cadr m))
-                           (list (caddr m))
-                           (loop (cadddr m))))]
-             [else
-              (list (make-element 'italic (list i)))])]
-          [(eq? i 'rsquo) (list 'prime)]
+           (match i
+             [(pregexp #px"^(.*)(_|\\^)\\{(.*)\\}(.*)$")
+              (define len (string-length i))
+              (let loop ([num 0] [curr 0] [start #f] [end #f] [last #f])
+                (cond
+                  [end
+                   (typeset (substring i 0 start)
+                            (substring i start (+ start 1))
+                            (substring i (+ start 2) end)
+                            (substring i (+ end 1) len))]
+                  [(>= curr len) (loop num curr start last last)]
+                  [(and (or (eq? (string-ref i curr) #\_)
+                            (eq? (string-ref i curr) #\^))
+                        (eq? (string-ref i (add1 curr)) #\{))
+                   (loop (add1 num) (+ curr 2) (or start curr) end last)]
+                  [(and start (eq? (string-ref i curr) #\}))
+                   (loop (sub1 num) (+ curr 1) start (if (= num 1) curr end) curr)]
+                  [else (loop num (+ curr 1) start end last)]))]
+             [(pregexp #px"^(.*)(_|\\^)([[:alnum:]]+)(.*)$"
+                       (list _ s1 _/^ s2 s3))
+              (typeset s1 _/^ s2 s3)]
+             [(pregexp #px"^(.*)([()[:digit:]{}\\[\\]\u03C0])(.*)$"
+                       (list _ s1 s2 s3))
+              (append (loop s1) (list s2) (loop s3))]
+             [_ (list (make-element 'italic (list i)))])]
+          [(eq? i 'rsquo) '(prime)]
           [else (list i)])))
     c)))
 
