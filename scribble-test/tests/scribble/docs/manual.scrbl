@@ -115,7 +115,7 @@ A function, again, not a link target, documented to return @racket[10] using a d
 @defmodule["manual-ex0.rkt" #:reader #:no-declare #:link-target? #f #:packages ()]
 
 
-@math{id_{a} = id_{a}^{-1} = (id_{a}^{-1})^{-1}}
+@math{id_{a} = id_{a}^{–1} = (id_{a}^{–1})^{–1}}
 
 @math{f_{1}^{m+n} = f_1^m × f_1^n}
 
@@ -129,13 +129,13 @@ A function, again, not a link target, documented to return @racket[10] using a d
 
 @math{A^{B^{C}}}
 
-@(math "f_{{{-1}")
+@(math "f_{{{–1}")
 
-@(math "f_{-1}}}")
+@(math "f_{–1}}}")
 
-@(math "f_{^{_{-1}")
+@(math "f_{^{_{–1}")
 
-@(math "f^{_{^{-1}")
+@(math "f^{_{^{–1}")
 
 @section{Sub2}
 @defmodule["manual-ex2.rkt" #:no-declare #:packages ()]

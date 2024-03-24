@@ -285,7 +285,7 @@ Lopez, 2017-03-11.
 
  #reader "manual-ex0.rkt"
 
-ida = ida-1 = (ida-1)-1
+ida = ida–1 = (ida–1)–1
 
 f1m+n = f1m × f1n
 
@@ -299,13 +299,13 @@ ABC
 
 ABC
 
-f{{-1
+f{{–1
 
-f-1}}
+f–1}}
 
-f^{_{-1
+f^{_{–1
 
-f_{^{-1
+f_{^{–1
 
 1. Sub2
 
