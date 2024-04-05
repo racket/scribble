@@ -80,8 +80,8 @@ number of options may be used:
 
 If multiple font size options are used, all but the last are ignored.
 
-The latest @link["https://github.com/borisveytsman/acmart/releases/tag/v2.03"]{@tt{acmart} release}
-(version 2.03, 2024-02-04, by Boris Veytsman)
+The latest @link["https://github.com/borisveytsman/acmart/releases/tag/v2.05"]{@tt{acmart} release}
+(version 2.05, 2024-04-03, by Boris Veytsman)
 provides these defaults and descriptions:
 
 @tabular[#:style 'boxed

@@ -38,7 +38,7 @@
 
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesClass{acmart}
-[2024/02/04 v2.03 Typesetting articles for the Association for Computing Machinery]
+[2024/04/03 v2.05 Typesetting articles for the Association for Computing Machinery]
 \def\@classname{acmart}
 \InputIfFileExists{acmart-preload-hook.tex}{%
   \ClassWarning{\@classname}{%
@@ -1309,8 +1309,8 @@
   \def\@journalNameShort{ACM Trans. Embedd. Comput. Syst.}%
   \def\@permissionCodeOne{1539-9087}%
 \or % TELO
-  \def\@journalName{ACM Transactions on Evolutionary Learning}%
-  \def\@journalNameShort{ACM Trans. Evol. Learn.}%
+  \def\@journalName{ACM Transactions on Evolutionary Learning and Optimization}%
+  \def\@journalNameShort{ACM Trans. Evol. Learn. Optim.}%
   \def\@permissionCodeOne{2688-3007}%
 \or % THRI
   \def\@journalName{ACM Transactions on Human-Robot Interaction}%
@@ -1471,7 +1471,7 @@
 \def\@journalName{}%
 \def\@journalNameShort{\@journalName}%
 \def\@permissionCodeOne{XXXX-XXXX}%
-\def\@permissionCodeTwo{}%
+\def\@permissionCodeTwo{\@permissionCodeOne}%
 \newcommand\acmConference[4][]{%
   \gdef\acmConference@shortname{#1}%
   \gdef\acmConference@name{#2}%
@@ -1983,7 +1983,7 @@
    and\hspace*{.5pt}/or a fee. Request permissions from
    permissions@acm.org.
   \or % rightsretained
-   Permission to make digital or hard copies of part or all of this
+   Permission to make digital or hard copies of all or part of this
    work for personal or classroom use is granted without fee provided
    that copies are not made or distributed for profit or commercial
    advantage and that copies bear this notice and the full citation on
@@ -2221,7 +2221,7 @@
         \else
           \if@ACM@nonacm\else
             \if@ACM@journal@bibstrip
-              ACM~\@permissionCodeOne/\@acmYear/\@acmMonth-ART\@acmArticle\\
+              ACM~\@permissionCodeTwo/\@acmYear/\@acmMonth-ART\@acmArticle\\
               \@formatdoi{\@acmDOI}%
             \else % Conference
               \ifx\@acmISBN\@empty\else ACM~ISBN~\@acmISBN\\\fi
