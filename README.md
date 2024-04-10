@@ -17,6 +17,8 @@ Contribute to Racket by submitting a [pull request], reporting an
 [issue], joining the [development mailing list], or visiting the
 IRC or Slack channels.
 
+See the [Guide] for details on building.
+
 ### License
 
 Racket, including these packages, is free software, see [LICENSE.txt]
@@ -30,4 +32,5 @@ is licensed under the [Apache 2.0] license and the [MIT] license.
 [pull request]: https://github.com/racket/scribble/pulls
 [issue]: https://github.com/racket/scribble/issues
 [development mailing list]: https://lists.racket-lang.org
+[Guide]: (https://docs.racket-lang.org/racket-build-guide/contribute.html#(part._pkg-contribute))
 [LICENSE.txt]: LICENSE.txt
