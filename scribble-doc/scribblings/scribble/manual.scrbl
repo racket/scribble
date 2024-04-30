@@ -1872,9 +1872,9 @@ of @racket[id].}
 
 Compatibility alias for @racket[racketlink].}
 
-@defproc[(link [url string?] [pre-content any/c] ...
-                [#:underline? underline? any/c #t]
-                [#:style style (or/c style? string? symbol? #f) (if underline? #f "plainlink")]) 
+@defproc[(link [url string?] [pre-content pre-content?] ...
+               [#:underline? underline? any/c #t]
+               [#:style style (or/c style? string? symbol? #f) (if underline? #f "plainlink")])
          element?]{
 
 Alias of @racket[hyperlink] for backward compatibility.}
