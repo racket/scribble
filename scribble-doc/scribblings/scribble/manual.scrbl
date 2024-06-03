@@ -1837,7 +1837,8 @@ typewriter font and in quotes).}
 
 @defproc[(envvar [pre-content pre-content?] ...) element?]{Typesets the given
 @tech{decode}d @racket[pre-content] as an environment variable (e.g.,
-in typewriter font).}
+in typewriter font).
+See also @racket[indexed-envvar].}
 
 @defproc[(Flag [pre-content pre-content?] ...) element?]{Typesets the given
 @tech{decode}d @racket[pre-content] as a flag (e.g., in typewriter
