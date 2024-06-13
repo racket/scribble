@@ -23,8 +23,10 @@
 \renewcommand{\SAuthorinfo}[4]{\author{#1}{#2}{#3}{#4}}
 \renewcommand{\SAuthorSep}[1]{}
 \renewcommand{\SAuthorOrcid}[1]{\orcid{#1}}
-\renewcommand{\SAuthorPlace}[1]{\affiliation{#1}}
+\renewcommand{\SAuthorAffiliation}[1]{\affiliation{#1}}
+\renewcommand{\SAuthorAdditionalAffiliation}[1]{\additionalaffiliation{#1}}
 \renewcommand{\SAuthorEmail}[1]{\email{#1}}
+\renewcommand{\SAuthorNoteMark}[1]{\authornotemark[#1]}
 
 \renewcommand{\SConferenceInfo}[2]{\conferenceinfo{#1}{#2}}
 \renewcommand{\SCopyrightYear}[1]{\copyrightyear{#1}}
@@ -49,5 +51,7 @@
 \newcommand{\SreceivedStage}[2]{\received[#1]{#2}}
 
 \newcommand{\SccsdescNumber}[2]{\ccsdesc[#1]{#2}}
+
+\newcommand{\SAnon}[2]{\anon[#1]{#2}}
 % END acmart/style.tex
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

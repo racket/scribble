@@ -28,6 +28,16 @@
   #:name author-institution
   #:transparent)
 
+(struct authornote (text)
+  #:constructor-name author-note
+  #:name author-note
+  #:transparent)
+
+(struct authornotemark (text)
+  #:constructor-name author-note-mark
+  #:name author-note-mark
+  #:transparent)
+
 (provide/contract
  [title (->* ()
              (#:short pre-content?
@@ -39,61 +49,60 @@
              #:rest (listof pre-content?)
              title-decl?)]
  [author (->* ()
-              (#:orcid (or/c pre-content? #f)
+              (#:note (or/c pre-content?
+                            authornote?
+                            authornotemark?
+                            (listof (or/c authornote? authornotemark?))
+                            #f)
+               #:orcid (or/c pre-content? #f)
                #:affiliation (or/c pre-content?
                                    affiliation?
                                    (listof affiliation?)
                                    #f)
+               #:additional-affiliation (or/c pre-content?
+                                             affiliation?
+                                             (listof affiliation?)
+                                             #f)
                #:email (or/c pre-content? email? (listof email?)))
               #:rest (listof pre-content?)
               block?)]
- [authorsaddresses (->* ()
-                        ()
-                        #:rest (listof pre-content?)
-                        block?)]
- [shortauthors (->* ()
-                    ()
-                    #:rest (listof pre-content?)
-                    element?)]
+ [authornote? (-> any/c boolean?)]
+ [authornotemark? (-> any/c boolean?)]
+ [authorsaddresses (->* () () #:rest (listof pre-content?) block?)]
+ [shortauthors (->* () () #:rest (listof pre-content?) element?)]
  [institution (->* ()
                    (#:departments (listof (or/c pre-content? institution?)))
                    #:rest pre-content?
                    institution?)]
  [institution? (-> any/c boolean?)]
- [email (->* ()
-             #:rest (listof pre-content?)
-             email?)]
- [email-string (->* ()
-                    #:rest (listof string?)
-                    email?)]
+ [email (->* () #:rest (listof pre-content?) email?)]
+ [email-string (->* () #:rest (listof string?) email?)]
  [email? (-> any/c boolean?)]
- [affiliation (->* ()
+ [affiliation (->* (#:institution (or/c pre-content? institution? (listof institution?) #f)
+                    #:country (or/c pre-content? #f))
                    (#:position (or/c pre-content? #f)
-                    #:institution (or/c pre-content? institution? (listof institution?) #f)
                     #:street-address (or/c pre-content? #f)
                     #:city (or/c pre-content? #f)
                     #:state (or/c pre-content? #f)
-                    #:postcode (or/c pre-content? #f)
-                    #:country (or/c pre-content? #f))
+                    #:postcode (or/c pre-content? #f))
                    affiliation?)]
  [affiliation? (-> any/c boolean?)]
- [abstract 
-  (->* () () #:rest (listof pre-content?)
-       block?)]
- [acmConference 
-  (-> string? string? string? block?)]
- [grantsponsor 
-  (-> string? string? string? content?)]
- [grantnum 
-  (->* (string? string?) (#:url string?) content?)]
+ [abstract (->* () () #:rest (listof pre-content?) block?)]
+ [acmConference (-> string? string? string? block?)]
+ [grantsponsor (-> string? string? string? content?)]
+ [grantnum (->* (string? string?) (#:url string?) content?)]
  [acmBadgeR (->* (string?) (#:url string?) block?)]
  [acmBadgeL (->* (string?) (#:url string?) block?)]
  [received (->* (string?) (#:stage string?) block?)]
  [citestyle (-> content? block?)]
  [ccsdesc (->* (string?) (#:number exact-integer?) block?)]
- [CCSXML 
-  (->* () () #:rest (listof pre-content?)
-       any/c)])
+ [CCSXML (->* () () #:rest (listof pre-content?) any/c)]
+ [setengagemetadata (-> string? string? block?)]
+ [translated-title (->* (string?) () #:rest (listof pre-content?) block?)]
+ [translated-subtitle (->* (string?) () #:rest (listof pre-content?) block?)]
+ [translated-abstract (->* (string?) () #:rest (listof pre-content?) block?)]
+ [anon (->* () (#:substitute (or/c pre-content? #f)) #:rest (listof pre-content?) block?)])
+
 (provide
   invisible-element-to-collect-for-acmart-extras
   include-abstract)
@@ -106,16 +115,18 @@
          ...
          (provide name ...)))
 
+(define-syntax-rule (define-command name style)
+  (begin
+    (provide/contract [name (->* () () #:rest (listof pre-content?)
+                                 block?)])
+    (define (name . str)
+      (make-paragraph (make-style 'pretitle '())
+                      (make-element (make-style (symbol->string 'name) command-props)
+                                    (decode-content str))))))
+
 (define-syntax-rule (define-commands name ...)
   (begin
-    (begin
-      (provide/contract [name (->* () () #:rest (listof pre-content?)
-                                   block?)])
-      (define (name . str)
-        (make-paragraph (make-style 'pretitle '())
-                        (make-element (make-style (symbol->string 'name) command-props)
-                                      (decode-content str)))))
-    ...))
+    (define-command name name) ...))
 
 (define-syntax-rule (define-environments name ...)
   (begin
@@ -142,7 +153,7 @@
 
 ; format options
 (defopts manuscript acmsmall acmlarge acmtog sigconf siggraph sigplan sigchi sigchi-a
-  dtrap pacmcgit tiot tdsci)
+  acmengage acmcp)
 ; boolean options
 (defopts review screen natbib anonymous authorversion nonacm timestamp authordraft
   acmthm balance pbalance urlbreakonhyphens 9pt 10pt 11pt 12pt)
@@ -216,7 +227,7 @@
                                                    (decode-string str)))
                       (make-element (make-style "acmBadgeR" (cons 'exact-chars command-props))
                                     (decode-string str)))))
-  
+
 (define (acmBadgeL #:url [url #f] str)
   (make-paragraph (make-style 'pretitle '())
                   (if url
@@ -274,45 +285,46 @@
                        s)
                      content)))
 
-(define (author #:orcid [orcid #f]
+(define (author #:note [note #f]
+                #:orcid [orcid #f]
                 #:affiliation [affiliation '()]
+                #:additional-affiliation [additional-affiliation '()]
                 #:email [email '()]
                 . name)
   (make-paragraph
    (make-style 'author command-props)
    (decode-content
     (list
-     (make-multiarg-element (make-style "SAuthorinfo" multicommand-props)
-                            (list (make-element #f (decode-content name))
-                                  (make-element #f
-                                                (if orcid
-                                                    (make-element
-                                                     (make-style "SAuthorOrcid" (cons 'exact-chars multicommand-props))
-                                                     ;; not decoding, since we want exact chars
-                                                     orcid)
-                                                    '()))
-                                  (make-element #f
-                                                (cond
-                                                  [(affiliation? affiliation)
-                                                   (convert-affiliation affiliation)]
-                                                  [(pre-content? affiliation)
-                                                   (make-element
-                                                    (make-style "SAuthorPlace" multicommand-props)
-                                                    (decode-content (list affiliation)))]
-                                                  [else
-                                                   (for/list ([a (in-list affiliation)])
-                                                     (convert-affiliation a))]))
-                                  (make-element #f
-                                                (cond
-                                                  [(email? email)
-                                                   (convert-email email)]
-                                                  [(pre-content? email)
-                                                   (make-element
-                                                    (make-style "SAuthorEmail" multicommand-props)
-                                                    (decode-content (list email)))]
-                                                  [else
-                                                   (for/list ([e (in-list email)])
-                                                     (convert-email e))]))))))))
+     (make-multiarg-element
+      (make-style "SAuthorinfo" multicommand-props)
+      (list (make-element #f (decode-content name))
+            (map
+              (lambda (n)
+                (cond ((authornote? n) (make-element "authornote" (authornote-text n)))
+                      ((authornotemark? n) (make-element "SAuthorNoteMark" (authornotemark-text n))))
+                (cond ((not note) '())
+                      ((list? note) note)
+                      (else (list note)))))
+            (make-element #f
+                          (if orcid
+                            (make-element
+                             (make-style "SAuthorOrcid" (cons 'exact-chars multicommand-props))
+                             ;; not decoding, since we want exact chars
+                             orcid)
+                            '()))
+            (make-affiliation affiliation "SAuthorAffiliation")
+            (make-affiliation additional-affiliation "SAuthorAdditionalAffiliation")
+            (make-element #f
+                          (cond
+                           [(email? email)
+                            (convert-email email)]
+                           [(pre-content? email)
+                            (make-element
+                             (make-style "SAuthorEmail" multicommand-props)
+                             (decode-content (list email)))]
+                           [else
+                            (for/list ([e (in-list email)])
+                                      (convert-email e))]))))))))0
 
 (define (authorsaddresses . content)
   (make-paragraph
@@ -327,6 +339,12 @@
 (define (institution #:departments [departments '()]
                      . name)
   (author-institution name departments))
+
+(define (authornote . content)
+  (author-note (decode-content content)))
+
+(define (authornotemark (number #f))
+  (author-note-mark number))
 
 (define (convert-institution inst
                              #:department? [department? #f])
@@ -402,14 +420,18 @@
                      #:city [city #f]
                      #:state [state #f]
                      #:postcode [postcode #f]
-                     #:country [country #f])
+                     #:country [country ""])
   (author-affiliation position institution street-address city state postcode country))
 
-(define (convert-affiliation aff)
+(define (make-element* str content)
+  (make-element str (decode-content (list content))))
+
+(define (convert-affiliation aff style)
   (define (maybe-element str content)
-    (and (content aff) (make-element str (decode-content (list (content aff))))))
+    (let ([c (content aff)])
+      (and c (make-element* str c))))
   (make-element
-   (make-style "SAuthorPlace" command-props)
+   (make-style style command-props)
    (make-multiarg-element
     (make-style #f multicommand-props)
     (filter values
@@ -421,20 +443,60 @@
                           (maybe-element "city" affiliation-city)
                           (maybe-element "state" affiliation-state)
                           (maybe-element "postcode" affiliation-postcode)
-                          (maybe-element "country" affiliation-country)))))))
-  
-(define-commands subtitle acmJournal
-  thanks titlenote subtitlenote authornote acmVolume acmNumber acmArticle acmYear acmMonth
-  acmArticleSeq acmPrice acmISBN acmDOI
+                          (make-element* "country" (affiliation-country affiliation))))))))
+
+(define (make-affiliation affiliation style)
+  (make-element #f
+    (cond
+      [(affiliation? affiliation)
+       (convert-affiliation affiliation style)]
+      [(pre-content? affiliation)
+       (make-element
+        (make-style style multicommand-props)
+        (decode-content (list affiliation)))]
+      [else
+       (for/list ([a (in-list affiliation)])
+                 (convert-affiliation a style))])))
+
+(define-commands subtitle acmJournal acmBooktitle editor
+  thanks titlenote subtitlenote acmVolume acmNumber acmArticle acmYear acmMonth
+  acmArticleSeq acmPrice acmISBN acmDOI acmSubmissionID
   startPage terms keywords
-  setcopyright copyrightyear
-  settopmatter hortauthors)
+  setcopyright copyrightyear setcctype
+  settopmatter hortauthors
+  acmArticleType acmCodeLink acmDataLink
+  setcitestyle)
 
 (define (CCSXML . strs)
   (make-nested-flow (make-style "CCSXML" '())
                     (list (make-paragraph (make-style #f '())
                                           (make-element (make-style #f '(exact-chars))
                                                         (apply string-append strs))))))
+
+(define (setengagemetadata name value)
+  (make-paragraph (make-style 'pretitle '())
+                  (make-multiarg-element (make-style "setengagemetadata" multicommand-props)
+                                         (list (decode-string name)
+                                               (decode-string value)))))
+(define ((translated-content style) language . title)
+  (make-paragraph (make-style 'pretitle '())
+                  (make-multiarg-element (make-style style multicommand-props)
+                                         (list (decode-string language)
+                                               (decode-content title)))))
+(define translated-title (translated-content "translatedtitle"))
+(define translated-subtitle (translated-content "translatedsubtitle"))
+(define (translated-abstract language . strs)
+  ;; gross hack
+  (make-nested-flow
+   (make-style (string-append "translatedabstract}{" language) (cons 'pretitle acmart-extras))
+   (decode-flow strs)))
+
+(define (anon #:substitute (substitute #f) . rest)
+  (if substitute
+    (make-element "anon" (decode-content rest))
+    (make-element* (make-style "SAnon" multicommand-props)
+                           (list (decode-string substitute)
+                                 (decode-content rest)))))
 
 (define-environments teaserfigure sidebar marginfigure margintable)
 (define-comment-environments printonly screenonly anonsuppress acks)

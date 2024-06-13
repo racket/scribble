@@ -8,3 +8,7 @@ compiled/
 .DS_Store
 *.bak
 TAGS
+
+# generated docs
+scribble-doc/scribblings/scribble/doc/
+scribble-doc/scriblib/scribblings/doc/

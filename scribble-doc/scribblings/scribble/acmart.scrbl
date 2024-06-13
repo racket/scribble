@@ -15,14 +15,23 @@ Machinery.}
 @margin-note{@tt{acmart} documentation: @link["https://portalparts.acm.org/hippo/latex_templates/acmart.pdf"]{[link]}}
 
 @bold{Note:} a @racketmodname[scribble/acmart] document must include a
-@racket[title] and @racket[author].
+@racket[title] and at least one @racket[author],
+with an affilitation that includes at least institution and country.
 
 Example:
 
 @verbatim[#:indent 2]|{
-  #lang scribble/acmart
+  #lang scribble/acmart @sigplan @authorversion @10pt
   @title{Surreal Numbers}
-  @author{Ursula N. Owens}
+  @author["Ursula N. Owens"
+    #:affiliation
+      (affiliation #:institution "Subreal Numerologists"
+                   #:city "R'lyeh" #:country "THEM")
+    #:email "uno@subreal.rlyeh"]
+  @author["Djorge U. Oruel"
+    #:affiliation
+      (affiliation #:institution "" #:country "")
+    #:email "duo@minitru.oceania"]
 }|
 
 @deftogether[(
@@ -35,9 +44,8 @@ Example:
 @defidform[sigplan]
 @defidform[sigchi]
 @defidform[sigchi-a]
-@defidform[dtrap]
-@defidform[tiot]
-@defidform[tdsci]
+@defidform[acmengage]
+@defidform[acmcp]
 )]{
 
 Enables the given document format. Use the format only on the same
@@ -168,6 +176,13 @@ Specifies a subtitle.}
                         (listof affiliation?)
                         #f)
                   #f]
+                 [#:additional-affiliation additional-affiliation
+                  (or/c pre-content?
+                        affiliation?
+                        (listof pre-content?)
+                        (listof affiliation?)
+                        #f)
+                  #f]
                  [#:email email
                   (or/c pre-content? email? (listof email?))
                   '()]
@@ -175,7 +190,7 @@ Specifies a subtitle.}
          block?]{
 
  Specifies an author with an optional email address, affiliation, and/or orcid.
- 
+
 @codeblock|{
   #lang scribble/acmart
   @title{Title}
@@ -194,6 +209,7 @@ Specifies a subtitle.}
 @deftogether[(
 @defproc[(acmJournal [journal pre-content?] ...) block?]
 @defproc[(acmConference [name pre-content?] [date pre-content?] [venue pre-content?]) block?]
+@defproc[(acmBooktitle [title pre-content?]) block?]
 @defproc[(acmVolume [content pre-content?] ...) block?]
 @defproc[(acmNumber [content pre-content?] ...) block?]
 @defproc[(acmArticle [content pre-content?] ...) block?]
@@ -203,9 +219,13 @@ Specifies a subtitle.}
 @defproc[(acmPrice [content pre-content?] ...) block?]
 @defproc[(acmISBN [content pre-content?] ...) block?]
 @defproc[(acmDOI [content pre-content?] ...) block?]
+@defproc[(editor [name pre-content?] ...) block?]
 )]{
 
-Declares information that is collected into the front-matter region of the paper.}
+Declares information that is collected into the front-matter region of the paper.
+
+Some of these procedures accept an empty string as argument to disable the corresponding message.
+}
 
 @deftogether[(
 @defproc[(acmBadgeL [#:url url string? #f] [graphics string?]) block?]
@@ -233,11 +253,11 @@ screen version of the image links to the badge authority.
 }
 
 @defproc[(email? [email any/c]) boolean?]{
-                                          
+
  Returns @racket[#t] if @racket[email] is an @racket[email],
  @racket[#f] otherwise.
 }
-         
+
 
 @defproc[(affiliation
           [#:position position (or/c pre-content? #f) #f]
@@ -248,24 +268,31 @@ screen version of the image links to the badge authority.
           [#:postcode postcode (or/c pre-content? #f) #f]
           [#:country country (or/c pre-content? #f) #f])
          affiliation?]{
-                       
+
  Creates an @racket[affiliation?] object for use with @racket[author].
+
+ As of acmart v2.05, the ACM insists that you should include
+ a city (or it issues a LaTeX warning)
+ and especially a country (or it issues a LaTeX error).
+ You may explicitly provide an empty string to eschew this error
+ without declaring a country when this might not make sense in your situation:
+ @racket[(affiliation #:institution "Apatrides United" #:country "")]
 }
 
 @defproc[(affiliation? [aff any/c]) boolean?]{
-                                              
+
  Returns @racket[#t] if @racket[aff] is an
  @racket[affiliation], @racket[#f] otherwise.
 }
 
-@defproc[(institution [#:departments departments (or/c pre-content? institution? (listof institution)) '()]
-                      [inst institution?] ...)
+@defproc[(institution [#:departments departments (listof (or/c pre-content? institution?)) '()]
+                      [pre-content?] ...)
          institution?]{
 
  Creates an @racket[institution?] object for use in @racket[author].}
 
 @defproc[(institution? [inst any/c]) boolean]{
-                                              
+
  Returns @racket[#t] if @racket[inst] is an
  @racket[institution], @racket[#f] otherwise.
 }
