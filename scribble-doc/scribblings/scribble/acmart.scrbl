@@ -315,13 +315,14 @@ screen version of the image links to the badge authority.
 )]{
 
 Typesets term and keyword information for the paper, which
-is normally placed immediately after an @racket[abstract] form.
+is normally placed immediately after an @racket[abstract] or @racket[include-abstract] form.
 See also @url["http://www.acm.org/about/class/how-to-use"].
 
 For @racket[terms], each general term should be in titlecase. Terms
 are usually drawn from a fixed list, and they are usually optional.
 
-For @racket[keywords], capitalize only the first letter of the first
+The @racket[keywords] procedure generates the ``Additional Key Words and Phrases''
+section. Capitalize only the first letter of the first
 word, separate phrases by commas, and do not include ``and'' before
 the last one. Keywords should be noun phrases, not adjectives.}
 
@@ -330,7 +331,8 @@ Sets the start page for the paper.}
 
 @defproc[(ccsdesc [#:number number? #f] [content pre-content?] ...) content?]{
 
-Declares CCS description with optional numeric code.}
+Declares CCS description with optional numeric code.
+This generates the ``CCS Concepts'' section.}
 
 @defproc[(received [#:stage stage string? #f] [date string?]) content?]{
 
