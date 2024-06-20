@@ -281,7 +281,7 @@ generates:
 
  @item{In the prose that documents @racket[my-helper], @racket[_lst]
        is automatically typeset in italic, matching the typesetting in
-       the blue box. The @racket[racket] form essentially knows that
+       the signature box. The @racket[racket] form essentially knows that
        it's used in the scope of a procedure with argument
        @racket[_lst].}
 
