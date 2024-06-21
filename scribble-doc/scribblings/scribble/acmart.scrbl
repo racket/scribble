@@ -331,8 +331,23 @@ Sets the start page for the paper.}
 
 @defproc[(ccsdesc [#:number number? #f] [content pre-content?] ...) content?]{
 
-Declares CCS description with optional numeric code.
-This generates the ``CCS Concepts'' section.}
+ Declares CCS description with optional numeric code. This
+ generates the ``CCS Concepts'' section. When using the
+ @link["https://www.acm.org/publications/class-2012"]{ACM
+  Computing Classification System tool}, it will give you
+ some LaTeX code, for example:
+ @verbatim|{
+\ccsdesc[500]{Software and its engineering~Functional languages}
+\ccsdesc[500]{Software and its engineering~Imperative languages}
+           }|
+Those calls translate into:
+@codeblock[#:keep-lang-line? #f]|{
+  #lang scribble/acmart
+  @ccsdesc[#:number 500]{Software and its engineering~Functional languages}
+  @ccsdesc[#:number 500]{Software and its engineering~Imperative languages}
+}|
+
+}
 
 @defproc[(received [#:stage stage string? #f] [date string?]) content?]{
 
