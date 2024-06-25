@@ -38,7 +38,7 @@
 
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesClass{acmart}
-[2024/04/17 v2.07 Typesetting articles for the Association for Computing Machinery]
+[2024/05/27 v2.08 Typesetting articles for the Association for Computing Machinery]
 \def\@classname{acmart}
 \InputIfFileExists{acmart-preload-hook.tex}{%
   \ClassWarning{\@classname}{%
@@ -3292,7 +3292,7 @@
   \rightskip\@rightskip
   \leftskip\z@skip
   \parindent\z@}
-\def\@secfont{\sffamily\bfseries\section@raggedright\MakeTextUppercase}
+\def\@secfont{\sffamily\bfseries\section@raggedright}
 \def\@subsecfont{\sffamily\bfseries\section@raggedright}
 \def\@subsubsecfont{\sffamily\itshape}
 \def\@parfont{\itshape}
@@ -3301,16 +3301,16 @@
 \relax % manuscript
 \or % acmsmall
 \or % acmlarge
- \def\@secfont{\sffamily\large\section@raggedright\MakeTextUppercase}
+ \def\@secfont{\sffamily\large\section@raggedright}
  \def\@subsecfont{\sffamily\large\section@raggedright}
 \or % acmtog
- \def\@secfont{\sffamily\large\section@raggedright\MakeTextUppercase}
+ \def\@secfont{\sffamily\large\section@raggedright}
  \def\@subsecfont{\sffamily\large\section@raggedright}
 \or % sigconf
- \def\@secfont{\bfseries\Large\section@raggedright\MakeTextUppercase}
+ \def\@secfont{\bfseries\Large\section@raggedright}
  \def\@subsecfont{\bfseries\Large\section@raggedright}
 \or % siggraph
- \def\@secfont{\sffamily\bfseries\Large\section@raggedright\MakeTextUppercase}
+ \def\@secfont{\sffamily\bfseries\Large\section@raggedright}
  \def\@subsecfont{\sffamily\bfseries\Large\section@raggedright}
 \or % sigplan
  \def\@secfont{\bfseries\Large\section@raggedright}
@@ -3320,14 +3320,14 @@
  \def\@subparfont{\itshape}
 \or % sigchi
  \setcounter{secnumdepth}{1}
- \def\@secfont{\sffamily\bfseries\section@raggedright\MakeTextUppercase}
+ \def\@secfont{\sffamily\bfseries\section@raggedright}
  \def\@subsecfont{\sffamily\bfseries\section@raggedright}
 \or % sigchi-a
  \setcounter{secnumdepth}{0}
- \def\@secfont{\sffamily\bfseries\section@raggedright\MakeTextUppercase}
+ \def\@secfont{\sffamily\bfseries\section@raggedright}
  \def\@subsecfont{\sffamily\bfseries\section@raggedright}
 \or % acmengage
- \def\@secfont{\bfseries\Large\section@raggedright\MakeTextUppercase}
+ \def\@secfont{\bfseries\Large\section@raggedright}
  \def\@subsecfont{\bfseries\Large\section@raggedright}
 \or %acmcp
 \fi
