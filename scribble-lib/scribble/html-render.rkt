@@ -167,24 +167,27 @@
                   (cdr l))]
    [else (cons (car l) (merge-styles s cls (cdr l)))]))
 
-(define (style->attribs style [extras null])
+(define (style->attribs style [extras null]
+                        #:transform-property [transform-property (λ (v proc) (proc v))])
+  (define (default-transform-property v)
+    (cond
+      [(attributes? v)
+       (map (lambda (v) (list (car v) (cdr v))) (attributes-assoc v))]
+      [(color-property? v)
+       `((style ,(format "color: ~a" (color->string (color-property-color v)))))]
+      [(background-color-property? v)
+       `((style ,(format "background-color: ~a" (color->string (background-color-property-color v)))))]
+      [(hover-property? v)
+       `((title ,(hover-property-text v)))]
+      [else null]))
+
   (let ([a (merge-styles
             #f
             #f
             (apply
              append
              extras
-             (map (lambda (v)
-                    (cond
-                     [(attributes? v)
-                      (map (lambda (v) (list (car v) (cdr v))) (attributes-assoc v))]
-                     [(color-property? v)
-                      `((style ,(format "color: ~a" (color->string (color-property-color v)))))]
-                     [(background-color-property? v)
-                      `((style ,(format "background-color: ~a" (color->string (background-color-property-color v)))))]
-                     [(hover-property? v)
-                      `((title ,(hover-property-text v)))]
-                     [else null]))
+             (map (λ (v) (transform-property v default-transform-property))
                   (style-properties style))))])
     (let ([name (style-name style)])
       (if (string? name)
@@ -1830,7 +1833,13 @@
         `((,(if (eq? 'ordered (style-name (itemization-style t)))
                 'ol
                 'ul)
-           (,@(style->attribs (itemization-style t))
+           (,@(style->attribs (itemization-style t)
+                              #:transform-property
+                              (λ (v transform-property)
+                                (cond
+                                  [(itemization-ordered? v)
+                                   `((start ,(number->string (itemization-ordered-start v))))]
+                                  [else (transform-property v)])))
             ,@(if (eq? 'compact (style-name (itemization-style t)))
                   `([class "compact"])
                   '()))

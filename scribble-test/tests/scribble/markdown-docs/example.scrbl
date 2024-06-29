@@ -22,7 +22,24 @@ This is a subsubsection.
 Here is an itemize:
 
 @itemize[
-@item{Item 1.}
+@item{This sentence is really long and should really be broken up into multiple lines
+      because wow it is so long.}
+@item{Item 2.}
+]
+
+Here is an ordered itemize, starting at 10.
+
+@itemize[#:style (ordered #:start 10)
+@item{This sentence is really long and should really be broken up into multiple lines
+      because wow it is so long.}
+@item{Item 11.}
+]
+
+Here is an ordered itemize, with the normal start.
+
+@itemize[#:style (ordered)
+@item{This sentence is really long and should really be broken up into multiple lines
+      because wow it is so long.}
 @item{Item 2.}
 ]
 

@@ -151,18 +151,39 @@
       null)
 
     (define/override (render-itemization i part ht)
+      ;; make-render-marker :: style? -> (-> number?)
+      (define (make-render-marker st)
+        (case (style-name st)
+          [(ordered)
+           (define offset 0)
+           (define start
+             (or (for/first ([prop (in-list (style-properties st))]
+                             #:when (itemization-ordered? prop))
+                   (itemization-ordered-start prop))
+                 1))
+           (λ ()
+             (define output (format "~a) " (+ offset start)))
+             (set! offset (add1 offset))
+             (write-string output))]
+          [else (λ () (write-string "* "))]))
+      (define render-marker (make-render-marker (itemization-style i)))
       (let ([flows (itemization-blockss i)])
         (if (null? flows)
             null
             (append*
-             (begin (printf "* ")
-                    (parameterize ([current-indent (make-indent 2)])
-                      (render-flow (car flows) part ht #t)))
-             (for/list ([d (in-list (cdr flows))])
-               (indented-newline)
-               (printf "* ")
-               (parameterize ([current-indent (make-indent 2)])
-                 (render-flow d part ht #f)))))))
+             (let ([marker-size (render-marker)])
+               (parameterize ([current-indent (make-indent marker-size)])
+                 (render-flow (car flows) part ht #t)))
+             (begin0 (for/list ([d (in-list (cdr flows))])
+                       (indented-newline)
+                       (define marker-size (render-marker))
+                       (parameterize ([current-indent (make-indent marker-size)])
+                         (render-flow d part ht #f)))
+               (when (eq? 'ordered (style-name (itemization-style i)))
+                 (indented-newline)
+                 ;; we add this to force Markdown to reset
+                 ;; the consecutive numbering
+                 (display "<!-- end of ordered itemization -->")))))))
 
     (define/override (render-paragraph p part ri)
       (define (write-note)
