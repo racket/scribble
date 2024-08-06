@@ -14,10 +14,27 @@ This is a subsubsection.
 
 Here is an itemize:
 
-* Item 1.
+* This sentence is really long and should really be broken up into
+  multiple lines because wow it is so long.
 
 * Item 2.
 
+Here is an ordered itemize, starting at 10.
+
+10) This sentence is really long and should really be broken up into
+    multiple lines because wow it is so long.
+
+11) Item 11.
+
+<!-- end of ordered itemization -->
+Here is an ordered itemize, with the normal start.
+
+1) This sentence is really long and should really be broken up into
+   multiple lines because wow it is so long.
+
+2) Item 2.
+
+<!-- end of ordered itemization -->
 Here is a hyperlink:
 
 [I am a hyperlink to Racket.](http://racket-lang.org/)

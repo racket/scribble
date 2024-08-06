@@ -924,7 +924,8 @@
         [(b) box-mode-bottom-name]))
 
     (define/override (render-itemization t part ri)
-      (let* ([style-str (let ([s (style-name (itemization-style t))])
+      (let* ([st (itemization-style t)]
+             [style-str (let ([s (style-name st)])
                           (if (eq? s 'compact)
                               "compact"
                               s))]
@@ -932,8 +933,13 @@
                             style-str)
                        (if (eq? 'ordered style-str)
                            "enumerate"
-                           "itemize"))])
-        (printf "\\begin{~a}\\atItemizeStart" mode)
+                           "itemize"))]
+             [ordered-option (or (for/first ([prop (in-list (style-properties st))]
+                                             #:when (itemization-ordered? prop))
+                                   (format "\\setcounter{enumi}{~a}"
+                                           (sub1 (itemization-ordered-start prop))))
+                                 "")])
+        (printf "\\begin{~a}~a\\atItemizeStart" mode ordered-option)
         (for ([flow (in-list (itemization-blockss t))])
           (printf "\n\n\\~a" (if (string? style-str)
                                   (format "~aItem{" style-str)
