@@ -255,6 +255,11 @@ content.}
 Returns @racket[#t] if @racket[v] is an item produced by
 @racket[item], @racket[#f] otherwise.}
 
+@defproc[(ordered [#:start start number? 1]) style?]{
+
+Constructs a @tech{style} for an @racket[itemization] to make it
+an ordered itemization. @racket[start] indicates the starting number
+in the ordered itemization.}
 
 @defproc[(tabular [cells (listof (listof (or/c block? content? 'cont)))]
                   [#:style style (or/c style? string? symbol? #f) #f]
