@@ -20,11 +20,11 @@
   
 (define (read-unsyntaxer port)
   (define p (peeking-input-port port))
-  (if (eq? (read p) '#:escape-id)
-      (begin
-        (read port)
-        (read port))
-      'unsyntax))
+  (cond
+    [(eq? (read p) '#:escape-id)
+     (read port)
+     (read port)]
+    [else 'unsyntax]))
 
 (define (make-comment-readtable #:readtable [rt (current-readtable)])
   (make-readtable rt
