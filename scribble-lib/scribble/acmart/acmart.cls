@@ -38,7 +38,7 @@
 
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesClass{acmart}
-[2024/05/27 v2.08 Typesetting articles for the Association for Computing Machinery]
+[2024/08/25 v2.09 Typesetting articles for the Association for Computing Machinery]
 \def\@classname{acmart}
 \InputIfFileExists{acmart-preload-hook.tex}{%
   \ClassWarning{\@classname}{%
@@ -47,13 +47,13 @@
 \RequirePackage{xkeyval}
 \RequirePackage{xstring}
 \RequirePackage{iftex}
-\define@choicekey*+{acmart.cls}{format}[\ACM@format\ACM@format@nr]{%
+\define@choicekey*+{\@classname.cls}{format}[\ACM@format\ACM@format@nr]{%
   manuscript, acmsmall, acmlarge, acmtog, sigconf, siggraph,
   sigplan, sigchi, sigchi-a, acmengage, acmcp}[manuscript]{}{%
   \ClassError{\@classname}{The option format must be manuscript,
     acmsmall, acmlarge, acmtog, sigconf, siggraph,
     sigplan, sigchi or sigchi-a}}
-\def\@DeclareACMFormat#1{\DeclareOptionX{#1}{\setkeys{acmart.cls}{format=#1}}}
+\def\@DeclareACMFormat#1{\DeclareOptionX{#1}{\setkeys{\@classname.cls}{format=#1}}}
 \@DeclareACMFormat{manuscript}
 \@DeclareACMFormat{acmsmall}
 \@DeclareACMFormat{acmlarge}
@@ -66,7 +66,7 @@
 \@DeclareACMFormat{acmengage}
 \@DeclareACMFormat{acmcp}
 \ExecuteOptionsX{format}
-\define@boolkey+{acmart.cls}[@ACM@]{screen}[true]{%
+\define@boolkey+{\@classname.cls}[@ACM@]{screen}[true]{%
   \if@ACM@screen
     \PackageInfo{\@classname}{Using screen mode}%
   \else
@@ -74,7 +74,7 @@
   \fi}{\PackageError{\@classname}{The option screen can be either true or
     false}}
 \ExecuteOptionsX{screen=false}
-\define@boolkey+{acmart.cls}[@ACM@]{urlbreakonhyphens}[true]{%
+\define@boolkey+{\@classname.cls}[@ACM@]{urlbreakonhyphens}[true]{%
   \if@ACM@urlbreakonhyphens
     \PackageInfo{\@classname}{Using breaking urls on hyphens}%
   \else
@@ -82,7 +82,7 @@
   \fi}{\PackageError{\@classname}{The option urlbreakonhyphens can be either true or
     false}}
 \ExecuteOptionsX{urlbreakonhyphens=true}
-\define@boolkey+{acmart.cls}[@ACM@]{acmthm}[true]{%
+\define@boolkey+{\@classname.cls}[@ACM@]{acmthm}[true]{%
   \if@ACM@acmthm
     \PackageInfo{\@classname}{Requiring acmthm}%
   \else
@@ -90,7 +90,7 @@
   \fi}{\PackageError{\@classname}{The option acmthm can be either true or
     false}}
 \ExecuteOptionsX{acmthm=true}
-\define@boolkey+{acmart.cls}[@ACM@]{review}[true]{%
+\define@boolkey+{\@classname.cls}[@ACM@]{review}[true]{%
   \if@ACM@review
     \PackageInfo{\@classname}{Using review mode}%
     \AtBeginDocument{\@ACM@printfoliostrue}%
@@ -99,7 +99,7 @@
   \fi}{\PackageError{\@classname}{The option review can be either true or
     false}}
 \ExecuteOptionsX{review=false}
-\define@boolkey+{acmart.cls}[@ACM@]{authorversion}[true]{%
+\define@boolkey+{\@classname.cls}[@ACM@]{authorversion}[true]{%
   \if@ACM@authorversion
     \PackageInfo{\@classname}{Using authorversion mode}%
   \else
@@ -107,7 +107,7 @@
   \fi}{\PackageError{\@classname}{The option authorversion can be either true or
     false}}
 \ExecuteOptionsX{authorversion=false}
-\define@boolkey+{acmart.cls}[@ACM@]{nonacm}[true]{%
+\define@boolkey+{\@classname.cls}[@ACM@]{nonacm}[true]{%
   \if@ACM@nonacm
     \PackageInfo{\@classname}{Using nonacm mode}%
     \AtBeginDocument{\@ACM@printacmreffalse}%
@@ -119,15 +119,15 @@
   \fi}{\PackageError{\@classname}{The option nonacm can be either true or
     false}}
 \ExecuteOptionsX{nonacm=false}
-\define@boolkey+{acmart.cls}[@ACM@]{balance}[true]{}{%
+\define@boolkey+{\@classname.cls}[@ACM@]{balance}[true]{}{%
   \PackageError{\@classname}{The option balance can be either true or
     false}}
 \ExecuteOptionsX{balance}
-\define@boolkey+{acmart.cls}[@ACM@]{pbalance}[true]{}{%
+\define@boolkey+{\@classname.cls}[@ACM@]{pbalance}[true]{}{%
   \PackageError{\@classname}{The option pbalance can be either true or
     false}}
 \ExecuteOptionsX{pbalance=false}
-\define@boolkey+{acmart.cls}[@ACM@]{natbib}[true]{%
+\define@boolkey+{\@classname.cls}[@ACM@]{natbib}[true]{%
   \if@ACM@natbib
     \PackageInfo{\@classname}{Explicitly selecting natbib mode}%
   \else
@@ -135,7 +135,7 @@
   \fi}{\PackageError{\@classname}{The option natbib can be either true or
     false}}
 \ExecuteOptionsX{natbib=true}
-\define@boolkey+{acmart.cls}[@ACM@]{anonymous}[true]{%
+\define@boolkey+{\@classname.cls}[@ACM@]{anonymous}[true]{%
   \if@ACM@anonymous
     \PackageInfo{\@classname}{Using anonymous mode}%
   \else
@@ -143,7 +143,7 @@
   \fi}{\PackageError{\@classname}{The option anonymous can be either true or
     false}}
 \ExecuteOptionsX{anonymous=false}
-\define@boolkey+{acmart.cls}[@ACM@]{timestamp}[true]{%
+\define@boolkey+{\@classname.cls}[@ACM@]{timestamp}[true]{%
   \if@ACM@timestamp
     \PackageInfo{\@classname}{Using timestamp mode}%
   \else
@@ -151,7 +151,7 @@
   \fi}{\PackageError{\@classname}{The option timestamp can be either true or
     false}}
 \ExecuteOptionsX{timestamp=false}
-\define@boolkey+{acmart.cls}[@ACM@]{authordraft}[true]{%
+\define@boolkey+{\@classname.cls}[@ACM@]{authordraft}[true]{%
   \if@ACM@authordraft
     \PackageInfo{\@classname}{Using authordraft mode}%
     \@ACM@timestamptrue
@@ -189,13 +189,13 @@
 \ClassWarning{\@classname}{%
   The format siggraph is now obsolete.\MessageBreak
   I am switching to sigconf.}
-  \setkeys{acmart.cls}{format=sigconf}
+  \setkeys{\@classname.cls}{format=sigconf}
 \fi
 \ifnum\ACM@format@nr=7\relax % sigchi
 \ClassWarning{\@classname}{%
   The format sigchi is now obsolete.\MessageBreak
   I am switching to sigconf.}
-  \setkeys{acmart.cls}{format=sigconf}
+  \setkeys{\@classname.cls}{format=sigconf}
 \fi
 \ifnum\ACM@format@nr=8\relax % sigchi
 \ClassWarning{\@classname}{%
@@ -546,7 +546,6 @@
       \fi}%
   \fi
   \ignorespaces}
-\def\@seccntformat#1{\csname the#1\endcsname\quad}
 \def\@ssect#1#2#3#4#5{%
   \@tempskipa #3\relax
   \ifdim \@tempskipa>\z@
@@ -559,6 +558,7 @@
     \def\@svsechd{#4{\hskip #1\relax #5}}%
   \fi
   \@xsect{#3}}
+\def\@seccntformat#1{\csname the#1\endcsname\quad}
 \def\@starttoc#1#2{\begingroup\makeatletter
   \setTrue{#1}%
   \par\removelastskip\vskip\z@skip
@@ -2001,22 +2001,6 @@
   Copyright held by the owner/author(s).
   \fi}
 \def\@formatdoi#1{\url{https://doi.org/#1}}
-\def\@ACM@copyright@check@cc{%
-  \if@ACM@nonacm
-     \ClassInfo{\@classname}{Using CC license with a non-acm
-       material}%
-  \else
-     \if@ACM@engage
-        \ClassInfo{\@classname}{Using CC license with ACM Enage
-          material}%
-      \else
-      \ClassWarning{\@classname}{%
-        Sorry, Creative Commons licenses are\MessageBreak
-        currently not used with ACM publications\MessageBreak
-        typeset by the authors}{Please use nonacm
-           option or ACM Engage class to enable CC licenses}%
-      \fi
-  \fi}
 \def\@copyrightpermission{%
   \ifcase\acm@copyrightmode\relax % none
   \or % acmcopyright
@@ -2145,7 +2129,6 @@
    disseminate the work on their personal and corporate Web sites with
    the appropriate attribution.
  \or % CC
-   \@ACM@copyright@check@cc
    \IfEq{\ACM@cc@type}{zero}{%
      \def\ACM@CC@Url{https://creativecommons.org/publicdomain/zero/1.0/legalcode}}{%
   \edef\ACM@CC@Url{https://creativecommons.org/licenses/\ACM@cc@type/\ACM@cc@version/legalcode}}%
@@ -2321,7 +2304,7 @@
     pdfsubject={\@concepts},
     pdfkeywords={\@keywords},
     pdfcreator={LaTeX with acmart
-      \csname ver@acmart.cls\endcsname\space
+      \csname ver@\@classname.cls\endcsname\space
       and hyperref
       \csname ver@hyperref.sty\endcsname}}%
   \andify\authors
@@ -3263,28 +3246,33 @@
  \fi
 }
 \def\ACM@adddotafter#1{\ifx\relax#1\relax\else\LTX@adddotafter{#1}\fi}
-\renewcommand\section{\@startsection{section}{1}{\z@}%
+\renewcommand\section{\def\@toclevel{1}%
+  \@startsection{section}{1}{\z@}%
   {-.75\baselineskip \@plus -2\p@ \@minus -.2\p@}%
   {.25\baselineskip}%
   {\ACM@NRadjust\@secfont}}
-\renewcommand\subsection{\@startsection{subsection}{2}{\z@}%
+\renewcommand\subsection{\def\@toclevel{2}%
+  \@startsection{subsection}{2}{\z@}%
   {-.75\baselineskip \@plus -2\p@ \@minus -.2\p@}%
   {.25\baselineskip}%
   {\ACM@NRadjust\@subsecfont}}
-\renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}%
+\renewcommand\subsubsection{\def\@toclevel{3}%
+  \@startsection{subsubsection}{3}{\z@}%
   {-.5\baselineskip \@plus -2\p@ \@minus -.2\p@}%
   {-3.5\p@}%
   {\ACM@NRadjust{\@subsubsecfont\@adddotafter}}}
-\renewcommand\paragraph{\@startsection{paragraph}{4}{\parindent}%
+\renewcommand\paragraph{\def\@toclevel{4}%
+  \@startsection{paragraph}{4}{\parindent}%
   {-.5\baselineskip \@plus -2\p@ \@minus -.2\p@}%
   {-3.5\p@}%
   {\ACM@NRadjust{\@parfont\@adddotafter}}}
-\newcommand\noindentparagraph{\@startsection{paragraph}{4}{\z@}%
+\newcommand\noindentparagraph{\def\@toclevel{4}%
+  \@startsection{paragraph}{4}{\z@}%
   {-.5\baselineskip \@plus -2\p@ \@minus -.2\p@}%
   {-3.5\p@}%
   {\ACM@NRadjust{\@parfont}}}
-
-\renewcommand\part{\@startsection{part}{9}{\z@}%
+\renewcommand\part{\def\@toclevel{9}%
+  \@startsection{part}{9}{\z@}%
   {-10\p@ \@plus -4\p@ \@minus -2\p@}%
   {4\p@}%
   {\ACM@NRadjust\@parfont}}
