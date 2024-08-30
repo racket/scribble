@@ -161,10 +161,9 @@
           (extract-content-style-files (part-title-content p) d ri ht pred extract)
           (extract-flow-style-files (part-blocks p) d ri ht pred extract))
         (unless only-up?
-          (for-each (lambda (p)
-                      (unless (stop-at-part? p)
-                        (loop p #f #f)))
-                    (part-parts p))))
+          (for ([p (in-list (part-parts p))])
+            (unless (stop-at-part? p)
+              (loop p #f #f)))))
       (map cdr
            (sort (for/list ([(k v) (in-hash ht)])
                    (cons v (if (or (bytes? k) (url? k)) k (collects-relative->path k))))
@@ -185,10 +184,9 @@
         [(table? p)
          (extract-style-style-files (table-style p) ht pred extract)
          (for ([blocks (in-list (table-blockss p))])
-           (for-each (lambda (block)
-                       (unless (eq? block 'cont)
-                         (extract-block-style-files block d ri ht pred extract)))
-                     blocks))]
+           (for ([block (in-list blocks)])
+             (unless (eq? block 'cont)
+               (extract-block-style-files block d ri ht pred extract))))]
         [(itemization? p)
          (extract-style-style-files (itemization-style p) ht pred extract)
          (for-each (lambda (blocks) (extract-flow-style-files blocks d ri ht pred extract))
@@ -500,11 +498,11 @@
                        (current-render-mode)
                        (hash-ref fp key default)))
                  (lambda (key val)
-                   (if (eq? key 'scribble:current-render-mode)
-                       (raise-mismatch-error 'traverse-info-set!
-                                             "cannot set value for built-in key: "
-                                             key)
-                       (set! fp (hash-set fp key val))))))
+                   (when (eq? key 'scribble:current-render-mode)
+                     (raise-mismatch-error 'traverse-info-set!
+                                           "cannot set value for built-in key: "
+                                           key))
+                   (set! fp (hash-set fp key val)))))
             (let ([fp (hash-set fp p v2)]) (if (procedure? v2) fp (again v2 fp))))
           fp))
     
@@ -575,12 +573,14 @@
                   s
                   d
                   p-ci
-                  (cons (if hidden-number?
-                            (if sub-grouper? "" #f)
-                            (if numberer numberer-str (if sub-grouper? (number->roman pos) pos)))
+                  (cons (cond
+                          [hidden-number? (if sub-grouper? "" #f)]
+                          [numberer numberer-str]
+                          [sub-grouper? (number->roman pos)]
+                          [else pos])
                         (if hidden-number?
                             (for/list ([i (in-list number)])
-                              (if (string? i) i #f))
+                              (and (string? i) i))
                             number))
                   sub-pos
                   sub-numberers))
@@ -991,26 +991,27 @@
                (define src-file (build-path (or src-dir (current-directory)) fn))
                (define dest-file
                  (build-path dest-file-dir
-                             (if (and private-name? helper-file-prefix)
-                                 (let-values ([(base name dir?) (split-path helper-file-prefix)])
-                                   (cond
-                                     [dir? (build-path helper-file-prefix fn)]
-                                     [else
-                                      (define new-fn
-                                        (bytes->path-element (bytes-append (path-element->bytes name)
-                                                                           (path-element->bytes fn))))
-                                      (if (eq? base 'relative) new-fn (build-path base new-fn))]))
-                                 fn)))
+                             (cond
+                               [(and private-name? helper-file-prefix)
+                                (define-values (base name dir?) (split-path helper-file-prefix))
+                                (cond
+                                  [dir? (build-path helper-file-prefix fn)]
+                                  [else
+                                   (define new-fn
+                                     (bytes->path-element (bytes-append (path-element->bytes name)
+                                                                        (path-element->bytes fn))))
+                                   (if (eq? base 'relative) new-fn (build-path base new-fn))])]
+                               [else fn])))
                (define (next-file-name dest)
-                 (let-values ([(base name dir?) (split-path dest)])
-                   (build-path base
-                               (let ([s (path-element->string (path-replace-suffix name #""))])
-                                 (let ([n (regexp-match #rx"^(.*)_([0-9]+)$" s)])
-                                   (format "~a_~a~a"
-                                           (if n (cadr n) s)
-                                           (if n (add1 (string->number (caddr n))) 2)
-                                           (let ([ext (filename-extension name)])
-                                             (if ext (bytes-append #"." ext) ""))))))))
+                 (define-values (base name dir?) (split-path dest))
+                 (build-path base
+                             (let ([s (path-element->string (path-replace-suffix name #""))])
+                               (let ([n (regexp-match #rx"^(.*)_([0-9]+)$" s)])
+                                 (format "~a_~a~a"
+                                         (if n (cadr n) s)
+                                         (if n (add1 (string->number (caddr n))) 2)
+                                         (let ([ext (filename-extension name)])
+                                           (if ext (bytes-append #"." ext) "")))))))
                (let-values
                    ([(dest-file normalized-dest-file)
                      (let loop ([dest-file dest-file])
@@ -1083,12 +1084,13 @@
                            (copy-directory/files src-file dest-file)
                            (copy-file src-file dest-file))))
                  (hash-set! copied-dests normalized-dest-file #t)
-                 (let ([result (path->string (find-relative-path
-                                              (simplify-path (path->complete-path dest-file-dir))
-                                              normalized-dest-file))])
-                   (unless content
-                     (hash-set! copied-srcs normalized result))
-                   result))))]))
+                 (define result
+                   (path->string (find-relative-path
+                                  (simplify-path (path->complete-path dest-file-dir))
+                                  normalized-dest-file)))
+                 (unless content
+                   (hash-set! copied-srcs normalized result))
+                 result)))]))
 
     ;; ----------------------------------------
 
