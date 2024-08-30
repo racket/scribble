@@ -152,19 +152,19 @@
       (let loop ([p d]
                  [up? #t]
                  [only-up? #f])
-        (let ([s (part-style p)])
-          (when up?
-            (let ([p (collected-info-parent (part-collected-info p ri))]) (if p (loop p #t #t) null)))
-          (extract-style-style-files (part-style p) ht pred extract)
-          (unless only-up?
-            (extract-content-style-files (part-to-collect p) d ri ht pred extract)
-            (extract-content-style-files (part-title-content p) d ri ht pred extract)
-            (extract-flow-style-files (part-blocks p) d ri ht pred extract))
-          (unless only-up?
-            (for-each (lambda (p)
-                        (unless (stop-at-part? p)
-                          (loop p #f #f)))
-                      (part-parts p)))))
+        (define s (part-style p))
+        (when up?
+          (let ([p (collected-info-parent (part-collected-info p ri))]) (if p (loop p #t #t) null)))
+        (extract-style-style-files (part-style p) ht pred extract)
+        (unless only-up?
+          (extract-content-style-files (part-to-collect p) d ri ht pred extract)
+          (extract-content-style-files (part-title-content p) d ri ht pred extract)
+          (extract-flow-style-files (part-blocks p) d ri ht pred extract))
+        (unless only-up?
+          (for-each (lambda (p)
+                      (unless (stop-at-part? p)
+                        (loop p #f #f)))
+                    (part-parts p))))
       (map cdr
            (sort (for/list ([(k v) (in-hash ht)])
                    (cons v (if (or (bytes? k) (url? k)) k (collects-relative->path k))))
@@ -184,12 +184,11 @@
       (cond
         [(table? p)
          (extract-style-style-files (table-style p) ht pred extract)
-         (for-each (lambda (blocks)
-                     (for-each (lambda (block)
-                                 (unless (eq? block 'cont)
-                                   (extract-block-style-files block d ri ht pred extract)))
-                               blocks))
-                   (table-blockss p))]
+         (for ([blocks (in-list (table-blockss p))])
+           (for-each (lambda (block)
+                       (unless (eq? block 'cont)
+                         (extract-block-style-files block d ri ht pred extract)))
+                     blocks))]
         [(itemization? p)
          (extract-style-style-files (itemization-style p) ht pred extract)
          (for-each (lambda (blocks) (extract-flow-style-files blocks d ri ht pred extract))
@@ -495,17 +494,18 @@
       (define v (hash-ref fp p (lambda () proc)))
       (if (procedure? v)
           (let ([fp fp])
-            (let ([v2 (v (lambda (key default)
-                           (if (eq? key 'scribble:current-render-mode)
-                               (current-render-mode)
-                               (hash-ref fp key default)))
-                         (lambda (key val)
-                           (if (eq? key 'scribble:current-render-mode)
-                               (raise-mismatch-error 'traverse-info-set!
-                                                     "cannot set value for built-in key: "
-                                                     key)
-                               (set! fp (hash-set fp key val)))))])
-              (let ([fp (hash-set fp p v2)]) (if (procedure? v2) fp (again v2 fp)))))
+            (define v2
+              (v (lambda (key default)
+                   (if (eq? key 'scribble:current-render-mode)
+                       (current-render-mode)
+                       (hash-ref fp key default)))
+                 (lambda (key val)
+                   (if (eq? key 'scribble:current-render-mode)
+                       (raise-mismatch-error 'traverse-info-set!
+                                             "cannot set value for built-in key: "
+                                             key)
+                       (set! fp (hash-set fp key val))))))
+            (let ([fp (hash-set fp p v2)]) (if (procedure? v2) fp (again v2 fp))))
           fp))
     
     ;; ----------------------------------------
@@ -556,54 +556,53 @@
                      [numberers init-sub-numberers]
                      [sub-pos 1]
                      [sub-numberers #hash()])
-            (if (null? parts)
-                (values pos numberers)
-                (let ([s (car parts)])
-                  (define unnumbered? (part-style? s 'unnumbered))
-                  (define hidden-number? (or unnumbered? (part-style? s 'hidden-number)))
-                  (define sub-grouper? (part-style? s 'grouper))
-                  (define numberer
-                    (and (not unnumbered?)
-                         (for/or ([p (style-properties (part-style s))]
-                                  #:when (numberer? p))
-                           p)))
-                  (define-values (numberer-str next-numberers)
-                    (if numberer
-                        (numberer-step numberer number p-ci numberers)
-                        (values #f numberers)))
-                  (define-values (next-sub-pos next-sub-numberers)
-                    (collect-part
-                     s
-                     d
-                     p-ci
-                     (cons (if hidden-number?
-                               (if sub-grouper? "" #f)
-                               (if numberer numberer-str (if sub-grouper? (number->roman pos) pos)))
-                           (if hidden-number?
-                               (for/list ([i (in-list number)])
-                                 (if (string? i) i #f))
-                               number))
-                     sub-pos
-                     sub-numberers))
-                  (define unnumbered-and-unnumbered-subsections?
-                    (and (not sub-grouper?)
-                         ;; If this section wasn't marked with
-                         ;; 'grouper but is unnumbered and doesn't
-                         ;; have numbered subsections, then didn't
-                         ;; reset counters, so propagate the old
-                         ;; position
-                         (and unnumbered? (= next-sub-pos sub-pos))))
-                  (loop (cdr parts)
-                        (if (or unnumbered? numberer) pos (add1 pos))
-                        next-numberers
-                        (cond
-                          [sub-grouper? next-sub-pos]
-                          [unnumbered-and-unnumbered-subsections? sub-pos]
-                          [else 1])
-                        (cond
-                          [sub-grouper? next-sub-numberers]
-                          [unnumbered-and-unnumbered-subsections? sub-numberers]
-                          [else #hash()])))))))
+            (cond
+              [(null? parts) (values pos numberers)]
+              [else
+               (define s (car parts))
+               (define unnumbered? (part-style? s 'unnumbered))
+               (define hidden-number? (or unnumbered? (part-style? s 'hidden-number)))
+               (define sub-grouper? (part-style? s 'grouper))
+               (define numberer
+                 (and (not unnumbered?)
+                      (for/or ([p (style-properties (part-style s))]
+                               #:when (numberer? p))
+                        p)))
+               (define-values (numberer-str next-numberers)
+                 (if numberer (numberer-step numberer number p-ci numberers) (values #f numberers)))
+               (define-values (next-sub-pos next-sub-numberers)
+                 (collect-part
+                  s
+                  d
+                  p-ci
+                  (cons (if hidden-number?
+                            (if sub-grouper? "" #f)
+                            (if numberer numberer-str (if sub-grouper? (number->roman pos) pos)))
+                        (if hidden-number?
+                            (for/list ([i (in-list number)])
+                              (if (string? i) i #f))
+                            number))
+                  sub-pos
+                  sub-numberers))
+               (define unnumbered-and-unnumbered-subsections?
+                 (and (not sub-grouper?)
+                      ;; If this section wasn't marked with
+                      ;; 'grouper but is unnumbered and doesn't
+                      ;; have numbered subsections, then didn't
+                      ;; reset counters, so propagate the old
+                      ;; position
+                      (and unnumbered? (= next-sub-pos sub-pos))))
+               (loop (cdr parts)
+                     (if (or unnumbered? numberer) pos (add1 pos))
+                     next-numberers
+                     (cond
+                       [sub-grouper? next-sub-pos]
+                       [unnumbered-and-unnumbered-subsections? sub-pos]
+                       [else 1])
+                     (cond
+                       [sub-grouper? next-sub-numberers]
+                       [unnumbered-and-unnumbered-subsections? sub-numberers]
+                       [else #hash()]))]))))
       (let ([prefix (part-tag-prefix d)])
         (for ([(k v) (collect-info-ht p-ci)])
           (when (cadr k)
@@ -792,8 +791,8 @@
            [(index-element? i)
             (define e (index-element-desc i))
             (when (delayed-index-desc? e)
-              (let ([v ((delayed-index-desc-resolve e) this d ri)])
-                (hash-set! (resolve-info-delays ri) e v)))]
+              (define v ((delayed-index-desc-resolve e) this d ri))
+              (hash-set! (resolve-info-delays ri) e v))]
            [(link-element? i) (resolve-get d ri (link-element-tag i))])
          (resolve-content (element-content i) d ri)
          (cond
@@ -950,9 +949,9 @@
       (cond
         [(string? i) (render-other i part ri)] ; short-cut for common case
         [(list? i)
-         (apply append
-                (for/list ([i (in-list i)])
-                  (render-content i part ri)))]
+         (for*/list ([i (in-list i)]
+                     [v (in-list (render-content i part ri))])
+           v)]
         [(and (link-element? i) (null? (element-content i)))
          (define v (resolve-get part ri (link-element-tag i)))
          (if v
@@ -989,109 +988,107 @@
                     [dest-dir (get-dest-directory #t)]
                     [fn (file-name-from-path fn)]
                     [dest-file-dir (or dest-dir (current-directory))])
-               (let ([src-file (build-path (or src-dir (current-directory)) fn)]
-                     [dest-file
-                      (build-path
-                       dest-file-dir
-                       (if (and private-name? helper-file-prefix)
-                           (let-values ([(base name dir?) (split-path helper-file-prefix)])
-                             (cond
-                               [dir? (build-path helper-file-prefix fn)]
-                               [else
-                                (define new-fn
-                                  (bytes->path-element (bytes-append (path-element->bytes name)
-                                                                     (path-element->bytes fn))))
-                                (if (eq? base 'relative) new-fn (build-path base new-fn))]))
-                           fn))]
-                     [next-file-name
-                      (lambda (dest)
-                        (let-values ([(base name dir?) (split-path dest)])
-                          (build-path base
-                                      (let ([s (path-element->string (path-replace-suffix name #""))])
-                                        (let ([n (regexp-match #rx"^(.*)_([0-9]+)$" s)])
-                                          (format "~a_~a~a"
-                                                  (if n (cadr n) s)
-                                                  (if n (add1 (string->number (caddr n))) 2)
-                                                  (let ([ext (filename-extension name)])
-                                                    (if ext (bytes-append #"." ext) ""))))))))])
-                 (let-values
-                     ([(dest-file normalized-dest-file)
-                       (let loop ([dest-file dest-file])
-                         (let* ([normalized-dest-file
-                                 (normal-case-path (simplify-path (path->complete-path dest-file)))]
-                                [check-same (lambda (src dest-file)
-                                              (call-with-input-file*
-                                               dest-file
-                                               (lambda (dest)
-                                                 (or (and (not content)
-                                                          (equal? (port-file-identity src)
-                                                                  (port-file-identity dest)))
-                                                     (let loop ()
-                                                       (let ([s (read-bytes 4096 src)]
-                                                             [d (read-bytes 4096 dest)])
-                                                         (and (equal? s d)
-                                                              (or (eof-object? s) (loop)))))))))]
-                                [same-directories?
-                                 (lambda (s d)
-                                   (let loop ([s s]
-                                              [d d])
-                                     (cond
-                                       [(and (file-exists? s) (file-exists? d))
-                                        (call-with-input-file* s (lambda (in) (check-same in d)))]
-                                       [(directory-exists? s)
-                                        (and (directory-exists? d)
-                                             (let ([sl (sort (directory-list s)
-                                                             bytes<?
-                                                             #:key path-element->bytes)]
-                                                   [dl (sort (directory-list d)
-                                                             bytes<?
-                                                             #:key path-element->bytes)])
-                                               (and (equal? sl dl) (andmap loop sl dl))))]
-                                       [else #f])))]
-                                [not-same (lambda (delete-dest)
-                                            (cond
-                                              [(or keep-existing-helper-files?
-                                                   (hash-ref copied-dests normalized-dest-file #f))
-                                               ;; need a different file/directory
-                                               (loop (next-file-name dest-file))]
-                                              [else
-                                               ;; replace the file/directory
-                                               (delete-dest dest-file)
-                                               (values dest-file normalized-dest-file)]))])
-                           (cond
-                             [(and (file-exists? src-file) (file-exists? dest-file))
-                              (cond
-                                [(or (and content (check-same (open-input-bytes content) dest-file))
-                                     (and (not content)
-                                          (call-with-input-file* src-file
-                                                                 (lambda (in)
-                                                                   (check-same in dest-file)))))
-                                 ;; same content at that destination
-                                 (values dest-file normalized-dest-file)]
-                                [else (not-same delete-file)])]
-                             [(and (directory-exists? src-file) (directory-exists? dest-file))
-                              (if (same-directories? src-file dest-file)
-                                  (values dest-file normalized-dest-file)
-                                  (not-same delete-directory/files))]
-                             [(file-exists? dest-file) (not-same delete-file)]
-                             [(directory-exists? dest-file) (not-same delete-directory/files)]
-                             ;; new file/directory
-                             [else (values dest-file normalized-dest-file)])))])
-                   (unless (or (file-exists? dest-file) (directory-exists? dest-file))
-                     (let-values ([(dir name dir?) (split-path dest-file)])
-                       (make-directory* dir))
-                     (if content
-                         (call-with-output-file* dest-file (lambda (dest) (write-bytes content dest)))
-                         (if (directory-exists? src-file)
-                             (copy-directory/files src-file dest-file)
-                             (copy-file src-file dest-file))))
-                   (hash-set! copied-dests normalized-dest-file #t)
-                   (let ([result (path->string (find-relative-path
-                                                (simplify-path (path->complete-path dest-file-dir))
-                                                normalized-dest-file))])
-                     (unless content
-                       (hash-set! copied-srcs normalized result))
-                     result)))))]))
+               (define src-file (build-path (or src-dir (current-directory)) fn))
+               (define dest-file
+                 (build-path dest-file-dir
+                             (if (and private-name? helper-file-prefix)
+                                 (let-values ([(base name dir?) (split-path helper-file-prefix)])
+                                   (cond
+                                     [dir? (build-path helper-file-prefix fn)]
+                                     [else
+                                      (define new-fn
+                                        (bytes->path-element (bytes-append (path-element->bytes name)
+                                                                           (path-element->bytes fn))))
+                                      (if (eq? base 'relative) new-fn (build-path base new-fn))]))
+                                 fn)))
+               (define (next-file-name dest)
+                 (let-values ([(base name dir?) (split-path dest)])
+                   (build-path base
+                               (let ([s (path-element->string (path-replace-suffix name #""))])
+                                 (let ([n (regexp-match #rx"^(.*)_([0-9]+)$" s)])
+                                   (format "~a_~a~a"
+                                           (if n (cadr n) s)
+                                           (if n (add1 (string->number (caddr n))) 2)
+                                           (let ([ext (filename-extension name)])
+                                             (if ext (bytes-append #"." ext) ""))))))))
+               (let-values
+                   ([(dest-file normalized-dest-file)
+                     (let loop ([dest-file dest-file])
+                       (let* ([normalized-dest-file
+                               (normal-case-path (simplify-path (path->complete-path dest-file)))]
+                              [check-same (lambda (src dest-file)
+                                            (call-with-input-file*
+                                             dest-file
+                                             (lambda (dest)
+                                               (or (and (not content)
+                                                        (equal? (port-file-identity src)
+                                                                (port-file-identity dest)))
+                                                   (let loop ()
+                                                     (let ([s (read-bytes 4096 src)]
+                                                           [d (read-bytes 4096 dest)])
+                                                       (and (equal? s d)
+                                                            (or (eof-object? s) (loop)))))))))]
+                              [same-directories?
+                               (lambda (s d)
+                                 (let loop ([s s]
+                                            [d d])
+                                   (cond
+                                     [(and (file-exists? s) (file-exists? d))
+                                      (call-with-input-file* s (lambda (in) (check-same in d)))]
+                                     [(directory-exists? s)
+                                      (and (directory-exists? d)
+                                           (let ([sl (sort (directory-list s)
+                                                           bytes<?
+                                                           #:key path-element->bytes)]
+                                                 [dl (sort (directory-list d)
+                                                           bytes<?
+                                                           #:key path-element->bytes)])
+                                             (and (equal? sl dl) (andmap loop sl dl))))]
+                                     [else #f])))]
+                              [not-same (lambda (delete-dest)
+                                          (cond
+                                            [(or keep-existing-helper-files?
+                                                 (hash-ref copied-dests normalized-dest-file #f))
+                                             ;; need a different file/directory
+                                             (loop (next-file-name dest-file))]
+                                            [else
+                                             ;; replace the file/directory
+                                             (delete-dest dest-file)
+                                             (values dest-file normalized-dest-file)]))])
+                         (cond
+                           [(and (file-exists? src-file) (file-exists? dest-file))
+                            (cond
+                              [(or (and content (check-same (open-input-bytes content) dest-file))
+                                   (and (not content)
+                                        (call-with-input-file* src-file
+                                                               (lambda (in)
+                                                                 (check-same in dest-file)))))
+                               ;; same content at that destination
+                               (values dest-file normalized-dest-file)]
+                              [else (not-same delete-file)])]
+                           [(and (directory-exists? src-file) (directory-exists? dest-file))
+                            (if (same-directories? src-file dest-file)
+                                (values dest-file normalized-dest-file)
+                                (not-same delete-directory/files))]
+                           [(file-exists? dest-file) (not-same delete-file)]
+                           [(directory-exists? dest-file) (not-same delete-directory/files)]
+                           ;; new file/directory
+                           [else (values dest-file normalized-dest-file)])))])
+                 (unless (or (file-exists? dest-file) (directory-exists? dest-file))
+                   (let-values ([(dir name dir?) (split-path dest-file)])
+                     (make-directory* dir))
+                   (if content
+                       (call-with-output-file* dest-file (lambda (dest) (write-bytes content dest)))
+                       (if (directory-exists? src-file)
+                           (copy-directory/files src-file dest-file)
+                           (copy-file src-file dest-file))))
+                 (hash-set! copied-dests normalized-dest-file #t)
+                 (let ([result (path->string (find-relative-path
+                                              (simplify-path (path->complete-path dest-file-dir))
+                                              normalized-dest-file))])
+                   (unless content
+                     (hash-set! copied-srcs normalized result))
+                   result))))]))
 
     ;; ----------------------------------------
 
