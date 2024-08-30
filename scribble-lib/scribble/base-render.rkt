@@ -1024,9 +1024,9 @@
                             (or (and (not content)
                                      (equal? (port-file-identity src) (port-file-identity dest)))
                                 (let loop ()
-                                  (let ([s (read-bytes 4096 src)]
-                                        [d (read-bytes 4096 dest)])
-                                    (and (equal? s d) (or (eof-object? s) (loop)))))))))
+                                  (define s (read-bytes 4096 src))
+                                  (define d (read-bytes 4096 dest))
+                                  (and (equal? s d) (or (eof-object? s) (loop))))))))
                        (define (same-directories? s d)
                          (let loop ([s s]
                                     [d d])
