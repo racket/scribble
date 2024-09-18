@@ -148,32 +148,27 @@
     ;; ----------------------------------------
 
     (define/public (extract-part-style-files d ri stop-at-part? pred extract)
-      (let ([ht (make-hash)])
-        (let loop ([p d] [up? #t] [only-up? #f])
-          (let ([s (part-style p)])
-            (when up?
-              (let ([p (collected-info-parent (part-collected-info p ri))])
-                (if p
-                    (loop p #t #t)
-                    null)))
-             (extract-style-style-files (part-style p) ht pred extract)
-             (unless only-up?
-               (extract-content-style-files (part-to-collect p) d ri ht pred extract)
-               (extract-content-style-files (part-title-content p) d ri ht pred extract)
-               (extract-flow-style-files (part-blocks p) d ri ht pred extract))
-             (unless only-up?
-               (for-each (lambda (p)
-                           (unless (stop-at-part? p)
-                             (loop p #f #f)))
-                         (part-parts p)))))
-        (map cdr
-             (sort
-              (for/list ([(k v) (in-hash ht)])
-                (cons v (if (or (bytes? k) (url? k))
-                            k 
-                            (collects-relative->path k))))
-              <
-              #:key car))))
+      (define ht (make-hash))
+      (let loop ([p d]
+                 [up? #t]
+                 [only-up? #f])
+        (define s (part-style p))
+        (when up?
+          (let ([p (collected-info-parent (part-collected-info p ri))]) (if p (loop p #t #t) null)))
+        (extract-style-style-files (part-style p) ht pred extract)
+        (unless only-up?
+          (extract-content-style-files (part-to-collect p) d ri ht pred extract)
+          (extract-content-style-files (part-title-content p) d ri ht pred extract)
+          (extract-flow-style-files (part-blocks p) d ri ht pred extract))
+        (unless only-up?
+          (for ([p (in-list (part-parts p))])
+            (unless (stop-at-part? p)
+              (loop p #f #f)))))
+      (map cdr
+           (sort (for/list ([(k v) (in-hash ht)])
+                   (cons v (if (or (bytes? k) (url? k)) k (collects-relative->path k))))
+                 <
+                 #:key car)))
 
     (define/private (extract-style-style-files s ht pred extract)
       (for ([v (in-list (style-properties s))])
@@ -188,26 +183,23 @@
       (cond
         [(table? p)
          (extract-style-style-files (table-style p) ht pred extract)
-         (for-each (lambda (blocks)
-                     (for-each (lambda (block)
-                                 (unless (eq? block 'cont)
-                                   (extract-block-style-files block d ri ht pred extract)))
-                               blocks))
-                   (table-blockss p))]
+         (for* ([blocks (in-list (table-blockss p))]
+                [block (in-list blocks)])
+           (unless (eq? block 'cont)
+             (extract-block-style-files block d ri ht pred extract)))]
         [(itemization? p)
          (extract-style-style-files (itemization-style p) ht pred extract)
-         (for-each (lambda (blocks)
-                     (extract-flow-style-files blocks d ri ht pred extract))
+         (for-each (lambda (blocks) (extract-flow-style-files blocks d ri ht pred extract))
                    (itemization-blockss p))]
-        [(nested-flow? p) 
+        [(nested-flow? p)
          (extract-style-style-files (nested-flow-style p) ht pred extract)
          (extract-flow-style-files (nested-flow-blocks p) d ri ht pred extract)]
         [(compound-paragraph? p)
          (extract-style-style-files (compound-paragraph-style p) ht pred extract)
          (extract-flow-style-files (compound-paragraph-blocks p) d ri ht pred extract)]
         [(delayed-block? p)
-         (let ([v (delayed-block-blocks p ri)])
-           (extract-block-style-files v d ri ht pred extract))]
+         (define v (delayed-block-blocks p ri))
+         (extract-block-style-files v d ri ht pred extract)]
         [(traverse-block? p)
          (extract-block-style-files (traverse-block-block p ri) d ri ht pred extract)]
         [else
@@ -218,40 +210,37 @@
 
     (define/private (extract-content-style-files e d ri ht pred extract)
       (cond
-       [(string? e) (let ([ses (string-to-implicit-styles e)])
-                      (when (pair? ses)
-                        (for ([s (in-list ses)])
-                          (extract-style-style-files s ht pred extract))))]
-       [(element? e)
-        (when (style? (element-style e))
-          (extract-style-style-files (element-style e) ht pred extract))
-        (extract-content-style-files (element-content e) d ri ht pred extract)]
-       [(multiarg-element? e)
-        (when (style? (multiarg-element-style e))
-          (extract-style-style-files (multiarg-element-style e) ht pred extract))
-        (extract-content-style-files (multiarg-element-contents e) d ri ht pred extract)]
-       [(list? e)
-        (for ([e (in-list e)])
-          (extract-content-style-files e d ri ht pred extract))]
-       [(delayed-element? e)
-        (extract-content-style-files (delayed-element-content e ri) d ri ht pred extract)]
-       [(traverse-element? e)
-        (extract-content-style-files (traverse-element-content e ri) d ri ht pred extract)]
-       [(part-relative-element? e)
-        (extract-content-style-files (part-relative-element-content e ri) d ri ht pred extract)]))
+        [(string? e)
+         (define ses (string-to-implicit-styles e))
+         (when (pair? ses)
+           (for ([s (in-list ses)])
+             (extract-style-style-files s ht pred extract)))]
+        [(element? e)
+         (when (style? (element-style e))
+           (extract-style-style-files (element-style e) ht pred extract))
+         (extract-content-style-files (element-content e) d ri ht pred extract)]
+        [(multiarg-element? e)
+         (when (style? (multiarg-element-style e))
+           (extract-style-style-files (multiarg-element-style e) ht pred extract))
+         (extract-content-style-files (multiarg-element-contents e) d ri ht pred extract)]
+        [(list? e)
+         (for ([e (in-list e)])
+           (extract-content-style-files e d ri ht pred extract))]
+        [(delayed-element? e)
+         (extract-content-style-files (delayed-element-content e ri) d ri ht pred extract)]
+        [(traverse-element? e)
+         (extract-content-style-files (traverse-element-content e ri) d ri ht pred extract)]
+        [(part-relative-element? e)
+         (extract-content-style-files (part-relative-element-content e ri) d ri ht pred extract)]))
 
     (define/public (extract-version d)
-      (or (ormap (lambda (v)
-                   (and (document-version? v)
-                        (document-version-text v)))
-                 (style-properties (part-style d)))
+      (or (for/or ([v (in-list (style-properties (part-style d)))])
+            (and (document-version? v) (document-version-text v)))
           ""))
 
     (define/public (extract-date d)
-      (ormap (lambda (v)
-               (and (document-date? v)
-                    (document-date-text v)))
-             (style-properties (part-style d))))
+      (for/or ([v (in-list (style-properties (part-style d)))])
+        (and (document-date? v) (document-date-text v))))
 
     (define/private (extract-content d lift-proc)
       (let loop ([l (part-blocks d)])
@@ -383,21 +372,20 @@
 
     (define/public (serialize-one-ht ri ht)
       (parameterize ([current-serialize-resolve-info ri])
-        (let ([rp (mobile-root-path root)])
+        (define rp (mobile-root-path root))
+        (when rp
+          (set-mobile-root-path! root #f))
+        (begin0 (serialize (cons root ht))
           (when rp
-            (set-mobile-root-path! root #f))
-          (begin0
-           (serialize (cons root ht))
-           (when rp
-             (set-mobile-root-path! root rp))))))
+            (set-mobile-root-path! root rp)))))
 
     (define/public (deserialize-info v ci #:root [root-path #f] #:doc-id [doc-id #f])
-      (let ([root+ht (deserialize v)]
-            [in-ht (collect-info-ext-ht ci)])
-        (when root-path
-          (set-mobile-root-path! (car root+ht) root-path))
-        (for ([(k v) (cdr root+ht)])
-          (hash-set! in-ht k (if doc-id (known-doc v doc-id) v)))))
+      (define root+ht (deserialize v))
+      (define in-ht (collect-info-ext-ht ci))
+      (when root-path
+        (set-mobile-root-path! (car root+ht) root-path))
+      (for ([(k v) (cdr root+ht)])
+        (hash-set! in-ht k (if doc-id (known-doc v doc-id) v))))
 
     (define/public (get-defined ci)
       (hash-map (collect-info-ht ci) (lambda (k v) k)))
@@ -435,10 +423,8 @@
 
     (define/public (traverse ds fns)
       (let loop ([fp #hasheq()])
-        (let ([fp2 (start-traverse ds fns fp)])
-          (if (equal? fp fp2)
-              fp
-              (loop fp2)))))
+        (define fp2 (start-traverse ds fns fp))
+        (if (equal? fp fp2) fp (loop fp2))))
 
     (define/public (start-traverse ds fns fp)
       (for/fold ([fp fp]) ([d (in-list ds)])
@@ -503,143 +489,125 @@
        [else fp]))
 
     (define/private (traverse-force fp p proc again)
-      (let ([v (hash-ref fp p (lambda () proc))])
-        (if (procedure? v)
-            (let ([fp fp])
-              (let ([v2 (v (lambda (key default)
-                             (if (eq? key 'scribble:current-render-mode)
-                                 (current-render-mode)
-                                 (hash-ref fp key default)))
-                           (lambda (key val)
-                             (if (eq? key 'scribble:current-render-mode)
-                                 (raise-mismatch-error 
-                                  'traverse-info-set! 
-                                  "cannot set value for built-in key: "
-                                  key)
-                                 (set! fp (hash-set fp key val)))))])
-                (let ([fp (hash-set fp p v2)])
-                  (if (procedure? v2)
-                      fp
-                      (again v2 fp)))))
-            fp)))
+      (define v (hash-ref fp p (lambda () proc)))
+      (if (procedure? v)
+          (let ([fp fp])
+            (define v2
+              (v (lambda (key default)
+                   (if (eq? key 'scribble:current-render-mode)
+                       (current-render-mode)
+                       (hash-ref fp key default)))
+                 (lambda (key val)
+                   (when (eq? key 'scribble:current-render-mode)
+                     (raise-mismatch-error 'traverse-info-set!
+                                           "cannot set value for built-in key: "
+                                           key))
+                   (set! fp (hash-set fp key val)))))
+            (let ([fp (hash-set fp p v2)]) (if (procedure? v2) fp (again v2 fp))))
+          fp))
     
     ;; ----------------------------------------
     ;; global-info collection
 
     (define/public (collect ds fns fp [demand (lambda (key ci) #f)])
-      (let ([ci (make-collect-info fp
-                                   (make-hash)
-                                   (make-hash)
-                                   (make-demand-chain (list demand))
-                                   (make-hasheq)
-                                   (make-hasheq)
-                                   null
-                                   (make-hasheq)
-                                   null)])
-        (start-collect ds fns ci)
-        ci))
+      (define ci
+        (make-collect-info fp
+                           (make-hash)
+                           (make-hash)
+                           (make-demand-chain (list demand))
+                           (make-hasheq)
+                           (make-hasheq)
+                           null
+                           (make-hasheq)
+                           null))
+      (start-collect ds fns ci)
+      ci)
 
     (define/public (start-collect ds fns ci)
       (for-each (lambda (d) (collect-part d #f ci null 1 #hash()))
                 ds))
 
     (define/public (collect-part d parent ci number init-sub-number init-sub-numberers)
-      (let ([p-ci (make-collect-info
-                   (collect-info-fp ci)
-                   (make-hash)
-                   (collect-info-ext-ht ci)
-                   (collect-info-ext-demand ci)
-                   (collect-info-parts ci)
-                   (collect-info-tags ci)
-                   (if (part-tag-prefix d)
-                       (append (collect-info-gen-prefix ci)
-                               (list (part-tag-prefix d)))
-                       (collect-info-gen-prefix ci))
-                   (collect-info-relatives ci)
-                   (cons d (collect-info-parents ci)))])
-        (hash-set! (collect-info-parts ci)
-                   d
-                   (make-collected-info number
-                                        parent
-                                        (collect-info-ht p-ci)))
-        (define grouper? (and (pair? number) (part-style? d 'grouper)))
-        (define-values (next-sub-number next-sub-numberers)
-          (parameterize ([current-tag-prefixes
-                          (extend-prefix d (fresh-tag-collect-context? d p-ci))])
-            (when (part-title-content d)
-              (collect-content (part-title-content d) p-ci))
-            (collect-part-tags d p-ci number)
-            (collect-content (part-to-collect d) p-ci)
-            (collect-flow (part-blocks d) p-ci)
-            (let loop ([parts (part-parts d)]
-                       [pos init-sub-number]
-                       [numberers init-sub-numberers]
-                       [sub-pos 1]
-                       [sub-numberers #hash()])
-              (if (null? parts)
-                  (values pos numberers)
-                  (let ([s (car parts)])
-                    (define unnumbered? (part-style? s 'unnumbered))
-                    (define hidden-number? (or unnumbered?
-                                               (part-style? s 'hidden-number)))
-                    (define sub-grouper? (part-style? s 'grouper))
-                    (define numberer (and (not unnumbered?)
-                                          (for/or ([p (style-properties (part-style s))]
-                                                   #:when (numberer? p))
-                                            p)))
-                    (define-values (numberer-str next-numberers)
-                      (if numberer
-                          (numberer-step numberer number p-ci numberers)
-                          (values #f numberers)))
-                    (define-values (next-sub-pos next-sub-numberers)
-                      (collect-part s d p-ci
-                                    (cons (if hidden-number?
-                                              (if sub-grouper?
-                                                  ""
-                                                  #f)
-                                              (if numberer
-                                                  numberer-str
-                                                  (if sub-grouper?
-                                                      (number->roman pos)
-                                                      pos)))
-                                          (if hidden-number?
-                                              (for/list ([i (in-list number)])
-                                                (if (string? i)
-                                                    i
-                                                    #f))
-                                              number))
-                                    sub-pos
-                                    sub-numberers))
-                    (define unnumbered-and-unnumbered-subsections?
-                      (and (not sub-grouper?)
-                           ;; If this section wasn't marked with
-                           ;; 'grouper but is unnumbered and doesn't
-                           ;; have numbered subsections, then didn't
-                           ;; reset counters, so propagate the old
-                           ;; position
-                           (and unnumbered?
-                                (= next-sub-pos sub-pos))))
-                    (loop (cdr parts)
-                          (if (or unnumbered? numberer)
-                              pos
-                              (add1 pos))
-                          next-numberers
-                          (cond
-                            [sub-grouper? next-sub-pos]
-                            [unnumbered-and-unnumbered-subsections? sub-pos]
-                            [else 1])
-                          (cond
-                            [sub-grouper? next-sub-numberers]
-                            [unnumbered-and-unnumbered-subsections? sub-numberers]
-                            [else #hash()])))))))
-        (let ([prefix (part-tag-prefix d)])
-          (for ([(k v) (collect-info-ht p-ci)])
-            (when (cadr k)
-              (collect-put! ci (if prefix
-                                   (convert-key prefix k) 
-                                   k) 
-                            v))))
-        (values next-sub-number next-sub-numberers)))
+      (define p-ci
+        (make-collect-info (collect-info-fp ci)
+                           (make-hash)
+                           (collect-info-ext-ht ci)
+                           (collect-info-ext-demand ci)
+                           (collect-info-parts ci)
+                           (collect-info-tags ci)
+                           (if (part-tag-prefix d)
+                               (append (collect-info-gen-prefix ci) (list (part-tag-prefix d)))
+                               (collect-info-gen-prefix ci))
+                           (collect-info-relatives ci)
+                           (cons d (collect-info-parents ci))))
+      (hash-set! (collect-info-parts ci) d (make-collected-info number parent (collect-info-ht p-ci)))
+      (define grouper? (and (pair? number) (part-style? d 'grouper)))
+      (define-values (next-sub-number next-sub-numberers)
+        (parameterize ([current-tag-prefixes (extend-prefix d (fresh-tag-collect-context? d p-ci))])
+          (when (part-title-content d)
+            (collect-content (part-title-content d) p-ci))
+          (collect-part-tags d p-ci number)
+          (collect-content (part-to-collect d) p-ci)
+          (collect-flow (part-blocks d) p-ci)
+          (let loop ([parts (part-parts d)]
+                     [pos init-sub-number]
+                     [numberers init-sub-numberers]
+                     [sub-pos 1]
+                     [sub-numberers #hash()])
+            (cond
+              [(null? parts) (values pos numberers)]
+              [else
+               (define s (car parts))
+               (define unnumbered? (part-style? s 'unnumbered))
+               (define hidden-number? (or unnumbered? (part-style? s 'hidden-number)))
+               (define sub-grouper? (part-style? s 'grouper))
+               (define numberer
+                 (and (not unnumbered?)
+                      (for/or ([p (style-properties (part-style s))]
+                               #:when (numberer? p))
+                        p)))
+               (define-values (numberer-str next-numberers)
+                 (if numberer (numberer-step numberer number p-ci numberers) (values #f numberers)))
+               (define-values (next-sub-pos next-sub-numberers)
+                 (collect-part
+                  s
+                  d
+                  p-ci
+                  (cons (cond
+                          [hidden-number? (and sub-grouper? "")]
+                          [numberer numberer-str]
+                          [sub-grouper? (number->roman pos)]
+                          [else pos])
+                        (if hidden-number?
+                            (for/list ([i (in-list number)])
+                              (and (string? i) i))
+                            number))
+                  sub-pos
+                  sub-numberers))
+               (define unnumbered-and-unnumbered-subsections?
+                 (and (not sub-grouper?)
+                      ;; If this section wasn't marked with
+                      ;; 'grouper but is unnumbered and doesn't
+                      ;; have numbered subsections, then didn't
+                      ;; reset counters, so propagate the old
+                      ;; position
+                      (and unnumbered? (= next-sub-pos sub-pos))))
+               (loop (cdr parts)
+                     (if (or unnumbered? numberer) pos (add1 pos))
+                     next-numberers
+                     (cond
+                       [sub-grouper? next-sub-pos]
+                       [unnumbered-and-unnumbered-subsections? sub-pos]
+                       [else 1])
+                     (cond
+                       [sub-grouper? next-sub-numberers]
+                       [unnumbered-and-unnumbered-subsections? sub-numberers]
+                       [else #hash()]))]))))
+      (let ([prefix (part-tag-prefix d)])
+        (for ([(k v) (collect-info-ht p-ci)])
+          (when (cadr k)
+            (collect-put! ci (if prefix (convert-key prefix k) k) v))))
+      (values next-sub-number next-sub-numberers))
 
     (define/private (convert-key prefix k)
       (case (car k)
@@ -703,34 +671,41 @@
         (collect-block d ci)))
 
     (define/public (collect-content i ci)
-      (if (part-relative-element? i)
-        (let ([content (or (hash-ref (collect-info-relatives ci) i #f)
-                           (let ([v ((part-relative-element-collect i) ci)])
-                             (hash-set! (collect-info-relatives ci) i v)
-                             v))])
-          (collect-content content ci))
-        (begin (when (target-element? i) (collect-target-element i ci))
-               (when (index-element? i) (collect-index-element i ci))
-               (when (collect-element? i) ((collect-element-collect i) ci))
-               (when (traverse-element? i)
-                 (collect-content (traverse-element-content i ci) ci))
-               (when (element? i)
-                 (collect-content (element-content i) ci))
-               (when (multiarg-element? i)
-                 (collect-content (multiarg-element-contents i) ci))
-               (when (list? i)
-                 (for ([e (in-list i)]) (collect-content e ci)))
-               (when (toc-element? i)
-                 (collect-content (toc-element-toc-content i) ci))
-               (when (toc-target2-element? i)
-                 (collect-content (toc-target2-element-toc-content i) ci)))))
+      (cond
+        [(part-relative-element? i)
+         (define content
+           (or (hash-ref (collect-info-relatives ci) i #f)
+               (let ([v ((part-relative-element-collect i) ci)])
+                 (hash-set! (collect-info-relatives ci) i v)
+                 v)))
+         (collect-content content ci)]
+        [else
+         (when (target-element? i)
+           (collect-target-element i ci))
+         (when (index-element? i)
+           (collect-index-element i ci))
+         (when (collect-element? i)
+           ((collect-element-collect i) ci))
+         (when (traverse-element? i)
+           (collect-content (traverse-element-content i ci) ci))
+         (when (element? i)
+           (collect-content (element-content i) ci))
+         (when (multiarg-element? i)
+           (collect-content (multiarg-element-contents i) ci))
+         (when (list? i)
+           (for ([e (in-list i)])
+             (collect-content e ci)))
+         (when (toc-element? i)
+           (collect-content (toc-element-toc-content i) ci))
+         (when (toc-target2-element? i)
+           (collect-content (toc-target2-element-toc-content i) ci))]))
 
     (define/public (collect-target-element i ci)
-      (let ([t (generate-tag (target-element-tag i) ci)])
-        (collect-put! ci t
-                      ;; See "INFO SHAPE" above.
-                      (vector (element-content i)
-                              (add-current-tag-prefix t)))))
+      (define t (generate-tag (target-element-tag i) ci))
+      (collect-put! ci
+                    t
+                    ;; See "INFO SHAPE" above.
+                    (vector (element-content i) (add-current-tag-prefix t))))
 
     (define/public (collect-index-element i ci)
       (collect-put! ci
@@ -743,9 +718,9 @@
     ;; global-info resolution
 
     (define/public (resolve ds fns ci)
-      (let ([ri (make-resolve-info ci (make-hasheq) (make-hash) (make-hash))])
-        (start-resolve ds fns ri)
-        ri))
+      (define ri (make-resolve-info ci (make-hasheq) (make-hash) (make-hash)))
+      (start-resolve ds fns ri)
+      ri)
 
     (define/public (start-resolve ds fns ri)
       (for-each (lambda (d) (resolve-part d ri)) ds))
@@ -773,10 +748,10 @@
         [(itemization? p) (resolve-itemization p d ri)]
         [(nested-flow? p) (resolve-nested-flow p d ri)]
         [(compound-paragraph? p) (resolve-compound-paragraph p d ri)]
-        [(delayed-block? p) 
-         (let ([v ((delayed-block-resolve p) this d ri)])
-           (hash-set! (resolve-info-delays ri) p v)
-           (resolve-block v d ri))]
+        [(delayed-block? p)
+         (define v ((delayed-block-resolve p) this d ri))
+         (hash-set! (resolve-info-delays ri) p v)
+         (resolve-block v d ri)]
         [(traverse-block? p) (resolve-block (traverse-block-block p ri) d ri)]
         [else (resolve-paragraph p d ri)]))
 
@@ -814,12 +789,11 @@
         [(element? i)
          (cond
            [(index-element? i)
-            (let ([e (index-element-desc i)])
-              (when (delayed-index-desc? e)
-                (let ([v ((delayed-index-desc-resolve e) this d ri)])
-                  (hash-set! (resolve-info-delays ri) e v))))]
-           [(link-element? i)
-            (resolve-get d ri (link-element-tag i))])
+            (define e (index-element-desc i))
+            (when (delayed-index-desc? e)
+              (define v ((delayed-index-desc-resolve e) this d ri))
+              (hash-set! (resolve-info-delays ri) e v))]
+           [(link-element? i) (resolve-get d ri (link-element-tag i))])
          (resolve-content (element-content i) d ri)
          (cond
           [(toc-target2-element? i) (resolve-content (toc-target2-element-toc-content i) d ri)]
@@ -866,13 +840,12 @@
           (install-file fn #:private-name? #f)))
       (unless prefix-file
         (for ([d (in-list ds)])
-          (let ([extras (ormap (lambda (v) (and (auto-extra-files? v) v))
-                               (style-properties (part-style d)))])
-            (when extras
-              (for ([fn (in-list (auto-extra-files-paths extras))])
-                (unless (skip-extra-file? fn)
-                  (install-file (collects-relative->path fn)
-                                #:private-name? #f))))))))
+          (define extras
+            (ormap (lambda (v) (and (auto-extra-files? v) v)) (style-properties (part-style d))))
+          (when extras
+            (for ([fn (in-list (auto-extra-files-paths extras))])
+              (unless (skip-extra-file? fn)
+                (install-file (collects-relative->path fn) #:private-name? #f)))))))
 
     (define/public (render ds fns ri)
       ;; maybe this should happen even if fns is empty or all #f?
@@ -881,13 +854,14 @@
       (map (lambda (d fn)
              (define (one) (render-one d ri fn))
              (when (report-output?) (printf " [Output to ~a]\n" fn))
-             (if fn
-               (with-output-to-file fn #:exists 'truncate/replace one)
-               ;; a #f filename means return the contents as a string
-               (let ([o (open-output-string)])
-                 (parameterize ([current-output-port o])
-                   (one)
-                   (get-output-string o)))))
+             (cond
+               [fn (with-output-to-file fn #:exists 'truncate/replace one)]
+               [else
+                ;; a #f filename means return the contents as a string
+                (define o (open-output-string))
+                (parameterize ([current-output-port o])
+                  (one)
+                  (get-output-string o))]))
            ds
            fns))
 
@@ -975,30 +949,25 @@
       (cond
         [(string? i) (render-other i part ri)] ; short-cut for common case
         [(list? i)
-         (apply append (for/list ([i (in-list i)]) (render-content i part ri)))]
-        [(and (link-element? i)
-              (null? (element-content i)))
-         (let ([v (resolve-get part ri (link-element-tag i))])
-           (if v
-               (render-content (strip-aux (or (vector-ref v 0) "???")) part ri)
-               (render-content (list "[missing]") part ri)))]
+         (for*/list ([i (in-list i)]
+                     [v (in-list (render-content i part ri))])
+           v)]
+        [(and (link-element? i) (null? (element-content i)))
+         (define v (resolve-get part ri (link-element-tag i)))
+         (if v
+             (render-content (strip-aux (or (vector-ref v 0) "???")) part ri)
+             (render-content (list "[missing]") part ri))]
         [(element? i)
          (when (render-element? i)
            ((render-element-render i) this part ri))
          (render-content (element-content i) part ri)]
-        [(multiarg-element? i)
-         (render-content (multiarg-element-contents i) part ri)]
-        [(delayed-element? i)
-         (render-content (delayed-element-content i ri) part ri)]
-        [(traverse-element? i)
-         (render-content (traverse-element-content i ri) part ri)]
-        [(part-relative-element? i)
-         (render-content (part-relative-element-content i ri) part ri)]
+        [(multiarg-element? i) (render-content (multiarg-element-contents i) part ri)]
+        [(delayed-element? i) (render-content (delayed-element-content i ri) part ri)]
+        [(traverse-element? i) (render-content (traverse-element-content i ri) part ri)]
+        [(part-relative-element? i) (render-content (part-relative-element-content i ri) part ri)]
         [(convertible? i)
          (define s (convert i 'text))
-         (if (string? s)
-             (render-other s part ri)
-             (render-other (format "~s" i) part ri))]
+         (if (string? s) (render-other s part ri) (render-other (format "~s" i) part ri))]
         [else (render-other i part ri)]))
 
     (define/public (render-other i part ri)
@@ -1010,130 +979,112 @@
     (define copied-dests (make-hash))
 
     (define/public (install-file fn [content #f] #:private-name? [private-name? #t])
-      (if (and refer-to-existing-files
-               (not content))
-          (if (string? fn)
-              (string->path fn)
-              fn)
-          (let ([normalized (normal-case-path (simplify-path (path->complete-path fn)))])
-            (or (and (not content)
-                     (hash-ref copied-srcs normalized #f))
-                (let* ([src-dir (path-only fn)]
-                       [dest-dir (get-dest-directory #t)]
-                       [fn (file-name-from-path fn)]
-                       [dest-file-dir (or dest-dir (current-directory))])
-                  (let ([src-file (build-path (or src-dir (current-directory)) fn)]
-                        [dest-file (build-path dest-file-dir
-                                               (if (and private-name?
-                                                        helper-file-prefix)
-                                                   (let-values ([(base name dir?) (split-path helper-file-prefix)])
-                                                     (cond
-                                                       [dir? (build-path helper-file-prefix fn)]
-                                                       [else
-                                                        (define new-fn
-                                                          (bytes->path-element
-                                                           (bytes-append (path-element->bytes name)
-                                                                         (path-element->bytes fn))))
-                                                        (if (eq? base 'relative)
-                                                            new-fn
-                                                            (build-path base new-fn))]))
-                                                   fn))]
-                        [next-file-name (lambda (dest)
-                                          (let-values ([(base name dir?) (split-path dest)])
-                                            (build-path
-                                             base
-                                             (let ([s (path-element->string (path-replace-suffix name #""))])
-                                               (let ([n (regexp-match #rx"^(.*)_([0-9]+)$" s)])
-                                                 (format "~a_~a~a"
-                                                         (if n (cadr n) s)
-                                                         (if n (add1 (string->number (caddr n))) 2)
-                                                         (let ([ext (filename-extension name)])
-                                                           (if ext
-                                                               (bytes-append #"." ext)
-                                                               ""))))))))])
-                    (let-values ([(dest-file normalized-dest-file)
-                                  (let loop ([dest-file dest-file])
-                                    (let* ([normalized-dest-file 
-                                            (normal-case-path (simplify-path (path->complete-path dest-file)))]
-                                           [check-same
-                                            (lambda (src dest-file)
-                                              (call-with-input-file* 
-                                               dest-file
-                                               (lambda (dest)
-                                                 (or (and (not content)
-                                                          (equal? (port-file-identity src)
-                                                                  (port-file-identity dest)))
-                                                     (let loop ()
-                                                       (let ([s (read-bytes 4096 src)]
-                                                             [d (read-bytes 4096 dest)])
-                                                         (and (equal? s d)
-                                                              (or (eof-object? s) (loop)))))))))]
-                                           [same-directories?
-                                            (lambda (s d)
-                                              (let loop ([s s] [d d])
-                                                (cond
-                                                 [(and (file-exists? s) (file-exists? d))
-                                                  (call-with-input-file* s (lambda (in)
-                                                                             (check-same in d)))]
-                                                 [(directory-exists? s)
-                                                  (and (directory-exists? d)
-                                                       (let ([sl (sort (directory-list s) bytes<? #:key path-element->bytes)]
-                                                             [dl (sort (directory-list d) bytes<? #:key path-element->bytes)])
-                                                         (and (equal? sl dl)
-                                                              (andmap loop sl dl))))]
-                                                 [else #f])))]
-                                           [not-same
-                                            (lambda (delete-dest)
-                                              (cond
-                                                [(or keep-existing-helper-files?
-                                                     (hash-ref copied-dests normalized-dest-file #f))
-                                                 ;; need a different file/directory
-                                                 (loop (next-file-name dest-file))]
-                                                [else
-                                                 ;; replace the file/directory
-                                                 (delete-dest dest-file)
-                                                 (values dest-file normalized-dest-file)]))])
-                                      (cond
-                                       [(and (file-exists? src-file)
-                                             (file-exists? dest-file))
-                                        (cond
-                                         [(or (and content
-                                                   (check-same (open-input-bytes content) dest-file))
-                                              (and (not content)
-                                                   (call-with-input-file* src-file (lambda (in) (check-same in dest-file)))))
-                                          ;; same content at that destination
-                                          (values dest-file normalized-dest-file)]
-                                         [else
-                                          (not-same delete-file)])]
-                                       [(and (directory-exists? src-file)
-                                             (directory-exists? dest-file))
-                                        (if (same-directories? src-file dest-file)
-                                            (values dest-file normalized-dest-file)
-                                            (not-same delete-directory/files))]
-                                       [(file-exists? dest-file)
-                                        (not-same delete-file)]
-                                       [(directory-exists? dest-file)
-                                        (not-same delete-directory/files)]
-                                       [else
-                                        ;; new file/directory
-                                        (values dest-file normalized-dest-file)])))])
-                      (unless (or (file-exists? dest-file)
-                                  (directory-exists? dest-file))
-                        (let-values ([(dir name dir?) (split-path dest-file)])
-                          (make-directory* dir))
-                        (if content
-                            (call-with-output-file*
-                             dest-file
-                             (lambda (dest) (write-bytes content dest)))
-                            (if (directory-exists? src-file)
-                                (copy-directory/files src-file dest-file)
-                                (copy-file src-file dest-file))))
-                      (hash-set! copied-dests normalized-dest-file #t)
-                      (let ([result (path->string (find-relative-path (simplify-path (path->complete-path dest-file-dir))
-                                                                      normalized-dest-file))])
-                        (unless content
-                          (hash-set! copied-srcs normalized result))
-                        result))))))))
+      (cond
+        [(and refer-to-existing-files (not content)) (if (string? fn) (string->path fn) fn)]
+        [else
+         (define normalized (normal-case-path (simplify-path (path->complete-path fn))))
+         (or (and (not content) (hash-ref copied-srcs normalized #f))
+             (let* ([src-dir (path-only fn)]
+                    [dest-dir (get-dest-directory #t)]
+                    [fn (file-name-from-path fn)]
+                    [dest-file-dir (or dest-dir (current-directory))])
+               (define src-file (build-path (or src-dir (current-directory)) fn))
+               (define dest-file
+                 (build-path dest-file-dir
+                             (cond
+                               [(and private-name? helper-file-prefix)
+                                (define-values (base name dir?) (split-path helper-file-prefix))
+                                (cond
+                                  [dir? (build-path helper-file-prefix fn)]
+                                  [else
+                                   (define new-fn
+                                     (bytes->path-element (bytes-append (path-element->bytes name)
+                                                                        (path-element->bytes fn))))
+                                   (if (eq? base 'relative) new-fn (build-path base new-fn))])]
+                               [else fn])))
+               (define (next-file-name dest)
+                 (define-values (base name dir?) (split-path dest))
+                 (build-path base
+                             (let ([s (path-element->string (path-replace-suffix name #""))])
+                               (define n (regexp-match #rx"^(.*)_([0-9]+)$" s))
+                               (format "~a_~a~a"
+                                       (if n (cadr n) s)
+                                       (if n (add1 (string->number (caddr n))) 2)
+                                       (let ([ext (filename-extension name)])
+                                         (if ext (bytes-append #"." ext) ""))))))
+               (let-values
+                   ([(dest-file normalized-dest-file)
+                     (let loop ([dest-file dest-file])
+                       (define normalized-dest-file
+                         (normal-case-path (simplify-path (path->complete-path dest-file))))
+                       (define (check-same src dest-file)
+                         (call-with-input-file*
+                          dest-file
+                          (lambda (dest)
+                            (or (and (not content)
+                                     (equal? (port-file-identity src) (port-file-identity dest)))
+                                (let loop ()
+                                  (define s (read-bytes 4096 src))
+                                  (define d (read-bytes 4096 dest))
+                                  (and (equal? s d) (or (eof-object? s) (loop))))))))
+                       (define (same-directories? s d)
+                         (let loop ([s s]
+                                    [d d])
+                           (cond
+                             [(and (file-exists? s) (file-exists? d))
+                              (call-with-input-file* s (lambda (in) (check-same in d)))]
+                             [(directory-exists? s)
+                              (and
+                               (directory-exists? d)
+                               (let ([sl (sort (directory-list s) bytes<? #:key path-element->bytes)]
+                                     [dl (sort (directory-list d) bytes<? #:key path-element->bytes)])
+                                 (and (equal? sl dl) (andmap loop sl dl))))]
+                             [else #f])))
+                       (define (not-same delete-dest)
+                         (cond
+                           [(or keep-existing-helper-files?
+                                (hash-ref copied-dests normalized-dest-file #f))
+                            ;; need a different file/directory
+                            (loop (next-file-name dest-file))]
+                           [else
+                            ;; replace the file/directory
+                            (delete-dest dest-file)
+                            (values dest-file normalized-dest-file)]))
+                       (cond
+                         [(and (file-exists? src-file) (file-exists? dest-file))
+                          (cond
+                            [(or (and content (check-same (open-input-bytes content) dest-file))
+                                 (and (not content)
+                                      (call-with-input-file* src-file
+                                                             (lambda (in)
+                                                               (check-same in dest-file)))))
+                             ;; same content at that destination
+                             (values dest-file normalized-dest-file)]
+                            [else (not-same delete-file)])]
+                         [(and (directory-exists? src-file) (directory-exists? dest-file))
+                          (if (same-directories? src-file dest-file)
+                              (values dest-file normalized-dest-file)
+                              (not-same delete-directory/files))]
+                         [(file-exists? dest-file) (not-same delete-file)]
+                         [(directory-exists? dest-file) (not-same delete-directory/files)]
+                         ;; new file/directory
+                         [else (values dest-file normalized-dest-file)]))])
+                 (unless (or (file-exists? dest-file) (directory-exists? dest-file))
+                   (let-values ([(dir name dir?) (split-path dest-file)])
+                     (make-directory* dir))
+                   (cond
+                     [content
+                      (call-with-output-file* dest-file (lambda (dest) (write-bytes content dest)))]
+                     [(directory-exists? src-file) (copy-directory/files src-file dest-file)]
+                     [else (copy-file src-file dest-file)]))
+                 (hash-set! copied-dests normalized-dest-file #t)
+                 (define result
+                   (path->string (find-relative-path
+                                  (simplify-path (path->complete-path dest-file-dir))
+                                  normalized-dest-file)))
+                 (unless content
+                   (hash-set! copied-srcs normalized result))
+                 result)))]))
 
     ;; ----------------------------------------
 
@@ -1173,39 +1124,28 @@
                                                      quiet (sub1 depth) prefixes))
                                      (part-parts part)))
                   null)])
-        (if skip?
-            subs
-            (let ([l (cons
-                      (list (make-paragraph
-                             plain
-                             (list
-                              (make-element
-                               'hspace
-                               (list (make-string (* 2 (- (length number)
-                                                          base-len))
-                                                  #\space)))
-                              (make-link-element
-                               (if (= 1 (length number)) "toptoclink" "toclink")
-                               (append
-                                (format-number
-                                 number
-                                 (list (make-element 'hspace '(" "))))
-                                (or (part-title-content part) '("???")))
-                               (for/fold ([t (car (part-tags part))])
-                                   ([prefix (in-list prefixes)])
-                                 (convert-key prefix t))))))
-                      subs)])
-              (if (and (= 1 (length number))
-                       (or (not (car number)) 
-                           (and (number? (car number))
-                                ((car number) . > . 1))
-                           (and (string? (car number))
-                                (not (string=? (car number) "I")))))
-                  (cons (list (make-paragraph
-                               plain
-                               (list (make-element 'hspace (list "")))))
-                        l)
-                  l)))))
+        (cond
+          [skip? subs]
+          [else
+           (define l
+             (cons (list (make-paragraph
+                          plain
+                          (list (make-element 'hspace
+                                              (list (make-string (* 2 (- (length number) base-len))
+                                                                 #\space)))
+                                (make-link-element
+                                 (if (= 1 (length number)) "toptoclink" "toclink")
+                                 (append (format-number number (list (make-element 'hspace '(" "))))
+                                         (or (part-title-content part) '("???")))
+                                 (for/fold ([t (car (part-tags part))]) ([prefix (in-list prefixes)])
+                                   (convert-key prefix t))))))
+                   subs))
+           (if (and (= 1 (length number))
+                    (or (not (car number))
+                        (and (number? (car number)) ((car number) . > . 1))
+                        (and (string? (car number)) (not (string=? (car number) "I")))))
+               (cons (list (make-paragraph plain (list (make-element 'hspace (list ""))))) l)
+               l)])))
 
     ;; ----------------------------------------
 
