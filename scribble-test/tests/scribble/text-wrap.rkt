@@ -1,6 +1,7 @@
 #lang racket/base
 
-(require tests/eli-tester scribble/text/wrap)
+(require scribble/text/wrap
+         tests/eli-tester)
 
 #; ; generate test cases from Emacs
 (defmacro wrap-line (str col &rest dummy)

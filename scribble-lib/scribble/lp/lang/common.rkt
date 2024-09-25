@@ -4,8 +4,7 @@
          module-begin/plain
          module-begin/doc)
 
-(require (for-syntax racket/base syntax/boundmap racket/list
-                     syntax/strip-context))
+(require (for-syntax racket/base racket/list syntax/boundmap syntax/strip-context))
 
 (begin-for-syntax
   (define first-id #f)
@@ -41,25 +40,24 @@
        (let loop ([block (get-chunk main-id)])
          (append-map
           (lambda (expr)
-            (if (identifier? expr)
-                (let ([subs (get-chunk expr)])
-                  (if (pair? subs)
-                      (begin (set! chunk-mentions (cons expr chunk-mentions))
-                             (loop subs))
-                      (list (shift expr))))
-                (let ([subs (syntax->list expr)])
-                  (if subs
-                      (list (restore expr (loop subs)))
-                      (list (shift expr))))))
+            (cond
+              [(identifier? expr)
+               (define subs (get-chunk expr))
+               (cond
+                 [(pair? subs)
+                  (set! chunk-mentions (cons expr chunk-mentions))
+                  (loop subs)]
+                 [else (list (shift expr))])]
+              [else
+               (define subs (syntax->list expr))
+               (if subs (list (restore expr (loop subs))) (list (shift expr)))]))
           block)))))                               
   (with-syntax ([(body ...) (strip-comments body)]
                 ;; construct arrows manually
                 [((b-use b-id) ...)
                  (append-map (lambda (m)
-                               (map (lambda (u)
-                                      (list (syntax-local-introduce m) 
-                                            (syntax-local-introduce u)))
-                                    (mapping-get chunk-groups m)))
+                               (for/list ([u (in-list (mapping-get chunk-groups m))])
+                                 (list (syntax-local-introduce m) (syntax-local-introduce u))))
                              chunk-mentions)])
     #`(begin body ... (let ([b-id (void)]) b-use) ...)))
 
