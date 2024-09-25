@@ -306,7 +306,8 @@
                   [info any/c])]
 
  [known-doc ([v any/c]
-             [id string?])])
+             [id (or/c #f string?)]
+             [pkg (or/c #f string?)])])
 
 (provide plain)
 (define plain (make-style #f null))

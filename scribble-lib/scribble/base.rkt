@@ -890,8 +890,9 @@
          (collect-info-ext-ht ci))))
    (lambda (k v)
      (when (and (pair? k) (eq? 'index-entry (car k)))
-       (let ([v (if (known-doc? v) (known-doc-v v) v)])
-         (set! l (cons (cons (cadr k) v) l))))))
+       (let ([pkg (and (known-doc? v) (known-doc-pkg v))]
+             [v (if (known-doc? v) (known-doc-v v) v)])
+         (set! l (cons (cons (cadr k) (append v (list pkg))) l))))))
   (sort l entry<?))
 
 (define (index-block)

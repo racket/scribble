@@ -214,7 +214,8 @@ from @racket[doc]).}
 
 @defmethod[(deserialize-info [v any/c]
                              [ci collect-info?]
-                             [#:root root-path (or/c path-string? false/c) #f])
+                             [#:root root-path (or/c path-string? false/c) #f]
+                             [#:pkg pkg (or/c path? false/c) #f])
            void?]{
 
 Adds the deserialized form of @racket[v] to @racket[ci].
@@ -222,7 +223,12 @@ Adds the deserialized form of @racket[v] to @racket[ci].
 If @racket[root-path] is not @racket[#f], then file paths that are
 recorded in @racket[ci] as relative to an instantiation-supplied
 @racket[root-path] are deserialized as relative instead to the given
-@racket[root-path].}
+@racket[root-path].
+
+If @racket[pkg] is not @racket[#f], then deserialized information is
+recorded as being from a document in the named package.
+
+@history[#:changed "1.52" @elem{Added the @racket[pkg] argument.}]}
 
 
 @defmethod[(get-defined [ci collect-info?]) (listof tag?)]{
