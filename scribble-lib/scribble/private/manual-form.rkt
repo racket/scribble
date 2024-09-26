@@ -305,7 +305,7 @@
 
 (define (meta-symbol? s) (memq s '(... ...+ ?)))
 
-(define (defform-site kw-id)
+(define (defform-site kw-id #:kind [kind "syntax"])
   (define target-maker (id-to-form-target-maker kw-id #t))
   (define-values (content ref-content) (definition-site (syntax-e kw-id) kw-id #t))
   (if target-maker
@@ -321,14 +321,16 @@
                (list ref-content)
                (with-exporting-libraries
                    (lambda (libs)
-                     (make-form-index-desc (syntax-e kw-id)
-                                           libs))))
+                     (make-exported-index-desc* (syntax-e kw-id)
+                                                libs
+                                                (hash 'kind kind)))))
               content)
           tag
           ref-content)))
       content))
 
 (define (*defforms kind link? kw-id forms form-procs subs sub-procs contract-procs content-thunk)
+  (define kind* (or kind "syntax"))
   (parameterize ([current-meta-list '(... ...+)])
     (make-box-splice
      (cons
@@ -342,7 +344,7 @@
                      [form-proc (in-list form-procs)]
                      [i (in-naturals)])
             (list
-             ((if (zero? i) (add-background-label (or kind "syntax")) values)
+             ((if (zero? i) (add-background-label kind*) values)
               (list
                ((or form-proc
                     (lambda (x)
@@ -351,7 +353,7 @@
                 (and kw-id
                      (if (eq? form (car forms))
                          (if link?
-                             (defform-site kw-id)
+                             (defform-site kw-id #:kind kind*)
                              (to-element #:defn? #t kw-id))
                          (to-element #:defn? #t kw-id))))))))
           (if (null? sub-procs)

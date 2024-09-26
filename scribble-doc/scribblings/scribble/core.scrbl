@@ -1105,11 +1105,10 @@ The @racket[entry-seq] list must have the same length as
 final document.
 
 The @racket[desc] field provides additional information about the
-index entry as supplied by the entry creator. For example, a reference
-to a procedure binding can be recognized when @racket[desc] is an
-instance of @racket[procedure-index-desc]. See
-@racketmodname[scribble/manual-struct] for other typical types of
-@racket[desc] values.
+index entry as supplied by the entry creator. For example, a reference to
+a procedure binding can be recognized when @racket[desc] is an instance of
+@racket[exported-index-desc*] with the @racket['("procedure")] kind.
+See @racketmodname[scribble/manual-struct] for other types of @racket[desc] values.
 
 See also @racket[index].}
 
