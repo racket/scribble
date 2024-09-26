@@ -386,9 +386,13 @@
                              content
                              (with-exporting-libraries
                                  (lambda (libs)
-                                   (make-constructor-index-desc
+                                   (make-exported-index-desc*
                                     (syntax-e within-id)
-                                    libs ctag)))))
+                                    libs
+                                    (hash 'kind (get-label)
+                                          'hidden? #t
+                                          'constructor? #t
+                                          'class-tag ctag))))))
                       tag)))
                   (car content))]
              [else (car content)]))
@@ -409,6 +413,7 @@
                         content
                         (lambda (ctag)
                           (define tag (method-tag ctag mname))
+                          (define class-name (syntax-e within-id))
                           (make-toc-target2-element
                            #f
                            (list (make-index-element
@@ -416,12 +421,23 @@
                                   content
                                   tag
                                   (list (datum-intern-literal (symbol->string mname)))
-                                  (list ref-content)
+                                  (list (list
+                                         ref-content
+                                         " "
+                                         (element 'smaller
+                                           (list "(method of "
+                                                 (make-element
+                                                  'tt
+                                                  (symbol->string class-name))
+                                                 ")"))))
                                   (with-exporting-libraries
                                       (lambda (libs)
-                                        (make-method-index-desc
-                                         (syntax-e within-id)
-                                         libs mname ctag)))))
+                                        (make-exported-index-desc*
+                                         class-name
+                                         libs
+                                         (hash 'kind (get-label)
+                                               'method-name mname
+                                               'class-tag ctag))))))
                            tag
                            ref-content)))
                        content)]
@@ -442,7 +458,7 @@
                   (list ref-content)
                   (with-exporting-libraries
                       (lambda (libs)
-                        (make-procedure-index-desc the-id libs))))
+                        (make-exported-index-desc* the-id libs (hash 'kind (get-label))))))
                  tag
                  ref-content)))
              content)]
@@ -1138,6 +1154,7 @@
 (define (*defthing kind link? stx-ids names form? result-contracts content-thunk
                    [result-values (map (lambda (x) #f) result-contracts)])
   (define max-proto-width (current-display-width))
+  (define kind* (or kind "value"))
   (make-box-splice
    (cons
     (make-blockquote
@@ -1194,7 +1211,10 @@
                        (list (datum-intern-literal (symbol->string name)))
                        (list ref-content)
                        (with-exporting-libraries
-                           (lambda (libs) (make-thing-index-desc name libs))))
+                         (lambda (libs) (make-exported-index-desc*
+                                         name
+                                         libs
+                                         (hash 'kind kind*)))))
                       tag
                       ref-content)))
                   content)))
@@ -1206,7 +1226,7 @@
           (append
            (list
             (list
-             ((if (zero? i) (add-background-label (or kind "value")) values)
+             ((if (zero? i) (add-background-label kind*) values)
               (top-align
                make-table-if-necessary
                "argcontract"
@@ -1255,7 +1275,8 @@
      (let* ([name (datum-intern-literal (string-append* (map symbol->string (cdar wrappers))))]
             [target-maker
              (id-to-target-maker (datum->syntax stx-id (string->symbol name))
-                                 #t)])
+                                 #t)]
+            [is-struct? (eq? 'info (caar wrappers))])
        (if target-maker
          (target-maker
           content
@@ -1267,14 +1288,20 @@
               content
               tag
               (list name)
-              (list (racketidfont (make-element value-link-color
-                                                (list name))))
+              (list (let ([name (racketidfont (make-element value-link-color
+                                                            (list name)))])
+                      (if is-struct?
+                          (list name " " (element 'smaller "(struct)"))
+                          (list name))))
               (with-exporting-libraries
                (lambda (libs)
                  (let ([name (string->symbol name)])
-                   (if (eq? 'info (caar wrappers))
-                       (make-struct-index-desc name libs)
-                       (make-procedure-index-desc name libs))))))
+                   (make-exported-index-desc*
+                    name
+                    libs
+                    (hash 'kind (if is-struct?
+                                    "struct"
+                                    "procedure")))))))
              tag)))
          content))
      (cdr wrappers))))

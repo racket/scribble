@@ -904,7 +904,15 @@
                      rows)))
   (define contents
     (lambda (renderer sec ri)
-      (define l (get-index-entries sec ri))
+      (define l (for/list ([e (in-list (get-index-entries sec ri))]
+                           #:unless (let* ([desc (list-ref e 3)]
+                                           [desc (if (delayed-index-desc? desc)
+                                                     (delayed-index-desc-content desc ri)
+                                                     desc)])
+                                      (or (constructor-index-desc? desc)
+                                          (and (exported-index-desc*? desc)
+                                               (hash-ref (exported-index-desc*-extras desc) 'hidden? #f)))))
+                  e))
       (define manual-newlines? (send renderer index-manual-newlines?))
       (define alpha-starts (make-hasheq))
       (define alpha-row

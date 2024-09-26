@@ -458,6 +458,10 @@
 (define (delayed-block-blocks p ri)
   (hash-ref (resolve-info-delays ri) p))
 
+(provide delayed-index-desc-content)
+(define (delayed-index-desc-content e ri)
+  (hash-ref (resolve-info-delays ri) e))
+
 (provide current-serialize-resolve-info)
 (define current-serialize-resolve-info (make-parameter #f))
 
