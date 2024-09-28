@@ -358,11 +358,23 @@ The @racket[resolve-get] information accepts both a @racket[part] and
 a @racket[resolve-info] argument. The @racket[part] argument enables
 searching for information in each enclosing part before sibling parts.
 
+During the @techlink{collect pass} and @techlink{resolve pass},
+@deftech{part context} information is accumulated from enclosing
+parts. The context starts as an empty table. When a
+@racket[part-tag-prefix] for a part reports a hash table, then for
+each key in the table, the value in the table is merged with the
+context from enclosing parts. A value is merged by adding the key and
+value to the accumulation if the key is not yet present, or by
+@racket[cons]ing the new value to the context's current value when the
+key is present. Use @racket[current-part-context-accumulation] during
+the @techlink{collect pass} or @techlink{resolve pass} to retrieve the
+value that has been accumulated from enclosing parts.
+
 @; ------------------------------------------------------------------------
 
 @section{Structure Reference}
 
-@defstruct[part ([tag-prefix (or/c #f string?)]
+@defstruct[part ([tag-prefix (or/c #f string? hash?)]
                  [tags (listof tag?)]
                  [title-content (or/c #f list?)]
                  [style style?]
@@ -371,7 +383,10 @@ searching for information in each enclosing part before sibling parts.
                  [parts (listof part?)])]{
 
 The @racket[tag-prefix] field determines the optional @techlink{tag
-prefix} for the part.
+prefix} for the part and/or @techlink{part context} accumulation. When
+@racket[tag-prefix] is a hash table, the value associated with the
+@racket['tag-prefix] key is used as the tag prefix when the value
+is a string.
 
 The @racket[tags] indicates a list of @techlink{tags} that each link
 to the section. Normally, @racket[tags] should be a non-empty list, so
@@ -564,7 +579,9 @@ The @racket[parts] field contains sub-parts.
 
 @history[#:changed "1.25" @elem{Added @racket['no-index] support.}
          #:changed "1.26" @elem{Added @racket[link-render-style] support.}
-         #:changed "1.27" @elem{Added @racket['no-toc+aux] support.}]}
+         #:changed "1.27" @elem{Added @racket['no-toc+aux] support.}
+         #:changed "1.54" @elem{Changed @racket[tag-prefix] field to allow a
+                                @tech{part context} hash table.}]}
 
 
 @defstruct[paragraph ([style style?] [content content?])]{
@@ -1108,7 +1125,27 @@ The @racket[desc] field provides additional information about the
 index entry as supplied by the entry creator. For example, a reference to
 a procedure binding can be recognized when @racket[desc] is an instance of
 @racket[exported-index-desc*] with the @racket['("procedure")] kind.
-See @racketmodname[scribble/manual-struct] for other types of @racket[desc] values.
+See @racketmodname[scribble/manual-struct] for other types of @racket[desc] values,
+but generally @racket[index-desc] or @racket[exported-index-desc*] should be used.
+A @racket[delayed-index-desc] is also recognized, and its @racket[resolve]
+function is called during the @link{resolve pass} to provide the index
+entry's description (which should normally produce a @racket[index-desc]
+or @racket[exported-index-desc*]).
+
+When @racket[desc] is @racket[index-desc],
+@racket[exported-index-desc], or @racket[exported-index-desc*], and
+when @tech{part context} is accumulated for @racket['index-extras],
+the accumulated context is merged with the @racket[extras] field of
+@racket[desc] (after promoting @racket[exported-index-desc] to
+@racket[exported-index-desc*] with an empty @racket[extras] hash
+table). An accumulated @racket['index-extras] contribution should be a
+@racket[cons] tree of hash tables, which are processed in order so
+that a subpart takes precedence over its enclosing part. For each
+accumulated table, if a key in the table is not present in
+@racket[extras] table, it is added with its value to the table. These
+additions are performed as an index entry is recorded during the
+@tech{collect pass} or @tech{resolve pass} (the latter for a
+@racket[delayed-index-desc]).
 
 See also @racket[index].}
 
@@ -1160,7 +1197,7 @@ calling the function in the @racket[resolve] field.
 
 The @racket[resolve] function can call @racket[collect-info-parents]
 to obtain a list of @techlink{parts} that enclose the element,
-starting with the nearest enclosing section. Functions like
+starting with the nearest enclosing part. Functions like
 @racket[part-collected-info] and @racket[collected-info-number] can
 extract information like the part number.}
 
@@ -1183,6 +1220,12 @@ during the @techlink{render pass}.
 
 If a @racket[render-element] instance is serialized (such as when
 saving collected info), it is reduced to a @racket[element] instance.}
+
+
+@defstruct[delayed-index-desc ([resolve (any/c part? resolve-info? . -> . any/c)])]{
+
+Like @racket[index-desc], but the @racket[resolve] procedure is called
+during the @techlink{resolve pass}. See also @racket[index-element].}
 
 
 @defstruct[collected-info ([number (listof part-number-item?)]
@@ -1671,6 +1714,16 @@ Returns the information collected for @racket[p] as recorded within
 @racket[ri].
 
 }
+
+
+@defproc[(current-part-context-accumulation [key any/c]) any/c]{
+
+Retrieves the accumulated value for a key in the @tech{part context}
+for enclosing parts, returning @racket[#f] if no value has been
+accumulated for the key.
+
+@history[#:added "1.54"]}
+
 
 @defproc[(tag-key [t tag?] [ri resolve-info?]) tag?]{
 

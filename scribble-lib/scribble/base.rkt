@@ -23,18 +23,20 @@
 (define-syntax-rule (title-like-contract)
   (->* ()
        (#:tag (or/c #f string? (listof string?))
-              #:tag-prefix (or/c #f string? module-path?)
-              #:style (or/c style? string? symbol? (listof symbol?) #f))
+              #:tag-prefix (or/c #f string? module-path? hash?)
+              #:style (or/c style? string? symbol? (listof symbol?) #f)
+              #:index-extras desc-extras/c)
        #:rest (listof pre-content?)
        part-start?))
 
 (provide/contract
  [title (->* ()
              (#:tag (or/c #f string? (listof string?))
-                    #:tag-prefix (or/c #f string? module-path?)
+                    #:tag-prefix (or/c #f string? module-path? hash?)
                     #:style (or/c style? string? symbol? (listof symbol?) #f)
                     #:version (or/c string? #f)
-                    #:date (or/c string? #f))
+                    #:date (or/c string? #f)
+                    #:index-extras desc-extras/c)
              #:rest (listof pre-content?)
              title-decl?)]
  [section (title-like-contract)]
@@ -48,44 +50,53 @@
 
 (define (title #:tag [tag #f] #:tag-prefix [prefix #f] #:style [style plain]
                #:version [version #f] #:date [date #f]
+               #:index-extras [extras #hash()]
                . str)
   (let ([content (decode-content str)])
-    (make-title-decl (prefix->string prefix)
-                     (convert-tag tag content)
-                     version
-                     (let ([s (convert-part-style 'title style)])
-                       (if date
-                           (make-style (style-name s)
-                                       (cons (make-document-date date)
-                                             (style-properties s)))
-                           s))
-                     content)))
+    (make-title-decl* (prefix->string prefix)
+                      (convert-tag tag content)
+                      version
+                      (let ([s (convert-part-style 'title style)])
+                        (if date
+                            (make-style (style-name s)
+                                        (cons (make-document-date date)
+                                              (style-properties s)))
+                            s))
+                      content
+                      (index-desc/part extras))))
 
 (define (section #:tag [tag #f] #:tag-prefix [prefix #f] #:style [style plain]
+                 #:index-extras [extras #hash()]
                  . str)
   (let ([content (decode-content str)])
-    (make-part-start 0 (prefix->string prefix)
-                     (convert-tag tag content)
-                     (convert-part-style 'section style)
-                     content)))
+    (make-part-start* 0 (prefix->string prefix)
+                      (convert-tag tag content)
+                      (convert-part-style 'section style)
+                      content
+                      (index-desc/part extras))))
 
 (define (subsection #:tag [tag #f] #:tag-prefix [prefix #f] #:style [style plain]
+                    #:index-extras [extras #hash()]
                     . str)
   (let ([content (decode-content str)])
-    (make-part-start 1
-                     (prefix->string prefix)
-                     (convert-tag tag content)
-                     (convert-part-style 'subsection style)
-                     content)))
+    (make-part-start* 1
+                      (prefix->string prefix)
+                      (convert-tag tag content)
+                      (convert-part-style 'subsection style)
+                      content
+                      (index-desc/part extras))))
 
 (define (subsubsection #:tag [tag #f] #:tag-prefix [prefix #f]
-                       #:style [style plain] . str)
+                       #:style [style plain]
+                       #:index-extras [extras #hash()]
+                       . str)
   (let ([content (decode-content str)])
-    (make-part-start 2
-                     (prefix->string prefix)
-                     (convert-tag tag content)
-                     (convert-part-style 'subsubsection style)
-                     content)))
+    (make-part-start* 2
+                      (prefix->string prefix)
+                      (convert-tag tag content)
+                      (convert-part-style 'subsubsection style)
+                      content
+                      (index-desc/part extras))))
 
 (define (subsubsub*section #:tag [tag #f] . str)
   (let ([content (decode-content str)])
@@ -108,6 +119,15 @@
        #'(begin
            (require (only-in mod [doc-from-mod doc]))
            doc))]))
+
+(define (index-desc/part extras)
+  (index-desc (let* ([extras (if (hash-has-key? extras 'kind)
+                                 extras
+                                 (hash-set extras 'kind "part"))]
+                     [extras (if (hash-has-key? extras 'part?)
+                                 extras
+                                 (hash-set extras 'part? #t))])
+                extras)))
 
 ;; ----------------------------------------
 
@@ -771,40 +791,57 @@
 (provide get-index-entries)
 (provide/contract
  [index-block (-> delayed-block?)]
- [index (((or/c string? (listof string?))) ()  #:rest (listof pre-content?) . ->* . index-element?)]
- [index* (((listof string?) (listof any/c)) ()  #:rest (listof pre-content?) . ->* . index-element?)] ; XXX first any/c wrong in docs 
- [as-index (() () #:rest (listof pre-content?) . ->* . index-element?)]
- [section-index (() () #:rest (listof string?) . ->* . part-index-decl?)]
+ [index (((or/c string? (listof string?)))
+         (#:extras desc-extras/c)
+         #:rest (listof pre-content?)
+         . ->* . index-element?)]
+ [index* (((listof string?) (listof any/c))
+          (#:extras desc-extras/c)
+          #:rest (listof pre-content?)
+          . ->* . index-element?)] ; XXX first any/c wrong in docs
+ [as-index (()
+            (#:extras desc-extras/c)
+            #:rest (listof pre-content?)
+            . ->* . index-element?)]
+ [section-index (()
+                 (#:extras desc-extras/c)
+                 #:rest (listof string?)
+                 . ->* . part-index-decl?)]
  [index-section (() (#:tag (or/c #f string?)) . ->* . part?)])
 
-(define (section-index . elems)
-  (make-part-index-decl (map content->string elems) elems))
+(define (section-index #:extras [extras #hash()]
+                       . elems)
+  (make-part-index-decl* (map content->string elems) elems (index-desc extras)))
 
-(define (record-index word-seq element-seq tag content)
+(define (record-index word-seq element-seq tag content extras)
   (make-index-element #f
                       (list (make-target-element #f content `(idx ,tag)))
                       `(idx ,tag)
                       word-seq
                       element-seq
-                      #f))
+                      (index-desc extras)))
 
-(define (index* word-seq content-seq . s)
+(define (index* word-seq content-seq
+                #:extras [extras #hash()]
+                . s)
   (let ([key (make-generated-tag)])
     (record-index (map clean-up-index-string word-seq)
-                  content-seq key (decode-content s))))
+                  content-seq key (decode-content s)
+                  extras)))
 
-(define (index word-seq . s)
+(define (index word-seq #:extras [extras #hash()] . s)
   (let ([word-seq (if (string? word-seq) (list word-seq) word-seq)])
-    (apply index* word-seq word-seq s)))
+    (apply index* word-seq word-seq s #:extras extras)))
 
-(define (as-index . s)
+(define (as-index #:extras [extras #hash()] . s)
   (let ([key (make-generated-tag)]
         [content (decode-content s)])
     (record-index
      (list (clean-up-index-string (content->string content)))
      (if (= 1 (length content)) content (list (make-element #f content)))
      key
-     content)))
+     content
+     extras)))
 
 (define (index-section #:title [title "Index"] #:tag [tag #f])
   (make-part #f
@@ -835,8 +872,14 @@
              (cons 'libs (map (lambda (l)
                                 (format "~s" l))
                               (exported-index-desc-from-libs desc)))]
-            [(module-path-index-desc? desc) '(mod)]
-            [(part-index-desc? desc) '(part)]
+            [(or (module-path-index-desc? desc)
+                 (and (index-desc? desc)
+                      (hash-ref (index-desc-extras desc) 'module-kind #f)))
+             '(mod)]
+            [(or (part-index-desc? desc)
+                 (and (index-desc? desc)
+                      (hash-ref (index-desc-extras desc) 'part? #f)))
+             '(part)]
             [(delayed-index-desc? desc) '(delayed)]
             [else '(#f)])))
   ;; parts first, then modules, then bindings, delayed means it's not
@@ -892,7 +935,9 @@
      (when (and (pair? k) (eq? 'index-entry (car k)))
        (let ([pkg (and (known-doc? v) (known-doc-pkg v))]
              [v (if (known-doc? v) (known-doc-v v) v)])
-         (set! l (cons (cons (cadr k) (append v (list pkg))) l))))))
+         (define-values (plain-seq entry-seq desc) (apply values v))
+         (set! l (cons (list (cadr k) plain-seq entry-seq desc pkg)
+                       l))))))
   (sort l entry<?))
 
 (define (index-block)

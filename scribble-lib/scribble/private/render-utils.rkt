@@ -2,6 +2,7 @@
 (require "../core.rkt")
 
 (provide part-style?
+         part-tag-prefix-string
          select-suffix
          extract-table-cell-styles
          empty-content?)
@@ -51,3 +52,12 @@
       (map (lambda (row) (map (lambda (c) plain) row)) (table-blockss t))))
 
 (define (empty-content? c) (null? c))
+
+(define (part-tag-prefix-string d)
+  (define p (part-tag-prefix d))
+  (cond
+    [(string? p) p]
+    [(hash? p)
+     (define s (hash-ref p 'tag-prefix #f))
+     (and (string? s) s)]
+    [else #f]))

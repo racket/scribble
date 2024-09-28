@@ -35,6 +35,12 @@
    [else (raise-argument-error who "(or/c style? string? symbol? (listof symbol?) #f)" s)]))
 
 (define (prefix->string p)
-  (and p (if (string? p) 
-             (datum-intern-literal p)
-             (module-path-prefix->string p))))
+  (cond
+    [(string? p) (datum-intern-literal p)]
+    [(module-path? p) (module-path-prefix->string p)]
+    [(hash? p)
+     (define s (hash-ref p 'tag-prefix #f))
+     (if s
+         (hash-set p 'tag-prefix (prefix->string p))
+         p)]
+    [else p]))

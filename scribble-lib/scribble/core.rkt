@@ -242,7 +242,7 @@
 ;; ----------------------------------------
 
 (provide-structs
- [part ([tag-prefix (or/c #f string?)]
+ [part ([tag-prefix (or/c #f string? hash?)]
         [tags (listof tag?)]
         [title-content (or/c #f content?)]
         [style style?]
@@ -472,7 +472,7 @@
   #:property
   prop:serializable
   (make-serialize-info
-   (lambda (d)
+   (lambda (d)<
      (let ([ri (current-serialize-resolve-info)])
        (unless ri
          (error 'serialize-part-relative-element
@@ -622,7 +622,10 @@
 
 (provide generate-tag tag-key
          current-tag-prefixes
-         add-current-tag-prefix)
+         add-current-tag-prefix
+         current-part-context
+         merge-part-contexts
+         current-part-context-accumulation)
 
 (define (generate-tag tg ci)
   (if (generated-tag? (cadr tg))
@@ -649,6 +652,19 @@
     (if (null? l)
         t
         (cons (car t) (append l (cdr t))))))
+
+(define current-part-context (make-parameter #hasheq()))
+(define (merge-part-contexts ctx old-ctx)
+  (for/fold ([ht old-ctx]) ([(k v) (in-hash ctx)])
+    (cond
+      [(hash-has-key? ht k)
+       (define old-v (hash-ref ht k))
+       (hash-set ht k (cons v old-v))]
+      [else
+       (hash-set ht k v)])))
+
+(define (current-part-context-accumulation k)
+  (hash-ref (current-part-context) k #f))
 
 ;; ----------------------------------------
 

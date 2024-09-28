@@ -56,6 +56,7 @@
              (~optional (~and #:indirect indirect))
              (~optional (~seq #:use-sources (pname ...)))
              (~optional (~seq #:module-paths (modpath ...)))
+             (~optional (~seq #:language-family (fam:string ...)))
              (~optional (~seq #:packages (pkg ...)))
              (~optional (~and #:no-declare no-declare))
              (~optional (~or (~and #:lang language)
@@ -102,6 +103,9 @@
                      [req (if (attribute req)
                               #'req
                               #'(racket require))]
+                     [fam (if (attribute fam)
+                              #'(quote (fam ...))
+                              #'#f)]
                      [(show-name ...)
                       (if (attribute modpath)
                           #'(name2 ...)
@@ -115,7 +119,8 @@
                          link-target-expr
                          kind
                          (list . content)
-                         req))))]))
+                         req
+                         fam))))]))
 
 ;; ----------------------------------------
 ;; old forms for backward compatibility:
@@ -213,7 +218,7 @@
                               (format "Install this package using `raco pkg install ~a`"
                                       pkg))))))
 
-(define (*defmodule names modpaths module-path packages link-target? lang content req)
+(define (*defmodule names modpaths module-path packages link-target? lang content req fam)
   (let ([modpaths (or modpaths names)])
     (define pkg-spec
       (let ([pkgs (or packages
@@ -236,7 +241,7 @@
     (define libs-specs
       ;; make-desc  : element -> flow
       ;; index-desc : module-path-index-desc
-      (let-values ([(make-desc index-desc)
+      (let-values ([(make-desc the-index-desc)
                     (case lang
                       [(#f)
                        (values (if (procedure? req)
@@ -255,9 +260,14 @@
                       [else (error 'defmodule "unknown mode: ~e" lang)])])
       (map
        (lambda (name modpath)
-         (define modname (if link-target?
-                             (make-defracketmodname name modpath index-desc)
-                             name))
+         (define modname (cond
+                           [link-target?
+                            (define the-index-desc/fam
+                              (if fam
+                                  (index-desc (hash-set (index-desc-extras the-index-desc) 'language-family fam))
+                                  the-index-desc))
+                            (make-defracketmodname name modpath the-index-desc/fam)]
+                           [else name]))
          (list
           (make-flow
            (list
@@ -298,9 +308,9 @@
                   null)
               (flow-paragraphs (decode-flow content)))))))
 
-(define the-module-path-index-desc (make-module-path-index-desc))
-(define the-language-index-desc (make-language-index-desc))
-(define the-reader-index-desc (make-reader-index-desc))
+(define the-module-path-index-desc (index-desc (hash 'module-kind 'lib)))
+(define the-language-index-desc (index-desc (hash 'module-kind 'lang)))
+(define the-reader-index-desc (index-desc (hash 'module-kind 'reader)))
 
 (define (make-defracketmodname mn mp index-desc)
   (define name-str (datum-intern-literal (element->string mn)))

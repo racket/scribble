@@ -3,13 +3,17 @@
          "../decode.rkt"
          "../struct.rkt"
          (only-in "../core.rkt" style)
+         (only-in "../manual-struct.rkt"
+                  index-desc
+                  desc-extras/c)
          "manual-utils.rkt"
          "manual-style.rkt")
 
 (provide/contract
  [deftech (() (#:normalize? any/c
                #:style? any/c
-               #:key (or/c string? #f))
+               #:key (or/c string? #f)
+               #:index-extras desc-extras/c)
            #:rest (listof pre-content?) . ->* . element?)]
  [tech (() 
         (#:doc (or/c module-path? #f) 
@@ -44,6 +48,7 @@
 (define (deftech #:style? [style? #t] 
           #:normalize? [normalize? #t] 
           #:key [key #f]
+          #:index-extras [extras #hash()]
           . s)
   (define e
     (if style?
@@ -56,7 +61,9 @@
                       (list (datum-intern-literal
                              (clean-up-index-string (element->string e))))
                       (list e)
-                      'tech))
+                      (index-desc
+                       (hash-set extras
+                                 'kind "terminology"))))
 
 (define (tech #:doc [doc #f]
               #:tag-prefixes [prefix #f]

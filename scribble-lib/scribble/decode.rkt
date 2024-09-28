@@ -2,6 +2,7 @@
 (require "core.rkt"
          "private/provide-structs.rkt"
          "decode-struct.rkt"
+         "manual-struct.rkt"
          racket/contract/base
          racket/contract/combinator
          racket/list)
@@ -39,19 +40,22 @@
            (andmap pre-part? v))))
 
 (provide-structs
- [title-decl ([tag-prefix (or/c #f string?)]
+ [title-decl ([tag-prefix (or/c #f string? hash?)]
               [tags (listof tag?)]
               [version (or/c string? #f)]
               [style style?]
               [content content?])]
+ [(title-decl* title-decl) ([index-desc index-desc?])]
  [part-start ([depth integer?]
-              [tag-prefix (or/c #f string?)]
+              [tag-prefix (or/c #f string? hash?)]
               [tags (listof tag?)]
               [style style?]
               [title content?])]
+ [(part-start* part-start) ([index-desc index-desc?])]
  [splice ([run list?])]
  [part-index-decl ([plain-seq (listof string?)]
                    [entry-seq list?])]
+ [(part-index-decl* part-index-decl) ([desc index-desc?])]
  [part-collect-decl ([element (or/c element? part-relative-element?)])]
  [part-tag-decl ([tag tag?])])
 
@@ -92,7 +96,8 @@
 (provide/contract
  [spliceof (flat-contract? . -> . flat-contract?)])
 
-(define the-part-index-desc (make-part-index-desc))
+(define the-part-index-desc (index-desc (hash 'kind "part"
+                                              'part? #t)))
 
 (define (clean-up-index-string s)
   ;; Collapse whitespace, and remove leading or trailing spaces, which
@@ -139,10 +144,10 @@
       null
       (list (decode-compound-paragraph (reverse (skip-whitespace accum))))))
 
-(define (decode-flow* l keys colls tag-prefix tags vers style title part-depth)
+(define (decode-flow* l keys colls tag-prefix tags vers style title index-desc part-depth)
   (let loop ([l l] [next? #f] [keys keys] [colls colls] [accum null]
              [title title] [tag-prefix tag-prefix] [tags tags] [vers vers]
-             [style style])
+             [style style] [index-desc index-desc])
     (cond
       [(null? l)
        (let ([k-tags (map (lambda (k) `(idx ,(make-generated-tag))) keys)]
@@ -163,7 +168,8 @@
                            (make-index-element #f null tag
                                                (part-index-decl-plain-seq k)
                                                (part-index-decl-entry-seq k)
-                                               #f))
+                                               (and (part-index-decl*? k)
+                                                    (part-index-decl*-desc k))))
                          keys k-tags)
                      colls)])
             (if (and title
@@ -175,22 +181,29 @@
                             (regexp-replace #px"^\\s+(?:(?:A|An|The)\\s)?"
                                             (content->string title) "")))
                      (list (make-element #f title))
-                     the-part-index-desc)
+                     (if index-desc
+                         index-desc
+                         the-part-index-desc))
                     l)
               l))
           (decode-accum-para accum)
           null))]
       [(void? (car l))
-       (loop (cdr l) next? keys colls accum title tag-prefix tags vers style)]
+       (loop (cdr l) next? keys colls accum title tag-prefix tags vers style index-desc)]
       [(title-decl? (car l))
-       (cond [(not part-depth) (error 'decode "misplaced title: ~e" (car l))]
-             [title (error 'decode "found extra title: ~v" (car l))]
-             [else (loop (cdr l) next? keys colls accum
-                         (title-decl-content (car l))
-                         (title-decl-tag-prefix (car l))
-                         (title-decl-tags (car l))
-                         (title-decl-version (car l))
-                         (title-decl-style (car l)))])]
+       (let ([t (car l)])
+         (cond
+           [(not part-depth) (error 'decode "misplaced title: ~e" t)]
+           [title (error 'decode "found extra title: ~v" t)]
+           [else (loop (cdr l) next? keys colls accum
+                       (title-decl-content t)
+                       (title-decl-tag-prefix t)
+                       (title-decl-tags t)
+                       (title-decl-version t)
+                       (title-decl-style t)
+                       (or (and (title-decl*? t)
+                                (title-decl*-index-desc t))
+                           index-desc))]))]
       #;
       ;; Blocks are now handled by decode-accum-para
       [(block? (car l))
@@ -208,7 +221,7 @@
       [(part? (car l))
        (let ([para (decode-accum-para accum)]
              [part (decode-flow* (cdr l) keys colls tag-prefix tags vers style
-                                 title part-depth)])
+                                 title index-desc part-depth)])
          (make-part
           (part-tag-prefix part)
           (part-tags part)
@@ -238,7 +251,7 @@
                                           (part-start-title s)
                                           (add1 part-depth))]
                    [part (decode-flow* l keys colls tag-prefix tags vers style
-                                       title part-depth)])
+                                       title (and (part-start*? s) (part-start*-index-desc s)) part-depth)])
                (make-part (part-tag-prefix part)
                           (part-tags part)
                           (part-title-content part)
@@ -255,36 +268,36 @@
                (loop (cdr l) (cons (car l) s-accum))]))))]
       [(splice? (car l))
        (loop (append (splice-run (car l)) (cdr l))
-             next? keys colls accum title tag-prefix tags vers style)]
+             next? keys colls accum title tag-prefix tags vers style index-desc)]
       [(list? (car l))
        (loop (append (car l) (cdr l))
-             next? keys colls accum title tag-prefix tags vers style)]
+             next? keys colls accum title tag-prefix tags vers style index-desc)]
        [(part-index-decl? (car l))
         (loop (cdr l) next? (cons (car l) keys) colls accum title tag-prefix
-              tags vers style)]
+              tags vers style index-desc)]
        [(part-collect-decl? (car l))
         (loop (cdr l) next? keys
               (cons (part-collect-decl-element (car l)) colls)
-              accum title tag-prefix tags vers style)]
+              accum title tag-prefix tags vers style index-desc)]
        [(part-tag-decl? (car l))
         (loop (cdr l) next? keys colls accum title tag-prefix
               (append tags (list (part-tag-decl-tag (car l))))
-              vers style)]
+              vers style index-desc)]
        [(null? (cdr l))
         (loop null #f keys colls (cons (car l) accum) title tag-prefix tags
-              vers style)]
+              vers style index-desc)]
        [(and (pair? (cdr l))
 	     (or (splice? (cadr l))
                  (list? (cadr l))))
 	(loop (cons (car l) (append ((if (splice? (cadr l)) splice-run values) (cadr l)) (cddr l)))
-              next? keys colls accum title tag-prefix tags vers style)]
+              next? keys colls accum title tag-prefix tags vers style index-desc)]
        [(line-break? (car l))
 	(if next?
-          (loop (cdr l) #t keys colls accum title tag-prefix tags vers style)
+          (loop (cdr l) #t keys colls accum title tag-prefix tags vers style index-desc)
           (let ([m (match-newline-whitespace (cdr l))])
             (if m
               (let ([part (loop m #t keys colls null title tag-prefix tags vers
-                                style)])
+                                style index-desc)])
                 (make-part
                  (part-tag-prefix part)
                  (part-tags part)
@@ -295,18 +308,18 @@
                          (part-blocks part))
                  (part-parts part)))
               (loop (cdr l) #f keys colls (cons (car l) accum) title tag-prefix
-                    tags vers style))))]
+                    tags vers style index-desc))))]
        [else (loop (cdr l) #f keys colls (cons (car l) accum) title tag-prefix
-                   tags vers style)])))
+                   tags vers style index-desc)])))
 
 (define (decode-part l tags title depth)
-  (decode-flow* l null null #f tags #f plain title depth))
+  (decode-flow* l null null #f tags #f plain title #f depth))
 
 (define (decode-styled-part l tag-prefix tags style title depth)
-  (decode-flow* l null null tag-prefix tags #f style title depth))
+  (decode-flow* l null null tag-prefix tags #f style title #f depth))
 
 (define (decode-flow l)
-  (part-blocks (decode-flow* l null null #f null #f plain #f #f)))
+  (part-blocks (decode-flow* l null null #f null #f plain #f #f #f)))
 
 (define (match-newline-whitespace l)
   (cond [(null? l) #f]

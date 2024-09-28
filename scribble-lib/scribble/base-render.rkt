@@ -10,7 +10,8 @@
          setup/path-relativize
          file/convertible
          net/url-structs
-         "render-struct.rkt")
+         "render-struct.rkt"
+         "manual-struct.rkt")
 
 (provide render%
          render<%>)
@@ -320,9 +321,16 @@
     (define/private (extend-prefix d fresh?)
       (cond
        [fresh? null]
-       [(part-tag-prefix d)
-        (cons (part-tag-prefix d) (current-tag-prefixes))]
+       [(part-tag-prefix-string d)
+        => (lambda (p)
+             (cons p (current-tag-prefixes)))]
        [else (current-tag-prefixes)]))
+
+    (define/private (extend-part-context d)
+      (define p (part-tag-prefix d))
+      (cond
+        [(hash? p) (merge-part-contexts p (current-part-context))]
+        [else (current-part-context)]))
 
     ;; ----------------------------------------
     ;; marshal info
@@ -338,7 +346,7 @@
 
     (define/private (partition-info all-ci n d)
       ;; partition information in `all-ci' based on `d's:
-      (let ([prefix (part-tag-prefix d)]
+      (let ([prefix (part-tag-prefix-string d)]
             [new-hts (for/list ([i (in-range n)])
                        (make-hash))]
             [covered (make-hash)])
@@ -347,7 +355,7 @@
               [i (in-naturals)])
           (define ht (list-ref new-hts (min (add1 i) (sub1 n))))
           (define cdi (hash-ref (collect-info-parts all-ci) sub-d #f))
-          (define sub-prefix (part-tag-prefix sub-d))
+          (define sub-prefix (part-tag-prefix-string sub-d))
           (when cdi
             (for ([(k v) (in-hash (collected-info-info cdi))])
               (when (cadr k)
@@ -535,15 +543,16 @@
                            (collect-info-ext-demand ci)
                            (collect-info-parts ci)
                            (collect-info-tags ci)
-                           (if (part-tag-prefix d)
-                               (append (collect-info-gen-prefix ci) (list (part-tag-prefix d)))
+                           (if (part-tag-prefix-string d)
+                               (append (collect-info-gen-prefix ci) (list (part-tag-prefix-string d)))
                                (collect-info-gen-prefix ci))
                            (collect-info-relatives ci)
                            (cons d (collect-info-parents ci))))
       (hash-set! (collect-info-parts ci) d (make-collected-info number parent (collect-info-ht p-ci)))
       (define grouper? (and (pair? number) (part-style? d 'grouper)))
       (define-values (next-sub-number next-sub-numberers)
-        (parameterize ([current-tag-prefixes (extend-prefix d (fresh-tag-collect-context? d p-ci))])
+        (parameterize ([current-tag-prefixes (extend-prefix d (fresh-tag-collect-context? d p-ci))]
+                       [current-part-context (extend-part-context d)])
           (when (part-title-content d)
             (collect-content (part-title-content d) p-ci))
           (collect-part-tags d p-ci number)
@@ -603,7 +612,7 @@
                        [sub-grouper? next-sub-numberers]
                        [unnumbered-and-unnumbered-subsections? sub-numberers]
                        [else #hash()]))]))))
-      (let ([prefix (part-tag-prefix d)])
+      (let ([prefix (part-tag-prefix-string d)])
         (for ([(k v) (collect-info-ht p-ci)])
           (when (cadr k)
             (collect-put! ci (if prefix (convert-key prefix k) k) v))))
@@ -712,7 +721,34 @@
                     `(index-entry ,(generate-tag (index-element-tag i) ci))
                     (list (index-element-plain-seq i)
                           (index-element-entry-seq i)
-                          (index-element-desc i))))
+                          (merge-desc-context (index-element-desc i)))))
+
+    (define/private (merge-desc-context d)
+      (define (merge-extras ht extras-tree)
+        (cond
+          [(hash? extras-tree)
+           (for/fold ([ht ht]) ([(k v) (in-hash extras-tree)])
+             (if (hash-has-key? ht k)
+                 ht
+                 (hash-set ht k v)))]
+          [(pair? extras-tree)
+           (merge-extras (merge-extras ht (car extras-tree)) (cdr extras-tree))]
+          [else ht]))
+      (cond
+        [(or (index-desc? d) (exported-index-desc*? d))
+         (define extras-tree (hash-ref (current-part-context) 'index-extras #f))
+         (cond
+           [(not extras-tree) d]
+           [(exported-index-desc*? d)
+            (struct-copy exported-index-desc* d
+                         [extras (merge-extras (exported-index-desc*-extras d) extras-tree)])]
+           [(exported-index-desc? d)
+            (exported-index-desc (exported-index-desc-name d)
+                                 (exported-index-desc-from-libs  d)
+                                 (merge-extras (hash) extras-tree))]
+           [else
+            (index-desc (merge-extras (index-desc-extras d) extras-tree))])]
+        [else d]))
 
     ;; ----------------------------------------
     ;; global-info resolution
@@ -728,6 +764,7 @@
     (define/public (resolve-part d ri)
       (parameterize ([current-tag-prefixes
                       (extend-prefix d (fresh-tag-resolve-context? d ri))]
+                     [current-part-context (extend-part-context d)]
                      [current-link-render-style (part-render-style d)])
         (when (part-title-content d)
           (resolve-content (part-title-content d) d ri))
@@ -792,7 +829,7 @@
             (define e (index-element-desc i))
             (when (delayed-index-desc? e)
               (define v ((delayed-index-desc-resolve e) this d ri))
-              (hash-set! (resolve-info-delays ri) e v))]
+              (hash-set! (resolve-info-delays ri) e (merge-desc-context v)))]
            [(link-element? i) (resolve-get d ri (link-element-tag i))])
          (resolve-content (element-content i) d ri)
          (cond
@@ -871,6 +908,7 @@
     (define/public (render-part d ri)
       (parameterize ([current-tag-prefixes
                       (extend-prefix d (fresh-tag-render-context? d ri))]
+                     [current-part-context (extend-part-context d)]
                      [current-link-render-style (part-render-style d)])
         (render-part-content d ri)))
 
@@ -1112,8 +1150,8 @@
 
     (define/private (generate-toc part ri base-len skip? quiet depth prefixes)
       (let* ([number (collected-info-number (part-collected-info part ri))]
-             [prefixes (if (part-tag-prefix part)
-                           (cons (part-tag-prefix part) prefixes)
+             [prefixes (if (part-tag-prefix-string part)
+                           (cons (part-tag-prefix-string part) prefixes)
                            prefixes)]
              [subs
               (if (and (quiet (and (part-style? part 'quiet)

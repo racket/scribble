@@ -728,8 +728,8 @@
           (define ps
             ((if (or (nearly-top? d) (eq? d top)) values (lambda (p) (if (pair? p) (cdr p) null)))
              (let flatten ([d d] [prefixes null] [top? #t])
-               (let ([prefixes (if (and (not top?) (part-tag-prefix d))
-                                   (cons (part-tag-prefix d) prefixes)
+               (let ([prefixes (if (and (not top?) (part-tag-prefix-string d))
+                                   (cons (part-tag-prefix-string d) prefixes)
                                    prefixes)])
                  (append*
                   ;; don't include the section if it's in the TOC
@@ -1950,7 +1950,7 @@
         (apply
          string-append
          (for/list ([p (in-list parents)])
-           (or (part-tag-prefix p) "")))))
+           (or (part-tag-prefix-string p) "")))))
 
     (define/override (part-nesting-depth d ri)
       (min (part-depth d ri) (sub1 directory-depth)))
