@@ -1,13 +1,13 @@
 #lang racket/base
-(require scribble/doclang
-         scribble/core
-         (except-in scribble/base author title)
-         scribble/acmart
-         scribble/latex-prefix
+(require (for-syntax racket/base
+                     syntax/parse)
          racket/list
-         "../private/defaults.rkt"
-         (for-syntax racket/base
-                     syntax/parse))
+         scribble/acmart
+         scribble/core
+         scribble/doclang
+         scribble/latex-prefix
+         (except-in scribble/base author title)
+         "../private/defaults.rkt")
 (provide (except-out (all-from-out scribble/doclang) #%module-begin)
          (all-from-out scribble/acmart)
          (all-from-out scribble/base)
