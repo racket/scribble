@@ -1,12 +1,12 @@
 #lang racket/base
-(require scribble/doclang
-         scribble/core
-         scribble/base
-         scribble/sigplan
-         scribble/latex-prefix
+(require (for-syntax racket/base)
          racket/list
-         "../private/defaults.rkt"
-         (for-syntax racket/base))
+         scribble/base
+         scribble/core
+         scribble/doclang
+         scribble/latex-prefix
+         scribble/sigplan
+         "../private/defaults.rkt")
 (provide (except-out (all-from-out scribble/doclang) #%module-begin)
          (all-from-out scribble/sigplan)
          (all-from-out scribble/base)
@@ -60,25 +60,20 @@ Read here for more:
 |#
 
 (define ((post-process times? qcourier? . opts) doc)
-  (let ([options
-         (if (ormap values opts)
-             (format "[~a]" (apply string-append (add-between (filter values opts) ", ")))
-             "")])
-    (add-sigplan-styles 
-     (add-defaults doc
-                   (string->bytes/utf-8
-                    (format "\\documentclass~a{sigplanconf}\n~a~a~a"
-                            options
-                            unicode-encoding-packages
-                            (if times? 
-                                "\\usepackage{times}\n"
-                                "")
-                            (if qcourier? 
-                                "\\usepackage{qcourier}\n"
-                                "")))
-                   (scribble-file "sigplan/style.tex")
-                   (list (scribble-file "sigplan/sigplanconf.cls"))
-                   #f))))
+  (define options
+    (if (ormap values opts)
+        (format "[~a]" (apply string-append (add-between (filter values opts) ", ")))
+        ""))
+  (add-sigplan-styles
+   (add-defaults doc
+                 (string->bytes/utf-8 (format "\\documentclass~a{sigplanconf}\n~a~a~a"
+                                              options
+                                              unicode-encoding-packages
+                                              (if times? "\\usepackage{times}\n" "")
+                                              (if qcourier? "\\usepackage{qcourier}\n" "")))
+                 (scribble-file "sigplan/style.tex")
+                 (list (scribble-file "sigplan/sigplanconf.cls"))
+                 #f)))
 
 (define (add-sigplan-styles doc)
   ;; Ensure that "sigplan.tex" is used, since "style.tex"
