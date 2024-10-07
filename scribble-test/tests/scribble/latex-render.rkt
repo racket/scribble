@@ -2,10 +2,10 @@
 
 (require racket/file
          racket/string
+         rackunit
          scribble/core
-         scribble/render
          scribble/latex-render
-         rackunit)
+         scribble/render)
 
 (define (latex-render-string doc)
   (dynamic-wind
