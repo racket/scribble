@@ -1,21 +1,21 @@
 #lang racket/base
-(require scribble/doclang
-         scribble/core
+(require (for-syntax racket/base
+                     racket/list
+                     racket/stxparam-exptime)
+         file/gunzip
+         net/ftp
          racket/file
+         racket/stxparam
+         scribble/core
+         scribble/decode
+         scribble/doclang
+         scribble/html-properties
+         scribble/latex-prefix
+         scribble/latex-properties
+         setup/collects
          (except-in scribble/base author)
          (prefix-in s/b: scribble/base)
-         scribble/decode
-         "../private/defaults.rkt"
-         setup/collects
-         scribble/html-properties
-         scribble/latex-properties
-         scribble/latex-prefix
-         racket/stxparam
-         net/ftp
-         file/gunzip
-         (for-syntax racket/base
-                     racket/list
-                     racket/stxparam-exptime))
+         "../private/defaults.rkt")
 
 (module test racket/base)
 
@@ -97,15 +97,14 @@
       (define extra-sz (integer-bytes->integer (get 2) #f #f))
       (define name (bytes->string/utf-8 (get name-sz) #\?))
       (skip extra-sz)
-      (if (equal? name "llncs.cls")
-          (call-with-output-file cls-file
-            (lambda (o)
-              (inflate i o)))
-          (begin
-            (skip sz)
-            (when data-desc?
-              skip 12)
-            (loop)))]
+      (cond
+        [(equal? name "llncs.cls") (call-with-output-file cls-file (lambda (o) (inflate i o)))]
+        [else
+         (skip sz)
+         (when data-desc?
+           skip
+           12)
+         (loop)])]
      [else (error "didn't find file in archive")]))
   (close-input-port i)
   (delete-file z))
