@@ -1,10 +1,10 @@
 #lang racket/base
 
-(require setup/dirs
-         net/sendurl
+(require net/sendurl
          net/uri-codec
          net/url
-         racket/string)
+         racket/string
+         setup/dirs)
 (provide perform-search send-main-page)
 
 (define search-dir "search/")
@@ -18,15 +18,12 @@
   (define open-url (get-doc-open-url))
   (cond
    [open-url
-    (define dest-url (let ([u (string->url open-url)])
-                       (combine-url/relative
-                        u
-                        (string-join
-                         (for/list ([s (explode-path sub)])
-                           (if (path? s)
-                               (path-element->string s)
-                               (format "~a" s)))
-                         "/"))))
+    (define u (string->url open-url))
+    (define dest-url
+      (combine-url/relative u
+                            (string-join (for/list ([s (explode-path sub)])
+                                           (if (path? s) (path-element->string s) (format "~a" s)))
+                                         "/")))
     (notify (url->string dest-url))
     (send-url (url->string
                (struct-copy url dest-url
@@ -47,12 +44,13 @@
                       ;; Doesn't exist, but notify and then fall back below:
                       (build-path (find-doc-dir) sub)))
      (notify path)
-     (if (file-exists? path)
-         (send-url/file path #:fragment fragment #:query query)
-         (let ([part (lambda (pfx x) (if x (string-append pfx x) ""))])
-           (send-url (string-append
-                      "https://docs.racket-lang.org/"
-                      sub (part "#" fragment) (part "?" query)))))]))
+     (cond
+       [(file-exists? path) (send-url/file path #:fragment fragment #:query query)]
+       [else
+        (define (part pfx x)
+          (if x (string-append pfx x) ""))
+        (send-url
+         (string-append "https://docs.racket-lang.org/" sub (part "#" fragment) (part "?" query)))])]))
 
 ;; This is an example of changing this code to use the online manuals.
 ;; Normally, it's better to set `doc-open-url` in "etc/config.rktd",
