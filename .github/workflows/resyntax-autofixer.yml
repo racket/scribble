@@ -14,22 +14,8 @@ jobs:
       pull-requests: write
       contents: write
     steps:
-      - name: Generate a token
-        id: generate-token
-        uses: actions/create-github-app-token@v1
-        with:
-          app-id: ${{ vars.RESYNTAX_APP_ID }}
-          private-key: ${{ secrets.RESYNTAX_APP_PRIVATE_KEY }}
-      - name: Get GitHub App User ID
-        id: get-user-id
-        run: echo "user-id=$(gh api "/users/${{ steps.generate-token.outputs.app-slug }}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
-        env:
-          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
       - name: Checkout code
         uses: actions/checkout@v4.2.1
-        # See https://github.com/actions/checkout/issues/118.
-        with:
-          fetch-depth: 0
       - name: Install Racket
         uses: Bogdanp/setup-racket@v1.11
         with:
@@ -44,30 +30,7 @@ jobs:
           raco pkg update --auto --no-setup scribble-text-lib scribble-html-lib scribble-lib scribble-doc scribble-test scribble
       - name: Install local packages
         run: raco setup --pkgs scribble scribble-doc scribble-html-lib scribble-lib scribble-test scribble-text-lib
-      - name: Create a new branch
-        run: git checkout -b autofix-${{ github.run_number }}-${{ github.run_attempt }}
-      - name: Run Resyntax
-        run: racket -l- resyntax/cli fix --directory . --max-fixes 20 --max-modified-files 3 --output-as-commit-message >> /tmp/resyntax-output.txt
-      - name: Create pull request
-        uses: actions/github-script@v7.0.1
+      - name: Create a Resyntax pull request
+        uses: jackfirth/create-resyntax-pull-request@v0.4.2
         with:
-          github-token: ${{ steps.generate-token.outputs.token }}
-          script: |
-            const { readFile, writeFile } = require('fs/promises');
-            const commitMessageBody = await readFile('/tmp/resyntax-output.txt', { encoding: 'utf8' });
-            const commitMessageTitle = "Automated Resyntax fixes";
-            const commitMessage = commitMessageTitle + "\n\n" + commitMessageBody;
-            await writeFile('/tmp/resyntax-commit-message.txt', commitMessage);
-            await exec.exec('git config user.name "${{ steps.generate-token.outputs.app-slug }}[bot]"');
-            await exec.exec('git config user.email "${{ steps.get-user-id.outputs.user-id }}+${{ steps.generate-token.outputs.app-slug }}[bot]@users.noreply.github.com"');
-            await exec.exec('git commit --all --file=/tmp/resyntax-commit-message.txt');
-            await exec.exec('git push --set-upstream origin autofix-${{ github.run_number }}-${{ github.run_attempt }}');
-            await github.rest.pulls.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: commitMessageTitle,
-              head: "autofix-${{ github.run_number }}-${{ github.run_attempt }}",
-              base: "master",
-              body: commitMessageBody,
-              maintainer_can_modify: true,
-            });
+          private-key: ${{ secrets.RESYNTAX_APP_PRIVATE_KEY }}
