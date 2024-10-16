@@ -1,7 +1,7 @@
 #lang racket/base
-(require scribble/doclang 
-         scribble/manual
+(require scribble/doclang
          scribble/html-properties
+         scribble/manual
          "../private/manual-defaults.rkt")
 (provide (except-out (all-from-out scribble/doclang) #%module-begin)
          (all-from-out scribble/manual)
