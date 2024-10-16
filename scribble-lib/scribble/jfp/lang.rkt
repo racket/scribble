@@ -1,13 +1,13 @@
 #lang racket/base
-(require scribble/doclang
-         (except-in scribble/base author)
-         scribble/jfp
-         setup/collects
-         "../private/defaults.rkt"
+(require (for-syntax racket/base)
          net/ftp
          racket/file
+         scribble/doclang
+         scribble/jfp
          scribble/latex-prefix
-         (for-syntax racket/base))
+         setup/collects
+         (except-in scribble/base author)
+         "../private/defaults.rkt")
 (provide (except-out (all-from-out scribble/doclang) #%module-begin)
          (all-from-out scribble/jfp)
          (all-from-out scribble/base)

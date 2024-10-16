@@ -1,21 +1,21 @@
 #lang racket/base
-(require scribble/doclang
-         scribble/core
+(require (for-syntax racket/base
+                     racket/list
+                     racket/stxparam-exptime)
+         file/gunzip
+         net/ftp
          racket/file
+         racket/stxparam
+         scribble/core
+         scribble/decode
+         scribble/doclang
+         scribble/html-properties
+         scribble/latex-prefix
+         scribble/latex-properties
+         setup/collects
          (except-in scribble/base author)
          (prefix-in s/b: scribble/base)
-         scribble/decode
-         "../private/defaults.rkt"
-         setup/collects
-         scribble/html-properties
-         scribble/latex-properties
-         scribble/latex-prefix
-         racket/stxparam
-         net/ftp
-         file/gunzip
-         (for-syntax racket/base
-                     racket/list
-                     racket/stxparam-exptime))
+         "../private/defaults.rkt")
 
 (module test racket/base)
 
@@ -51,11 +51,10 @@
     (list
      (make-tex-addition (abs "elsarticle.tex")))))
 
-(define (LaTeX-element i)
-  (λ strs
-    (make-element (style i elsarticle-extras)
-                  ;; XXX maybe decode-content
-                  (decode-content strs))))
+(define ((LaTeX-element i) . strs)
+  (make-element (style i elsarticle-extras)
+                ;; XXX maybe decode-content
+                (decode-content strs)))
 
 (define abstract (LaTeX-element "ELSabstract"))
 (define author (LaTeX-element "ELSauthor"))
