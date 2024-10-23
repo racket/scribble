@@ -20,7 +20,6 @@ jobs:
         uses: Bogdanp/setup-racket@v1.11
         with:
           version: current
-          packages: resyntax
           local_catalogs: $GITHUB_WORKSPACE
           dest: '"${HOME}/racketdist-current-CS"'
           sudo: never
