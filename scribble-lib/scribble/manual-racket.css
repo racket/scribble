@@ -329,12 +329,10 @@ tbody > tr:first-child > td > .together {
     a.RktValDef, a.RktStxDef, a.RktSymDef,
     span.RktValDef, span.RktStxDef, span.RktSymDef {
         color: #b5c2e6;
-
     }
 
     .inherited {
         background-color: #9E1C1F;
-
     }
 
     .RktValLink, .RktStxLink, .RktModLink {
@@ -348,7 +346,6 @@ tbody > tr:first-child > td > .together {
     h2 .RktVal, h3 .RktVal, h4 .RktVal, h5 .RktVal,
     h2 .RktPn, h3 .RktPn, h4 .RktPn, h5 .RktPn {
         color: #e6ccff;
-
     }
 
     .tocset td a.tocviewselflink .RktValLink,
@@ -367,17 +364,14 @@ tbody > tr:first-child > td > .together {
 
     .tocset .RktValLink, .tocset .RktStxLink, .tocset .RktModLink, .tocset .RktSym {
         color: #e6ccff;
-
     }
 
     .SVInsetFlow .RktVar {
         color: #e6ccff;
-
     }
 
     .RktVar {
         color: #b5c2e6;
-
     }
 
     .RktRes {
@@ -386,7 +380,6 @@ tbody > tr:first-child > td > .together {
 
     .RktSym {
         color: #b5c2e6;
-
     }
 
     .RktOut {
