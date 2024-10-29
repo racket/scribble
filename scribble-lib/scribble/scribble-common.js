@@ -15,7 +15,7 @@ function GetPageQueryString() {
 }
 
 function GetPageArg(key, def) {
-  return GetURL().searchParams.get(key) || def;
+  return GetPageArgs().get(key) || def;
 }
 
 function MergePageArgsIntoLink(a) {
