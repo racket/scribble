@@ -2,7 +2,8 @@
 
 (provide valid-blueboxes-info?)
 
-(require scribble/core racket/contract/base)
+(require racket/contract/base
+         scribble/core)
 
 (define valid-blueboxes-info?
   (hash/c

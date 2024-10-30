@@ -1,6 +1,6 @@
 #lang racket/base
-(require "private/doc-begin.rkt"
-         (for-syntax racket/base))
+(require (for-syntax racket/base)
+         "private/doc-begin.rkt")
 
 (provide (except-out (all-from-out racket/base) #%module-begin)
          (rename-out [*module-begin #%module-begin]))
