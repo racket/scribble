@@ -33,9 +33,9 @@
                     [(char port)
                      (do-comment port (lambda () (read/recursive port #\@)))]
                     [(char port src line col pos)
-                     (let ([v (do-comment port (lambda () (read-syntax/recursive src port #\@)))])
-                       (define-values (eline ecol epos) (port-next-location port))
-                       (datum->syntax #f v (list src line col pos (and pos epos (- epos pos)))))])))
+                     (define v (do-comment port (lambda () (read-syntax/recursive src port #\@))))
+                     (define-values (eline ecol epos) (port-next-location port))
+                     (datum->syntax #f v (list src line col pos (and pos epos (- epos pos))))])))
 
 (define (do-comment port recur)
   (let loop ()

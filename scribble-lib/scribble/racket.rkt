@@ -1,14 +1,14 @@
 #lang racket/base
 
-(require "core.rkt"
-         "basic.rkt"
-         "search.rkt"
-         "private/manual-sprop.rkt"
-         "private/on-demand.rkt"
-         "html-properties.rkt"
+(require (for-syntax racket/base)
          file/convertible
          racket/extflonum
-         (for-syntax racket/base))
+         "basic.rkt"
+         "core.rkt"
+         "html-properties.rkt"
+         "private/manual-sprop.rkt"
+         "private/on-demand.rkt"
+         "search.rkt")
   
 (provide define-code
          to-element
@@ -474,7 +474,7 @@
                                         a
                                         (let ([val? (positive? quote-depth)])
                                           (make-sized-element
-                                           (if val? value-color #f)
+                                           (and val? value-color)
                                            (list
                                             (make-element/cache (if val? value-color paren-color) '". ")
                                             (typeset a #f "" "" "" (not val?) expr? escapes? defn? elem-wrap)
@@ -504,12 +504,11 @@
       (out 'nbsp comment-color)
       (define v (syntax->datum (cadr (syntax->list c))))
       (if (paragraph? v)
-          (map (lambda (v)
-                 (let ([v (no-fancy-chars v)])
-                   (if (or (string? v) (symbol? v))
-                       (out v comment-color)
-                       (out v #f))))
-               (paragraph-content v))
+          (for/list ([v (in-list (paragraph-content v))])
+            (let ([v (no-fancy-chars v)])
+              (if (or (string? v) (symbol? v))
+                  (out v comment-color)
+                  (out v #f))))
           (out (no-fancy-chars v) comment-color))]
 
     #; {Syntax Init-line! Srcless-step String String -> Contract}
@@ -737,14 +736,15 @@
                                                              (syntax-column (cadr l)))
                                                         (and (syntax-column c)
                                                              (+ (syntax-column c) (syntax-span c))))])
-                                           (if end
-                                               (datum->syntax #f
-                                                              (syntax-e key)
-                                                              (vector #f (syntax-line key)
-                                                                      (syntax-column key)
-                                                                      (syntax-position key)
-                                                                      (max 1 (- end 1 (syntax-column key)))))
-                                               end))
+                                           (and end
+                                                (datum->syntax
+                                                 #f
+                                                 (syntax-e key)
+                                                 (vector #f
+                                                         (syntax-line key)
+                                                         (syntax-column key)
+                                                         (syntax-position key)
+                                                         (max 1 (- end 1 (syntax-column key)))))))
                                          (cdr l)))]
                               [(struct-proxy? (syntax-e c))
                                (struct-proxy-content (syntax-e c))]

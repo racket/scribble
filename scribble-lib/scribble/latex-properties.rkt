@@ -1,7 +1,7 @@
 #lang racket/base
-(require "private/provide-structs.rkt"
+(require racket/contract/base
          racket/serialize
-         racket/contract/base)
+         "private/provide-structs.rkt")
 
 (provide-structs
  [tex-addition ([path (or/c path-string? (cons/c 'collects (listof bytes?)) bytes?)])]

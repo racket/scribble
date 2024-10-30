@@ -1,7 +1,8 @@
 #lang racket/base
 
-(require "private/indirect-renderer.rkt" "private/run-pdflatex.rkt"
-         (prefix-in latex: "latex-render.rkt"))
+(require (prefix-in latex: "latex-render.rkt")
+         "private/indirect-renderer.rkt"
+         "private/run-pdflatex.rkt")
 
 (provide render-mixin
          dvi-render-mixin

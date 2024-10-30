@@ -1,13 +1,12 @@
 #lang racket/base
-(require (rename-in (except-in "core.rkt"
-                               target-url struct:target-url target-url? target-url-addr)
-                    [make-target-url core:make-target-url])
-         "private/provide-structs.rkt"
-         "html-properties.rkt"
+(require (for-syntax racket/base)
+         racket/contract/base
          racket/provide-syntax
          racket/struct-info
-         racket/contract/base
-         (for-syntax racket/base))
+         (rename-in (except-in "core.rkt" target-url struct:target-url target-url? target-url-addr)
+                    [make-target-url core:make-target-url])
+         "html-properties.rkt"
+         "private/provide-structs.rkt")
 
 (define-provide-syntax (compat**-out stx)
   (syntax-case stx ()
@@ -47,11 +46,11 @@
                                            (string->symbol (format "make-~a" (syntax-e #'id)))
                                            #'id)]
                    [(sel-id ...)
-                    (map (lambda (field-id)
-                           (datum->syntax field-id
-                                          (string->symbol (format "~a-~a" (syntax-e #'id) (syntax-e field-id)))
-                                          field-id))
-                         (syntax->list #'(field-id ...)))])
+                    (for/list ([field-id (in-list (syntax->list #'(field-id ...)))])
+                      (datum->syntax
+                       field-id
+                       (string->symbol (format "~a-~a" (syntax-e #'id) (syntax-e field-id)))
+                       field-id))])
               #'(combine-out
                  id struct:id make-id id? sel-id ...))]
     [(_ [id (field-id ...)]...)
@@ -214,24 +213,21 @@
 
 (define (make-table/compat style cellss)
   (make-table (convert-style style)
-              (map (lambda (cells)
-                     (map (lambda (cell)
-                            (cond
-                             [(eq? cell 'cont) 'cont]
-                             [(= 1 (length cell)) (car cell)]
-                             [else (make-nested-flow plain cell)]))
-                          cells))
-                   cellss)))
+              (for/list ([cells (in-list cellss)])
+                (map (lambda (cell)
+                       (cond
+                         [(eq? cell 'cont) 'cont]
+                         [(= 1 (length cell)) (car cell)]
+                         [else (make-nested-flow plain cell)]))
+                     cells))))
 (define (table-flowss t)
   (map (lambda (row) (map (lambda (c) (make-flow (list c))) row))
        (table-blockss t)))
 
 (define (make-auxiliary-table style cells)
-  (let ([t (make-table/compat style cells)])
-    (make-table (make-style (style-name (table-style t))
-                            (cons 'aux
-                                  (style-properties (table-style t))))
-                (table-blockss t))))
+  (define t (make-table/compat style cells))
+  (make-table (make-style (style-name (table-style t)) (cons 'aux (style-properties (table-style t))))
+              (table-blockss t)))
 
 (define (auxiliary-table? t)
   (ormap (lambda (v) (eq? v 'aux) (style-properties (table-style t)))))
@@ -369,9 +365,8 @@
                           (if (string? (cadr s)) (cadr s) (cdr s)))))]
    [(and (pair? s)
          (list? s)
-         (andmap (lambda (v) (and (pair? v) 
-                                  (memq (car v) '(alignment valignment row-styles style))))
-                 s))
+         (for/and ([v (in-list s)])
+           (and (pair? v) (memq (car v) '(alignment valignment row-styles style)))))
     (let ([gen-columns (lambda (sn a va)
                          (map (lambda (sn a va)
                                 (make-style sn
@@ -384,19 +379,19 @@
                     (and s (cadr s)))
                   (let ([a (assq 'alignment s)]
                         [va (assq 'valignment s)])
-                    (if (or a va)
-                        (list (make-table-columns (gen-columns #f a va)))
-                        (let ([l (cdr (assq 'row-styles s))])
-                          (list
-                           (make-table-cells
-                            (map (lambda (row)
-                                   (let ([sn (assq 'style row)]
-                                         [a (assq 'alignment row)]
-                                         [va (assq 'valignment row)])
-                                     (if (or sn a va)
-                                         (gen-columns sn a va)
-                                         (error 'convert-style "no row style found"))))
-                                 l))))))))]
+                    (cond
+                      [(or a va) (list (make-table-columns (gen-columns #f a va)))]
+                      [else
+                       (define l (cdr (assq 'row-styles s)))
+                       (list (make-table-cells (map (lambda (row)
+                                                      (let ([sn (assq 'style row)]
+                                                            [a (assq 'alignment row)]
+                                                            [va (assq 'valignment row)])
+                                                        (if (or sn a va)
+                                                            (gen-columns sn a va)
+                                                            (error 'convert-style
+                                                                   "no row style found"))))
+                                                    l)))]))))]
    [else (error 'convert-style "unrecognized style: ~e" s)]))
 
 (define (flatten-style s)
@@ -414,16 +409,11 @@
            rest
            (with-attributes-assoc s))))]
    [(target-url? s)
-    (let ([rest (flatten-style (target-url-style s))])
-      (if (with-attributes? rest)
-          ;; lift nested attributes out:
-          (make-with-attributes 
-           (make-target-url
-            (target-url-addr s)
-            (with-attributes-style rest))
-           (with-attributes-assoc rest))
-          ;; rebuild with flattened inner:
-          (make-target-url
-           (target-url-addr s)
-           rest)))]
+    (define rest (flatten-style (target-url-style s)))
+    (if (with-attributes? rest)
+        ;; lift nested attributes out:
+        (make-with-attributes (make-target-url (target-url-addr s) (with-attributes-style rest))
+                              (with-attributes-assoc rest))
+        ;; rebuild with flattened inner:
+        (make-target-url (target-url-addr s) rest))]
    [else s]))

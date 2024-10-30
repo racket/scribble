@@ -3,9 +3,9 @@
 ;; A slightly nicer version of doclang where the parameters are keyword-based
 ;; rather than positional.
 
-(require "private/doc-begin.rkt"
-         (for-syntax racket/base
-                     syntax/parse)) 
+(require (for-syntax racket/base
+                     syntax/parse)
+         "private/doc-begin.rkt") 
 
 (provide (except-out (all-from-out racket/base) #%module-begin)
          (rename-out [*module-begin #%module-begin]))
