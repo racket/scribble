@@ -2,21 +2,30 @@
 
 // Page Parameters ------------------------------------------------------------
 
-var page_query_string = location.search.substring(1);
-const page_args = new URLSearchParams(location.search);
+function GetURL() {
+  return new URL(location);
+}
+
+function GetPageArgs() {
+  return GetURL().searchParams;
+}
+
+function GetPageQueryString() {
+  return GetPageArgs().toString();
+}
 
 function GetPageArg(key, def) {
-  return page_args.get(key) || def;
+  return GetPageArgs().get(key) || def;
 }
 
 function MergePageArgsIntoLink(a) {
-  if (page_args.size === 0 || !a.dataset.pltdoc) return;
+  if (GetPageArgs().size === 0 || !a.dataset.pltdoc) return;
   a.href = MergePageArgsIntoUrl(a.href);
 }
 
 function MergePageArgsIntoUrl(href) {
   const url = new URL(href, window.location.href);
-  for (const [key, val] of page_args) {
+  for (const [key, val] of GetPageArgs()) {
     if (url.searchParams.has(key)) continue;
     url.searchParams.append(key, val)
   }
