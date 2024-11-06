@@ -4,9 +4,6 @@
                      racket/stxparam-exptime)
          file/unzip
          net/ftp
-         (only-in net/url
-                  string->url
-                  get-pure-port)
          racket/file
          racket/path
          racket/port
@@ -18,6 +15,7 @@
          scribble/latex-prefix
          scribble/latex-properties
          setup/collects
+         (only-in net/url string->url get-pure-port)
          (except-in scribble/base author)
          (prefix-in s/b: scribble/base)
          "../private/defaults.rkt")

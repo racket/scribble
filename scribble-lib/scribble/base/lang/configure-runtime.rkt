@@ -1,7 +1,7 @@
 #lang racket/base
 
-(require (only-in scribble/reader make-at-readtable)
-         racket/interaction-info)
+(require racket/interaction-info
+         (only-in scribble/reader make-at-readtable))
 
 (define old-read (current-read-interaction))
 (define (scribble-read-interaction src in)
