@@ -1,6 +1,8 @@
 #lang racket/base
 
-(require tests/eli-tester (prefix-in scr: scribble/reader) racket/list)
+(require racket/list
+         tests/eli-tester
+         (prefix-in scr: scribble/reader))
 
 (define the-tests #<<END-OF-TESTS
 
@@ -825,8 +827,10 @@ END-OF-TESTS
   (if whole?
     (reader i)
     (let loop ()
-      (let ([x (reader i)])
-        (if (eof-object? x) '() (cons x (loop)))))))
+      (define x (reader i))
+      (if (eof-object? x)
+          '()
+          (cons x (loop))))))
 
 (define read/BS (scr:make-at-reader #:command-char #\\ #:syntax? #f))
 (define read-syntax/BS (scr:make-at-reader #:command-char #\\ #:syntax? #t))
@@ -940,19 +944,17 @@ END-OF-TESTS
            [ts (regexp-split #px"(?m:^)-+(?:$|\r?\n)" ts)])
       (parameterize ([port-count-lines-enabled #t])
         (for ([t ts] #:unless (regexp-match? #px"^\\s*$" t))
-          (let ([m (or (regexp-match #px"^(.*)\n\\s*(-\\S+->)\\s*\n(.*)$"
-                                     t)
-                       (regexp-match #px"^(.*\\S)\\s+(-\\S+->)\\s+(\\S.*)$"
-                                     t))])
-            (if (not (and m (= 4 (length m))))
+          (define m
+            (or (regexp-match #px"^(.*)\n\\s*(-\\S+->)\\s*\n(.*)$" t)
+                (regexp-match #px"^(.*\\S)\\s+(-\\S+->)\\s+(\\S.*)$" t)))
+          (if (not (and m (= 4 (length m))))
               (error 'bad-test "~a" t)
-              (let-values ([(x y)
-                            ((string->tester (caddr m)) (cadr m) (cadddr m))])
-                (test #:failure-message
-                      (format "bad result in\n    ~a\n  results:\n    ~s != ~s"
-                              (regexp-replace* #rx"\n" t "\n    ")
-                              x y)
-                      (matching? x y))))))))
+              (let-values ([(x y) ((string->tester (caddr m)) (cadr m) (cadddr m))])
+                (test #:failure-message (format "bad result in\n    ~a\n  results:\n    ~s != ~s"
+                                                (regexp-replace* #rx"\n" t "\n    ")
+                                                x
+                                                y)
+                      (matching? x y)))))))
 
     ;; Check static versus dynamic readtable for command (dynamic when "c" in the
     ;; name) and datum (dynamic when "d" in the name) parts:

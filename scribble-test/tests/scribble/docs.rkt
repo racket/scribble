@@ -2,31 +2,32 @@
 
 ;; Use text renderer to check some Scribble functionality
 
-(require scribble/base-render
+(require racket/class
+         racket/file
+         racket/runtime-path
+         scribble/base-render
+         tests/eli-tester
          (prefix-in text: scribble/text-render)
          (prefix-in html: scribble/html-render)
          (prefix-in latex: scribble/latex-render)
-         (prefix-in markdown: scribble/markdown-render)
-         racket/file 
-         racket/class
-         racket/runtime-path
-         tests/eli-tester)
+         (prefix-in markdown: scribble/markdown-render))
 
 (define-runtime-path source-dir "docs")
 (define work-dir (build-path (find-system-path 'temp-dir)
                              "scribble-docs-tests"))
 
 (define (build-doc render% src-file dest-file)
-  (let* ([renderer (new render% [dest-dir work-dir])]
-         [docs     (list (if (module-declared? `(submod ,src-file doc) #t)
-                             (dynamic-require `(submod ,src-file doc) 'doc)
-                             (dynamic-require src-file 'doc)))]
-         [fns      (list (build-path work-dir dest-file))]
-         [fp       (send renderer traverse docs fns)]
-         [info     (send renderer collect  docs fns fp)]
-         [r-info   (send renderer resolve  docs fns info)])
-    (send renderer render docs fns r-info)
-    (send renderer get-undefined r-info)))
+  (define renderer (new render% [dest-dir work-dir]))
+  (define docs
+    (list (if (module-declared? `(submod ,src-file doc) #t)
+              (dynamic-require `(submod ,src-file doc) 'doc)
+              (dynamic-require src-file 'doc))))
+  (define fns (list (build-path work-dir dest-file)))
+  (define fp (send renderer traverse docs fns))
+  (define info (send renderer collect docs fns fp))
+  (define r-info (send renderer resolve docs fns info))
+  (send renderer render docs fns r-info)
+  (send renderer get-undefined r-info))
 
 (define (build-text-doc src-file dest-file)
   (build-doc (text:render-mixin render%) src-file dest-file))
@@ -65,11 +66,9 @@
           (define (contents file)
             (regexp-replace #rx"\n+$" (file->string file) ""))
           (define undefineds (build-text-doc src-file "gen.txt"))
-          (for ([u (in-list undefineds)])
-            (when (eq? 'tech (car u))
-              (test #:failure-message
-                    (format "undefined tech: ~e" u)
-                    #f)))
+          (for ([u (in-list undefineds)]
+                #:when (eq? 'tech (car u)))
+            (test #:failure-message (format "undefined tech: ~e" u) #f))
           (test #:failure-message
                 (format
                  "mismatch for: \"~a\", expected text in: \"~a\", got:\n~a"
