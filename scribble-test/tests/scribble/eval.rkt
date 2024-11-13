@@ -1,5 +1,8 @@
 #lang racket/base
-(require scribble/eval scribble/core rackunit racket/match)
+(require racket/match
+         rackunit
+         scribble/core
+         scribble/eval)
 
 (check-not-exn (λ () (make-base-eval)))
 (check-not-exn (λ () (make-base-eval #:pretty-print? #t #:lang 'racket/base)))
@@ -24,7 +27,8 @@
 (check-not-exn (λ () ((make-eval-factory '() #:pretty-print? #t #:lang 'lazy))))
 
 (define (get-result-blocks nf)
-  (match (nested-flow-blocks nf) [(list (table _ (list _ res))) res]))
+  (match-define (list (table _ (list _ res))) (nested-flow-blocks nf))
+  res)
 
 (define filter-datum '(define (filter p? lst) 
                         (if (null? lst) 

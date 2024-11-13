@@ -1,6 +1,7 @@
 #lang racket/base
 
-(require tests/eli-tester scribble/text/syntax-utils)
+(require scribble/text/syntax-utils
+         tests/eli-tester)
 
 (provide begin/collect-tests)
 (module+ main (begin/collect-tests))

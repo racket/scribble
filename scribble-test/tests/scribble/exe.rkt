@@ -1,6 +1,6 @@
 #lang racket/base
-(require racket/file
-         compiler/embed
+(require compiler/embed
+         racket/file
          racket/system)
 
 ;; Check that `scribble/manual` can be embedded in an executable

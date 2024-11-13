@@ -1,8 +1,8 @@
 #lang racket/base
-(require scribble/render
-         scribble/text-render
+(require racket/file
          scribble/core
-         racket/file
+         scribble/render
+         scribble/text-render
          tests/eli-tester)
 
 (provide render-tests)

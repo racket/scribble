@@ -1,6 +1,6 @@
 #lang racket/base
-(require scribble/xref
-         racket/fasl
+(require racket/fasl
+         scribble/xref
          setup/dirs
          tests/eli-tester)
 

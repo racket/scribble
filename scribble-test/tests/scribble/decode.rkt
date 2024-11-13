@@ -1,8 +1,8 @@
 #lang racket/base
-(require scribble/decode
-         scribble/core
+(require racket/contract/base
          rackunit
-         racket/contract/base)
+         scribble/core
+         scribble/decode)
 
 (check-true (pre-content? "x"))
 (check-true (pre-content? null))

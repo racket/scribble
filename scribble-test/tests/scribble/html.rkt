@@ -5,17 +5,18 @@
 ;;  match a master list of HTML tags (defined in this file)
 ;; Also check that `scribble/html/html` is disjoint from `racket/base`
 
-(require rackunit racket/set)
+(require racket/set
+         rackunit)
 
 (define (phase0-provides m) ; Symbol -> [Setof Symbol]
   (parameterize ([current-namespace (make-base-namespace)])
     (dynamic-require m #f)
-    (let-values ([(e1* e2*) (module->exports m)])
-      (for*/seteq ([export* (in-list (list e1* e2*))]
-                   [tag+exp (in-list export*)]
-                   #:when (or (not (car tag+exp)) (zero? (car tag+exp)))
-                   [exp (in-list (cdr tag+exp))])
-        (car exp)))))
+    (define-values (e1* e2*) (module->exports m))
+    (for*/seteq ([export* (in-list (list e1* e2*))]
+                 [tag+exp (in-list export*)]
+                 #:when (or (not (car tag+exp)) (zero? (car tag+exp)))
+                 [exp (in-list (cdr tag+exp))])
+      (car exp))))
 
 (define (expected-disjoint m1 m2)
   (format "'~a' and '~a' should provide disjoint sets of identifiers" m1 m2))

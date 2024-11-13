@@ -1,6 +1,9 @@
 #lang racket/base
 
-(require tests/eli-tester racket/runtime-path racket/port racket/sandbox
+(require racket/port
+         racket/runtime-path
+         racket/sandbox
+         tests/eli-tester
          (prefix-in doc: (lib "scribblings/scribble/text.scrbl")))
 
 (provide text-lang-tests)
@@ -58,8 +61,9 @@
       (t (if len-to-read (read-string len-to-read i) (port->string i))
          => expected)
       (t (begin (kill-thread thd) (cond [exn => raise] [else #t])))
-      (for ([m more])
-        (when (file-exists? (car m)) (delete-file (car m))))))
+      (for ([m more]
+            #:when (file-exists? (car m)))
+        (delete-file (car m)))))
   (call-with-trusted-sandbox-configuration
     (lambda ()
       (for ([t (in-list (doc:tests))])
