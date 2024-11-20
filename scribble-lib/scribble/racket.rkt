@@ -209,7 +209,7 @@
                                    (nonbreak-leading-hyphens s)
                                    tag)])))]
          [unlinked-ok?
-          (list (make-element symbol-color s))]
+          (list (make-element (if defn? syntax-def-color symbol-color) s))]
          [else
           (list
            (make-element "badlink"
