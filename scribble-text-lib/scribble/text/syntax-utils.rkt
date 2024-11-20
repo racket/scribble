@@ -1,6 +1,8 @@
 #lang racket/base
 
-(require "output.rkt" (for-syntax racket/base syntax/kerncase))
+(require (for-syntax racket/base
+                     syntax/kerncase)
+         "output.rkt")
 
 (provide module-begin/text begin/text include/text begin/collect
          process-begin/text)
@@ -120,47 +122,53 @@
 (define-for-syntax (split-collect-body exprs ctx)
   (let loop ([exprs exprs]      ; expressions to scan
              [ds '()] [es '()]) ; collected definitions and expressions
-    (if (null? exprs)
-      (values (reverse ds) (reverse es) '())
-      (let ([expr* (local-expand (car exprs) ctx stoplist (car ctx))])
-        (define (rebuild-bindings)
-          (syntax-case expr* ()
-            [(def ids rhs)
-             (datum->syntax expr*
-                            (list #'def
-                                  (map (lambda (id) (syntax-local-identifier-as-binding id (car ctx)))
-                                       (syntax->list #'ids))
-                                  #'rhs)
-                            expr*
-                            expr*)]))
-        (syntax-case expr* (begin define-syntaxes define-values)
-          [(begin x ...)
-           (loop (append (syntax->list #'(x ...)) (cdr exprs)) ds es)]
-          [(define-syntaxes (id ...) rhs)
-           (andmap identifier? (syntax->list #'(id ...)))
-           (if (null? es)
-             (let ([ids (syntax->list #'(id ...))])
-               (syntax-local-bind-syntaxes
-                ids (local-transformer-expand #'rhs 'expression '()) (car ctx))
-               (loop (cdr exprs) (cons (rebuild-bindings) ds) es))
-             ;; return the unexpanded expr, to be re-expanded later, in the
-             ;; right contexts
-             (values (reverse ds) (reverse es) exprs))]
-          [(define-values (id ...) rhs)
-           (andmap identifier? (syntax->list #'(id ...)))
-           (if (null? es)
-             (begin (syntax-local-bind-syntaxes
-                     (syntax->list #'(id ...)) #f (car ctx))
-                    (loop (cdr exprs) (cons (rebuild-bindings) ds) es))
-             ;; same note here
-             (values (reverse ds) (reverse es) exprs))]
-          [_ (loop (cdr exprs) ds (cons expr* es))])))))
+    (cond
+      [(null? exprs) (values (reverse ds) (reverse es) '())]
+      [else
+       (define expr* (local-expand (car exprs) ctx stoplist (car ctx)))
+       (define (rebuild-bindings)
+         (syntax-case expr* ()
+           [(def ids rhs)
+            (datum->syntax expr*
+                           (list #'def
+                                 (map (lambda (id) (syntax-local-identifier-as-binding id (car ctx)))
+                                      (syntax->list #'ids))
+                                 #'rhs)
+                           expr*
+                           expr*)]))
+       (syntax-case expr*
+                    (begin
+                      define-syntaxes
+                      define-values)
+         [(begin
+            x ...)
+          (loop (append (syntax->list #'(x ...)) (cdr exprs)) ds es)]
+         [(define-syntaxes (id ...) rhs)
+          (andmap identifier? (syntax->list #'(id ...)))
+          (if (null? es)
+              (let ([ids (syntax->list #'(id ...))])
+                (syntax-local-bind-syntaxes ids
+                                            (local-transformer-expand #'rhs 'expression '())
+                                            (car ctx))
+                (loop (cdr exprs) (cons (rebuild-bindings) ds) es))
+              ;; return the unexpanded expr, to be re-expanded later, in the
+              ;; right contexts
+              (values (reverse ds) (reverse es) exprs))]
+         [(define-values (id ...) rhs)
+          (andmap identifier? (syntax->list #'(id ...)))
+          (if (null? es)
+              (begin
+                (syntax-local-bind-syntaxes (syntax->list #'(id ...)) #f (car ctx))
+                (loop (cdr exprs) (cons (rebuild-bindings) ds) es))
+              ;; same note here
+              (values (reverse ds) (reverse es) exprs))]
+         [_ (loop (cdr exprs) ds (cons expr* es))])])))
 (define-syntax (begin/collect* stx) ; helper, has a boolean flag first
   (define-values [exprs always-list?]
     (let ([exprs (syntax->list stx)])
-      (if (and (pair? exprs) (pair? (cdr exprs)))
-        (values (cddr exprs) (syntax-e (cadr exprs)))
-        (raise-syntax-error #f "bad syntax" stx))))
+      (unless (and (pair? exprs) (pair? (cdr exprs)))
+        (raise-syntax-error #f "bad syntax" stx))
+      (values (cddr exprs) (syntax-e (cadr exprs)))))
   (define context
     (cons (syntax-local-make-definition-context)
           (let ([old (syntax-local-context)]) (if (list? old) old '()))))
@@ -182,7 +190,9 @@
      #'(process-begin/text begin/collect begin expr ...)]))
 
 ;; include for templates
-(require (for-syntax racket/base (prefix-in scribble: scribble/reader) syntax/parse)
+(require (for-syntax racket/base
+                     syntax/parse
+                     (prefix-in scribble: scribble/reader))
          racket/include)
 (define-syntax (include/text stx)
   (syntax-case stx ()
