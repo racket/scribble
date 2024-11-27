@@ -12,28 +12,26 @@
          scribble/scheme
          "private/gui-eval-exn.rkt")
 
-(define-syntax define-mr
-  (syntax-rules ()
-    [(_ mr orig)
-     (begin
-       (provide mr)
-       (define-syntax (mr stx)
-         (syntax-case stx ()
-           [(_ #:eval+opts the-eval get-predicate? get-render get-get-width get-get-height x (... ...))
-            #'(let ([the-eval-x the-eval])
-                (parameterize ([scribble-eval-handler (gui-eval-handler the-eval-x
-                                                                        get-predicate?
-                                                                        get-render
-                                                                        get-get-width
-                                                                        get-get-height)])
-                  (orig #:eval the-eval-x x (... ...))))]
-           [(_ x (... ...))
-            #'(parameterize ([scribble-eval-handler (gui-eval-handler gui-eval
-                                                                      (λ () (gui-eval 'pict?))
-                                                                      (λ () (gui-eval 'draw-pict))
-                                                                      (λ () (gui-eval 'pict-width))
-                                                                      (λ () (gui-eval 'pict-height)))])
-                (orig #:eval gui-eval x (... ...)))])))]))
+(define-syntax-rule (define-mr mr orig)
+  (begin
+    (provide mr)
+    (define-syntax (mr stx)
+      (syntax-case stx ()
+        [(_ #:eval+opts the-eval get-predicate? get-render get-get-width get-get-height x (... ...))
+         #'(let ([the-eval-x the-eval])
+             (parameterize ([scribble-eval-handler (gui-eval-handler the-eval-x
+                                                                     get-predicate?
+                                                                     get-render
+                                                                     get-get-width
+                                                                     get-get-height)])
+               (orig #:eval the-eval-x x (... ...))))]
+        [(_ x (... ...))
+         #'(parameterize ([scribble-eval-handler (gui-eval-handler gui-eval
+                                                                   (λ () (gui-eval 'pict?))
+                                                                   (λ () (gui-eval 'draw-pict))
+                                                                   (λ () (gui-eval 'pict-width))
+                                                                   (λ () (gui-eval 'pict-height)))])
+             (orig #:eval gui-eval x (... ...)))]))))
 
 (define gui-eval (make-base-eval #:pretty-print? #f))
 
