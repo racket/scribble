@@ -133,41 +133,40 @@
   (let loop ([v v])
     (cond
       [(predicate? v)
-       (let ([fn (build-string-path img-dir
-                                    (format "img~a.png" image-counter))])
-         (set! image-counter (add1 image-counter))
-         (let ([dc (let ([pss (make-object (gui-eval 'ps-setup%))])
-                     (send pss set-mode 'file)
-                     (send pss set-file (path-replace-suffix fn #".pdf"))
-                     (parameterize ([(gui-eval 'current-ps-setup) pss])
-                       (let ([xb (box 0)]
-                             [yb (box 0)])
-                         (send pss get-scaling xb yb)
-                         (new (gui-eval 'pdf-dc%) 
-                              [interactive #f]
-                              [width (* (unbox xb) (get-width v))]
-                              [height (* (unbox yb) (get-height v))]))))])
-           (send dc start-doc "Image")
-           (send dc start-page)
-           (render v dc 0 0)
-           (send dc end-page)
-           (send dc end-doc))
-         (let* ([bm (make-object (gui-eval 'bitmap%)
+       (define fn (build-string-path img-dir (format "img~a.png" image-counter)))
+       (set! image-counter (add1 image-counter))
+       (let ([dc (let ([pss (make-object (gui-eval 'ps-setup%))])
+                   (send pss set-mode 'file)
+                   (send pss set-file (path-replace-suffix fn #".pdf"))
+                   (parameterize ([(gui-eval 'current-ps-setup) pss])
+                     (let ([xb (box 0)]
+                           [yb (box 0)])
+                       (send pss get-scaling xb yb)
+                       (new (gui-eval 'pdf-dc%)
+                            [interactive #f]
+                            [width (* (unbox xb) (get-width v))]
+                            [height (* (unbox yb) (get-height v))]))))])
+         (send dc start-doc "Image")
+         (send dc start-page)
+         (render v dc 0 0)
+         (send dc end-page)
+         (send dc end-doc))
+       (define bm
+         (make-object (gui-eval 'bitmap%)
                       (inexact->exact (ceiling (get-width v)))
-                      (inexact->exact (ceiling (get-height v))))]
-                [dc (make-object (gui-eval 'bitmap-dc%) bm)])
-           (send dc set-smoothing 'aligned)
-           (send dc clear)
-           (render v dc 0 0)
-           (send bm save-file fn 'png)
-           (make-image-element
-            #f
-            (list "[image]")
-            ;; Be sure to use a string rather than a path, because
-            ;; it gets recorded in "exprs.dat".
-            (path->string (path-replace-suffix fn #""))
-            '(".pdf" ".png")
-            1.0)))]
+                      (inexact->exact (ceiling (get-height v)))))
+       (define dc (make-object (gui-eval 'bitmap-dc%) bm))
+       (send dc set-smoothing 'aligned)
+       (send dc clear)
+       (render v dc 0 0)
+       (send bm save-file fn 'png)
+       (make-image-element #f
+                           (list "[image]")
+                           ;; Be sure to use a string rather than a path, because
+                           ;; it gets recorded in "exprs.dat".
+                           (path->string (path-replace-suffix fn #""))
+                           '(".pdf" ".png")
+                           1.0)]
       [(pair? v) (cons (loop (car v))
                        (loop (cdr v)))]
       [(serializable? v) v]
