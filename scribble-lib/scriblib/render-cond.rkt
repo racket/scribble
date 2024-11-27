@@ -1,6 +1,6 @@
 #lang racket/base
-(require scribble/core
-         (for-syntax racket/base))
+(require (for-syntax racket/base)
+         scribble/core)
 
 (provide cond-element
          cond-block)
