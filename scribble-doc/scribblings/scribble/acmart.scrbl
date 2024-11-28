@@ -11,8 +11,12 @@
 language is like @racketmodname[scribble/base], but configured with
 LaTeX style defaults to use the @hyperlink[acmart-url]{@tt{acmart}}
 class for typesetting publications for the Association of Computing
-Machinery.}
-@margin-note{@tt{acmart} documentation: @link["https://portalparts.acm.org/hippo/latex_templates/acmart.pdf"]{[link]}}
+Machinery.
+
+ It is based on v2.10 of Boris Veytsman's LaTeX package, which has
+ @link["https://portalparts.acm.org/hippo/latex_templates/acmart.pdf"]{its
+  own documention}.
+}
 
 @bold{Note:} a @racketmodname[scribble/acmart] document must include a
 @racket[title] and @racket[author].
@@ -80,8 +84,7 @@ number of options may be used:
 
 If multiple font size options are used, all but the last are ignored.
 
-The latest @link["https://github.com/borisveytsman/acmart/releases/tag/v2.05"]{@tt{acmart} release}
-(version 2.05, 2024-04-03, by Boris Veytsman)
+The official @tt{acmart} release
 provides these defaults and descriptions:
 
 @tabular[#:style 'boxed
