@@ -5,7 +5,8 @@
 ;;    https://html.spec.whatwg.org/multipage/#toc-semantics
 ;; Put esoteric elements in scribble/html/extra
 
-(require "xml.rkt" scribble/text)
+(require scribble/text
+         "xml.rkt")
 
 ;; ----------------------------------------------------------------------------
 ;; Doctype line
