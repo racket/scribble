@@ -1,12 +1,12 @@
 #lang racket/base
 
-(require "class-diagrams.rkt"
-         (only-in pict pin-arrow-line)
-         texpict/mrpict
-         (except-in texpict/utils pin-arrow-line)
+(require racket/class
+         racket/draw
          racket/system
-         racket/class
-         racket/draw)
+         texpict/mrpict
+         (only-in pict pin-arrow-line)
+         (except-in texpict/utils pin-arrow-line)
+         "class-diagrams.rkt")
 
 (define (mk-ps-diagram)
   ;; thicken up the lines for postscript

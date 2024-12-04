@@ -102,7 +102,9 @@
 
 ;; stuff for the scribble/text examples
 
-(require racket/list (for-syntax racket/base racket/list))
+(require (for-syntax racket/base
+                     racket/list)
+         racket/list)
 
 (define max-textsample-width 45)
 

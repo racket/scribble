@@ -1,6 +1,9 @@
 #lang racket/base
 
-(require rackunit scriblib/autobib scribble/base scribble/core)
+(require rackunit
+         scribble/base
+         scribble/core
+         scriblib/autobib)
 
 (test-case "define-cite"
   ;; Check that `define-cite` binds the expected identifiers
