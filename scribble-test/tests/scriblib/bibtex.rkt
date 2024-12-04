@@ -1,9 +1,9 @@
 #lang racket
 (require racket/runtime-path
-         tests/eli-tester
-         scriblib/bibtex
-         scriblib/autobib
          scribble/render
+         scriblib/autobib
+         scriblib/bibtex
+         tests/eli-tester
          (prefix-in text: scribble/text-render))
 
 (define-runtime-path example.bib "example.bib")
