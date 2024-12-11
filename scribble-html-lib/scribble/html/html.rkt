@@ -187,11 +187,11 @@
   (define-values [attrs body] (attributes+body args))
   (make-element
    'script attrs
-   `("\n" ,(set-prefix 0 (apply cdata #:line-prefix "//" body)) "\n")))
+   (list "\n" (set-prefix 0 (apply cdata #:line-prefix "//" body)) "\n")))
 (provide style/inline)
 (define (style/inline . args)
   (define-values [attrs body] (attributes+body args))
-  (make-element 'style attrs `("\n" ,body "\n")))
+  (make-element 'style attrs (list "\n" body "\n")))
 
 ;; ----------------------------------------------------------------------------
 ;; Entities
