@@ -1,12 +1,12 @@
 #lang racket/base
-(require setup/collects
+(require (for-syntax racket/base)
          racket/contract/base
-         scribble/core
          scribble/base
+         scribble/core
          scribble/decode
          scribble/html-properties
          scribble/latex-properties
-         (for-syntax racket/base))
+         setup/collects)
 
 (provide/contract
  [abstract 

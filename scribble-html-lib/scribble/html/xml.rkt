@@ -2,7 +2,8 @@
 
 ;; XML-like objects and functions, with rendering
 
-(require scribble/text racket/port)
+(require racket/port
+         scribble/text)
 
 ;; ----------------------------------------------------------------------------
 ;; Represent attribute names as `foo:' symbols.  They are made self-quoting in

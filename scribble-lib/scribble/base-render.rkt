@@ -1,17 +1,17 @@
 #lang racket/base
 
-(require "core.rkt"
-         "private/render-utils.rkt"
+(require file/convertible
          mzlib/class
          mzlib/serialize
+         net/url-structs
          racket/file
          racket/path
          setup/collects
          setup/path-relativize
-         file/convertible
-         net/url-structs
-         "render-struct.rkt"
-         "manual-struct.rkt")
+         "core.rkt"
+         "manual-struct.rkt"
+         "private/render-utils.rkt"
+         "render-struct.rkt")
 
 (provide render%
          render<%>)
