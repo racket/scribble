@@ -1,10 +1,10 @@
 #lang racket/base
 
-(require scribble/core
+(require racket/promise
+         scribble/core
          scribble/decode
          scribble/html-properties
          scribble/latex-properties
-         racket/promise
          setup/main-collects
          "private/counter.rkt")
 

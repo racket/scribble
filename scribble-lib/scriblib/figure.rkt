@@ -1,13 +1,13 @@
 #lang racket/base
 (require racket/contract/base
-         scribble/manual
          scribble/core
          scribble/decode
          scribble/html-properties
          scribble/latex-properties
+         scribble/manual
+         scribble/private/lang-parameters
          setup/main-collects
-         "private/counter.rkt"
-         scribble/private/lang-parameters)
+         "private/counter.rkt")
 
 (provide figure
          figure*

@@ -1,12 +1,12 @@
 #lang racket/base
-(require (prefix-in etc: mzlib/etc)
+(require racket/class
+         racket/contract
+         racket/draw
+         racket/runtime-path
          texpict/mrpict
+         (prefix-in etc: mzlib/etc)
          (only-in pict pin-line pin-arrow-line)
          (except-in texpict/utils pin-line pin-arrow-line)
-         racket/class
-         racket/runtime-path
-         racket/draw
-         racket/contract
          (only-in racket/list last))
 
 (define the-font-size 12)
