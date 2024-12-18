@@ -1,12 +1,12 @@
 #lang racket/base
-(require (prefix-in etc: mzlib/etc)
+(require racket/class
+         racket/contract
+         racket/draw
+         racket/runtime-path
          texpict/mrpict
+         (prefix-in etc: mzlib/etc)
          (only-in pict pin-line pin-arrow-line)
          (except-in texpict/utils pin-line pin-arrow-line)
-         racket/class
-         racket/runtime-path
-         racket/draw
-         racket/contract
          (only-in racket/list last))
 
 (define the-font-size 12)
@@ -70,41 +70,33 @@
   (unless (even? (length args))
     (error 'method-spec "expected a list of types and argument names, but found ~a arguments"
            (length args)))
-  (let ([first-line
-         (hbl-append
-          (type-spec range)
-          (normal-font " ")
-          (var-font name)
-          (cond
-            [(null? args)
-             (normal-font "()")]
-            [else
-             (hbl-append
-              (normal-font "(")
-              (let loop ([args args])
-                (let* ([type (car args)]
-                       [param (cadr args)]
-                       [single-arg 
-                        (if param 
-                            (hbl-append (type-spec type)
-                                        (normal-font " ")
-                                        (var-font param))
-                            (type-spec type))])
-                  
-                  (cond
-                    [(null? (cddr args))
-                     (hbl-append single-arg (normal-font ")"))]
-                    [else
-                     (hbl-append single-arg
-                                 (normal-font ", ")
-                                 (loop (cddr args)))]))))])
-          (if body
-              (hbl-append (normal-font " {"))
-              (blank)))])
-    (if body
-        (vl-append first-line
-                   (hbl-append (blank 8 0) body (normal-font "}")))
-        first-line)))
+  (define first-line
+    (hbl-append
+     (type-spec range)
+     (normal-font " ")
+     (var-font name)
+     (cond
+       [(null? args) (normal-font "()")]
+       [else
+        (hbl-append
+         (normal-font "(")
+         (let loop ([args args])
+           (define type (car args))
+           (define param (cadr args))
+           (define single-arg
+             (if param
+                 (hbl-append (type-spec type) (normal-font " ") (var-font param))
+                 (type-spec type)))
+           
+           (cond
+             [(null? (cddr args)) (hbl-append single-arg (normal-font ")"))]
+             [else (hbl-append single-arg (normal-font ", ") (loop (cddr args)))])))])
+     (if body
+         (hbl-append (normal-font " {"))
+         (blank))))
+  (if body
+      (vl-append first-line (hbl-append (blank 8 0) body (normal-font "}")))
+      first-line))
              
 (define (type-spec str)
   (cond
@@ -126,35 +118,32 @@
 
 ;; class-box : pict (or/c #f (listof pict)) (or/c #f (listof pict)) -> pict
 (define (class-box name fields methods)
-  (let* ([mk-blank (λ () (blank 0 (+ class-box-margin class-box-margin)))])
-    (cond
-      [(and methods fields)
-       (let* ([top-spacer (mk-blank)]
-              [bottom-spacer (mk-blank)]
-              [main (vl-append name 
-                               top-spacer
-                               (if (null? fields)
-                                   (blank 0 4)
-                                   (apply vl-append fields))
-                               bottom-spacer
-                               (if (null? methods)
-                                   (blank 0 4)
-                                   (apply vl-append methods)))])
-         (add-hline
-          (add-hline (frame (inset main class-box-margin))
-                     top-spacer)
-          bottom-spacer))]
-      [fields
-       (let* ([top-spacer (mk-blank)]
-              [main (vl-append name 
-                               top-spacer
-                               (if (null? fields)
-                                   (blank)
-                                   (apply vl-append fields)))])
-         (add-hline (frame (inset main class-box-margin))
-                    top-spacer))]
-      [methods (class-box name methods fields)]
-      [else (frame (inset name class-box-margin))])))
+  (define (mk-blank)
+    (blank 0 (+ class-box-margin class-box-margin)))
+  (cond
+    [(and methods fields)
+     (let* ([top-spacer (mk-blank)]
+            [bottom-spacer (mk-blank)]
+            [main (vl-append name
+                             top-spacer
+                             (if (null? fields)
+                                 (blank 0 4)
+                                 (apply vl-append fields))
+                             bottom-spacer
+                             (if (null? methods)
+                                 (blank 0 4)
+                                 (apply vl-append methods)))])
+       (add-hline (add-hline (frame (inset main class-box-margin)) top-spacer) bottom-spacer))]
+    [fields
+     (let* ([top-spacer (mk-blank)]
+            [main (vl-append name
+                             top-spacer
+                             (if (null? fields)
+                                 (blank)
+                                 (apply vl-append fields)))])
+       (add-hline (frame (inset main class-box-margin)) top-spacer))]
+    [methods (class-box name methods fields)]
+    [else (frame (inset name class-box-margin))]))
 
 (define (add-hline main sub)
   (let-values ([(x y) (cc-find main sub)])
@@ -438,7 +427,7 @@
     (define-values (main3 dot3) (add-dot-junction main2 dot2 cc-find finish-class ct-find))
     (connect-dots #t main3 dot1 dot2 dot3)))
 
-(define connect-dots-contract (->* (boolean? pict? pict?) () #:rest (listof pict?) (values pict?)))
+(define connect-dots-contract (-> boolean? pict? pict? pict? ... (values pict?)))
 
 (provide type-link-color)
 (provide/contract
