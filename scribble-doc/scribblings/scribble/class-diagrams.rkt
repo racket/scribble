@@ -81,15 +81,16 @@
         (hbl-append
          (normal-font "(")
          (let loop ([args args])
-           (let* ([type (car args)]
-                  [param (cadr args)]
-                  [single-arg (if param
-                                  (hbl-append (type-spec type) (normal-font " ") (var-font param))
-                                  (type-spec type))])
-  
-             (cond
-               [(null? (cddr args)) (hbl-append single-arg (normal-font ")"))]
-               [else (hbl-append single-arg (normal-font ", ") (loop (cddr args)))]))))])
+           (define type (car args))
+           (define param (cadr args))
+           (define single-arg
+             (if param
+                 (hbl-append (type-spec type) (normal-font " ") (var-font param))
+                 (type-spec type)))
+           
+           (cond
+             [(null? (cddr args)) (hbl-append single-arg (normal-font ")"))]
+             [else (hbl-append single-arg (normal-font ", ") (loop (cddr args)))])))])
      (if body
          (hbl-append (normal-font " {"))
          (blank))))
