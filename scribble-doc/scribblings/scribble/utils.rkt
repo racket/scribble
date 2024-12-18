@@ -186,11 +186,9 @@
        (and (string? (syntax-e #'sep)) (regexp-match? sep-rx (syntax-e #'sep)))
        (let ([m (cond [(regexp-match sep-rx (syntax-e #'sep)) => cadr]
                       [else #f])])
-         (if (and m (not (regexp-match? file-rx m)))
-           (raise-syntax-error #f "bad filename specified" stx #'sep)
-           (loop #'xs
-                 (list (and m (datum->syntax #'sep m #'sep #'sep)))
-                 (cons (reverse text) texts))))]
+         (when (and m (not (regexp-match? file-rx m)))
+           (raise-syntax-error #f "bad filename specified" stx #'sep))
+         (loop #'xs (list (and m (datum->syntax #'sep m #'sep #'sep))) (cons (reverse text) texts)))]
       [(x . xs) (loop #'xs (cons #'x text) texts)]
       [() (let ([texts (reverse (cons (reverse text) texts))]
                 [line  (syntax-line stx)])
