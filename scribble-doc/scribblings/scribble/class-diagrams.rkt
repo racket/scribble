@@ -426,7 +426,7 @@
     (define-values (main3 dot3) (add-dot-junction main2 dot2 cc-find finish-class ct-find))
     (connect-dots #t main3 dot1 dot2 dot3)))
 
-(define connect-dots-contract (->* (boolean? pict? pict?) () #:rest (listof pict?) (values pict?)))
+(define connect-dots-contract (-> boolean? pict? pict? pict? ... (values pict?)))
 
 (provide type-link-color)
 (provide/contract
