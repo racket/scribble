@@ -68,61 +68,63 @@
                                    "exprs.dat"))
 
 (define gui-eval-handler
-  (if mred?
-      (let ([eh (scribble-eval-handler)]
-            [log-file (open-output-file exprs-dat-file #:exists 'truncate/replace)])
-        (λ (gui-eval get-predicate? get-render get-get-width get-get-height)
-          (lambda (ev catching-exns? expr)
-            (write (serialize (if (syntax? expr) (syntax->datum expr) expr)) log-file)
-            (newline log-file)
-            (flush-output log-file)
-            (let ([result
-                   (with-handlers ([exn:fail?
-                                    (lambda (exn)
-                                      (make-gui-exn (exn-message exn)))])
-                     ;; put the call to fixup-picts in the handlers
-                     ;; so that errors in the user-supplied predicates & 
-                     ;; conversion functions show up in the rendered output
-                     (fixup-picts (get-predicate?) (get-render) (get-get-width) (get-get-height)
-                                  (eh ev catching-exns? expr)))])
-              (write (serialize result) log-file)
-              (newline log-file)
-              (flush-output log-file)
-              (if (gui-exn? result)
-                  (raise (make-exn:fail
-                          (gui-exn-message result)
-                          (current-continuation-marks)))
-                  result)))))
-      (let ([log-file (with-handlers ([exn:fail:filesystem?
-                                       (lambda (exn)
-                                         (open-input-string ""))])
-                        (open-input-file exprs-dat-file))])
-        (λ (gui-eval get-predicate? get-render get-get-width get-get-height)
-          (lambda (ev catching-exns? expr)
-            (with-handlers ([exn:fail? (lambda (exn)
-                                         (if catching-exns?
-                                             (raise exn)
-                                             (void)))])
-              (let ([v (read log-file)])
-                (if (eof-object? v)
-                    (error "expression not in log file")
-                    (let ([v (deserialize v)])
-                      (if (equal? v (if (syntax? expr)
-                                        (syntax->datum expr)
-                                        expr))
-                          (let ([v (read log-file)])
-                            (if (eof-object? v)
-                                (error "expression result missing in log file")
-                                (let ([v (deserialize v)])
-                                  (if (gui-exn? v)
-                                      (raise (make-exn:fail
-                                              (gui-exn-message v)
-                                              (current-continuation-marks)))
-                                      v))))
-                          (error 'mreval
-                                 "expression does not match log file: ~e versus: ~e"
-                                 expr
-                                 v)))))))))))
+  (cond
+    [mred?
+     (define eh (scribble-eval-handler))
+     (define log-file (open-output-file exprs-dat-file #:exists 'truncate/replace))
+     (λ (gui-eval get-predicate? get-render get-get-width get-get-height)
+       (lambda (ev catching-exns? expr)
+         (write (serialize (if (syntax? expr)
+                               (syntax->datum expr)
+                               expr))
+                log-file)
+         (newline log-file)
+         (flush-output log-file)
+         (let ([result (with-handlers ([exn:fail? (lambda (exn) (make-gui-exn (exn-message exn)))])
+                         ;; put the call to fixup-picts in the handlers
+                         ;; so that errors in the user-supplied predicates &
+                         ;; conversion functions show up in the rendered output
+                         (fixup-picts (get-predicate?)
+                                      (get-render)
+                                      (get-get-width)
+                                      (get-get-height)
+                                      (eh ev catching-exns? expr)))])
+           (write (serialize result) log-file)
+           (newline log-file)
+           (flush-output log-file)
+           (if (gui-exn? result)
+               (raise (make-exn:fail (gui-exn-message result) (current-continuation-marks)))
+               result))))]
+    [else
+     (define log-file
+       (with-handlers ([exn:fail:filesystem? (lambda (exn) (open-input-string ""))])
+         (open-input-file exprs-dat-file)))
+     (λ (gui-eval get-predicate? get-render get-get-width get-get-height)
+       (lambda (ev catching-exns? expr)
+         (with-handlers ([exn:fail? (lambda (exn)
+                                      (if catching-exns?
+                                          (raise exn)
+                                          (void)))])
+           (let ([v (read log-file)])
+             (if (eof-object? v)
+                 (error "expression not in log file")
+                 (let ([v (deserialize v)])
+                   (if (equal? v
+                               (if (syntax? expr)
+                                   (syntax->datum expr)
+                                   expr))
+                       (let ([v (read log-file)])
+                         (if (eof-object? v)
+                             (error "expression result missing in log file")
+                             (let ([v (deserialize v)])
+                               (if (gui-exn? v)
+                                   (raise (make-exn:fail (gui-exn-message v)
+                                                         (current-continuation-marks)))
+                                   v))))
+                       (error 'mreval
+                              "expression does not match log file: ~e versus: ~e"
+                              expr
+                              v))))))))]))
 
 (define image-counter 0)
 

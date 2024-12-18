@@ -49,22 +49,20 @@
                     [pos base]
                     [second #f]
                     [accum null])
-           (if (null? e)
-             (datum->syntax
-              p (reverse accum)
-              (list (syntax-source p) (syntax-line p) base (add1 base)
-                    (- pos base))
-              p)
-             (let* ([v ((norm-spacing (if (= line (syntax-line (car e)))
-                                        pos
-                                        (or second pos)))
-                        (car e))]
-                    [next-pos (+ (syntax-column v) (syntax-span v) 1)])
-               (loop (cdr e)
-                     (syntax-line v)
-                     next-pos
-                     (or second next-pos)
-                     (cons v accum)))))]
+           (cond
+             [(null? e)
+              (datum->syntax p
+                             (reverse accum)
+                             (list (syntax-source p) (syntax-line p) base (add1 base) (- pos base))
+                             p)]
+             [else
+              (define v
+                ((norm-spacing (if (= line (syntax-line (car e)))
+                                   pos
+                                   (or second pos)))
+                 (car e)))
+              (define next-pos (+ (syntax-column v) (syntax-span v) 1))
+              (loop (cdr e) (syntax-line v) next-pos (or second next-pos) (cons v accum))]))]
         [else (datum->syntax
                p (syntax-e p)
                (list (syntax-source p) (syntax-line p) base (add1 base) 1)
