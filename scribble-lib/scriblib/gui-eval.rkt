@@ -1,16 +1,16 @@
 #lang racket/base
 
-(require scribble/eval
-         scribble/core
-         scribble/scheme
+(require (for-syntax racket/base)
          racket/class
          racket/file
          racket/runtime-path
-         racket/serialize
-         "private/gui-eval-exn.rkt"
-         racket/system
          racket/sandbox
-         (for-syntax racket/base))
+         racket/serialize
+         racket/system
+         scribble/core
+         scribble/eval
+         scribble/scheme
+         "private/gui-eval-exn.rkt")
 
 (define-syntax define-mr
   (syntax-rules ()
