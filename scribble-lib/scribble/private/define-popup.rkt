@@ -13,21 +13,12 @@
          [found-open?
           (cond
             [(char=? char #\})
-             (regexp-replace
-              #rx"^[\n ]*"
-              (regexp-replace
-               #rx"[\n ]*$"
-               (apply string (reverse chars))
-               "")
-              "")]
-            [else
-             (loop (+ pos 1) #t (cons char chars))])]
-         [else
-          (cond
-            [(char=? char #\{)
-             (loop (+ pos 1) #t '())]
-            [else
-             (loop (+ pos 1) #f '())])])]
+             (regexp-replace #rx"^[\n ]*"
+                             (regexp-replace #rx"[\n ]*$" (apply string (reverse chars)) "")
+                             "")]
+            [else (loop (+ pos 1) #t (cons char chars))])]
+         [(char=? char #\{) (loop (+ pos 1) #t '())]
+         [else (loop (+ pos 1) #f '())])]
       [else #f])))
 
 (define define-popup
