@@ -101,9 +101,9 @@
      (λ (gui-eval get-predicate? get-render get-get-width get-get-height)
        (lambda (ev catching-exns? expr)
          (with-handlers ([exn:fail? (lambda (exn)
-                                      (if catching-exns?
-                                          (raise exn)
-                                          (void)))])
+                                      (when catching-exns?
+                                        (raise exn))
+                                      (void))])
            (define v (read log-file))
            (if (eof-object? v)
                (error "expression not in log file")
