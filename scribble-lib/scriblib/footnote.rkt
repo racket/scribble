@@ -70,9 +70,6 @@
      (lambda (get set)
        (make-compound-paragraph
         footnote-block-style
-        (map (lambda (content)
-               (make-paragraph
-                footnote-block-content-style
-                content))
-             (reverse (get id null)))))))
+        (for/list ([content (in-list (reverse (get id null)))])
+          (make-paragraph footnote-block-content-style content))))))
    null))
