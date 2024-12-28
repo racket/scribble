@@ -180,7 +180,7 @@ is a result from the @method[render<%> collect] method.}
            list?]{
 
 Produces the final output.  The @racket[ri] argument is a result from
-the @method[render<%> render] method.
+the @method[render<%> resolve] method.
 
 The @racket[dests] provide names of files for Latex or single-file
 HTML output, or names of sub-directories for multi-file HTML output.

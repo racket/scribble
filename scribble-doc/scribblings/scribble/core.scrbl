@@ -1248,7 +1248,7 @@ reverse order):
        which is shown as part of the combined section number only when
        it's the first element.}
 
- @item{A a list corresponds to a @tech{numberer}-generated section
+ @item{A list corresponds to a @tech{numberer}-generated section
        string plus its separator string, where the separator is used
        in a combined section number after the section string and
        before a subsection's number (or, for some output modes, before
