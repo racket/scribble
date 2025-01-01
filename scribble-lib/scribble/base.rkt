@@ -140,10 +140,9 @@
      (case (length auths)
        [(1) auths]
        [(2) (list (car auths) nl "and " (cadr auths))]
-       [else (let ([r (reverse auths)])
-               (append (add-between (reverse (cdr r))
-                                    (make-element #f (list "," nl)))
-                       (list "," nl "and " (car r))))]))))
+       [else (define r (reverse auths))
+             (append (add-between (reverse (cdr r)) (make-element #f (list "," nl)))
+                     (list "," nl "and " (car r)))]))))
 
 (define (author+email name email #:obfuscate? [obfuscate? #f])
   (make-element #f
@@ -372,18 +371,18 @@
       [(3) "rd"]
       [else "th"]))
   (unless (null? cells)
-    (let ([n (length (car cells))])
-      (for ([row (in-list (cdr cells))]
-            [pos (in-naturals 2)])
-        (unless (= n (length row))
-          (raise-mismatch-error
-           'tabular
-           (format "bad length (~a does not match first row's length ~a) for ~a~a row: "
-                   (length row)
-                   n
-                   pos
-                   (nth-str pos))
-           row)))))
+    (define n (length (car cells)))
+    (for ([row (in-list (cdr cells))]
+          [pos (in-naturals 2)])
+      (unless (= n (length row))
+        (raise-mismatch-error
+         'tabular
+         (format "bad length (~a does not match first row's length ~a) for ~a~a row: "
+                 (length row)
+                 n
+                 pos
+                 (nth-str pos))
+         row))))
   (for ([row (in-list cells)]
         [pos (in-naturals 1)])
     (when (and (pair? row) (eq? (car row) 'cont))
