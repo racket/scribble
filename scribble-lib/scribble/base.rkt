@@ -209,7 +209,7 @@
 ;; ----------------------------------------
 
 (define elem-like-contract
-  (->* () () #:rest (listof pre-content?) element?))
+  (-> pre-content? ... element?))
 
 (provide (contract-out
           [linebreak (-> element?)]
