@@ -379,12 +379,9 @@
                  (nth-str pos))
          row))))
   (for ([row (in-list cells)]
-        [pos (in-naturals 1)])
-    (when (and (pair? row) (eq? (car row) 'cont))
-      (raise-mismatch-error
-       'tabular
-       (format "~a~a row starts with 'cont: " pos (nth-str pos))
-       row)))
+        [pos (in-naturals 1)]
+        #:when (and (pair? row) (eq? (car row) 'cont)))
+    (raise-mismatch-error 'tabular (format "~a~a row starts with 'cont: " pos (nth-str pos)) row))
   (make-table (let ([s (convert-block-style style)])
                 (define n-orig-cols (if (null? cells)
                                         0
@@ -410,12 +407,11 @@
                    "cell properties list is too long: "
                    cell-properties))
                 (unless (null? cells)
-                  (for ([row (in-list cell-properties)])
-                    (when ((length row) . > . n-orig-cols)
-                      (raise-mismatch-error
-                       'tabular
-                       "row list within cell properties list is too long: "
-                       row))))
+                  (for ([row (in-list cell-properties)]
+                        #:when ((length row) . > . n-orig-cols))
+                    (raise-mismatch-error 'tabular
+                                          "row list within cell properties list is too long: "
+                                          row)))
                 ;; Expand given column and cell properties lists to match
                 ;; the dimensions of the given `cells` by duplicating
                 ;; the last element of a list as needed (and ignoring

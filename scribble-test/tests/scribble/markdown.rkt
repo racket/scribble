@@ -44,11 +44,9 @@
           (define (contents file)
             (regexp-replace #rx"\n+$" (file->string file) ""))
           (define undefineds (build-markdown-doc src-file "gen.md"))
-          (for ([u (in-list undefineds)])
-            (when (eq? 'tech (car u))
-              (test #:failure-message
-                    (format "undefined tech: ~e" u)
-                    #f)))
+          (for ([u (in-list undefineds)]
+                #:when (eq? 'tech (car u)))
+            (test #:failure-message (format "undefined tech: ~e" u) #f))
           (test #:failure-message
                 (format
                  "mismatch for: \"~a\", expected text in: \"~a\", got:\n~a"
