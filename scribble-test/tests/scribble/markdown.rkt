@@ -2,8 +2,12 @@
 
 ;; Use text renderer to check some Scribble functionality
 
-(require scribble/base-render (prefix-in markdown: scribble/markdown-render)
-         racket/file racket/class racket/runtime-path tests/eli-tester)
+(require racket/class
+         racket/file
+         racket/runtime-path
+         scribble/base-render
+         tests/eli-tester
+         (prefix-in markdown: scribble/markdown-render))
 
 (define-runtime-path source-dir "markdown-docs")
 (define work-dir (build-path (find-system-path 'temp-dir)

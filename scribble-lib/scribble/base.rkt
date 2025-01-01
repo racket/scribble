@@ -1,17 +1,17 @@
 #lang racket/base
 
-(require "decode.rkt"
-         "core.rkt"
-         "manual-struct.rkt"
-         "decode-struct.rkt"
-         "html-properties.rkt"
-         "tag.rkt"
-         "private/tag.rkt"
-         racket/list
+(require (for-syntax racket/base)
          racket/class
          racket/contract/base
          racket/contract/combinator
-         (for-syntax racket/base))
+         racket/list
+         "core.rkt"
+         "decode-struct.rkt"
+         "decode.rkt"
+         "html-properties.rkt"
+         "manual-struct.rkt"
+         "private/tag.rkt"
+         "tag.rkt")
 
 (provide (all-from-out "tag.rkt"))
 
