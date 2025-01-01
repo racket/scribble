@@ -309,11 +309,7 @@
 ;; ----------------------------------------
 
 (define (cell-spec/c c)
-  (define rc
-    (recursive-contract (or/c c
-                              empty
-                              (cons/c rc rc))))
-  rc)
+  (recursive-contract (or/c c empty (cons/c rc rc))))
 
 (provide (contract-out
           [para
