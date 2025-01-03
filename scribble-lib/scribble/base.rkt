@@ -1,17 +1,17 @@
 #lang racket/base
 
-(require "decode.rkt"
-         "core.rkt"
-         "manual-struct.rkt"
-         "decode-struct.rkt"
-         "html-properties.rkt"
-         "tag.rkt"
-         "private/tag.rkt"
-         racket/list
+(require (for-syntax racket/base)
          racket/class
          racket/contract/base
          racket/contract/combinator
-         (for-syntax racket/base))
+         racket/list
+         "core.rkt"
+         "decode-struct.rkt"
+         "decode.rkt"
+         "html-properties.rkt"
+         "manual-struct.rkt"
+         "private/tag.rkt"
+         "tag.rkt")
 
 (provide (all-from-out "tag.rkt"))
 
@@ -29,23 +29,22 @@
        #:rest (listof pre-content?)
        part-start?))
 
-(provide/contract
- [title (->* ()
-             (#:tag (or/c #f string? (listof string?))
-                    #:tag-prefix (or/c #f string? module-path? hash?)
-                    #:style (or/c style? string? symbol? (listof symbol?) #f)
-                    #:version (or/c string? #f)
-                    #:date (or/c string? #f)
-                    #:index-extras desc-extras/c)
-             #:rest (listof pre-content?)
-             title-decl?)]
- [section (title-like-contract)]
- [subsection (title-like-contract)]
- [subsubsection (title-like-contract)]
- [subsubsub*section  (->* ()
-                          (#:tag (or/c #f string? (listof string?)))
-                          #:rest (listof pre-content?)
-                          block?)])
+(provide (contract-out
+          [title
+           (->* ()
+                (#:tag (or/c #f string? (listof string?))
+                       #:tag-prefix (or/c #f string? module-path? hash?)
+                       #:style (or/c style? string? symbol? (listof symbol?) #f)
+                       #:version (or/c string? #f)
+                       #:date (or/c string? #f)
+                       #:index-extras desc-extras/c)
+                #:rest (listof pre-content?)
+                title-decl?)]
+          [section (title-like-contract)]
+          [subsection (title-like-contract)]
+          [subsubsection (title-like-contract)]
+          [subsubsub*section
+           (->* () (#:tag (or/c #f string? (listof string?))) #:rest (listof pre-content?) block?)]))
 (provide include-section)
 
 (define (title #:tag [tag #f] #:tag-prefix [prefix #f] #:style [style plain]
@@ -131,9 +130,8 @@
 
 ;; ----------------------------------------
 
-(provide/contract 
- [author (->* (content?) () #:rest (listof content?) block?)]
- [author+email (->* (content? string?) (#:obfuscate? any/c) element?)])
+(provide (contract-out [author (->* (content?) () #:rest (listof content?) block?)]
+                       [author+email (->* (content? string?) (#:obfuscate? any/c) element?)]))
 
 (define (author . auths)
   (make-paragraph 
@@ -142,10 +140,9 @@
      (case (length auths)
        [(1) auths]
        [(2) (list (car auths) nl "and " (cadr auths))]
-       [else (let ([r (reverse auths)])
-               (append (add-between (reverse (cdr r))
-                                    (make-element #f (list "," nl)))
-                       (list "," nl "and " (car r))))]))))
+       [else (define r (reverse auths))
+             (append (add-between (reverse (cdr r)) (make-element #f (list "," nl)))
+                     (list "," nl "and " (car r)))]))))
 
 (define (author+email name email #:obfuscate? [obfuscate? #f])
   (make-element #f
@@ -173,17 +170,11 @@
 
 (provide items/c)
 
-(provide/contract 
- [itemlist (->* () 
-                (#:style (or/c style? string? symbol? #f)) 
-                #:rest (listof items/c)
-                itemization?)]
- [item (->* () 
-            () 
-            #:rest (listof pre-flow?)
-            item?)])
-(provide/contract
- [item? (any/c . -> . boolean?)])
+(provide (contract-out
+          [itemlist
+           (->* () (#:style (or/c style? string? symbol? #f)) #:rest (listof items/c) itemization?)]
+          [item (->* () () #:rest (listof pre-flow?) item?)]))
+(provide (contract-out [item? (any/c . -> . boolean?)]))
 
 (define (itemlist #:style [style plain] . items)
   (let ([flows (let loop ([items items])
@@ -218,33 +209,27 @@
 ;; ----------------------------------------
 
 (define elem-like-contract
-  (->* () () #:rest (listof pre-content?) element?))
+  (-> pre-content? ... element?))
 
-(provide/contract
- [linebreak (-> element?)]
- [nonbreaking elem-like-contract]
- [hspace (-> exact-nonnegative-integer? element?)]
- [elem (->* ()
-            (#:style element-style?)
-            #:rest (listof pre-content?)
-            element?)]
- [italic elem-like-contract]
- [bold elem-like-contract]
- [smaller elem-like-contract]
- [larger elem-like-contract]
- [emph elem-like-contract]
- [tt elem-like-contract]
- [subscript elem-like-contract]
- [superscript elem-like-contract]
-
- [literal (->* (string?) () #:rest (listof string?) element?)]
-
- [image (->* ((or/c path-string? (cons/c 'collects (listof bytes?))))
-             (#:scale real?
-                      #:suffixes (listof (and/c string? #rx"^[.]"))
-                      #:style element-style?)
-             #:rest (listof content?)
-             image-element?)])
+(provide (contract-out
+          [linebreak (-> element?)]
+          [nonbreaking elem-like-contract]
+          [hspace (-> exact-nonnegative-integer? element?)]
+          [elem (->* () (#:style element-style?) #:rest (listof pre-content?) element?)]
+          [italic elem-like-contract]
+          [bold elem-like-contract]
+          [smaller elem-like-contract]
+          [larger elem-like-contract]
+          [emph elem-like-contract]
+          [tt elem-like-contract]
+          [subscript elem-like-contract]
+          [superscript elem-like-contract]
+          [literal (->* (string?) () #:rest (listof string?) element?)]
+          [image
+           (->* ((or/c path-string? (cons/c 'collects (listof bytes?))))
+                (#:scale real? #:suffixes (listof (and/c string? #rx"^[.]")) #:style element-style?)
+                #:rest (listof content?)
+                image-element?)]))
 
 (define hspace-cache (make-vector 100 #f))
 
@@ -292,11 +277,10 @@
                 l))])
     (if (andmap string? l)
       (make-element 'tt l)
-      (make-element #f (map (lambda (s)
-                              (if (or (string? s) (symbol? s))
-                                (make-element 'tt (list s))
-                                s))
-                            l)))))
+      (make-element #f (for/list ([s (in-list l)])
+                         (if (or (string? s) (symbol? s))
+                             (make-element 'tt (list s))
+                             s))))))
 
 (define (span-class classname . str)
   (make-element classname (decode-content str)))
@@ -325,33 +309,30 @@
 ;; ----------------------------------------
 
 (define (cell-spec/c c)
-  (define rc
-    (recursive-contract (or/c c
-                              empty
-                              (cons/c rc rc))))
-  rc)
+  (recursive-contract (or/c c empty (cons/c rc rc))))
 
-(provide/contract
- [para (->* ()
-            (#:style (or/c style? string? symbol? #f ))
-            #:rest (listof pre-content?)
-            paragraph?)]
- [nested (->* ()
-              (#:style (or/c style? string? symbol? #f ))
-              #:rest (listof pre-flow?)
-              nested-flow?)]
- [compound (->* ()
-                (#:style (or/c style? string? symbol? #f ))
+(provide (contract-out
+          [para
+           (->* ()
+                (#:style (or/c style? string? symbol? #f))
+                #:rest (listof pre-content?)
+                paragraph?)]
+          [nested
+           (->* () (#:style (or/c style? string? symbol? #f)) #:rest (listof pre-flow?) nested-flow?)]
+          [compound
+           (->* ()
+                (#:style (or/c style? string? symbol? #f))
                 #:rest (listof pre-flow?)
                 compound-paragraph?)]
- [tabular (->* ((listof (listof (or/c 'cont block? content?))))
-               (#:style (or/c style? string? symbol? #f)
-                #:sep (or/c content? block? #f)
-                #:column-properties (listof any/c)
-                #:row-properties (listof any/c)
-                #:cell-properties (listof (listof any/c))
-                #:sep-properties (or/c list? #f))
-               table?)])
+          [tabular
+           (->* ((listof (listof (or/c 'cont block? content?))))
+                (#:style (or/c style? string? symbol? #f)
+                         #:sep (or/c content? block? #f)
+                         #:column-properties (listof any/c)
+                         #:row-properties (listof any/c)
+                         #:cell-properties (listof (listof any/c))
+                         #:sep-properties (or/c list? #f))
+                table?)]))
 
 (define (convert-block-style style)
   (cond
@@ -385,25 +366,22 @@
       [(3) "rd"]
       [else "th"]))
   (unless (null? cells)
-    (let ([n (length (car cells))])
-      (for ([row (in-list (cdr cells))]
-            [pos (in-naturals 2)])
-        (unless (= n (length row))
-          (raise-mismatch-error
-           'tabular
-           (format "bad length (~a does not match first row's length ~a) for ~a~a row: "
-                   (length row)
-                   n
-                   pos
-                   (nth-str pos))
-           row)))))
+    (define n (length (car cells)))
+    (for ([row (in-list (cdr cells))]
+          [pos (in-naturals 2)])
+      (unless (= n (length row))
+        (raise-mismatch-error
+         'tabular
+         (format "bad length (~a does not match first row's length ~a) for ~a~a row: "
+                 (length row)
+                 n
+                 pos
+                 (nth-str pos))
+         row))))
   (for ([row (in-list cells)]
-        [pos (in-naturals 1)])
-    (when (and (pair? row) (eq? (car row) 'cont))
-      (raise-mismatch-error
-       'tabular
-       (format "~a~a row starts with 'cont: " pos (nth-str pos))
-       row)))
+        [pos (in-naturals 1)]
+        #:when (and (pair? row) (eq? (car row) 'cont)))
+    (raise-mismatch-error 'tabular (format "~a~a row starts with 'cont: " pos (nth-str pos)) row))
   (make-table (let ([s (convert-block-style style)])
                 (define n-orig-cols (if (null? cells)
                                         0
@@ -429,12 +407,11 @@
                    "cell properties list is too long: "
                    cell-properties))
                 (unless (null? cells)
-                  (for ([row (in-list cell-properties)])
-                    (when ((length row) . > . n-orig-cols)
-                      (raise-mismatch-error
-                       'tabular
-                       "row list within cell properties list is too long: "
-                       row))))
+                  (for ([row (in-list cell-properties)]
+                        #:when ((length row) . > . n-orig-cols))
+                    (raise-mismatch-error 'tabular
+                                          "row list within cell properties list is too long: "
+                                          row)))
                 ;; Expand given column and cell properties lists to match
                 ;; the dimensions of the given `cells` by duplicating
                 ;; the last element of a list as needed (and ignoring
