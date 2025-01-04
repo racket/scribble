@@ -38,7 +38,7 @@
 
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesClass{acmart}
-[2024/12/07 v2.11 Typesetting articles for the Association for Computing Machinery]
+[2024/12/28 v2.12 Typesetting articles for the Association for Computing Machinery]
 \def\@classname{acmart}
 \InputIfFileExists{acmart-preload-hook.tex}{%
   \ClassWarning{\@classname}{%
@@ -289,7 +289,6 @@
 \RequirePackage{setspace}
 \onehalfspacing
 \fi
-\RequirePackage{textcase}
 \if@ACM@acmcp
 \RequirePackage{framed}
 \RequirePackage{zref-savepos, zref-user}
@@ -859,21 +858,23 @@
     have the newtxmath package installed.  Please upgrade your
     TeX}\@ACM@newfontsfalse}
 \if@ACM@newfonts
-  \RequirePackage[T1]{fontenc}
   % Note that the order in which packages are loaded matters,
   % and the correct order depends on the LaTeX engine used.
   % See https://github.com/borisveytsman/acmart/issues/402
   % and https://github.com/borisveytsman/acmart/issues/410
   \ifxetex
-    \RequirePackage[libertine]{newtxmath}
+    \RequirePackage{unicode-math}
+    \setmathfont[Scale=MatchUppercase]{libertinusmath-regular.otf}
     \RequirePackage[tt=false]{libertine}
     \setmonofont[StylisticSet=3]{inconsolata}
   \else
     \ifluatex
-      \RequirePackage[libertine]{newtxmath}
+      \RequirePackage{unicode-math}
+      \setmathfont[Scale=MatchUppercase]{libertinusmath-regular.otf}
       \RequirePackage[tt=false]{libertine}
       \setmonofont[StylisticSet=3]{inconsolata}
     \else
+       \RequirePackage[T1]{fontenc}
        \RequirePackage[tt=false, type1=true]{libertine}
        \RequirePackage[varqu]{zi4}
        \RequirePackage[libertine]{newtxmath}
@@ -1636,7 +1637,7 @@
   \def\position##1{\ignorespaces}%
   \def\institution##1{##1\ignorespaces}%
   \def\department{\@ifnextchar[{\@department}{\@department[]}}%
-  \def\@department[##1]##2{\unskip, ##2\ignorespaces}%
+  \def\@department[##1]##2{##2, \ignorespaces}%
   \let\city\position
   \let\state\position
   \let\country\position
@@ -2247,7 +2248,9 @@
     \if@printcopyright
       \copyright\ \@copyrightyear\ \@copyrightowner\\
     \else
-      \@copyrightyear.\
+      \ifx\@copyrightyear\@empty\else
+        \@copyrightyear.\
+      \fi
     \fi
     \if@ACM@manuscript
       Manuscript submitted to ACM\\
@@ -2363,6 +2366,7 @@
     \fi
     \ifx\@empty\@authorsaddresses\else\bigskip\@setauthorsaddresses\fi
     \zsaveposy{@ACM@acmcpbox@y}%
+    \par
   }
 \egroup}
 \def\@specialsection#1{%
@@ -2680,9 +2684,9 @@
   \global\let\and\@typeset@author@line
   \def\@author##1{%
     \ifx\@currentauthors\@empty
-      \gdef\@currentauthors{\@authorfont\MakeTextUppercase{##1}}%
+      \gdef\@currentauthors{\@authorfont\MakeUppercase{##1}}%
     \else
-       \g@addto@macro{\@currentauthors}{\and\MakeTextUppercase{##1}}%
+       \g@addto@macro{\@currentauthors}{\and\MakeUppercase{##1}}%
     \fi
     \gdef\and{}}%
   \def\email##1##2{}%
