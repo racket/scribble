@@ -59,10 +59,7 @@
 (define hovers (make-weak-hasheq))
 (define (intern-hover-style text)
   (let ([text (datum-intern-literal text)])
-    (or (hash-ref hovers text #f)
-        (let ([s (make-style #f (list (make-hover-property text)))])
-          (hash-set! hovers text s)
-          s))))
+    (hash-ref! hovers text (λ () (make-style #f (list (make-hover-property text)))))))
 
 (define (annote-exporting-library e)
   (make-delayed-element
