@@ -413,11 +413,12 @@
               flow-empty-line flow-empty-line)
         (list (to-flow nonterm) flow-empty-line (to-flow "=") flow-empty-line
               (make-flow (list (car clauses))))
-        (map (lambda (clause)
-               (list flow-empty-line flow-empty-line
-                     (to-flow "|") flow-empty-line
-                     (make-flow (list clause))))
-             (cdr clauses))))
+        (for/list ([clause (in-list (cdr clauses))])
+          (list flow-empty-line
+                flow-empty-line
+                (to-flow "|")
+                flow-empty-line
+                (make-flow (list clause))))))
      nonterms clauseses))))
 
 (define (*racketrawgrammar style nonterm clause1 . clauses)
@@ -426,11 +427,8 @@
 (define (*racketgrammar lits s-expr clauseses-thunk)
   (define l (clauseses-thunk))
   (*racketrawgrammars #f
-                      (map (lambda (x)
-                             (make-element #f
-                                           (list (hspace 2)
-                                                 (car x))))
-                           l)
+                      (for/list ([x (in-list l)])
+                        (make-element #f (list (hspace 2) (car x))))
                       (map cdr l)))
 
 (define (*var id)
@@ -445,14 +443,11 @@
       (append
        (list (list flow-empty-line))
        (list (list (make-flow
-                    (map (lambda (c)
-                           (make-table
-                            "argcontract"
-                            (list
-                             (list (to-flow (hspace 2))
-                                   (to-flow ((car c)))
-                                   flow-spacer
-                                   (to-flow ":")
-                                   flow-spacer
-                                   (make-flow (list ((cadr c))))))))
-                         contract-procs)))))))
+                    (for/list ([c (in-list contract-procs)])
+                      (make-table "argcontract"
+                                  (list (list (to-flow (hspace 2))
+                                              (to-flow ((car c)))
+                                              flow-spacer
+                                              (to-flow ":")
+                                              flow-spacer
+                                              (make-flow (list ((cadr c))))))))))))))
