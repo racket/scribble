@@ -140,10 +140,14 @@ A @deftech{block} is either a @techlink{table}, an
                          uncollapsible spaces that cannot be broken
                          across lines.}
 
-                   @item{A symbol content is either @racket['mdash],
-                         @racket['ndash], @racket['ldquo],
-                         @racket['lsquo], @racket['rdquo], @racket['rsquo], @racket['larr],
-                         @racket['rarr], or @racket['prime]; it is
+                   @item{A symbol content is either
+                         @racket['mdash], @racket['ndash],
+                         @racket['ldquo], @racket['rdquo],
+                         @racket['lsquo], @racket['rsquo],
+                         @racket['lang], @racket['rang],
+                         @racket['larr], @racket['rarr],
+                         @racket['nbsp], @racket['prime],
+                         @racket['alpha], or @racket['infin]; it is
                          rendered as the corresponding HTML entity
                          (even for Latex output).}
 
