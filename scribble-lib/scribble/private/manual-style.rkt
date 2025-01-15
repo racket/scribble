@@ -26,7 +26,7 @@
           [filebox (((or/c core:element? string?)) () #:rest (listof pre-flow?) . ->* . block?)]))
 
 (define styling-f/c
-  (() () #:rest (listof pre-content?) . ->* . element?))
+  (-> pre-content? ... element?))
 (define-syntax-rule (provide-styling id ...)
   (provide/contract [id styling-f/c] ...))
 (provide-styling racketmodfont racketoutput
