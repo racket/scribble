@@ -171,11 +171,10 @@
   (make-blockquote code-inset-style (list b)))
 
 (define (commandline . s)
-  (make-paragraph (cons (hspace 2) (map (lambda (s)
-                                          (if (string? s)
-                                            (make-element 'tt (list s))
-                                            s))
-                                        s))))
+  (make-paragraph (cons (hspace 2) (for/list ([s (in-list s)])
+                                     (if (string? s)
+                                         (make-element 'tt (list s))
+                                         s)))))
 
 (define (pidefterm . s)
   (define c (apply defterm s))

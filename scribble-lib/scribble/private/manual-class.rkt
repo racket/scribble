@@ -155,11 +155,11 @@
       null))
 
 (define (build-body decl body)
-  `(,@(map (lambda (i)
-             (cond [(constructor? i) ((constructor-def i))]
-                   [(meth? i) ((meth-def i))]
-                   [else i]))
-           body)
+  `(,@(for/list ([i (in-list body)])
+        (cond
+          [(constructor? i) ((constructor-def i))]
+          [(meth? i) ((meth-def i))]
+          [else i]))
     ,(make-delayed-block (lambda (r d ri) (make-inherited-table r d ri decl)))))
 
 (define (*include-class/title decl link?)
