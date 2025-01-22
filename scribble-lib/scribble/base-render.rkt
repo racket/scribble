@@ -167,9 +167,9 @@
                  #:key car)))
 
     (define/private (extract-style-style-files s ht pred extract)
-      (for ([v (in-list (style-properties s))])
-        (when (pred v)
-          (hash-update! ht (extract v) values (hash-count ht)))))
+      (for ([v (in-list (style-properties s))]
+            #:when (pred v))
+        (hash-update! ht (extract v) values (hash-count ht))))
 
     (define/private (extract-flow-style-files blocks d ri ht pred extract)
       (for ([b (in-list blocks)])
