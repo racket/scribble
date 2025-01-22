@@ -346,34 +346,37 @@
 
     (define/private (partition-info all-ci n d)
       ;; partition information in `all-ci' based on `d's:
-      (let ([prefix (part-tag-prefix-string d)]
-            [new-hts (for/list ([i (in-range n)])
-                       (make-hash))]
-            [covered (make-hash)])
-        ;; Fill in new-hts from parts:
-        (for ([sub-d (in-list (part-parts d))]
-              [i (in-naturals)])
-          (define ht (list-ref new-hts (min (add1 i) (sub1 n))))
-          (define cdi (hash-ref (collect-info-parts all-ci) sub-d #f))
-          (define sub-prefix (part-tag-prefix-string sub-d))
-          (when cdi
-            (for ([(k v) (in-hash (collected-info-info cdi))])
-              (when (cadr k)
-                (define sub-k (if sub-prefix
-                                  (convert-key sub-prefix k)
-                                  k))
-                (define full-k (if prefix
-                                   (convert-key prefix sub-k)
-                                   sub-k))
-                (hash-set! ht full-k v)
-                (hash-set! covered full-k #t)))))
-        ;; Anything not covered in the new-hts must go in the main hts:
-        (let ([ht0 (car new-hts)])
-          (for ([(k v) (in-hash (collect-info-ht all-ci))])
-            (unless (hash-ref covered k #f)
-              (hash-set! ht0 k v))))
-        ;; Return hts:
-        new-hts))
+      (define prefix (part-tag-prefix-string d))
+      (define new-hts
+        (for/list ([i (in-range n)])
+          (make-hash)))
+      (define covered (make-hash))
+      ;; Fill in new-hts from parts:
+      (for ([sub-d (in-list (part-parts d))]
+            [i (in-naturals)])
+        (define ht (list-ref new-hts (min (add1 i) (sub1 n))))
+        (define cdi (hash-ref (collect-info-parts all-ci) sub-d #f))
+        (define sub-prefix (part-tag-prefix-string sub-d))
+        (when cdi
+          (for ([(k v) (in-hash (collected-info-info cdi))])
+            (when (cadr k)
+              (define sub-k
+                (if sub-prefix
+                    (convert-key sub-prefix k)
+                    k))
+              (define full-k
+                (if prefix
+                    (convert-key prefix sub-k)
+                    sub-k))
+              (hash-set! ht full-k v)
+              (hash-set! covered full-k #t)))))
+      ;; Anything not covered in the new-hts must go in the main hts:
+      (let ([ht0 (car new-hts)])
+        (for ([(k v) (in-hash (collect-info-ht all-ci))])
+          (unless (hash-ref covered k #f)
+            (hash-set! ht0 k v))))
+      ;; Return hts:
+      new-hts)
 
     (define/public (serialize-info ri)
       (serialize-one-ht ri (collect-info-ht (resolve-info-ci ri))))
