@@ -393,11 +393,11 @@
         (hash-set! in-ht k (if (or doc-id pkg) (known-doc v doc-id pkg) v))))
 
     (define/public (get-defined ci)
-      (hash-map (collect-info-ht ci) (lambda (k v) k)))
+      (hash-keys (collect-info-ht ci)))
 
     (define/public (get-defineds ci n d)
       (for/list ([ht (partition-info ci n d)])
-        (hash-map ht (lambda (k v) k))))
+        (hash-keys ht)))
 
     (define/public (get-external ri)
       (hash-map (resolve-info-undef ri) (lambda (k v) k)))
