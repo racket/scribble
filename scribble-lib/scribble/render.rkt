@@ -69,13 +69,12 @@
   (unless quiet?
     (send renderer report-output!))
   (define fns
-    (map (lambda (fn)
-           (let-values ([(base name dir?) (split-path fn)])
-             (let ([fn (path-replace-suffix name (send renderer get-suffix))])
-               (if dest-dir
-                   (build-path dest-dir fn)
-                   fn))))
-         names))
+    (for/list ([fn (in-list names)])
+      (define-values (base name dir?) (split-path fn))
+      (let ([fn (path-replace-suffix name (send renderer get-suffix))])
+        (if dest-dir
+            (build-path dest-dir fn)
+            fn))))
   (define fp (send renderer traverse docs fns))
   (define info (send renderer collect docs fns fp))
   (for ([file (in-list info-input-files)])
