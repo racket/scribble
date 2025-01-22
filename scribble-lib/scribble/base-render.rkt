@@ -242,8 +242,7 @@
       (let loop ([l (part-blocks d)])
         (apply append
                (for/list ([b (in-list l)])
-                 (define lifted (lift-proc b loop))
-                 lifted))))
+                 (lift-proc b loop)))))
 
     (define/private (extract-pre-paras-proc sym)
       (λ (v loop)
