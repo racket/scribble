@@ -110,9 +110,8 @@
 (define (definition-tag->class/interface-tag t) (cons 'class/intf (cdr t)))
 (define (class/interface-tag->constructor-tag t) (cons 'constructor (cdr t)))
 (define (get-class/interface-and-method meth-tag)
-  (match meth-tag
-    [`(meth ((,_ ,class/interface) ,method))
-     (values class/interface method)]))
+  (match-define `(meth ((,_ ,class/interface) ,method)) meth-tag)
+  (values class/interface method))
 (define (definition-tag? x) (and (tag? x) (equal? (car x) 'def)))
 (define (class/interface-tag? x) (and (tag? x) (equal? (car x) 'class/intf)))
 (define (method-tag? x) (and (tag? x) (equal? (car x) 'meth)))
