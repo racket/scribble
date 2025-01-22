@@ -157,9 +157,9 @@
           (extract-content-style-files (part-title-content p) d ri ht pred extract)
           (extract-flow-style-files (part-blocks p) d ri ht pred extract))
         (unless only-up?
-          (for ([p (in-list (part-parts p))])
-            (unless (stop-at-part? p)
-              (loop p #f #f)))))
+          (for ([p (in-list (part-parts p))]
+                #:unless (stop-at-part? p))
+            (loop p #f #f))))
       (map cdr
            (sort (for/list ([(k v) (in-hash ht)])
                    (cons v (if (or (bytes? k) (url? k)) k (collects-relative->path k))))
@@ -180,9 +180,9 @@
         [(table? p)
          (extract-style-style-files (table-style p) ht pred extract)
          (for* ([blocks (in-list (table-blockss p))]
-                [block (in-list blocks)])
-           (unless (eq? block 'cont)
-             (extract-block-style-files block d ri ht pred extract)))]
+                [block (in-list blocks)]
+                #:unless (eq? block 'cont))
+           (extract-block-style-files block d ri ht pred extract))]
         [(itemization? p)
          (extract-style-style-files (itemization-style p) ht pred extract)
          (for-each (lambda (blocks) (extract-flow-style-files blocks d ri ht pred extract))
