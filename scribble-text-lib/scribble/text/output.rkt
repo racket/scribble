@@ -280,10 +280,7 @@
         [(eq? p (car last)) (cdr last)]
         [else
          (define s
-           (or (hash-ref t p #f)
-               (let ([s (mcons 0 0)])
-                 (hash-set! t p s)
-                 s)))
+           (hash-ref! t p (λ () (mcons 0 0))))
          (set! last (cons p s))
          s]))))
 
