@@ -70,41 +70,32 @@
   (unless (even? (length args))
     (error 'method-spec "expected a list of types and argument names, but found ~a arguments"
            (length args)))
-  (let ([first-line
-         (hbl-append
-          (type-spec range)
-          (normal-font " ")
-          (var-font name)
-          (cond
-            [(null? args)
-             (normal-font "()")]
-            [else
-             (hbl-append
-              (normal-font "(")
-              (let loop ([args args])
-                (let* ([type (car args)]
-                       [param (cadr args)]
-                       [single-arg 
-                        (if param 
-                            (hbl-append (type-spec type)
-                                        (normal-font " ")
-                                        (var-font param))
-                            (type-spec type))])
-                  
-                  (cond
-                    [(null? (cddr args))
-                     (hbl-append single-arg (normal-font ")"))]
-                    [else
-                     (hbl-append single-arg
-                                 (normal-font ", ")
-                                 (loop (cddr args)))]))))])
-          (if body
-              (hbl-append (normal-font " {"))
-              (blank)))])
-    (if body
-        (vl-append first-line
-                   (hbl-append (blank 8 0) body (normal-font "}")))
-        first-line)))
+  (define first-line
+    (hbl-append
+     (type-spec range)
+     (normal-font " ")
+     (var-font name)
+     (cond
+       [(null? args) (normal-font "()")]
+       [else
+        (hbl-append
+         (normal-font "(")
+         (let loop ([args args])
+           (let* ([type (car args)]
+                  [param (cadr args)]
+                  [single-arg (if param
+                                  (hbl-append (type-spec type) (normal-font " ") (var-font param))
+                                  (type-spec type))])
+  
+             (cond
+               [(null? (cddr args)) (hbl-append single-arg (normal-font ")"))]
+               [else (hbl-append single-arg (normal-font ", ") (loop (cddr args)))]))))])
+     (if body
+         (hbl-append (normal-font " {"))
+         (blank))))
+  (if body
+      (vl-append first-line (hbl-append (blank 8 0) body (normal-font "}")))
+      first-line))
              
 (define (type-spec str)
   (cond
@@ -126,35 +117,32 @@
 
 ;; class-box : pict (or/c #f (listof pict)) (or/c #f (listof pict)) -> pict
 (define (class-box name fields methods)
-  (let* ([mk-blank (λ () (blank 0 (+ class-box-margin class-box-margin)))])
-    (cond
-      [(and methods fields)
-       (let* ([top-spacer (mk-blank)]
-              [bottom-spacer (mk-blank)]
-              [main (vl-append name 
-                               top-spacer
-                               (if (null? fields)
-                                   (blank 0 4)
-                                   (apply vl-append fields))
-                               bottom-spacer
-                               (if (null? methods)
-                                   (blank 0 4)
-                                   (apply vl-append methods)))])
-         (add-hline
-          (add-hline (frame (inset main class-box-margin))
-                     top-spacer)
-          bottom-spacer))]
-      [fields
-       (let* ([top-spacer (mk-blank)]
-              [main (vl-append name 
-                               top-spacer
-                               (if (null? fields)
-                                   (blank)
-                                   (apply vl-append fields)))])
-         (add-hline (frame (inset main class-box-margin))
-                    top-spacer))]
-      [methods (class-box name methods fields)]
-      [else (frame (inset name class-box-margin))])))
+  (define (mk-blank)
+    (blank 0 (+ class-box-margin class-box-margin)))
+  (cond
+    [(and methods fields)
+     (let* ([top-spacer (mk-blank)]
+            [bottom-spacer (mk-blank)]
+            [main (vl-append name
+                             top-spacer
+                             (if (null? fields)
+                                 (blank 0 4)
+                                 (apply vl-append fields))
+                             bottom-spacer
+                             (if (null? methods)
+                                 (blank 0 4)
+                                 (apply vl-append methods)))])
+       (add-hline (add-hline (frame (inset main class-box-margin)) top-spacer) bottom-spacer))]
+    [fields
+     (let* ([top-spacer (mk-blank)]
+            [main (vl-append name
+                             top-spacer
+                             (if (null? fields)
+                                 (blank)
+                                 (apply vl-append fields)))])
+       (add-hline (frame (inset main class-box-margin)) top-spacer))]
+    [methods (class-box name methods fields)]
+    [else (frame (inset name class-box-margin))]))
 
 (define (add-hline main sub)
   (let-values ([(x y) (cc-find main sub)])
