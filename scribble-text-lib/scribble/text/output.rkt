@@ -112,11 +112,12 @@
          (cond
            [(pair? nls)
             (define nl (car nls))
-            (if (regexp-match? #rx"^ *$" x start (car nl))
-                (newline p) ; only spaces before the end of the line
-                (begin
-                  (output-pfx col pfx lpfx)
-                  (write x p start (cdr nl))))
+            (cond
+              [(regexp-match? #rx"^ *$" x start (car nl))
+               (newline p)] ; only spaces before the end of the line
+              [else
+               (output-pfx col pfx lpfx)
+               (write x p start (cdr nl))])
             (loop (cdr nl) (cdr nls) 0 0)]
            ;; last substring from here (always set lpfx state when done)
            [(start . = . len) (set-mcdr! pfxs lpfx)]
@@ -279,10 +280,7 @@
         [(eq? p (car last)) (cdr last)]
         [else
          (define s
-           (or (hash-ref t p #f)
-               (let ([s (mcons 0 0)])
-                 (hash-set! t p s)
-                 s)))
+           (hash-ref! t p (λ () (mcons 0 0))))
          (set! last (cons p s))
          s]))))
 
