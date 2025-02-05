@@ -145,15 +145,16 @@
           (loop (append (syntax->list #'(x ...)) (cdr exprs)) ds es)]
          [(define-syntaxes (id ...) rhs)
           (andmap identifier? (syntax->list #'(id ...)))
-          (if (null? es)
-              (let ([ids (syntax->list #'(id ...))])
-                (syntax-local-bind-syntaxes ids
-                                            (local-transformer-expand #'rhs 'expression '())
-                                            (car ctx))
-                (loop (cdr exprs) (cons (rebuild-bindings) ds) es))
-              ;; return the unexpanded expr, to be re-expanded later, in the
-              ;; right contexts
-              (values (reverse ds) (reverse es) exprs))]
+          (cond
+            [(null? es)
+             (define ids (syntax->list #'(id ...)))
+             (syntax-local-bind-syntaxes ids
+                                         (local-transformer-expand #'rhs 'expression '())
+                                         (car ctx))
+             (loop (cdr exprs) (cons (rebuild-bindings) ds) es)]
+            ;; return the unexpanded expr, to be re-expanded later, in the
+            ;; right contexts
+            [else (values (reverse ds) (reverse es) exprs)])]
          [(define-values (id ...) rhs)
           (andmap identifier? (syntax->list #'(id ...)))
           (cond
