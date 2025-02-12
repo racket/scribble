@@ -182,11 +182,11 @@
 (define (resource path0 renderer #:exists [exists 'delete-file])
   (define (bad reason) (error 'resource "bad path, ~a: ~e" reason path0))
   (unless (string? path0) (bad "must be a string"))
-  (for ([x (in-list '([#rx"^/" "must be relative"]
-                      [#rx"//" "must not have empty elements"]
-                      [#rx"(?:^|/)[.][.]?(?:/|$)"
-                          "must not contain `.' or `..'"]))])
-    (when (regexp-match? (car x) path0) (bad (cadr x))))
+  (for ([x (in-list '([#rx"^/" "must be relative"] [#rx"//" "must not have empty elements"]
+                                                   [#rx"(?:^|/)[.][.]?(?:/|$)"
+                                                    "must not contain `.' or `..'"]))]
+        #:when (regexp-match? (car x) path0))
+    (bad (cadr x)))
   (define path (regexp-replace #rx"(?<=^|/)$" path0 default-file))
   (define-values [dirpathlist filename]
     (let-values ([(l r) (split-at-right (regexp-split #rx"/" path) 1)])
