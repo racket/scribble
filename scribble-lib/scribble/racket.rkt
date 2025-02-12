@@ -852,22 +852,24 @@
                                                   [col (if (= line (syntax-line (cdr p)))
                                                            col
                                                            col0)])
+                                             (define e
+                                               (syntax-ize (car p)
+                                                           (max 0
+                                                                (- (syntax-column (cdr p)) width sep))
+                                                           (syntax-line (cdr p))
+                                                           #:expr? (and expr? (zero? quote-depth))))
                                              (define key
-                                               (let ([e (syntax-ize (car p)
-                                                                    (max 0 (- (syntax-column (cdr p))
-                                                                              width
-                                                                              sep))
-                                                                    (syntax-line (cdr p))
-                                                                    #:expr? (and expr? (zero? quote-depth)))])
-                                                 (if ((syntax-column e) . <= . col)
-                                                     e
-                                                     (datum->syntax #f
-                                                                    (syntax-e e)
-                                                                    (vector (syntax-source e)
-                                                                            (syntax-line e)
-                                                                            col
-                                                                            (syntax-position e)
-                                                                            (+ (syntax-span e) (- (syntax-column e) col)))))))
+                                               (if ((syntax-column e) . <= . col)
+                                                   e
+                                                   (datum->syntax #f
+                                                                  (syntax-e e)
+                                                                  (vector (syntax-source e)
+                                                                          (syntax-line e)
+                                                                          col
+                                                                          (syntax-position e)
+                                                                          (+ (syntax-span e)
+                                                                             (- (syntax-column e)
+                                                                                col))))))
                                              (define elem
                                                (datum->syntax
                                                 #f
