@@ -886,11 +886,9 @@
                 ;; constructed:
                 [(and expr? (zero? quote-depth))
                  (define l (apply append
-                                  (map (lambda (p)
-                                         (let ([p (syntax-e p)])
-                                           (list (forced-pair-car p)
-                                                 (forced-pair-cdr p))))
-                                       (reverse l2))))
+                                  (for/list ([p (in-list (reverse l2))])
+                                    (let ([p (syntax-e p)])
+                                      (list (forced-pair-car p) (forced-pair-cdr p))))))
                  (datum->syntax
                   #f
                   (cons (datum->syntax #f
