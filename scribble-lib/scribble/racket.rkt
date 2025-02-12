@@ -793,9 +793,8 @@
                     (out ". " (if (positive? quote-depth) value-color paren-color))
                     (set! src-col (+ src-col 3)))
                   (hash-set! next-col-map src-col dest-col)
-                  ((loop init-line! quote-depth first-expr? #f) l (if (and expr? (zero? quote-depth))
-                                                                      srcless-step
-                                                                      #f))]))
+                  ((loop init-line! quote-depth first-expr? #f) l (and (and expr? (zero? quote-depth))
+                                                                       srcless-step))]))
              (out (case sh
                     [(#\[) "]"]
                     [(#\{) "}"]
