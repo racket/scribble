@@ -881,6 +881,7 @@
                    ,(scribble-css-contents scribble-css
                                            scribble-css-path
                                            dir-depth)
+                   (script ([type "text/javascript"]) "\ndocument.createElement('aside');\n")
                    ,@(map (lambda (style-file)
                             (if (or (bytes? style-file) (url? style-file))
                                 (scribble-css-contents style-file #f dir-depth)
