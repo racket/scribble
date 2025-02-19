@@ -231,46 +231,33 @@
                   (module-path-index-join mod-path #f)))
   (make-element
    #f
-   (map
-    (lambda (redirect)
-      (define id (car redirect))
-      (define form? (cadr redirect))
-      (define path (caddr redirect))
-      (define anchor (cadddr redirect))
-      (define (make-one kind)
-        (make-redirect-target-element
-         #f
-         null
-         (intern-taglet (list kind (list taglet id)))
-         path
-         anchor))
-      (make-element
-       #f
-       (list (make-one (if form? 'form 'def))
-             (make-dep (list taglet id) null)
-             (let ([str (datum-intern-literal (symbol->string id))])
-               (make-index-element #f
-                                   null
-                                   (intern-taglet
-                                    (list (if form? 'form 'def)
-                                          (list taglet id)))
-                                   (list str)
-                                   (list
-                                    (make-element
-                                     symbol-color
-                                     (list
-                                      (make-element
-                                       (if form?
-                                           syntax-link-color
-                                           value-link-color)
-                                       (list str)))))
-                                   (make-exported-index-desc*
-                                    id
-                                    (list mod-path)
-                                    (hash 'kind (if form?
-                                                    "syntax"
-                                                    "procedure"))))))))
-    redirects)))
+   (for/list ([redirect (in-list redirects)])
+     (define id (car redirect))
+     (define form? (cadr redirect))
+     (define path (caddr redirect))
+     (define anchor (cadddr redirect))
+     (define (make-one kind)
+       (make-redirect-target-element #f
+                                     null
+                                     (intern-taglet (list kind (list taglet id)))
+                                     path
+                                     anchor))
+     (make-element
+      #f
+      (list (make-one (if form? 'form 'def))
+            (make-dep (list taglet id) null)
+            (let ([str (datum-intern-literal (symbol->string id))])
+              (make-index-element
+               #f
+               null
+               (intern-taglet (list (if form? 'form 'def) (list taglet id)))
+               (list str)
+               (list (make-element symbol-color
+                                   (list (make-element (if form? syntax-link-color value-link-color)
+                                                       (list str)))))
+               (make-exported-index-desc* id
+                                          (list mod-path)
+                                          (hash 'kind (if form? "syntax" "procedure"))))))))))
 
 
 (define (make-dep t content)
