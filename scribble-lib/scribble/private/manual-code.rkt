@@ -340,16 +340,19 @@
          (list 'function start end 1)] ; this looses information
         [_ tok])))
 
-  (define (make-test-result  lst)
-    (define-values (res _)
-      (for/fold ([result null] [count 12])
+  (define (make-test-result lst)
+    (define res
+      (for/fold ([result null]
+                 [count 12]
+                 #:result result)
                 ([p lst])
         (define next (+ count (second p)))
         (define r (if (eq? (first p) 'function) 1 0))
-        (values
-         (cons (list (first p) count next r) result)
-         next)))
-    (list* `(function 0 5 1) `(white-space 5 6 0) `(function 6 12 1) `(function 6 12 1)
+        (values (cons (list (first p) count next r) result) next)))
+    (list* `(function 0 5 1)
+           `(white-space 5 6 0)
+           `(function 6 12 1)
+           `(function 6 12 1)
            (reverse res)))
 
   (check-equal?
