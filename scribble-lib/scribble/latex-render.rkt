@@ -226,7 +226,12 @@
                          (depth . > . 1)
                          (not no-number?))
                 (printf "~a\\quad{}" (car (format-number number null)))))
-            (printf "\n\n\\~a~a~a"
+            (printf "\n\n")
+            (unless no-toc?
+              (printf "\\SNextTitlePlain{")
+              (render-content (content->string (part-title-content d)) d ri)
+              (printf "}"))
+            (printf "\\~a~a~a"
                     (case depth
                       [(0 1) (if grouper?
                                  "partNewpage\n\n\\Spart"
