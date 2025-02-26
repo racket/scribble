@@ -172,47 +172,42 @@
      (list
       (make-table
        boxed-style
-       (map
-        (lambda (box)
-          (unless (and (box-splice? box)
-                       (= 1 (length (splice-run box)))
-                       (nested-flow? (car (splice-run box)))
-                       (eq? vertical-inset-style (nested-flow-style (car (splice-run box))))
-                       (let ([l (nested-flow-blocks (car (splice-run box)))])
-                         (= 1 (length l))
-                         (table? (car l))
-                         (eq? boxed-style (table-style (car l)))))
-            (error 'deftogether
-                   "element is not a boxing splice containing a single nested-flow with a single table: ~e"
-                   box))
-          (list (make-flow (list (make-table
-                                  "together"
-                                  (table-flowss (car (nested-flow-blocks (car (splice-run box))))))))))
-        boxes))))
+       (for/list ([box (in-list boxes)])
+         (unless (and (box-splice? box)
+                      (= 1 (length (splice-run box)))
+                      (nested-flow? (car (splice-run box)))
+                      (eq? vertical-inset-style (nested-flow-style (car (splice-run box))))
+                      (let ([l (nested-flow-blocks (car (splice-run box)))])
+                        (= 1 (length l))
+                        (table? (car l))
+                        (eq? boxed-style (table-style (car l)))))
+           (error
+            'deftogether
+            "element is not a boxing splice containing a single nested-flow with a single table: ~e"
+            box))
+         (list (make-flow (list (make-table "together"
+                                            (table-flowss (car (nested-flow-blocks
+                                                                (car (splice-run box)))))))))))))
     (body-thunk))))
 
 (define-syntax (deftogether stx)
   (syntax-parse stx
     [(_ (def ...+) . body)
      (with-syntax ([((_ (lit ...) (var ...) decl) ...)
-                    (map (lambda (def)
-                           (define exp-def
-                             (local-expand 
-                              def
-                              (list (make-deftogether-tag))
-                              (cons
-                               #'with-togetherable-racket-variables*
-                               (kernel-form-identifier-list))))
-                           (syntax-case exp-def (with-togetherable-racket-variables*)
-                             [(with-togetherable-racket-variables* lits vars decl)
-                              exp-def]
-                             [_
-                              (raise-syntax-error
-                               #f
-                               "sub-form is not a documentation form that can be combined"
-                               stx
-                               def)]))
-                         (syntax->list #'(def ...)))])
+                    (for/list ([def (in-list (syntax->list #'(def ...)))])
+                      (define exp-def
+                        (local-expand def
+                                      (list (make-deftogether-tag))
+                                      (cons #'with-togetherable-racket-variables*
+                                            (kernel-form-identifier-list))))
+                      (syntax-case exp-def (with-togetherable-racket-variables*)
+                        [(with-togetherable-racket-variables* lits vars decl) exp-def]
+                        [_
+                         (raise-syntax-error
+                          #f
+                          "sub-form is not a documentation form that can be combined"
+                          stx
+                          def)]))])
        #'(with-togetherable-racket-variables
           (lit ... ...)
           (var ... ...)
