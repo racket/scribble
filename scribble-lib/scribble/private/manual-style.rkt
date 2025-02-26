@@ -69,19 +69,17 @@
 (define etc (make-element #f (list "etc" ._)))
 
 (define (litchar . strs)
-  (let ([s (string-append* (map (lambda (s) (regexp-replace* "\n" s " "))
-                                strs))])
-    (cond
-      [(regexp-match? #rx"^ *$" s) (make-element input-background-color (list (hspace (string-length s))))]
-      [else
-       (define ^spaces (car (regexp-match-positions #rx"^ *" s)))
-       (define $spaces (car (regexp-match-positions #rx" *$" s)))
-       (make-element
-        input-background-color
-        (list (hspace (cdr ^spaces))
-              (make-element input-color
-                            (list (substring s (cdr ^spaces) (car $spaces))))
-              (hspace (- (cdr $spaces) (car $spaces)))))])))
+  (define s (string-append* (map (lambda (s) (regexp-replace* "\n" s " ")) strs)))
+  (cond
+    [(regexp-match? #rx"^ *$" s)
+     (make-element input-background-color (list (hspace (string-length s))))]
+    [else
+     (define ^spaces (car (regexp-match-positions #rx"^ *" s)))
+     (define $spaces (car (regexp-match-positions #rx" *$" s)))
+     (make-element input-background-color
+                   (list (hspace (cdr ^spaces))
+                         (make-element input-color (list (substring s (cdr ^spaces) (car $spaces))))
+                         (hspace (- (cdr $spaces) (car $spaces)))))]))
 
 (define (onscreen . str)
   (make-element 'sf (decode-content str)))
