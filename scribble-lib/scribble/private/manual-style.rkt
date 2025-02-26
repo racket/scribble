@@ -22,7 +22,8 @@
          itemize
          aux-elem
          code-inset)
-(provide/contract [filebox (((or/c core:element? string?)) () #:rest (listof pre-flow?) . ->* . block?)])
+(provide (contract-out
+          [filebox (((or/c core:element? string?)) () #:rest (listof pre-flow?) . ->* . block?)]))
 
 (define styling-f/c
   (() () #:rest (listof pre-content?) . ->* . element?))
@@ -53,16 +54,15 @@
 
 (provide void-const
          undefined-const)
-(provide/contract
- [PLaneT element?]
- [hash-lang (-> element?)]
- [etc element?]
- [inset-flow (() () #:rest (listof pre-content?) . ->* . nested-flow?)]
- [litchar (() () #:rest (listof string?) . ->* . element?)]
- [t (() () #:rest (listof pre-content?) . ->* . paragraph?)]
- [exec (() () #:rest (listof content?) . ->* . element?)]
- [commandline (() () #:rest (listof content?) . ->* . paragraph?)]
- [menuitem (string? string? . -> . element?)])
+(provide (contract-out [PLaneT element?]
+                       [hash-lang (-> element?)]
+                       [etc element?]
+                       [inset-flow (() () #:rest (listof pre-content?) . ->* . nested-flow?)]
+                       [litchar (() () #:rest (listof string?) . ->* . element?)]
+                       [t (() () #:rest (listof pre-content?) . ->* . paragraph?)]
+                       [exec (() () #:rest (listof content?) . ->* . element?)]
+                       [commandline (() () #:rest (listof content?) . ->* . paragraph?)]
+                       [menuitem (string? string? . -> . element?)]))
 
 (define PLaneT (make-element "planetName" '("PLaneT")))
 

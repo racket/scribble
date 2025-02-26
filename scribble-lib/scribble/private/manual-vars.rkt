@@ -17,8 +17,7 @@
 
 (define-struct (box-splice splice) ())
 
-(provide/contract
- [struct (box-splice splice) ([run list?])]) ; XXX ugly copying
+(provide (contract-out (struct (box-splice splice) ([run list?])))) ; XXX ugly copying
 (provide deftogether *deftogether
          with-racket-variables
          with-togetherable-racket-variables
