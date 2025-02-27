@@ -12,7 +12,7 @@
    see if any font is set. */
 
 /* Monospace: */
-.maincolumn, .refpara, .refelem, .tocset, .stt, .hspace, .refparaleft, .refelemleft {
+.maincolumn, .refpara, .refelem, .tocset, .stt, .hspace, .refparaleft, .refelemleft, .reffootnote {
   font-family: monospace;
 }
 
@@ -200,7 +200,7 @@ table td {
 /* ---------------------------------------- */
 /* Margin notes */
 
-.refpara, .refelem {
+.refpara, .refelem, .reffootnote {
   position: relative;
   float: right;
   left: 2em;
@@ -209,7 +209,7 @@ table td {
   margin: 0em -13em 0em 0em;
 }
 
-.refpara, .refparaleft {
+.refpara, .refparaleft, .reffootnote {
   top: -1em;
 }
 
