@@ -2053,7 +2053,7 @@ See also @racketmodname[scribble/latex-prefix].}
  @racket["scribble-load-replace.tex"] to
  @racket["my-scribble.tex"], then the
  @racket["my-scribble.tex"] file in the current directory
- will we used in place of the standard scribble package
+ will be used in place of the standard scribble package
  inclusion header. Using @racket["scribble-load-replace.tex"]
  can disable the use of possibly-conflicting packages in the
  LaTeX output. The file
