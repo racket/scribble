@@ -8,14 +8,15 @@
          racket/list)
 
 (provide doc-prefix)
-(provide/contract
- [spacer element?]
- [to-flow (content? . -> . flow?)]
- [flow-spacer flow?]
- [flow-spacer/n (-> exact-nonnegative-integer? flow?)]
- [flow-empty-line flow?]
- [make-table-if-necessary ((or/c style? string?) list? . -> . (list/c (or/c omitable-paragraph? table?)))]
- [current-display-width (parameter/c exact-nonnegative-integer?)])
+(provide (contract-out
+          [spacer element?]
+          [to-flow (content? . -> . flow?)]
+          [flow-spacer flow?]
+          [flow-spacer/n (-> exact-nonnegative-integer? flow?)]
+          [flow-empty-line flow?]
+          [make-table-if-necessary
+           ((or/c style? string?) list? . -> . (list/c (or/c omitable-paragraph? table?)))]
+          [current-display-width (parameter/c exact-nonnegative-integer?)]))
 
 (define spacer (hspace 1))
 
