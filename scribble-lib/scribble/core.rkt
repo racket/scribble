@@ -14,36 +14,34 @@
             part))
 
 (define (collect-put! ci key val)
-  (let ([ht (collect-info-ht ci)])
-    (let ([old-val (hash-ref ht key #f)])
-      (when old-val
-        (eprintf "WARNING: collected information for key multiple times: ~e; values: ~e ~e\n"
-                 key old-val val))
-      (hash-set! ht key val))))
+  (define ht (collect-info-ht ci))
+  (define old-val (hash-ref ht key #f))
+  (when old-val
+    (eprintf "WARNING: collected information for key multiple times: ~e; values: ~e ~e\n"
+             key
+             old-val
+             val))
+  (hash-set! ht key val))
 
 (define (resolve-get/where part ri key)
   (let ([key (tag-key key ri)])
-    (let ([v (hash-ref (if part
-                         (collected-info-info (part-collected-info part ri))
-                         (collect-info-ht (resolve-info-ci ri)))
-                       key
-                       #f)])
-      (cond
-        [v (values v #f)]
-        [part (resolve-get/where
-               (collected-info-parent (part-collected-info part ri))
-               ri key)]
-        [else
-         (define ci (resolve-info-ci ri))
-         (define (try-ext)
-           (hash-ref (collect-info-ext-ht ci) key #f))
-         (define v
-           (or (try-ext)
-               (and ((collect-info-ext-demand ci) key ci)
-                    (try-ext))))
-         (if (known-doc? v)
-             (values (known-doc-v v) (known-doc-id v))
-             (values v #t))]))))
+    (define v
+      (hash-ref (if part
+                    (collected-info-info (part-collected-info part ri))
+                    (collect-info-ht (resolve-info-ci ri)))
+                key
+                #f))
+    (cond
+      [v (values v #f)]
+      [part (resolve-get/where (collected-info-parent (part-collected-info part ri)) ri key)]
+      [else
+       (define ci (resolve-info-ci ri))
+       (define (try-ext)
+         (hash-ref (collect-info-ext-ht ci) key #f))
+       (define v (or (try-ext) (and ((collect-info-ext-demand ci) key ci) (try-ext))))
+       (if (known-doc? v)
+           (values (known-doc-v v) (known-doc-id v))
+           (values v #t))])))
 
 (define (resolve-get/ext? part ri key)
   (define-values (v ext-id) (resolve-get/ext-id* part ri key #f))
@@ -53,31 +51,29 @@
   (resolve-get/ext-id* part ri key #f))
 
 (define (resolve-get/ext-id* part ri key search-key)
-  (let-values ([(v ext-id) (resolve-get/where part ri key)])
-    (when ext-id
-      (hash-set! (resolve-info-undef ri) (tag-key key ri) 
-                 (if v 'found search-key)))
-    (values v ext-id)))
+  (define-values (v ext-id) (resolve-get/where part ri key))
+  (when ext-id
+    (hash-set! (resolve-info-undef ri) (tag-key key ri) (if v 'found search-key)))
+  (values v ext-id))
 
 (define (resolve-get part ri key)
   (resolve-get* part ri key #f))
 
 (define (resolve-get* part ri key search-key)
-  (let-values ([(v ext-id) (resolve-get/ext-id* part ri key search-key)])
-    v))
+  (define-values (v ext-id) (resolve-get/ext-id* part ri key search-key))
+  v)
 
 (define (resolve-get/tentative part ri key)
-  (let-values ([(v ext-id) (resolve-get/where part ri key)])
-    v))
+  (define-values (v ext-id) (resolve-get/where part ri key))
+  v)
 
 (define (resolve-search search-key part ri key)
   (let ([s-ht (hash-ref (resolve-info-searches ri)
                         search-key
                         (lambda ()
-                          (let ([s-ht (make-hash)])
-                            (hash-set! (resolve-info-searches ri)
-                                       search-key s-ht)
-                            s-ht)))])
+                          (define s-ht (make-hash))
+                          (hash-set! (resolve-info-searches ri) search-key s-ht)
+                          s-ht))])
     (hash-set! s-ht key #t))
   (resolve-get* part ri key search-key))
 
@@ -325,11 +321,10 @@
   prop:serializable
   (make-serialize-info
    (lambda (d)
-     (let ([ri (current-serialize-resolve-info)])
-       (unless ri
-         (error 'serialize-traverse-block
-                "current-serialize-resolve-info not set"))
-       (vector (traverse-block-block d ri))))
+     (define ri (current-serialize-resolve-info))
+     (unless ri
+       (error 'serialize-traverse-block "current-serialize-resolve-info not set"))
+     (vector (traverse-block-block d ri)))
    #'deserialize-traverse-block
    #f
    (or (current-load-relative-directory) (current-directory)))
@@ -375,11 +370,10 @@
   prop:serializable
   (make-serialize-info
    (lambda (d)
-     (let ([ri (current-serialize-resolve-info)])
-       (unless ri
-         (error 'serialize-traverse-block
-                "current-serialize-resolve-info not set"))
-       (vector (traverse-element-content d ri))))
+     (define ri (current-serialize-resolve-info))
+     (unless ri
+       (error 'serialize-traverse-block "current-serialize-resolve-info not set"))
+     (vector (traverse-element-content d ri)))
    #'deserialize-traverse-element
    #f
    (or (current-load-relative-directory) (current-directory)))
@@ -425,16 +419,16 @@
   prop:serializable
   (make-serialize-info
    (lambda (d)
-     (let ([ri (current-serialize-resolve-info)])
-       (unless ri
-         (error 'serialize-delayed-element
-                "current-serialize-resolve-info not set"))
-       (with-handlers ([exn:fail:contract?
-                        (lambda (exn)
-                          (error 'serialize-delayed-element
-                                 "serialization failed (wrong resolve info? delayed element never rendered?); ~a"
-                                 (exn-message exn)))])
-         (vector (delayed-element-content d ri)))))
+     (define ri (current-serialize-resolve-info))
+     (unless ri
+       (error 'serialize-delayed-element "current-serialize-resolve-info not set"))
+     (with-handlers
+         ([exn:fail:contract?
+           (lambda (exn)
+             (error 'serialize-delayed-element
+                    "serialization failed (wrong resolve info? delayed element never rendered?); ~a"
+                    (exn-message exn)))])
+       (vector (delayed-element-content d ri))))
    #'deserialize-delayed-element
    #f
    (or (current-load-relative-directory) (current-directory)))
