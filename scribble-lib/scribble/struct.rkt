@@ -397,17 +397,13 @@
 (define (flatten-style s)
   (cond
    [(with-attributes? s)
-    (let ([rest (flatten-style (with-attributes-style s))])
-      (if (with-attributes? rest)
-          ;; collapse nested with-attributes
-          (make-with-attributes 
-           (with-attributes-style rest)
-           (append (with-attributes-assoc s)
-                   (with-attributes-assoc rest)))
-          ;; rebuild with flattened inner:
-          (make-with-attributes 
-           rest
-           (with-attributes-assoc s))))]
+    (define rest (flatten-style (with-attributes-style s)))
+    (if (with-attributes? rest)
+        ;; collapse nested with-attributes
+        (make-with-attributes (with-attributes-style rest)
+                              (append (with-attributes-assoc s) (with-attributes-assoc rest)))
+        ;; rebuild with flattened inner:
+        (make-with-attributes rest (with-attributes-assoc s)))]
    [(target-url? s)
     (define rest (flatten-style (target-url-style s)))
     (if (with-attributes? rest)

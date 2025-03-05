@@ -347,12 +347,10 @@
 (define (traverse-block-block b i)
   (cond
    [(collect-info? i)
-    (let ([p (hash-ref (collect-info-fp i) b #f)])
-      (if (block? p)
-          p
-          (error 'traverse-block-block
-                 "no block computed for traverse-block: ~e"
-                 b)))]
+    (define p (hash-ref (collect-info-fp i) b #f))
+    (if (block? p)
+        p
+        (error 'traverse-block-block "no block computed for traverse-block: ~e" b))]
    [(resolve-info? i)
     (traverse-block-block b (resolve-info-ci i))]))
 
@@ -392,12 +390,10 @@
 (define (traverse-element-content e i)
   (cond
    [(collect-info? i)
-    (let ([c (hash-ref (collect-info-fp i) e #f)])
-      (if (content? c)
-          c
-          (error 'traverse-block-block
-                 "no block computed for traverse-block: ~e"
-                 e)))]
+    (define c (hash-ref (collect-info-fp i) e #f))
+    (if (content? c)
+        c
+        (error 'traverse-block-block "no block computed for traverse-block: ~e" e))]
    [(resolve-info? i)
     (traverse-element-content e (resolve-info-ci i))]))
 
