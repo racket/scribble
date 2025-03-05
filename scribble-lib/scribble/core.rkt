@@ -78,12 +78,13 @@
   (resolve-get* part ri key search-key))
 
 (define (resolve-get-keys part ri key-pred)
-  (for/list ([k (in-hash-keys (if part
-                                  (collected-info-info (part-collected-info part ri))
-                                  (let ([ci (resolve-info-ci ri)])
-                                    ;; Force all xref info:
-                                    ((collect-info-ext-demand ci) #f ci)
-                                    (collect-info-ext-ht ci))))]
+  (for/list ([k (in-hash-keys (cond
+                                [part (collected-info-info (part-collected-info part ri))]
+                                [else
+                                 (define ci (resolve-info-ci ri))
+                                 ;; Force all xref info:
+                                 ((collect-info-ext-demand ci) #f ci)
+                                 (collect-info-ext-ht ci)]))]
              #:when (key-pred k))
     k))
 
