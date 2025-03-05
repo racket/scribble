@@ -311,8 +311,7 @@
 
 (define (box-mode* name)
   (box-mode name name name))
-(provide/contract
- [box-mode* (string? . -> . box-mode?)])
+(provide (contract-out [box-mode* (string? . -> . box-mode?)]))
 
 ;; ----------------------------------------
 
@@ -339,8 +338,7 @@
                  block?))))
 
 (provide block-traverse-procedure/c)
-(provide/contract
- (struct traverse-block ([traverse block-traverse-procedure/c])))
+(provide (contract-out (struct traverse-block ([traverse block-traverse-procedure/c]))))
 
 (provide deserialize-traverse-block)
 (define deserialize-traverse-block
@@ -358,10 +356,8 @@
    [(resolve-info? i)
     (traverse-block-block b (resolve-info-ci i))]))
 
-(provide/contract
- [traverse-block-block (traverse-block?
-                        (or/c resolve-info? collect-info?)
-                        . -> . block?)])
+(provide (contract-out [traverse-block-block
+                        (traverse-block? (or/c resolve-info? collect-info?) . -> . block?)]))
 
 ;; ----------------------------------------
 
@@ -387,8 +383,7 @@
     . -> . (or/c element-traverse-procedure/c
                  content?))))
 
-(provide/contract
- (struct traverse-element ([traverse element-traverse-procedure/c])))
+(provide (contract-out (struct traverse-element ([traverse element-traverse-procedure/c]))))
 
 (provide deserialize-traverse-element)
 (define deserialize-traverse-element
@@ -407,10 +402,8 @@
     (traverse-element-content e (resolve-info-ci i))]))
 
 (provide element-traverse-procedure/c)
-(provide/contract
- [traverse-element-content (traverse-element?
-                            (or/c resolve-info? collect-info?)
-                            . -> . content?)])
+(provide (contract-out [traverse-element-content
+                        (traverse-element? (or/c resolve-info? collect-info?) . -> . content?)]))
 
 ;; ----------------------------------------
 
