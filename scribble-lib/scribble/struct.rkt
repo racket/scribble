@@ -214,12 +214,11 @@
 (define (make-table/compat style cellss)
   (make-table (convert-style style)
               (for/list ([cells (in-list cellss)])
-                (map (lambda (cell)
-                       (cond
-                         [(eq? cell 'cont) 'cont]
-                         [(= 1 (length cell)) (car cell)]
-                         [else (make-nested-flow plain cell)]))
-                     cells))))
+                (for/list ([cell (in-list cells)])
+                  (cond
+                    [(eq? cell 'cont) 'cont]
+                    [(= 1 (length cell)) (car cell)]
+                    [else (make-nested-flow plain cell)])))))
 (define (table-flowss t)
   (map (lambda (row) (map (lambda (c) (make-flow (list c))) row))
        (table-blockss t)))
@@ -383,15 +382,13 @@
                       [(or a va) (list (make-table-columns (gen-columns #f a va)))]
                       [else
                        (define l (cdr (assq 'row-styles s)))
-                       (list (make-table-cells (map (lambda (row)
-                                                      (let ([sn (assq 'style row)]
-                                                            [a (assq 'alignment row)]
-                                                            [va (assq 'valignment row)])
-                                                        (if (or sn a va)
-                                                            (gen-columns sn a va)
-                                                            (error 'convert-style
-                                                                   "no row style found"))))
-                                                    l)))]))))]
+                       (list (make-table-cells (for/list ([row (in-list l)])
+                                                 (let ([sn (assq 'style row)]
+                                                       [a (assq 'alignment row)]
+                                                       [va (assq 'valignment row)])
+                                                   (if (or sn a va)
+                                                       (gen-columns sn a va)
+                                                       (error 'convert-style "no row style found"))))))]))))]
    [else (error 'convert-style "unrecognized style: ~e" s)]))
 
 (define (flatten-style s)
