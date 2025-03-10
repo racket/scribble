@@ -65,7 +65,9 @@
        `(" " ,@(decode-content (list location)) ,(if date "," "."))
        null)
      (if date `(" " ,@(decode-content (list date)) ".") null)
-     (if url `(" " ,(link url (tt url))) null)
+     (if url (list " "
+                   (link url
+                         (tt url))) null)
      (if note (decode-content (list note)) null)))))
 
 (define-on-demand bib-style (make-style "RBibliography" scheme-properties))
