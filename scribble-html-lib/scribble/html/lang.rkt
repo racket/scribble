@@ -1,7 +1,8 @@
 #lang racket/base
 
-(require "main.rkt" (except-in scribble/text/lang #%top)
-         scribble/text/syntax-utils)
+(require scribble/text/syntax-utils
+         (except-in scribble/text/lang #%top)
+         "main.rkt")
 
 (provide (except-out (all-from-out scribble/text/lang) #%module-begin)
          (rename-out [module-begin #%module-begin])
