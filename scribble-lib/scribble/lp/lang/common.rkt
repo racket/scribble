@@ -24,7 +24,7 @@
      (cons id (mapping-get chunk-groups id)))
     (free-identifier-mapping-put!
      chunks id
-     `(,@(mapping-get chunks id) ,@exprs))))
+     (append (mapping-get chunks id) exprs))))
 
 (define-syntax (tangle stx)
   (define chunk-mentions '())
