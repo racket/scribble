@@ -2,22 +2,26 @@
 
 ;; Use text renderer to check some Scribble functionality
 
-(require scribble/base-render (prefix-in markdown: scribble/markdown-render)
-         racket/file racket/class racket/runtime-path tests/eli-tester)
+(require racket/class
+         racket/file
+         racket/runtime-path
+         scribble/base-render
+         tests/eli-tester
+         (prefix-in markdown: scribble/markdown-render))
 
 (define-runtime-path source-dir "markdown-docs")
 (define work-dir (build-path (find-system-path 'temp-dir)
                              "scribble-docs-tests"))
 
 (define (build-markdown-doc src-file dest-file)
-  (let* ([renderer (new (markdown:render-mixin render%) [dest-dir work-dir])]
-         [docs     (list (dynamic-require src-file 'doc))]
-         [fns      (list (build-path work-dir dest-file))]
-         [fp       (send renderer traverse docs fns)]
-         [info     (send renderer collect  docs fns fp)]
-         [r-info   (send renderer resolve  docs fns info)])
-    (send renderer render docs fns r-info)
-    (send renderer get-undefined r-info)))
+  (define renderer (new (markdown:render-mixin render%) [dest-dir work-dir]))
+  (define docs (list (dynamic-require src-file 'doc)))
+  (define fns (list (build-path work-dir dest-file)))
+  (define fp (send renderer traverse docs fns))
+  (define info (send renderer collect docs fns fp))
+  (define r-info (send renderer resolve docs fns info))
+  (send renderer render docs fns r-info)
+  (send renderer get-undefined r-info))
 
 (provide markdown-tests)
 (module+ main (markdown-tests))
@@ -40,11 +44,9 @@
           (define (contents file)
             (regexp-replace #rx"\n+$" (file->string file) ""))
           (define undefineds (build-markdown-doc src-file "gen.md"))
-          (for ([u (in-list undefineds)])
-            (when (eq? 'tech (car u))
-              (test #:failure-message
-                    (format "undefined tech: ~e" u)
-                    #f)))
+          (for ([u (in-list undefineds)]
+                #:when (eq? 'tech (car u)))
+            (test #:failure-message (format "undefined tech: ~e" u) #f))
           (test #:failure-message
                 (format
                  "mismatch for: \"~a\", expected text in: \"~a\", got:\n~a"
