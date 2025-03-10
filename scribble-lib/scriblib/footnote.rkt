@@ -44,27 +44,19 @@
     (define (footnote-part . text) (do-footnote-part footnotes id))))
 
 (define (do-footnote footnotes id text)
-  (let ([tag (generated-tag)]
-        [content (decode-content text)])
-    (make-traverse-element
-     (lambda (get set)
-       (set id (cons (cons
-                      (make-element footnote-target-style
-                                    (make-element
-                                     'superscript
-                                     (counter-target footnotes tag #f)))
+  (define tag (generated-tag))
+  (define content (decode-content text))
+  (make-traverse-element
+   (lambda (get set)
+     (set id
+          (cons (cons (make-element footnote-target-style
+                                    (make-element 'superscript (counter-target footnotes tag #f)))
                       content)
-                     (get id null)))
-       (make-element footnote-style
-                     (list
-                      (make-element 
-                       footnote-ref-style
-                       (make-element
-                        'superscript
-                        (counter-ref footnotes tag #f)))
-                      (make-element
-                       footnote-content-style
-                       content)))))))
+                (get id null)))
+     (make-element footnote-style
+                   (list (make-element footnote-ref-style
+                                       (make-element 'superscript (counter-ref footnotes tag #f)))
+                         (make-element footnote-content-style content))))))
 
 (define (do-footnote-part footnotes id)
   (make-part
@@ -78,9 +70,6 @@
      (lambda (get set)
        (make-compound-paragraph
         footnote-block-style
-        (map (lambda (content)
-               (make-paragraph
-                footnote-block-content-style
-                content))
-             (reverse (get id null)))))))
+        (for/list ([content (in-list (reverse (get id null)))])
+          (make-paragraph footnote-block-content-style content))))))
    null))
