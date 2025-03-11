@@ -110,7 +110,9 @@ get all cross-reference information for installed documentation.
                                                               (one-of/c 0 1)
                                                               (or/c exact-integer? false/c)
                                                               (or/c exact-integer? false/c)))]
-                                       [mode (or/c exact-integer? false/c)])
+                                       [mode (or/c exact-integer? #f)]
+                                       [#:space space #f (or/c symbol? #f)]
+                                       [#:suffix suffix space any/c])
          (or/c tag? false/c)]{
 
 Locates a tag in @racket[xref] that documents a module export. The
@@ -146,10 +148,18 @@ binding. The @racket[binding] is specified in one of four ways:
 
 ]
 
+The @racket[space] argument indicates a binding space (in the sense of
+@racket[for-space]) to search. The @racket[suffix] argument specifies
+an additional suffix for the tag, which may be used to distinguish
+bindings for different spaces or components of a binding.
+
 If a documentation point exists in @racket[xref], a tag is returned,
 which might be used with @racket[xref-tag->path+anchor] or embedded in
 a document rendered via @racket[xref-render]. If no definition point
-is found in @racket[xref], the result is @racket[#f].}
+is found in @racket[xref], the result is @racket[#f].
+
+@history[#:changed "1.55" @elem{Added the @racket[#:space] and
+                                @racket[#:suffix] arguments.}]}
 
 
 @defproc[(xref-tag->path+anchor [xref xref?]

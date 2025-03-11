@@ -125,12 +125,14 @@
   (send renderer transfer-info ci (resolve-info-ci (xrefs-ri xrefs))))
 
 ;; Returns (values <tag-or-#f> <form?>)
-(define xref-binding-tag
-  (case-lambda
-   [(xrefs id/binding mode)
+(define (xref-binding-tag xrefs id/binding mode
+                          #:space [space #f]
+                          #:suffix [suffix space])
     (let ([search
            (lambda (id/binding)
-             (let ([tag (find-scheme-tag #f (xrefs-ri xrefs) id/binding mode)])
+             (let ([tag (find-scheme-tag #f (xrefs-ri xrefs) id/binding mode
+                                         #:space space
+                                         #:suffix suffix)])
                (if tag
                    (values tag (eq? (car tag) 'form))
                    (values #f #f))))])
@@ -158,10 +160,14 @@
                                      "                    (and (list? l)\n"
                                      "                         (or (= (length l) 2)\n"
                                      "                             (= (length l) 7)))))")
-                                    id/binding)]))]))
+                                    id/binding)])))
 
-(define (xref-binding->definition-tag xrefs id/binding mode)
-  (let-values ([(tag form?) (xref-binding-tag xrefs id/binding mode)])
+(define (xref-binding->definition-tag xrefs id/binding mode
+                                      #:space [space #f]
+                                      #:suffix [suffix space])
+  (let-values ([(tag form?) (xref-binding-tag xrefs id/binding mode
+                                              #:space space
+                                              #:suffix suffix)])
     tag))
 
 (define (xref-tag->path+anchor xrefs tag
