@@ -211,7 +211,7 @@ output). Beware of colliding with output for a table of contents.
 If @racket[footnote?] is true, then the Latex renderer typesets the
 content as a footnote instead of a margin note.
 
-@history[#:change "1.55" @elem{Added the @racket[#:footnote?] argument.}]}
+@history[#:changed "1.55" @elem{Added the @racket[#:footnote?] argument.}]}
 
 
 @defproc[(margin-note* [pre-content pre-content?] ...
@@ -223,7 +223,7 @@ Like @racket[margin-note], but @racket[margin-note*] can be
 used in the middle of a paragraph. At the same time, its content is
 constrained to form a single paragraph in the margin.
 
-@history[#:change "1.55" @elem{Added the @racket[#:footnote?] argument.}]}
+@history[#:changed "1.55" @elem{Added the @racket[#:footnote?] argument.}]}
 
 
 @defproc[(itemlist [itm items/c] ...
