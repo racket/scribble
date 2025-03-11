@@ -297,7 +297,7 @@
 % The \refpara command corresponds to `margin-note'. The
 % refcolumn and refcontent environments also wrap the note,
 % because they simplify the CSS side.
-\newcommand{\refpara}[1]{\normalmarginpar\marginpar{\raggedright \footnotesize #1}}
+\newcommand{\refpara}[1]{\footnote{ #1}}
 \newcommand{\refelem}[1]{\refpara{#1}}
 \newenvironment{refcolumn}{}{}
 \newenvironment{refcontent}{}{}
