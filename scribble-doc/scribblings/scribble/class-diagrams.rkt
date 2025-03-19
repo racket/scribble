@@ -224,9 +224,8 @@
 
 
 (define (add-dot-right main class field) (add-dot-left-right/offset main class field 0 rc-find))
-(define add-dot-right/space 
-  (λ (main class field [count 1])
-    (add-dot-right/offset main class field (* count dot-edge-spacing))))
+(define (add-dot-right/space main class field [count 1])
+  (add-dot-right/offset main class field (* count dot-edge-spacing)))
 (define (add-dot-right/offset main class field offset)
   (add-dot-left-right/offset main class field offset rc-find))
 
