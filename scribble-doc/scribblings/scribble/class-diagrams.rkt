@@ -70,41 +70,32 @@
   (unless (even? (length args))
     (error 'method-spec "expected a list of types and argument names, but found ~a arguments"
            (length args)))
-  (let ([first-line
-         (hbl-append
-          (type-spec range)
-          (normal-font " ")
-          (var-font name)
-          (cond
-            [(null? args)
-             (normal-font "()")]
-            [else
-             (hbl-append
-              (normal-font "(")
-              (let loop ([args args])
-                (let* ([type (car args)]
-                       [param (cadr args)]
-                       [single-arg 
-                        (if param 
-                            (hbl-append (type-spec type)
-                                        (normal-font " ")
-                                        (var-font param))
-                            (type-spec type))])
-                  
-                  (cond
-                    [(null? (cddr args))
-                     (hbl-append single-arg (normal-font ")"))]
-                    [else
-                     (hbl-append single-arg
-                                 (normal-font ", ")
-                                 (loop (cddr args)))]))))])
-          (if body
-              (hbl-append (normal-font " {"))
-              (blank)))])
-    (if body
-        (vl-append first-line
-                   (hbl-append (blank 8 0) body (normal-font "}")))
-        first-line)))
+  (define first-line
+    (hbl-append
+     (type-spec range)
+     (normal-font " ")
+     (var-font name)
+     (cond
+       [(null? args) (normal-font "()")]
+       [else
+        (hbl-append
+         (normal-font "(")
+         (let loop ([args args])
+           (let* ([type (car args)]
+                  [param (cadr args)]
+                  [single-arg (if param
+                                  (hbl-append (type-spec type) (normal-font " ") (var-font param))
+                                  (type-spec type))])
+  
+             (cond
+               [(null? (cddr args)) (hbl-append single-arg (normal-font ")"))]
+               [else (hbl-append single-arg (normal-font ", ") (loop (cddr args)))]))))])
+     (if body
+         (hbl-append (normal-font " {"))
+         (blank))))
+  (if body
+      (vl-append first-line (hbl-append (blank 8 0) body (normal-font "}")))
+      first-line))
              
 (define (type-spec str)
   (cond
@@ -126,83 +117,86 @@
 
 ;; class-box : pict (or/c #f (listof pict)) (or/c #f (listof pict)) -> pict
 (define (class-box name fields methods)
-  (let* ([mk-blank (λ () (blank 0 (+ class-box-margin class-box-margin)))])
-    (cond
-      [(and methods fields)
-       (let* ([top-spacer (mk-blank)]
-              [bottom-spacer (mk-blank)]
-              [main (vl-append name 
-                               top-spacer
-                               (if (null? fields)
-                                   (blank 0 4)
-                                   (apply vl-append fields))
-                               bottom-spacer
-                               (if (null? methods)
-                                   (blank 0 4)
-                                   (apply vl-append methods)))])
-         (add-hline
-          (add-hline (frame (inset main class-box-margin))
-                     top-spacer)
-          bottom-spacer))]
-      [fields
-       (let* ([top-spacer (mk-blank)]
-              [main (vl-append name 
-                               top-spacer
-                               (if (null? fields)
-                                   (blank)
-                                   (apply vl-append fields)))])
-         (add-hline (frame (inset main class-box-margin))
-                    top-spacer))]
-      [methods (class-box name methods fields)]
-      [else (frame (inset name class-box-margin))])))
+  (define (mk-blank)
+    (blank 0 (+ class-box-margin class-box-margin)))
+  (cond
+    [(and methods fields)
+     (let* ([top-spacer (mk-blank)]
+            [bottom-spacer (mk-blank)]
+            [main (vl-append name
+                             top-spacer
+                             (if (null? fields)
+                                 (blank 0 4)
+                                 (apply vl-append fields))
+                             bottom-spacer
+                             (if (null? methods)
+                                 (blank 0 4)
+                                 (apply vl-append methods)))])
+       (add-hline (add-hline (frame (inset main class-box-margin)) top-spacer) bottom-spacer))]
+    [fields
+     (let* ([top-spacer (mk-blank)]
+            [main (vl-append name
+                             top-spacer
+                             (if (null? fields)
+                                 (blank)
+                                 (apply vl-append fields)))])
+       (add-hline (frame (inset main class-box-margin)) top-spacer))]
+    [methods (class-box name methods fields)]
+    [else (frame (inset name class-box-margin))]))
 
 (define (add-hline main sub)
-  (let-values ([(x y) (cc-find main sub)])
-    (pin-line main
-              sub (λ (p1 p2) (values 0 y))
-              sub (λ (p1 p2) (values (pict-width main) y)))))
+  (define-values (x y) (cc-find main sub))
+  (pin-line main sub (λ (p1 p2) (values 0 y)) sub (λ (p1 p2) (values (pict-width main) y))))
 
 ;; hierarchy : pict (cons pict (listof pict)) (cons pict (listof pict)) -> pict
 (define (hierarchy main supers subs)
-  (let ([supers-bottoms (apply max (map (λ (x) (let-values ([(x y) (cb-find main x)]) y)) supers))]
-        [subs-tops (apply min (map (λ (x) (let-values ([(x y) (ct-find main x)]) y)) subs))]
-        [sorted-subs (sort subs (λ (x y) (< (left-edge-x main x) (left-edge-x main y))))])
-    (unless (< supers-bottoms subs-tops)
-      (error 'hierarchy "expected supers to be on top of subs, supers bottom is at ~a, and subs tops is at ~a"
-             supers-bottoms
-             subs-tops))
-    (let* ([main-line-y (max (- subs-tops 20) (/ (+ supers-bottoms subs-tops) 2))]
-           [main-line-start-x (center-x  main (car sorted-subs))]
-           [main-line-end-x (center-x main (last sorted-subs))]
-           [w/main-line
-            (pin-line main
-                      main (λ (_1 _2) (values main-line-start-x main-line-y))
-                      main (λ (_1 _2) (values main-line-end-x main-line-y))
-                      #:color hierarchy-color)]
-           [super-lines
-            (map (λ (super) 
-                   (let-values ([(x y) (cb-find main super)])
-                     (pin-over 
-                      (pin-line (ghost main)
-                                super cb-find
-                                main (λ (_1 _2) (values x main-line-y)))
-                      (- x (/ (pict-width triangle) 2))
-                      (- (/ (+ y main-line-y) 2)
-                         (/ (pict-height triangle) 2))
-                      triangle)))
-                 supers)]
-           [sub-lines
-            (map (λ (sub) 
-                   (let-values ([(x y) (ct-find main sub)])
-                     (pin-line (ghost main)
-                               sub ct-find
-                               main (λ (_1 _2) (values x main-line-y))
-                               #:color hierarchy-color)))
-                 subs)])
-      (apply cc-superimpose 
-             w/main-line
-             (append sub-lines
-                     super-lines)))))
+  (define supers-bottoms
+    (apply max
+           (map (λ (x)
+                  (let-values ([(x y) (cb-find main x)])
+                    y))
+                supers)))
+  (define subs-tops
+    (apply min
+           (map (λ (x)
+                  (let-values ([(x y) (ct-find main x)])
+                    y))
+                subs)))
+  (define sorted-subs (sort subs (λ (x y) (< (left-edge-x main x) (left-edge-x main y)))))
+  (unless (< supers-bottoms subs-tops)
+    (error 'hierarchy
+           "expected supers to be on top of subs, supers bottom is at ~a, and subs tops is at ~a"
+           supers-bottoms
+           subs-tops))
+  (define main-line-y (max (- subs-tops 20) (/ (+ supers-bottoms subs-tops) 2)))
+  (define main-line-start-x (center-x main (car sorted-subs)))
+  (define main-line-end-x (center-x main (last sorted-subs)))
+  (define w/main-line
+    (pin-line main
+              main
+              (λ (_1 _2) (values main-line-start-x main-line-y))
+              main
+              (λ (_1 _2) (values main-line-end-x main-line-y))
+              #:color hierarchy-color))
+  (define super-lines
+    (map (λ (super)
+           (let-values ([(x y) (cb-find main super)])
+             (pin-over (pin-line (ghost main) super cb-find main (λ (_1 _2) (values x main-line-y)))
+                       (- x (/ (pict-width triangle) 2))
+                       (- (/ (+ y main-line-y) 2) (/ (pict-height triangle) 2))
+                       triangle)))
+         supers))
+  (define sub-lines
+    (map (λ (sub)
+           (let-values ([(x y) (ct-find main sub)])
+             (pin-line (ghost main)
+                       sub
+                       ct-find
+                       main
+                       (λ (_1 _2) (values x main-line-y))
+                       #:color hierarchy-color)))
+         subs))
+  (apply cc-superimpose w/main-line (append sub-lines super-lines)))
 
 (define triangle-width 12)
 (define triangle-height 12)
@@ -212,21 +206,21 @@
                       (make-object point% triangle-width triangle-height))])
     (colorize 
      (dc (λ (dc dx dy)
-           (let ([brush (send dc get-brush)])
-             (send dc set-brush (send brush get-color) 'solid)
-             (send dc draw-polygon points dx dy)
-             (send dc set-brush brush)))
+           (define brush (send dc get-brush))
+           (send dc set-brush (send brush get-color) 'solid)
+           (send dc draw-polygon points dx dy)
+           (send dc set-brush brush))
          triangle-width
          triangle-height)
      hierarchy-color)))
 
 (define (center-x main pict)
-  (let-values ([(x y) (cc-find main pict)])
-    x))
+  (define-values (x y) (cc-find main pict))
+  x)
 
 (define (left-edge-x main pict)
-  (let-values ([(x y) (lc-find main pict)])
-    x))
+  (define-values (x y) (lc-find main pict))
+  x)
 
 
 (define (add-dot-right main class field) (add-dot-left-right/offset main class field 0 rc-find))
@@ -244,32 +238,28 @@
   (add-dot-left-right/offset main class field offset lc-find))
 
 (define (add-dot-left-right/offset main class field offset finder)
-  (let-values ([(_1 y) (cc-find main field)]
-               [(x-edge _2) (finder main class)])
-    (add-dot main (+ x-edge offset) y)))
+  (define-values (_1 y) (cc-find main field))
+  (define-values (x-edge _2) (finder main class))
+  (add-dot main (+ x-edge offset) y))
 
 (define add-dot-junction
   (case-lambda
     [(main x-pict y-pict) (add-dot-junction main x-pict cc-find y-pict cc-find)]
     [(main x-pict x-find y-pict y-find)
-     (let-values ([(x _1) (x-find main x-pict)]
-                  [(_2 y) (y-find main y-pict)])
-       (add-dot main x y))]))
+     (define-values (x _1) (x-find main x-pict))
+     (define-values (_2 y) (y-find main y-pict))
+     (add-dot main x y)]))
 
 (define (add-dot-offset pict dot dx dy)
-  (let-values ([(x y) (cc-find pict dot)])
-    (add-dot pict (+ x dx) (+ y dy))))
+  (define-values (x y) (cc-find pict dot))
+  (add-dot pict (+ x dx) (+ y dy)))
 
 (define dot-δx (make-parameter 0))
 (define dot-δy (make-parameter 0))
 
 (define (add-dot pict dx dy)
-  (let ([dot (blank)])
-    (values (pin-over pict 
-                      (+ dx (dot-δx))
-                      (+ dy (dot-δy))
-                      dot)
-            dot)))
+  (define dot (blank))
+  (values (pin-over pict (+ dx (dot-δx)) (+ dy (dot-δy)) dot) dot))
 
 (define (connect-dots show-arrowhead? main dot1 . dots)
   (let loop ([prev-dot dot1]
@@ -327,39 +317,39 @@
                                [count 1] 
                                #:connect-dots [connect-dots connect-dots]
                                #:dot-delta [dot-delta 0])
-  (let ([going-down? (let-values ([(_1 start-y) (find-cc main0 start-field)]
-                                  [(_2 finish-y) (find-cc main0 finish-name)])
-                       (< start-y finish-y))])
-    (define-values (main1 dot1) (add-dot-delta (λ () (add-dot-right main0 start-class start-field))
-                                               0
-                                               (if going-down? 
-                                                   dot-delta
-                                                   (- dot-delta))))
-    (define-values (main2 dot2) (add-dot-delta (λ () (add-dot-right/space main1 start-class start-field count))
-                                               dot-delta
-                                               (if going-down? 
-                                                   dot-delta
-                                                   (- dot-delta))))
-    (define-values (main3 dot3) (add-dot-delta (λ () (add-dot-right main2 finish-class finish-name))
-                                               0
-                                               (if going-down? 
-                                                   (- dot-delta)
-                                                   dot-delta)))
-    (define-values (main4 dot4) (add-dot-delta (λ () (add-dot-junction main3 dot2 dot3))
-                                               0
-                                               0))
-    
-    ;; these last two dots are just there for the delta-less arrowhead
-    (define-values (main5 dot5) (add-dot-right main4 finish-class finish-name))
-    (define-values (main6 dot6) (add-dot-delta (λ () (add-dot-right main5 finish-class finish-name))
-                                               1 ;; just enough to get the arrowhead going the right direction; not enough to see the line
-                                               0))
-    
-    (connect-dots
-     #t
-     (connect-dots #f main6 dot1 dot2 dot4 dot3)
-     dot6 
-     dot5)))
+  (define going-down?
+    (let-values ([(_1 start-y) (find-cc main0 start-field)]
+                 [(_2 finish-y) (find-cc main0 finish-name)])
+      (< start-y finish-y)))
+  (define-values (main1 dot1)
+    (add-dot-delta (λ () (add-dot-right main0 start-class start-field))
+                   0
+                   (if going-down?
+                       dot-delta
+                       (- dot-delta))))
+  (define-values (main2 dot2)
+    (add-dot-delta (λ () (add-dot-right/space main1 start-class start-field count))
+                   dot-delta
+                   (if going-down?
+                       dot-delta
+                       (- dot-delta))))
+  (define-values (main3 dot3)
+    (add-dot-delta (λ () (add-dot-right main2 finish-class finish-name))
+                   0
+                   (if going-down?
+                       (- dot-delta)
+                       dot-delta)))
+  (define-values (main4 dot4) (add-dot-delta (λ () (add-dot-junction main3 dot2 dot3)) 0 0))
+  
+  ;; these last two dots are just there for the delta-less arrowhead
+  (define-values (main5 dot5) (add-dot-right main4 finish-class finish-name))
+  (define-values (main6 dot6)
+    (add-dot-delta
+     (λ () (add-dot-right main5 finish-class finish-name))
+     1 ;; just enough to get the arrowhead going the right direction; not enough to see the line
+     0))
+  
+  (connect-dots #t (connect-dots #f main6 dot1 dot2 dot4 dot3) dot6 dot5))
 
 (define left-left-reference
   (λ (main0 start-class start-field finish-class finish-name [count 1] 
@@ -427,9 +417,9 @@
     (connect-dots #t main4 dot1 dot2 dot4 dot3)))
 
 (define (find-middle main p1 find1 p2 find2)
-  (let-values ([(x1 y1) (find1 main p1)]
-               [(x2 y2) (find2 main p2)])
-    (- (/ (+ x1 x2) 2) (min x1 x2))))
+  (define-values (x1 y1) (find1 main p1))
+  (define-values (x2 y2) (find2 main p2))
+  (- (/ (+ x1 x2) 2) (min x1 x2)))
 
 (define right-top-reference
   (λ (main0 start-class start-field finish-class [count 1] #:connect-dots [connect-dots connect-dots])
