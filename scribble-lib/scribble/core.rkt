@@ -424,10 +424,10 @@
    (or (current-load-relative-directory) (current-directory)))
   #:transparent)
 
-(provide/contract
- (struct delayed-element ([resolve (any/c part? resolve-info? . -> . content?)]
-                          [sizer (-> any)]
-                          [plain (-> any)])))
+(provide (contract-out (struct delayed-element
+                               ([resolve (any/c part? resolve-info? . -> . content?)] [sizer (-> any)]
+                                                                                      [plain
+                                                                                       (-> any)]))))
 
 (module+ deserialize-info
   (provide deserialize-delayed-element))
@@ -473,10 +473,9 @@
    (or (current-load-relative-directory) (current-directory)))
   #:transparent)
 
-(provide/contract
- (struct part-relative-element ([collect (collect-info? . -> . content?)]
-                                [sizer (-> any)]
-                                [plain (-> any)])))
+(provide (contract-out (struct part-relative-element
+                               ([collect (collect-info? . -> . content?)] [sizer (-> any)]
+                                                                          [plain (-> any)]))))
 
 (module+ deserialize-info
   (provide deserialize-part-relative-element))
