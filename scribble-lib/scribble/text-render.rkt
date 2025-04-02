@@ -105,10 +105,8 @@
                        (make-list (length flowss)
                                   (for/list ([s (in-list (table-columns-styles tc))])
                                     (extract-align s))))]
-                    [else
-                     (if (null? flowss)
-                         null
-                         (make-list (length flowss) (make-list (length (car flowss)) 'left)))])]
+                    [(null? flowss) null]
+                    [else (make-list (length flowss) (make-list (length (car flowss)) 'left))])]
                  [extract-border (lambda (s)
                                    (define p (style-properties s))
                                    (cond
@@ -134,11 +132,10 @@
                                 (make-list (length flowss)
                                            (for/list ([s (in-list (table-columns-styles tc))])
                                              (extract-border s))))]
+                             [(null? flowss) null]
                              [else
-                              (if (null? flowss)
-                                  null
-                                  (make-list (length flowss)
-                                             (make-list (length (car flowss)) '#(#f #f #f #f))))])]
+                              (make-list (length flowss)
+                                         (make-list (length (car flowss)) '#(#f #f #f #f)))])]
                  [border-left? (lambda (v) (vector-ref v 0))]
                  [border-right? (lambda (v) (vector-ref v 1))]
                  [border-top? (lambda (v) (vector-ref v 2))]
