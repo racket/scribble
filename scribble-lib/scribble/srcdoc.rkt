@@ -412,19 +412,22 @@
                                 [((x y) ...)
                                  (andmap identifier? (syntax->list #'(x ... y ...)))]
                                 [((x y) ...)
-                                 (for-each
-                                  (λ (var) 
-                                    (unless (identifier? var)
-                                      (raise-syntax-error #f "expected an identifier in the optional names" stx var)))
-                                  (syntax->list #'(x ... y ...)))]
+                                 (for ([var (in-list (syntax->list #'(x ... y ...)))])
+                                   (unless (identifier? var)
+                                     (raise-syntax-error
+                                      #f
+                                      "expected an identifier in the optional names"
+                                      stx
+                                      var)))]
                                 [(a ...)
-                                 (for-each
-                                  (λ (a)
-                                    (syntax-case stx ()
-                                      [(x y) (void)]
-                                      [other
-                                       (raise-syntax-error #f "expected an sequence of two idenfiers" stx #'other)]))
-                                  (syntax->list #'(a ...)))]))]
+                                 (for ([a (in-list (syntax->list #'(a ...)))])
+                                   (syntax-case stx ()
+                                     [(x y) (void)]
+                                     [other
+                                      (raise-syntax-error #f
+                                                          "expected an sequence of two idenfiers"
+                                                          stx
+                                                          #'other)]))]))]
                            [x
                             (raise-syntax-error
                              #f
