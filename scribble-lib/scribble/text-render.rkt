@@ -188,9 +188,10 @@
                  (let ([h (apply max 0 (map x-length row))])
                    (let ([row* (for/list ([i (in-range h)])
                                  (for/list ([col (in-list row)])
-                                   (if (i . < . (x-length col))
-                                       (list-ref col i)
-                                       (if (eq? col 'cont) 'cont ""))))])
+                                   (cond
+                                     [(i . < . (x-length col)) (list-ref col i)]
+                                     [(eq? col 'cont) 'cont]
+                                     [else ""])))])
                      (for/fold ([indent? indent?])
                                ([sub-row (in-list row*)]
                                 [pos (in-naturals)])
