@@ -149,12 +149,11 @@
                                   (define v2 (list-ref borders i))
                                   (vector (or (border-left? v) (border-left? v2))
                                           (or (border-right? v) (border-right? v2)))))]
-                 [widths (map (lambda (col)
-                                (for/fold ([d 0]) ([i (in-list col)])
-                                  (if (eq? i 'cont)
-                                      d
-                                      (apply max d (map string-length i)))))
-                              (apply map list strs))]
+                 [widths (for/list ([col (in-list (apply map list strs))])
+                           (for/fold ([d 0]) ([i (in-list col)])
+                             (if (eq? i 'cont)
+                                 d
+                                 (apply max d (map string-length i)))))]
                  [x-length (lambda (col)
                              (if (eq? col 'cont)
                                  0
