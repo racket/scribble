@@ -66,22 +66,15 @@
            #'(check-pre-part s (quote-syntax loc))))]))
 
 (define (check-pre-part v loc-stx)
-  (if (pre-part? v)
-      v
-      (error
-       (format
-        "~a: not valid in document body (need a pre-part for decode) in: ~e"
-        (cond
-         [(and (syntax-source loc-stx)
-               (syntax-line loc-stx))
-          (format "~a:~a:~a"
-                  (syntax-source loc-stx)
-                  (syntax-line loc-stx)
-                  (syntax-column loc-stx))]
-         [(and (syntax-source loc-stx)
-               (syntax-position loc-stx))
-          (format "~a:::~a"
-                  (syntax-source loc-stx)
-                  (syntax-position loc-stx))]
-         [else 'document])
-        v))))
+  (unless (pre-part? v)
+    (error
+     (format
+      "~a: not valid in document body (need a pre-part for decode) in: ~e"
+      (cond
+        [(and (syntax-source loc-stx) (syntax-line loc-stx))
+         (format "~a:~a:~a" (syntax-source loc-stx) (syntax-line loc-stx) (syntax-column loc-stx))]
+        [(and (syntax-source loc-stx) (syntax-position loc-stx))
+         (format "~a:::~a" (syntax-source loc-stx) (syntax-position loc-stx))]
+        [else 'document])
+      v)))
+  v)
