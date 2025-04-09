@@ -57,11 +57,10 @@
     (set! cached-roots
           (cons roots
                 (and (list? roots) (pair? roots)
-                     (map (lambda (root)
-                            (list* (regexp-match* #rx"[^/]+" (car root))
-                                   (regexp-replace #rx"/$" (cadr root) "")
-                                   (cddr root)))
-                          roots)))))
+                     (for/list ([root (in-list roots)])
+                       (list* (regexp-match* #rx"[^/]+" (car root))
+                              (regexp-replace #rx"/$" (cadr root) "")
+                              (cddr root)))))))
   (cdr cached-roots))
 
 ;; a utility for relative paths, taking the above `default-file' and
