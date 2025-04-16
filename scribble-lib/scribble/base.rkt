@@ -209,7 +209,7 @@
 ;; ----------------------------------------
 
 (define elem-like-contract
-  (->* () () #:rest (listof pre-content?) element?))
+  (-> pre-content? ... element?))
 
 (provide (contract-out
           [linebreak (-> element?)]
@@ -559,10 +559,7 @@
 
 (provide
  (contract-out
-  [elemtag (->* ((or/c taglet? generated-tag?))
-                ()
-                #:rest (listof pre-content?)
-                element?)]
+  [elemtag (-> (or/c taglet? generated-tag?) pre-content? ... element?)]
   [elemref (->* ((or/c taglet? generated-tag?))
                 (#:underline? any/c)
                 #:rest (listof pre-content?)
