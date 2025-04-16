@@ -606,13 +606,10 @@
                  #:tag-prefixes [prefix #f]
                  #:indirect? [indirect? #f]
                  . s)
-  (make-link-element (if indirect?
-                         (if u?
-                             normal-indirect
-                             plain-indirect)
-                         (if u? 
-                             #f 
-                             "plainlink"))
+  (make-link-element (cond
+                       [indirect? (if u? normal-indirect plain-indirect)]
+                       [u? #f]
+                       [else "plainlink"])
                      (decode-content s)
                      `(part ,(doc-prefix doc prefix tag))))
 
