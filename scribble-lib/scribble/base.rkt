@@ -483,22 +483,15 @@
                 (define tc (and all-column-properties
                                 (let ([tc (ormap (lambda (v) (and (table-columns? v) v))
                                                  props)])
-                                  (if (and tc
-                                           (= (length (table-columns-styles tc))
-                                              n-cols))
-                                      tc
-                                      #f))))
+                                  (and (and tc (= (length (table-columns-styles tc)) n-cols)) tc))))
                 (define tl (and all-cell-properties
                                 (let ([tl (ormap (lambda (v) (and (table-cells? v) v))
                                                  props)])
-                                  (if (and tl
-                                           (= (length (table-cells-styless tl))
-                                              n-rows)
-                                           (andmap (lambda (cl)
-                                                     (= (length cl) n-cols))
-                                                   (table-cells-styless tl)))
-                                      tl
-                                      #f))))
+                                  (and (and tl
+                                            (= (length (table-cells-styless tl)) n-rows)
+                                            (andmap (lambda (cl) (= (length cl) n-cols))
+                                                    (table-cells-styless tl)))
+                                       tl))))
                 ;; Merge:
                 (define (cons-maybe v l) (if v (cons v l) l))
                 (make-style (style-name s)
