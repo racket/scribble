@@ -140,10 +140,9 @@
      (case (length auths)
        [(1) auths]
        [(2) (list (car auths) nl "and " (cadr auths))]
-       [else (let ([r (reverse auths)])
-               (append (add-between (reverse (cdr r))
-                                    (make-element #f (list "," nl)))
-                       (list "," nl "and " (car r))))]))))
+       [else (define r (reverse auths))
+             (append (add-between (reverse (cdr r)) (make-element #f (list "," nl)))
+                     (list "," nl "and " (car r)))]))))
 
 (define (author+email name email #:obfuscate? [obfuscate? #f])
   (make-element #f
@@ -372,18 +371,18 @@
       [(3) "rd"]
       [else "th"]))
   (unless (null? cells)
-    (let ([n (length (car cells))])
-      (for ([row (in-list (cdr cells))]
-            [pos (in-naturals 2)])
-        (unless (= n (length row))
-          (raise-mismatch-error
-           'tabular
-           (format "bad length (~a does not match first row's length ~a) for ~a~a row: "
-                   (length row)
-                   n
-                   pos
-                   (nth-str pos))
-           row)))))
+    (define n (length (car cells)))
+    (for ([row (in-list (cdr cells))]
+          [pos (in-naturals 2)])
+      (unless (= n (length row))
+        (raise-mismatch-error
+         'tabular
+         (format "bad length (~a does not match first row's length ~a) for ~a~a row: "
+                 (length row)
+                 n
+                 pos
+                 (nth-str pos))
+         row))))
   (for ([row (in-list cells)]
         [pos (in-naturals 1)])
     (when (and (pair? row) (eq? (car row) 'cont))
@@ -607,13 +606,12 @@
                      (make-section-tag s #:doc doc #:tag-prefixes prefix)))
 (define (Secref s #:underline? [u? #t] #:doc [doc #f] #:tag-prefixes [prefix #f]
                 #:link-render-style [link-style #f])
-  (let ([le (secref s #:underline? u? #:doc doc #:tag-prefixes prefix
-                    #:link-render-style link-style)])
-    (make-link-element
-     (let ([es (or (element-style le) plain)])
-       (style (style-name es) (cons 'uppercase (style-properties es))))
-     (element-content le)
-     (link-element-tag le))))
+  (define le
+    (secref s #:underline? u? #:doc doc #:tag-prefixes prefix #:link-render-style link-style))
+  (make-link-element (let ([es (or (element-style le) plain)])
+                       (style (style-name es) (cons 'uppercase (style-properties es))))
+                     (element-content le)
+                     (link-element-tag le)))
 
 (define normal-indirect (style #f '(indirect-link)))
 (define plain-indirect (style "plainlink" '(indirect-link)))
@@ -742,12 +740,12 @@
     ;; Convert a single string in a line to typewriter font,
     ;; and also convert multiple adjacent spaces to `hspace` so
     ;; that the space is preserved exactly:
-    (let ([spaces (regexp-match-positions #rx"(?:^| ) +" str)])
-      (if spaces
+    (define spaces (regexp-match-positions #rx"(?:^| ) +" str))
+    (if spaces
         (list* (make-element 'tt (substring str 0 (caar spaces)))
                (hspace (- (cdar spaces) (caar spaces)))
                (str->elts (substring str (cdar spaces))))
-        (list (make-element 'tt (list str))))))
+        (list (make-element 'tt (list str)))))
   (define (strs->elts line)
     ;; Convert strings in the line:
     (apply append (map (lambda (e) 
