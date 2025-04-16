@@ -17,6 +17,7 @@
 
 (define current-render-mixin       (make-parameter html:render-mixin))
 (define current-html               (make-parameter #t))
+(define current-xexpr              (make-parameter #f))
 (define current-dest-directory     (make-parameter #f))
 (define current-dest-name          (make-parameter #f))
 (define current-info-output-file   (make-parameter #f))
@@ -93,6 +94,8 @@
     (current-html #f)
     (current-render-mixin markdown:render-mixin)]
    #:once-each
+   [("--xexpr") "generate xexpr body and navigation output instead of html output"
+    (current-xexpr #t)]
    [("--lib" "-l") "treat argument <file>s as library paths instead of filesystem paths"
     (current-lib-mode #t)]
    [("--dest") dir "write output in <dir>"
@@ -219,6 +222,7 @@
                          'scribble "result from `~s' of `~s' is not an xref: ~e"
                          (cdr mod+id) (car mod+id) xr))
                       xr))
-          #:info-out-file (current-info-output-file)))
+          #:info-out-file (current-info-output-file)
+          #:xexpr-out? (current-xexpr)))
 
 (run)
