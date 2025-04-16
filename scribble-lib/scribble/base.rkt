@@ -277,11 +277,10 @@
                 l))])
     (if (andmap string? l)
       (make-element 'tt l)
-      (make-element #f (map (lambda (s)
-                              (if (or (string? s) (symbol? s))
-                                (make-element 'tt (list s))
-                                s))
-                            l)))))
+      (make-element #f (for/list ([s (in-list l)])
+                         (if (or (string? s) (symbol? s))
+                             (make-element 'tt (list s))
+                             s))))))
 
 (define (span-class classname . str)
   (make-element classname (decode-content str)))
@@ -532,17 +531,16 @@
                                             (make-style #f ps))))))
                               (remq tc (remq tl props))))))
               ;; Process cells:
-              (map (lambda (row)
-                     (define (cvt cell)
-                       (cond
-                        [(eq? cell 'cont) cell]
-                        [(block? cell) cell]
-                        [else (make-paragraph plain cell)]))
-                     (define l (map cvt row))
-                     (if sep
-                         (add-between/cont l (cvt sep))
-                         l))
-                   cells)))
+              (for/list ([row (in-list cells)])
+                (define (cvt cell)
+                  (cond
+                    [(eq? cell 'cont) cell]
+                    [(block? cell) cell]
+                    [else (make-paragraph plain cell)]))
+                (define l (map cvt row))
+                (if sep
+                    (add-between/cont l (cvt sep))
+                    l))))
 
 ;; Like `add-between`, but change `sep` to 'cont when
 ;; adding before a 'cont:
