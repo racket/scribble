@@ -94,11 +94,10 @@
                       (attribute no-result-kw)
                       (attribute no-form-kw))))
          (with-syntax ([srcloced-form srcloced-form]
-                       [title (or (attribute title)
-                                  (cond
-                                   [(= 1 (length (syntax->list #'(form ...))))
-                                    #'example-title]
-                                   [else #'examples-title]))])
+                       [title (cond
+                                [(attribute title) #t]
+                                [(= 1 (length (syntax->list #'(form ...)))) #'example-title]
+                                [else #'examples-title])])
            (syntax/loc stx (as-examples title srcloced-form)))]
         [else
          srcloced-form]))
