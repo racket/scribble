@@ -11,7 +11,6 @@
          racket/pretty
          racket/list
          racket/string
-         racket/trace
          file/convertible
          mzlib/runtime-path
          setup/main-doc
