@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@master
       # The next two step was copied from the CI config for Typed Racket:
       # https://github.com/racket/typed-racket/blob/master/.github/workflows/ci.yml
-      - uses: Bogdanp/setup-racket@v1.11
+      - uses: Bogdanp/setup-racket@v1.13
         with:
           architecture: x64
           distribution: full
