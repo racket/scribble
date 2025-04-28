@@ -1088,7 +1088,7 @@
           (define script-file-path
             (or (lookup-path script-file alt-paths) 
                 (install-file/as-url script-file)))
-          (unless  xexpr-out?
+          (unless xexpr-out?
             (if (bytes? prefix-file)
               (display prefix-file)
               (call-with-input-file*
