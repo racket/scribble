@@ -1162,21 +1162,21 @@
               (define authors-paragraph-list (extract-authors d))
               (for/list ([p authors-paragraph-list])
                 (car (paragraph-content p))))
-            (if xexpr-out?
-                (let ([article
-                       (scribble-xexpr-page
-                        title-string        ; title
-                        (authors-list)      ; authors
-                        (extract-date d)    ; date
-                        (extract-version d) ; document version
-                        null                ; tags
-                        (unless (part-style? d 'no-toc+aux)
-                         (list-of-toc-view d ri)) ; tocset
-                        article-xexpr       ; article
-                        )]
-                      [article-string (open-output-string)])
-                  (pretty-write article))
-                (xml:write-xexpr part-xexpr))))))
+            (cond
+              [xexpr-out?
+               (pretty-write
+                (scribble-xexpr-page
+                 title-string        ; title
+                 (authors-list)      ; authors
+                 (extract-date d)    ; date
+                 (extract-version d) ; document version
+                 null                ; tags
+                 (if (part-style? d 'no-toc+aux)
+                     null
+                     (list-of-toc-view d ri)) ; tocset
+                 article-xexpr       ; article
+                 ))]
+              [else (xml:write-xexpr part-xexpr)])))))
 
     (define (toc-part? d ri)
       (and (part-style? d 'toc)
