@@ -857,42 +857,38 @@
                                             (make-just-context (car name)
                                                                (car (syntax-e stx-id)))
                                             stx-id)])
-                           (if link?
-                               (let ()
-                                 (define (gen defn?)
-                                   ((if defn? annote-exporting-library values)
-                                    (to-element #:defn? defn? name-id)))
-                                 (define content (gen #t))
-                                 (define ref-content (gen #f))
-                                 (make-target-element*
-                                  (lambda (s c t)
-                                    (make-toc-target2-element s c t ref-content))
-                                  (if (pair? name)
-                                      (car (syntax-e stx-id))
-                                      stx-id)
-                                  content
-                                  (let ([name (if (pair? name) (car name) name)])
-                                    (list* (list 'info name)
-                                           (list 'type 'struct: name)
-                                           (list 'predicate name '?)
-                                           (append
-                                            (if cname-id
-                                                (list (list 'constructor (syntax-e cname-id)))
-                                                null)
-                                            (map (lambda (f)
-                                                   (list 'accessor name '-
-                                                         (field-name f)))
-                                                 fields)
-                                            (filter-map
-                                             (lambda (f)
-                                               (and (or (not immutable?)
-                                                        (and (pair? (car f))
-                                                             (memq '#:mutable
-                                                                   (car f))))
-                                                    (list 'mutator 'set- name '-
-                                                          (field-name f) '!)))
-                                             fields))))))
-                               (to-element #:defn? #t name-id)))])
+                           (cond
+                             [link?
+                              (define (gen defn?)
+                                ((if defn? annote-exporting-library values) (to-element #:defn? defn?
+                                                                                        name-id)))
+                              (define content (gen #t))
+                              (define ref-content (gen #f))
+                              (make-target-element*
+                               (lambda (s c t) (make-toc-target2-element s c t ref-content))
+                               (if (pair? name)
+                                   (car (syntax-e stx-id))
+                                   stx-id)
+                               content
+                               (let ([name (if (pair? name)
+                                               (car name)
+                                               name)])
+                                 (list* (list 'info name)
+                                        (list 'type 'struct: name)
+                                        (list 'predicate name '?)
+                                        (append
+                                         (if cname-id
+                                             (list (list 'constructor (syntax-e cname-id)))
+                                             null)
+                                         (map (lambda (f) (list 'accessor name '- (field-name f)))
+                                              fields)
+                                         (filter-map
+                                          (lambda (f)
+                                            (and (or (not immutable?)
+                                                     (and (pair? (car f)) (memq '#:mutable (car f))))
+                                                 (list 'mutator 'set- name '- (field-name f) '!)))
+                                          fields)))))]
+                             [else (to-element #:defn? #t name-id)]))])
                     (if (pair? name)
                         (make-element
                          #f
@@ -913,17 +909,17 @@
                           (map sym-length
                                (append (if (pair? name) name (list name))
                                        (map field-name fields)))
-                          (map (lambda (f)
-                                 (match (car f)
-                                   [(? symbol?) 0]
-                                   [(list name) 2] ;; the extra [ ]
-                                   [(list* name field-opts)
-                                    ;; '[' ']'
-                                    (apply + 2
-                                           (for/list ([field-opt (in-list field-opts)])
-                                             ;; and " #:"
-                                             (+ 3 (string-length (keyword->string field-opt)))))]))
-                               fields)))])
+                          (for/list ([f (in-list fields)])
+                            (match (car f)
+                              [(? symbol?) 0]
+                              [(list name) 2] ;; the extra [ ]
+                              [(list* name field-opts)
+                               ;; '[' ']'
+                               (apply +
+                                      2
+                                      (for/list ([field-opt (in-list field-opts)])
+                                        ;; and " #:"
+                                        (+ 3 (string-length (keyword->string field-opt)))))]))))])
             (cond
               [(and (short-width . < . max-proto-width)
                     (not keyword-modifiers?))
@@ -931,9 +927,7 @@
                (make-omitable-paragraph
                 (list
                  (to-element
-                  `(,(racket struct)
-                    ,the-name
-                    ,(map field-view fields)))))]
+                  (list (racket struct) the-name (map field-view fields)))))]
               [else
                ;; Multi-line view (leaving out last paren if keywords follow):
                (define one-right-column?
