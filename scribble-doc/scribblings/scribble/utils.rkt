@@ -49,22 +49,20 @@
                     [pos base]
                     [second #f]
                     [accum null])
-           (if (null? e)
-             (datum->syntax
-              p (reverse accum)
-              (list (syntax-source p) (syntax-line p) base (add1 base)
-                    (- pos base))
-              p)
-             (let* ([v ((norm-spacing (if (= line (syntax-line (car e)))
-                                        pos
-                                        (or second pos)))
-                        (car e))]
-                    [next-pos (+ (syntax-column v) (syntax-span v) 1)])
-               (loop (cdr e)
-                     (syntax-line v)
-                     next-pos
-                     (or second next-pos)
-                     (cons v accum)))))]
+           (cond
+             [(null? e)
+              (datum->syntax p
+                             (reverse accum)
+                             (list (syntax-source p) (syntax-line p) base (add1 base) (- pos base))
+                             p)]
+             [else
+              (define v
+                ((norm-spacing (if (= line (syntax-line (car e)))
+                                   pos
+                                   (or second pos)))
+                 (car e)))
+              (define next-pos (+ (syntax-column v) (syntax-span v) 1))
+              (loop (cdr e) (syntax-line v) next-pos (or second next-pos) (cons v accum))]))]
         [else (datum->syntax
                p (syntax-e p)
                (list (syntax-source p) (syntax-line p) base (add1 base) 1)
@@ -77,28 +75,27 @@
     (port-count-lines! p)
     (let loop ([r '()] [newlines? #f])
       (regexp-match? #px#"^[[:space:]]*" p)
-      (let* ([p1  (file-position p)]
-             [stx (scribble:read-syntax #f p)]
-             [p2  (file-position p)])
-        (if (not (eof-object? stx))
+      (define p1 (file-position p))
+      (define stx (scribble:read-syntax #f p))
+      (define p2 (file-position p))
+      (if (not (eof-object? stx))
           (let ([str (substring lines p1 p2)])
-            (loop (cons (list str stx) r)
-                  (or newlines? (regexp-match? #rx#"\n" str))))
+            (loop (cons (list str stx) r) (or newlines? (regexp-match? #rx#"\n" str))))
           (let* ([r (reverse r)]
                  [r (if newlines?
-                      (cdr (apply append (map (lambda (x) (list #f x)) r)))
-                      r)])
-            (make-table
-             plain
-             (map (lambda (x)
-                    (let ([@expr (if x (litchar/lines (car x)) "")]
-                          [sexpr (if x
-                                   (racket:to-paragraph
-                                    ((norm-spacing 0) (cadr x)))
-                                   "")]
-                          [reads-as (if x reads-as "")])
-                      (map as-flow (list spacer @expr reads-as sexpr))))
-                  r))))))))
+                        (cdr (apply append (map (lambda (x) (list #f x)) r)))
+                        r)])
+            (make-table plain
+                        (map (lambda (x)
+                               (let ([@expr (if x
+                                                (litchar/lines (car x))
+                                                "")]
+                                     [sexpr (if x
+                                                (racket:to-paragraph ((norm-spacing 0) (cadr x)))
+                                                "")]
+                                     [reads-as (if x reads-as "")])
+                                 (map as-flow (list spacer @expr reads-as sexpr))))
+                             r)))))))
 
 ;; stuff for the scribble/text examples
 
@@ -112,12 +109,12 @@
   (define strs2 (split out-text))
   (define strsm (map (compose split cdr) more))
   (define (str->elts str)
-    (let ([spaces (regexp-match-positions #rx"(?:^| ) +" str)])
-      (if spaces
+    (define spaces (regexp-match-positions #rx"(?:^| ) +" str))
+    (if spaces
         (list* (str->elts (substring str 0 (caar spaces)))
                (smaller (hspace (- (cdar spaces) (caar spaces))))
                (str->elts (substring str (cdar spaces))))
-        (list (smaller (make-element 'tt str))))))
+        (list (smaller (make-element 'tt str)))))
   (define (make-line str)
     (list (as-flow (if (equal? str "")
                        (smaller (hspace 1))
@@ -129,15 +126,16 @@
                   (filebox file t)
                   t))))
   (define filenames (map car more))
-  (define indent (let ([d (- max-textsample-width
-                             (for*/fold ([m 0])
-                                        ([s (in-list (cons strs1 strsm))]
-                                         [s (in-list s)])
-                               (max m (string-length s))))])
-                   (if (negative? d)
-                     (error 'textsample-verbatim-boxes
-                            "left box too wide for sample at line ~s" line)
-                     (make-element 'tt (list (hspace d))))))
+  (define d
+    (- max-textsample-width
+       (for*/fold ([m 0])
+                  ([s (in-list (cons strs1 strsm))]
+                   [s (in-list s)])
+         (max m (string-length s)))))
+  (define indent
+    (if (negative? d)
+        (error 'textsample-verbatim-boxes "left box too wide for sample at line ~s" line)
+        (make-element 'tt (list (hspace d)))))
   ;; Note: the font-size property is reset for every table, so we need it
   ;; everywhere there's text, and they don't accumulate for nested tables
   (values
@@ -186,11 +184,9 @@
        (and (string? (syntax-e #'sep)) (regexp-match? sep-rx (syntax-e #'sep)))
        (let ([m (cond [(regexp-match sep-rx (syntax-e #'sep)) => cadr]
                       [else #f])])
-         (if (and m (not (regexp-match? file-rx m)))
-           (raise-syntax-error #f "bad filename specified" stx #'sep)
-           (loop #'xs
-                 (list (and m (datum->syntax #'sep m #'sep #'sep)))
-                 (cons (reverse text) texts))))]
+         (when (and m (not (regexp-match? file-rx m)))
+           (raise-syntax-error #f "bad filename specified" stx #'sep))
+         (loop #'xs (list (and m (datum->syntax #'sep m #'sep #'sep))) (cons (reverse text) texts)))]
       [(x . xs) (loop #'xs (cons #'x text) texts)]
       [() (let ([texts (reverse (cons (reverse text) texts))]
                 [line  (syntax-line stx)])
