@@ -1,17 +1,17 @@
 #lang racket/base
 
-(require "core.rkt"
-         "private/render-utils.rkt"
+(require file/convertible
          mzlib/class
          mzlib/serialize
+         net/url-structs
          racket/file
          racket/path
          setup/collects
          setup/path-relativize
-         file/convertible
-         net/url-structs
-         "render-struct.rkt"
-         "manual-struct.rkt")
+         "core.rkt"
+         "manual-struct.rkt"
+         "private/render-utils.rkt"
+         "render-struct.rkt")
 
 (provide render%
          render<%>)
@@ -83,30 +83,25 @@
                  (not (ormap number? number))))
         null]
        [else
+        (define s
+          (string-append (apply string-append
+                                (map (lambda (n)
+                                       (cond
+                                         [(number? n) (format "~a." n)]
+                                         [(or (not n) (string? n)) ""]
+                                         [(pair? n) (string-append (car n) (cadr n))]))
+                                     (reverse (cdr number))))
+                         (if (and (car number) (not (equal? "" (car number))))
+                             (if (pair? (car number))
+                                 (if keep-separator?
+                                     (string-append (caar number) (cadar number))
+                                     (caar number))
+                                 (format "~a." (car number)))
+                             "")))
         (define result-s
-          (let ([s (string-append
-                    (apply
-                     string-append
-                     (map (lambda (n) 
-                            (cond
-                             [(number? n) (format "~a." n)]
-                             [(or (not n) (string? n)) ""]
-                             [(pair? n) (string-append (car n) (cadr n))]))
-                          (reverse (cdr number))))
-                    (if (and (car number) 
-                             (not (equal? "" (car number))))
-                        (if (pair? (car number))
-                            (if keep-separator?
-                                (string-append (caar number)
-                                               (cadar number))
-                                (caar number))
-                            (format "~a." (car number)))
-                        ""))])
-            (if (or keep-separator?
-                    (pair? (car number))
-                    (equal? s ""))
-                s
-                (substring s 0 (sub1 (string-length s))))))
+          (if (or keep-separator? (pair? (car number)) (equal? s ""))
+              s
+              (substring s 0 (sub1 (string-length s)))))
         (if (equal? result-s "")
             null
             (cons result-s sep))]))
