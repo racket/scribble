@@ -909,17 +909,17 @@
                           (map sym-length
                                (append (if (pair? name) name (list name))
                                        (map field-name fields)))
-                          (map (lambda (f)
-                                 (match (car f)
-                                   [(? symbol?) 0]
-                                   [(list name) 2] ;; the extra [ ]
-                                   [(list* name field-opts)
-                                    ;; '[' ']'
-                                    (apply + 2
-                                           (for/list ([field-opt (in-list field-opts)])
-                                             ;; and " #:"
-                                             (+ 3 (string-length (keyword->string field-opt)))))]))
-                               fields)))])
+                          (for/list ([f (in-list fields)])
+                            (match (car f)
+                              [(? symbol?) 0]
+                              [(list name) 2] ;; the extra [ ]
+                              [(list* name field-opts)
+                               ;; '[' ']'
+                               (apply +
+                                      2
+                                      (for/list ([field-opt (in-list field-opts)])
+                                        ;; and " #:"
+                                        (+ 3 (string-length (keyword->string field-opt)))))]))))])
             (cond
               [(and (short-width . < . max-proto-width)
                     (not keyword-modifiers?))

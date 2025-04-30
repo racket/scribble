@@ -27,11 +27,8 @@
         (when (directory-exists? tmp-dir) (delete-directory/files tmp-dir)))
       (with-handlers ([void (lambda (e) (cleanup) (raise e))])
         (define tmp-dests
-          (map (lambda (dest)
-                 (build-path tmp-dir
-                             (path-replace-suffix (file-name-from-path dest)
-                                                  base-suffix)))
-               dests))
+          (for/list ([dest (in-list dests)])
+            (build-path tmp-dir (path-replace-suffix (file-name-from-path dest) base-suffix))))
         (set! tmp-dest-dir tmp-dir)
         ;; it would be better if it's ok to change current-directory for this
         (super render srcs tmp-dests ri)

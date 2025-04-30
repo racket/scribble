@@ -81,12 +81,10 @@
     (list
      (make-table
       bib-style
-      (map (lambda (c)
-             (define key (a-bib-entry-key c))
-             (define val (a-bib-entry-val c))
-             (list
-              (to-flow (make-target-element #f `("[" ,key "]") `(cite ,key)))
+      (for/list ([c (in-list citations)])
+        (define key (a-bib-entry-key c))
+        (define val (a-bib-entry-val c))
+        (list (to-flow (make-target-element #f `("[" ,key "]") `(cite ,key)))
               flow-spacer
-              (to-flow val)))
-           citations))))
+              (to-flow val))))))
    null))
