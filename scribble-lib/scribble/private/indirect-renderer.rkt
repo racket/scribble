@@ -19,10 +19,8 @@
     (define/override (get-suffix) target-suffix)
     (define/override (render srcs dests ri)
       (define tmp-dir
-        (make-temporary-file
-         (format "scribble-~a-to-~a-~~a"
-                 (dotless base-suffix) (dotless target-suffix))
-         'directory))
+        (make-temporary-directory
+         (format "scribble-~a-to-~a-~~a" (dotless base-suffix) (dotless target-suffix))))
       (define (cleanup)
         (when (directory-exists? tmp-dir) (delete-directory/files tmp-dir)))
       (with-handlers ([void (lambda (e) (cleanup) (raise e))])
