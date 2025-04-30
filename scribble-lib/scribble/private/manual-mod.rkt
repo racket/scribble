@@ -331,12 +331,12 @@
                                  #'(list pkg ...)
                                  #'#f)])
        (let ([libs (syntax->list #'(lib ... plib ...))])
-         (for ([l libs])
-           (unless (or (syntax-case l (unquote)
-                         [(unquote _) #t]
-                         [_ #f])
-                       (module-path? (syntax->datum l)))
-             (raise-syntax-error #f "not a module path" stx l)))
+         (for ([l libs]
+               #:unless (or (syntax-case l (unquote)
+                              [(unquote _) #t]
+                              [_ #f])
+                            (module-path? (syntax->datum l))))
+           (raise-syntax-error #f "not a module path" stx l))
          (when (null? libs)
            (raise-syntax-error #f "need at least one module path" stx))
          #'(*declare-exporting `(lib ...) `(plib ...) packages)))]))
