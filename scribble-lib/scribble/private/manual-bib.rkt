@@ -11,18 +11,21 @@
 
 (define-struct a-bib-entry (key val))
 
-(provide/contract
- [cite ((string?) () #:rest (listof string?) . ->* . element?)]
- [bib-entry ((#:key string? #:title (or/c #f pre-content?))
-             (#:is-book? boolean? #:author (or/c #f pre-content?) 
-                         #:location (or/c #f pre-content?) 
-                         #:date (or/c #f pre-content?) 
-                         #:url (or/c #f pre-content?)
-                         #:note (or/c #f pre-content?))
-             . ->* .
-             a-bib-entry?)]
- [rename a-bib-entry? bib-entry? predicate/c]
- [bibliography (() (#:tag string?) #:rest (listof a-bib-entry?) . ->* . part?)]) 
+(provide (contract-out
+          [cite ((string?) () #:rest (listof string?) . ->* . element?)]
+          [bib-entry
+           ((#:key string? #:title (or/c #f pre-content?)) (#:is-book? boolean?
+                                                            #:author (or/c #f pre-content?)
+                                                            #:location (or/c #f pre-content?)
+                                                            #:date (or/c #f pre-content?)
+                                                            #:url (or/c #f pre-content?)
+                                                            #:note (or/c #f pre-content?))
+                                                           . ->* .
+                                                           a-bib-entry?)]
+          (rename a-bib-entry?
+                  bib-entry?
+                  predicate/c)
+          [bibliography (() (#:tag string?) #:rest (listof a-bib-entry?) . ->* . part?)])) 
 
 (define (cite key . keys)
   (make-element
