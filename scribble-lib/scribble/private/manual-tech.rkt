@@ -9,28 +9,31 @@
          "manual-utils.rkt"
          "manual-style.rkt")
 
-(provide/contract
- [deftech (() (#:normalize? any/c
-               #:style? any/c
-               #:key (or/c string? #f)
-               #:index-extras desc-extras/c)
-           #:rest (listof pre-content?) . ->* . element?)]
- [tech (() 
-        (#:doc (or/c module-path? #f) 
-         #:tag-prefixes (or/c (listof string?) #f) 
-         #:key (or/c string? #f)
-         #:normalize? any/c
-         #:indirect? any/c)
-        #:rest (listof pre-content?) 
-        . ->* . element?)]
- [techlink (() 
-            (#:doc (or/c module-path? #f) 
-             #:tag-prefixes (or/c (listof string?) #f) 
-             #:key (or/c string? #f)
-             #:normalize? any/c
-             #:indirect? any/c)
-            #:rest (listof pre-content?) 
-            . ->* . element?)])
+(provide (contract-out
+          [deftech
+           (()
+            (#:normalize? any/c #:style? any/c #:key (or/c string? #f) #:index-extras desc-extras/c)
+            #:rest (listof pre-content?)
+            . ->* .
+            element?)]
+          [tech
+           (() (#:doc (or/c module-path? #f)
+                      #:tag-prefixes (or/c (listof string?) #f)
+                      #:key (or/c string? #f)
+                      #:normalize? any/c
+                      #:indirect? any/c)
+               #:rest (listof pre-content?)
+               . ->* .
+               element?)]
+          [techlink
+           (() (#:doc (or/c module-path? #f)
+                      #:tag-prefixes (or/c (listof string?) #f)
+                      #:key (or/c string? #f)
+                      #:normalize? any/c
+                      #:indirect? any/c)
+               #:rest (listof pre-content?)
+               . ->* .
+               element?)]))
 
 (define (*tech make-elem style doc prefix s key normalize?)
   (let* ([c (decode-content s)]
