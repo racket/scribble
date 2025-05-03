@@ -83,30 +83,25 @@
                  (not (ormap number? number))))
         null]
        [else
+        (define s
+          (string-append (apply string-append
+                                (map (lambda (n)
+                                       (cond
+                                         [(number? n) (format "~a." n)]
+                                         [(or (not n) (string? n)) ""]
+                                         [(pair? n) (string-append (car n) (cadr n))]))
+                                     (reverse (cdr number))))
+                         (if (and (car number) (not (equal? "" (car number))))
+                             (if (pair? (car number))
+                                 (if keep-separator?
+                                     (string-append (caar number) (cadar number))
+                                     (caar number))
+                                 (format "~a." (car number)))
+                             "")))
         (define result-s
-          (let ([s (string-append
-                    (apply
-                     string-append
-                     (map (lambda (n) 
-                            (cond
-                             [(number? n) (format "~a." n)]
-                             [(or (not n) (string? n)) ""]
-                             [(pair? n) (string-append (car n) (cadr n))]))
-                          (reverse (cdr number))))
-                    (if (and (car number) 
-                             (not (equal? "" (car number))))
-                        (if (pair? (car number))
-                            (if keep-separator?
-                                (string-append (caar number)
-                                               (cadar number))
-                                (caar number))
-                            (format "~a." (car number)))
-                        ""))])
-            (if (or keep-separator?
-                    (pair? (car number))
-                    (equal? s ""))
-                s
-                (substring s 0 (sub1 (string-length s))))))
+          (if (or keep-separator? (pair? (car number)) (equal? s ""))
+              s
+              (substring s 0 (sub1 (string-length s)))))
         (if (equal? result-s "")
             null
             (cons result-s sep))]))
@@ -162,9 +157,9 @@
           (extract-content-style-files (part-title-content p) d ri ht pred extract)
           (extract-flow-style-files (part-blocks p) d ri ht pred extract))
         (unless only-up?
-          (for ([p (in-list (part-parts p))])
-            (unless (stop-at-part? p)
-              (loop p #f #f)))))
+          (for ([p (in-list (part-parts p))]
+                #:unless (stop-at-part? p))
+            (loop p #f #f))))
       (map cdr
            (sort (for/list ([(k v) (in-hash ht)])
                    (cons v (if (or (bytes? k) (url? k)) k (collects-relative->path k))))
@@ -172,9 +167,9 @@
                  #:key car)))
 
     (define/private (extract-style-style-files s ht pred extract)
-      (for ([v (in-list (style-properties s))])
-        (when (pred v)
-          (hash-update! ht (extract v) values (hash-count ht)))))
+      (for ([v (in-list (style-properties s))]
+            #:when (pred v))
+        (hash-update! ht (extract v) values (hash-count ht))))
 
     (define/private (extract-flow-style-files blocks d ri ht pred extract)
       (for ([b (in-list blocks)])
@@ -185,9 +180,9 @@
         [(table? p)
          (extract-style-style-files (table-style p) ht pred extract)
          (for* ([blocks (in-list (table-blockss p))]
-                [block (in-list blocks)])
-           (unless (eq? block 'cont)
-             (extract-block-style-files block d ri ht pred extract)))]
+                [block (in-list blocks)]
+                #:unless (eq? block 'cont))
+           (extract-block-style-files block d ri ht pred extract))]
         [(itemization? p)
          (extract-style-style-files (itemization-style p) ht pred extract)
          (for-each (lambda (blocks) (extract-flow-style-files blocks d ri ht pred extract))
@@ -247,8 +242,7 @@
       (let loop ([l (part-blocks d)])
         (apply append
                (for/list ([b (in-list l)])
-                 (define lifted (lift-proc b loop))
-                 lifted))))
+                 (lift-proc b loop)))))
 
     (define/private (extract-pre-paras-proc sym)
       (λ (v loop)
@@ -346,34 +340,37 @@
 
     (define/private (partition-info all-ci n d)
       ;; partition information in `all-ci' based on `d's:
-      (let ([prefix (part-tag-prefix-string d)]
-            [new-hts (for/list ([i (in-range n)])
-                       (make-hash))]
-            [covered (make-hash)])
-        ;; Fill in new-hts from parts:
-        (for ([sub-d (in-list (part-parts d))]
-              [i (in-naturals)])
-          (define ht (list-ref new-hts (min (add1 i) (sub1 n))))
-          (define cdi (hash-ref (collect-info-parts all-ci) sub-d #f))
-          (define sub-prefix (part-tag-prefix-string sub-d))
-          (when cdi
-            (for ([(k v) (in-hash (collected-info-info cdi))])
-              (when (cadr k)
-                (define sub-k (if sub-prefix
-                                  (convert-key sub-prefix k)
-                                  k))
-                (define full-k (if prefix
-                                   (convert-key prefix sub-k)
-                                   sub-k))
-                (hash-set! ht full-k v)
-                (hash-set! covered full-k #t)))))
-        ;; Anything not covered in the new-hts must go in the main hts:
-        (let ([ht0 (car new-hts)])
-          (for ([(k v) (in-hash (collect-info-ht all-ci))])
-            (unless (hash-ref covered k #f)
-              (hash-set! ht0 k v))))
-        ;; Return hts:
-        new-hts))
+      (define prefix (part-tag-prefix-string d))
+      (define new-hts
+        (for/list ([i (in-range n)])
+          (make-hash)))
+      (define covered (make-hash))
+      ;; Fill in new-hts from parts:
+      (for ([sub-d (in-list (part-parts d))]
+            [i (in-naturals)])
+        (define ht (list-ref new-hts (min (add1 i) (sub1 n))))
+        (define cdi (hash-ref (collect-info-parts all-ci) sub-d #f))
+        (define sub-prefix (part-tag-prefix-string sub-d))
+        (when cdi
+          (for ([(k v) (in-hash (collected-info-info cdi))])
+            (when (cadr k)
+              (define sub-k
+                (if sub-prefix
+                    (convert-key sub-prefix k)
+                    k))
+              (define full-k
+                (if prefix
+                    (convert-key prefix sub-k)
+                    sub-k))
+              (hash-set! ht full-k v)
+              (hash-set! covered full-k #t)))))
+      ;; Anything not covered in the new-hts must go in the main hts:
+      (let ([ht0 (car new-hts)])
+        (for ([(k v) (in-hash (collect-info-ht all-ci))])
+          (unless (hash-ref covered k #f)
+            (hash-set! ht0 k v))))
+      ;; Return hts:
+      new-hts)
 
     (define/public (serialize-info ri)
       (serialize-one-ht ri (collect-info-ht (resolve-info-ci ri))))
@@ -396,11 +393,11 @@
         (hash-set! in-ht k (if (or doc-id pkg) (known-doc v doc-id pkg) v))))
 
     (define/public (get-defined ci)
-      (hash-map (collect-info-ht ci) (lambda (k v) k)))
+      (hash-keys (collect-info-ht ci)))
 
     (define/public (get-defineds ci n d)
       (for/list ([ht (partition-info ci n d)])
-        (hash-map ht (lambda (k v) k))))
+        (hash-keys ht)))
 
     (define/public (get-external ri)
       (hash-map (resolve-info-undef ri) (lambda (k v) k)))
