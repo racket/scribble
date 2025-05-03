@@ -104,26 +104,24 @@
           (displayln "```")]
 
         [else
-          (define strs (map (lambda (flows)
-                              (map (lambda (d)
-                                     (cond
-                                       [(eq? d 'cont) d]
-                                       [else
-                                        (define o (open-output-string))
-                                        (parameterize ([current-indent 0]
-                                                       [current-output-port o])
-                                          (render-block d part ht #f))
-                                        (regexp-split
-                                         #rx"\n"
-                                         (regexp-replace #rx"\n$" (get-output-string o) ""))]))
-                                   flows))
-                            flowss))
-          (define widths (map (lambda (col)
-                                (for/fold ([d 0]) ([i (in-list col)])
-                                  (if (eq? i 'cont)
-                                      0
-                                      (apply max d (map string-length i)))))
-                              (apply map list strs)))
+          (define strs (for/list ([flows (in-list flowss)])
+                         (map
+                          (lambda (d)
+                            (cond
+                              [(eq? d 'cont) d]
+                              [else
+                               (define o (open-output-string))
+                               (parameterize ([current-indent 0]
+                                              [current-output-port o])
+                                 (render-block d part ht #f))
+                               (regexp-split #rx"\n"
+                                             (regexp-replace #rx"\n$" (get-output-string o) ""))]))
+                          flows)))
+          (define widths (for/list ([col (in-list (apply map list strs))])
+                           (for/fold ([d 0]) ([i (in-list col)])
+                             (if (eq? i 'cont)
+                                 0
+                                 (apply max d (map string-length i))))))
           (define (x-length col)
             (if (eq? col 'cont) 0 (length col)))
           (for/fold ([indent? #f]) ([row (in-list strs)])
