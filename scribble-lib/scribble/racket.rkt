@@ -793,9 +793,8 @@
                     (out ". " (if (positive? quote-depth) value-color paren-color))
                     (set! src-col (+ src-col 3)))
                   (hash-set! next-col-map src-col dest-col)
-                  ((loop init-line! quote-depth first-expr? #f) l (if (and expr? (zero? quote-depth))
-                                                                      srcless-step
-                                                                      #f))]))
+                  ((loop init-line! quote-depth first-expr? #f) l (and (and expr? (zero? quote-depth))
+                                                                       srcless-step))]))
              (out (case sh
                     [(#\[) "]"]
                     [(#\{) "}"]
@@ -853,22 +852,24 @@
                                                   [col (if (= line (syntax-line (cdr p)))
                                                            col
                                                            col0)])
+                                             (define e
+                                               (syntax-ize (car p)
+                                                           (max 0
+                                                                (- (syntax-column (cdr p)) width sep))
+                                                           (syntax-line (cdr p))
+                                                           #:expr? (and expr? (zero? quote-depth))))
                                              (define key
-                                               (let ([e (syntax-ize (car p)
-                                                                    (max 0 (- (syntax-column (cdr p))
-                                                                              width
-                                                                              sep))
-                                                                    (syntax-line (cdr p))
-                                                                    #:expr? (and expr? (zero? quote-depth)))])
-                                                 (if ((syntax-column e) . <= . col)
-                                                     e
-                                                     (datum->syntax #f
-                                                                    (syntax-e e)
-                                                                    (vector (syntax-source e)
-                                                                            (syntax-line e)
-                                                                            col
-                                                                            (syntax-position e)
-                                                                            (+ (syntax-span e) (- (syntax-column e) col)))))))
+                                               (if ((syntax-column e) . <= . col)
+                                                   e
+                                                   (datum->syntax #f
+                                                                  (syntax-e e)
+                                                                  (vector (syntax-source e)
+                                                                          (syntax-line e)
+                                                                          col
+                                                                          (syntax-position e)
+                                                                          (+ (syntax-span e)
+                                                                             (- (syntax-column e)
+                                                                                col))))))
                                              (define elem
                                                (datum->syntax
                                                 #f
@@ -885,11 +886,9 @@
                 ;; constructed:
                 [(and expr? (zero? quote-depth))
                  (define l (apply append
-                                  (map (lambda (p)
-                                         (let ([p (syntax-e p)])
-                                           (list (forced-pair-car p)
-                                                 (forced-pair-cdr p))))
-                                       (reverse l2))))
+                                  (for/list ([p (in-list (reverse l2))])
+                                    (let ([p (syntax-e p)])
+                                      (list (forced-pair-car p) (forced-pair-cdr p))))))
                  (datum->syntax
                   #f
                   (cons (datum->syntax #f
