@@ -186,18 +186,21 @@
        (loop (cdr l) next? keys colls accum title tag-prefix tags vers style index-desc)]
       [(title-decl? (car l))
        (let ([t (car l)])
-         (cond
-           [(not part-depth) (error 'decode "misplaced title: ~e" t)]
-           [title (error 'decode "found extra title: ~v" t)]
-           [else (loop (cdr l) next? keys colls accum
-                       (title-decl-content t)
-                       (title-decl-tag-prefix t)
-                       (title-decl-tags t)
-                       (title-decl-version t)
-                       (title-decl-style t)
-                       (or (and (title-decl*? t)
-                                (title-decl*-index-desc t))
-                           index-desc))]))]
+         (unless part-depth
+           (error 'decode "misplaced title: ~e" t))
+         (when title
+           (error 'decode "found extra title: ~v" t))
+         (loop (cdr l)
+               next?
+               keys
+               colls
+               accum
+               (title-decl-content t)
+               (title-decl-tag-prefix t)
+               (title-decl-tags t)
+               (title-decl-version t)
+               (title-decl-style t)
+               (or (and (title-decl*? t) (title-decl*-index-desc t)) index-desc)))]
       #;
       ;; Blocks are now handled by decode-accum-para
       [(block? (car l))
