@@ -12,8 +12,8 @@
 
 (module test racket/base)
 
-(define multi-html:render-mixin
-  (lambda (%) (html:render-multi-mixin (html:render-mixin %))))
+(define (multi-html:render-mixin %)
+  (html:render-multi-mixin (html:render-mixin %)))
 
 (define current-render-mixin       (make-parameter html:render-mixin))
 (define current-html               (make-parameter #t))
