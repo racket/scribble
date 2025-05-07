@@ -359,24 +359,19 @@
     (if (null? para-accum)
         null
         (list (make-paragraph plain (skip-whitespace (apply append (reverse para-accum)))))))
-  (let ([r (let loop ([l (skip-whitespace l)]
-                      [para-accum null])
-             (cond
-              [(null? l)
-               (finish-accum para-accum)]
-              [else
-               (let ([s (car l)])
-                 (cond
-                  [(block? s) (append
-                               (finish-accum para-accum)
-                               (cons s (loop (skip-whitespace (cdr l)) null)))]
-                  [(string? s) (loop (cdr l)
-                                     (cons (decode-string s) para-accum))]
-                  [else (loop (cdr l)
-                              (cons (list (car l)) para-accum))]))]))])
-    (cond
-     [(null? r)
-      (make-paragraph plain null)]
-     [(null? (cdr r))
-      (car r)]
-     [(make-compound-paragraph plain r)])))
+  (define r
+    (let loop ([l (skip-whitespace l)]
+               [para-accum null])
+      (cond
+        [(null? l) (finish-accum para-accum)]
+        [else
+         (let ([s (car l)])
+           (cond
+             [(block? s)
+              (append (finish-accum para-accum) (cons s (loop (skip-whitespace (cdr l)) null)))]
+             [(string? s) (loop (cdr l) (cons (decode-string s) para-accum))]
+             [else (loop (cdr l) (cons (list (car l)) para-accum))]))])))
+  (cond
+    [(null? r) (make-paragraph plain null)]
+    [(null? (cdr r)) (car r)]
+    [(make-compound-paragraph plain r)]))
