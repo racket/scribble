@@ -64,27 +64,22 @@
          pre-flow?
          pre-part?)
 
-(provide/contract
- [decode (-> (listof pre-part?)
-             part?)]
- [decode-part  (-> (listof pre-part?)
-                   (listof string?)
-                   (or/c #f content?)
-                   exact-nonnegative-integer?
-                   part?)]
- [decode-flow  (-> (listof pre-flow?)
-                   (listof block?))]
- [decode-paragraph (-> (listof pre-content?)
-                       paragraph?)]
- [decode-compound-paragraph (-> (listof pre-flow?)
-                                block?)]
- [decode-content (-> (listof pre-content?)
-                     content?)]
- [rename decode-content decode-elements
-         (-> (listof pre-content?)
-             content?)]
- [decode-string (-> string? content?)]
- [clean-up-index-string (-> string? string?)])
+(provide (contract-out [decode (-> (listof pre-part?) part?)]
+                       [decode-part
+                        (-> (listof pre-part?)
+                            (listof string?)
+                            (or/c #f content?)
+                            exact-nonnegative-integer?
+                            part?)]
+                       [decode-flow (-> (listof pre-flow?) (listof block?))]
+                       [decode-paragraph (-> (listof pre-content?) paragraph?)]
+                       [decode-compound-paragraph (-> (listof pre-flow?) block?)]
+                       [decode-content (-> (listof pre-content?) content?)]
+                       (rename decode-content
+                               decode-elements
+                               (-> (listof pre-content?) content?))
+                       [decode-string (-> string? content?)]
+                       [clean-up-index-string (-> string? string?)]))
 
 (define (spliceof c)
   (define name `(spliceof ,(contract-name c)))
@@ -93,8 +88,7 @@
                       #:first-order (lambda (x)
                                       (and (splice? x)
                                            (andmap p (splice-run x))))))
-(provide/contract
- [spliceof (flat-contract? . -> . flat-contract?)])
+(provide (contract-out [spliceof (flat-contract? . -> . flat-contract?)]))
 
 (define the-part-index-desc (index-desc (hash 'kind "part"
                                               'part? #t)))
