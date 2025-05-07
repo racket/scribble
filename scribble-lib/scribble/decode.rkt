@@ -64,27 +64,22 @@
          pre-flow?
          pre-part?)
 
-(provide/contract
- [decode (-> (listof pre-part?)
-             part?)]
- [decode-part  (-> (listof pre-part?)
-                   (listof string?)
-                   (or/c #f content?)
-                   exact-nonnegative-integer?
-                   part?)]
- [decode-flow  (-> (listof pre-flow?)
-                   (listof block?))]
- [decode-paragraph (-> (listof pre-content?)
-                       paragraph?)]
- [decode-compound-paragraph (-> (listof pre-flow?)
-                                block?)]
- [decode-content (-> (listof pre-content?)
-                     content?)]
- [rename decode-content decode-elements
-         (-> (listof pre-content?)
-             content?)]
- [decode-string (-> string? content?)]
- [clean-up-index-string (-> string? string?)])
+(provide (contract-out [decode (-> (listof pre-part?) part?)]
+                       [decode-part
+                        (-> (listof pre-part?)
+                            (listof string?)
+                            (or/c #f content?)
+                            exact-nonnegative-integer?
+                            part?)]
+                       [decode-flow (-> (listof pre-flow?) (listof block?))]
+                       [decode-paragraph (-> (listof pre-content?) paragraph?)]
+                       [decode-compound-paragraph (-> (listof pre-flow?) block?)]
+                       [decode-content (-> (listof pre-content?) content?)]
+                       (rename decode-content
+                               decode-elements
+                               (-> (listof pre-content?) content?))
+                       [decode-string (-> string? content?)]
+                       [clean-up-index-string (-> string? string?)]))
 
 (define (spliceof c)
   (define name `(spliceof ,(contract-name c)))
@@ -93,8 +88,7 @@
                       #:first-order (lambda (x)
                                       (and (splice? x)
                                            (andmap p (splice-run x))))))
-(provide/contract
- [spliceof (flat-contract? . -> . flat-contract?)])
+(provide (contract-out [spliceof (flat-contract? . -> . flat-contract?)]))
 
 (define the-part-index-desc (index-desc (hash 'kind "part"
                                               'part? #t)))
@@ -192,18 +186,21 @@
        (loop (cdr l) next? keys colls accum title tag-prefix tags vers style index-desc)]
       [(title-decl? (car l))
        (let ([t (car l)])
-         (cond
-           [(not part-depth) (error 'decode "misplaced title: ~e" t)]
-           [title (error 'decode "found extra title: ~v" t)]
-           [else (loop (cdr l) next? keys colls accum
-                       (title-decl-content t)
-                       (title-decl-tag-prefix t)
-                       (title-decl-tags t)
-                       (title-decl-version t)
-                       (title-decl-style t)
-                       (or (and (title-decl*? t)
-                                (title-decl*-index-desc t))
-                           index-desc))]))]
+         (unless part-depth
+           (error 'decode "misplaced title: ~e" t))
+         (when title
+           (error 'decode "found extra title: ~v" t))
+         (loop (cdr l)
+               next?
+               keys
+               colls
+               accum
+               (title-decl-content t)
+               (title-decl-tag-prefix t)
+               (title-decl-tags t)
+               (title-decl-version t)
+               (title-decl-style t)
+               (or (and (title-decl*? t) (title-decl*-index-desc t)) index-desc)))]
       #;
       ;; Blocks are now handled by decode-accum-para
       [(block? (car l))
@@ -237,12 +234,12 @@
          (error 'decode
                 "misplaced part (the part is more than one layer deeper than its container); title: ~s"
                 (part-start-title (car l))))
-       (let ([s (car l)])
-         (let loop ([l (cdr l)] [s-accum null])
-           (if (or (null? l)
-                   (and (part-start? (car l))
-                        ((part-start-depth (car l)) . <= . part-depth))
-                   (part? (car l)))
+       (define s (car l))
+       (let loop ([l (cdr l)]
+                  [s-accum null])
+         (if (or (null? l)
+                 (and (part-start? (car l)) ((part-start-depth (car l)) . <= . part-depth))
+                 (part? (car l)))
              (let ([para (decode-accum-para accum)]
                    [s (decode-styled-part (reverse s-accum)
                                           (part-start-tag-prefix s)
@@ -250,8 +247,16 @@
                                           (part-start-style s)
                                           (part-start-title s)
                                           (add1 part-depth))]
-                   [part (decode-flow* l keys colls tag-prefix tags vers style
-                                       title (and (part-start*? s) (part-start*-index-desc s)) part-depth)])
+                   [part (decode-flow* l
+                                       keys
+                                       colls
+                                       tag-prefix
+                                       tags
+                                       vers
+                                       style
+                                       title
+                                       (and (part-start*? s) (part-start*-index-desc s))
+                                       part-depth)])
                (make-part (part-tag-prefix part)
                           (part-tags part)
                           (part-title-content part)
@@ -260,12 +265,9 @@
                           para
                           (cons s (part-parts part))))
              (cond
-              [(splice? (car l))
-               (loop (append (splice-run (car l)) (cdr l)) s-accum)]
-              [(list? (car l))
-               (loop (append (car l) (cdr l)) s-accum)]
-              [else
-               (loop (cdr l) (cons (car l) s-accum))]))))]
+               [(splice? (car l)) (loop (append (splice-run (car l)) (cdr l)) s-accum)]
+               [(list? (car l)) (loop (append (car l) (cdr l)) s-accum)]
+               [else (loop (cdr l) (cons (car l) s-accum))])))]
       [(splice? (car l))
        (loop (append (splice-run (car l)) (cdr l))
              next? keys colls accum title tag-prefix tags vers style index-desc)]
@@ -292,23 +294,30 @@
 	(loop (cons (car l) (append ((if (splice? (cadr l)) splice-run values) (cadr l)) (cddr l)))
               next? keys colls accum title tag-prefix tags vers style index-desc)]
        [(line-break? (car l))
-	(if next?
-          (loop (cdr l) #t keys colls accum title tag-prefix tags vers style index-desc)
-          (let ([m (match-newline-whitespace (cdr l))])
-            (if m
-              (let ([part (loop m #t keys colls null title tag-prefix tags vers
-                                style index-desc)])
-                (make-part
-                 (part-tag-prefix part)
-                 (part-tags part)
-                 (part-title-content part)
-                 (part-style part)
-                 (part-to-collect part)
-                 (append (decode-accum-para accum)
-                         (part-blocks part))
-                 (part-parts part)))
-              (loop (cdr l) #f keys colls (cons (car l) accum) title tag-prefix
-                    tags vers style index-desc))))]
+	(cond
+   [next? (loop (cdr l) #t keys colls accum title tag-prefix tags vers style index-desc)]
+   [else
+    (define m (match-newline-whitespace (cdr l)))
+    (if m
+        (let ([part (loop m #t keys colls null title tag-prefix tags vers style index-desc)])
+          (make-part (part-tag-prefix part)
+                     (part-tags part)
+                     (part-title-content part)
+                     (part-style part)
+                     (part-to-collect part)
+                     (append (decode-accum-para accum) (part-blocks part))
+                     (part-parts part)))
+        (loop (cdr l)
+              #f
+              keys
+              colls
+              (cons (car l) accum)
+              title
+              tag-prefix
+              tags
+              vers
+              style
+              index-desc))])]
        [else (loop (cdr l) #f keys colls (cons (car l) accum) title tag-prefix
                    tags vers style index-desc)])))
 
@@ -359,24 +368,19 @@
     (if (null? para-accum)
         null
         (list (make-paragraph plain (skip-whitespace (apply append (reverse para-accum)))))))
-  (let ([r (let loop ([l (skip-whitespace l)]
-                      [para-accum null])
-             (cond
-              [(null? l)
-               (finish-accum para-accum)]
-              [else
-               (let ([s (car l)])
-                 (cond
-                  [(block? s) (append
-                               (finish-accum para-accum)
-                               (cons s (loop (skip-whitespace (cdr l)) null)))]
-                  [(string? s) (loop (cdr l)
-                                     (cons (decode-string s) para-accum))]
-                  [else (loop (cdr l)
-                              (cons (list (car l)) para-accum))]))]))])
-    (cond
-     [(null? r)
-      (make-paragraph plain null)]
-     [(null? (cdr r))
-      (car r)]
-     [(make-compound-paragraph plain r)])))
+  (define r
+    (let loop ([l (skip-whitespace l)]
+               [para-accum null])
+      (cond
+        [(null? l) (finish-accum para-accum)]
+        [else
+         (let ([s (car l)])
+           (cond
+             [(block? s)
+              (append (finish-accum para-accum) (cons s (loop (skip-whitespace (cdr l)) null)))]
+             [(string? s) (loop (cdr l) (cons (decode-string s) para-accum))]
+             [else (loop (cdr l) (cons (list (car l)) para-accum))]))])))
+  (cond
+    [(null? r) (make-paragraph plain null)]
+    [(null? (cdr r)) (car r)]
+    [(make-compound-paragraph plain r)]))
