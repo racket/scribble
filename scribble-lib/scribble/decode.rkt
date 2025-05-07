@@ -234,12 +234,12 @@
          (error 'decode
                 "misplaced part (the part is more than one layer deeper than its container); title: ~s"
                 (part-start-title (car l))))
-       (let ([s (car l)])
-         (let loop ([l (cdr l)] [s-accum null])
-           (if (or (null? l)
-                   (and (part-start? (car l))
-                        ((part-start-depth (car l)) . <= . part-depth))
-                   (part? (car l)))
+       (define s (car l))
+       (let loop ([l (cdr l)]
+                  [s-accum null])
+         (if (or (null? l)
+                 (and (part-start? (car l)) ((part-start-depth (car l)) . <= . part-depth))
+                 (part? (car l)))
              (let ([para (decode-accum-para accum)]
                    [s (decode-styled-part (reverse s-accum)
                                           (part-start-tag-prefix s)
@@ -247,8 +247,16 @@
                                           (part-start-style s)
                                           (part-start-title s)
                                           (add1 part-depth))]
-                   [part (decode-flow* l keys colls tag-prefix tags vers style
-                                       title (and (part-start*? s) (part-start*-index-desc s)) part-depth)])
+                   [part (decode-flow* l
+                                       keys
+                                       colls
+                                       tag-prefix
+                                       tags
+                                       vers
+                                       style
+                                       title
+                                       (and (part-start*? s) (part-start*-index-desc s))
+                                       part-depth)])
                (make-part (part-tag-prefix part)
                           (part-tags part)
                           (part-title-content part)
@@ -257,12 +265,9 @@
                           para
                           (cons s (part-parts part))))
              (cond
-              [(splice? (car l))
-               (loop (append (splice-run (car l)) (cdr l)) s-accum)]
-              [(list? (car l))
-               (loop (append (car l) (cdr l)) s-accum)]
-              [else
-               (loop (cdr l) (cons (car l) s-accum))]))))]
+               [(splice? (car l)) (loop (append (splice-run (car l)) (cdr l)) s-accum)]
+               [(list? (car l)) (loop (append (car l) (cdr l)) s-accum)]
+               [else (loop (cdr l) (cons (car l) s-accum))])))]
       [(splice? (car l))
        (loop (append (splice-run (car l)) (cdr l))
              next? keys colls accum title tag-prefix tags vers style index-desc)]
