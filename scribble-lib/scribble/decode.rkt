@@ -292,23 +292,30 @@
 	(loop (cons (car l) (append ((if (splice? (cadr l)) splice-run values) (cadr l)) (cddr l)))
               next? keys colls accum title tag-prefix tags vers style index-desc)]
        [(line-break? (car l))
-	(if next?
-          (loop (cdr l) #t keys colls accum title tag-prefix tags vers style index-desc)
-          (let ([m (match-newline-whitespace (cdr l))])
-            (if m
-              (let ([part (loop m #t keys colls null title tag-prefix tags vers
-                                style index-desc)])
-                (make-part
-                 (part-tag-prefix part)
-                 (part-tags part)
-                 (part-title-content part)
-                 (part-style part)
-                 (part-to-collect part)
-                 (append (decode-accum-para accum)
-                         (part-blocks part))
-                 (part-parts part)))
-              (loop (cdr l) #f keys colls (cons (car l) accum) title tag-prefix
-                    tags vers style index-desc))))]
+	(cond
+   [next? (loop (cdr l) #t keys colls accum title tag-prefix tags vers style index-desc)]
+   [else
+    (define m (match-newline-whitespace (cdr l)))
+    (if m
+        (let ([part (loop m #t keys colls null title tag-prefix tags vers style index-desc)])
+          (make-part (part-tag-prefix part)
+                     (part-tags part)
+                     (part-title-content part)
+                     (part-style part)
+                     (part-to-collect part)
+                     (append (decode-accum-para accum) (part-blocks part))
+                     (part-parts part)))
+        (loop (cdr l)
+              #f
+              keys
+              colls
+              (cons (car l) accum)
+              title
+              tag-prefix
+              tags
+              vers
+              style
+              index-desc))])]
        [else (loop (cdr l) #f keys colls (cons (car l) accum) title tag-prefix
                    tags vers style index-desc)])))
 
