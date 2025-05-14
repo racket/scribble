@@ -166,15 +166,13 @@
                  (define val-list (cadar promptless?+val-list+outputs))
                  (if (equal? val-list (list (void)))
                      null
-                     (map (lambda (v)
-                            (list.flow.list
-                             (make-paragraph (list (if (formatted-result? v)
-                                                       (formatted-result-content v)
-                                                       (elem #:style result-color
-                                                             (to-element/no-color
-                                                              v
-                                                              #:expr? (print-as-expression))))))))
-                          val-list))])
+                     (for/list ([v (in-list val-list)])
+                       (list.flow.list
+                        (make-paragraph
+                         (list (if (formatted-result? v)
+                                   (formatted-result-content v)
+                                   (elem #:style result-color
+                                         (to-element/no-color v #:expr? (print-as-expression)))))))))])
               (if (and (caar promptless?+val-list+outputs)
                        (pair? (cdr promptless?+val-list+outputs)))
                   (list (list (list blank-line)))
