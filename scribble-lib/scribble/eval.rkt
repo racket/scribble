@@ -379,10 +379,10 @@
            (vector-set! v2 i (loop (vector-ref v i))))
          v2)]
       [(box? v)
-       (let ([v2 (box #f)])
-         (hash-set! ht v v2)
-         (set-box! v2 (loop (unbox v)))
-         v2)]
+       (define v2 (box #f))
+       (hash-set! ht v v2)
+       (set-box! v2 (loop (unbox v)))
+       v2]
       [(hash? v)
        (define ph (make-placeholder #f))
        (hash-set! ht v ph)
@@ -659,15 +659,14 @@
                 (update-source-location src #:source new-source)))
             (let loop ([e #'e])
               (cond [(syntax? e)
-                     (let ([src (get-source-location e)]
-                           [original? (syntax-original? (syntax-local-introduce e))])
-                       #`(syntax-property
-                          (datum->syntax #f
-                                         #,(loop (syntax-e e))
-                                         (quote #,src)
-                                         #,(if original? #'orig-stx #'#f))
-                          'paren-shape
-                          (quote #,(syntax-property e 'paren-shape))))]
+                     (define src (get-source-location e))
+                     (define original? (syntax-original? (syntax-local-introduce e)))
+                     #`(syntax-property (datum->syntax #f
+                                                       #,(loop (syntax-e e))
+                                                       (quote #,src)
+                                                       #,(if original? #'orig-stx #'#f))
+                                        'paren-shape
+                                        (quote #,(syntax-property e 'paren-shape)))]
                     [(pair? e)
                      #`(cons #,(loop (car e)) #,(loop (cdr e)))]
                     [(vector? e)
