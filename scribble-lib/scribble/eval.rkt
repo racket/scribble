@@ -860,15 +860,11 @@
     [(_ racketblock e ...)
      (racketblockX+eval racketblock #:eval (make-base-eval) #:escape unsyntax e ...)]))
 
-(define-syntax racketblock+eval
-  (syntax-rules ()
-    [(_ e ...)
-     (racketblockX+eval racketblock e ...)]))
+(define-syntax-rule (racketblock+eval e ...)
+  (racketblockX+eval racketblock e ...))
 
-(define-syntax racketblock0+eval
-  (syntax-rules ()
-    [(_ e ...)
-     (racketblockX+eval racketblock0 e ...)]))
+(define-syntax-rule (racketblock0+eval e ...)
+  (racketblockX+eval racketblock0 e ...))
 
 (define-syntax racketmod+eval
   (syntax-rules ()
