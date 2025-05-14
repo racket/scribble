@@ -93,10 +93,11 @@
               (list* (module-path-index->taglet mod)
                      id
                      (if suffix (list suffix) null)))
-            (when (not search-key)
-              (set! search-key (if unlinked-ok?
-                                   (cons #f eb)
-                                   eb)))
+            (unless search-key
+              (set! search-key
+                    (if unlinked-ok?
+                        (cons #f eb)
+                        eb)))
             (define v (and eb (resolve-search search-key part ri `(dep ,eb))))
             (define here-result
               (and need-result?
