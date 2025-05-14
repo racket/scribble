@@ -322,7 +322,7 @@
                            (decode-content name))]
       [else (make-element (make-style "department"
                                       (append
-                                       (if (> level 0)
+                                       (if (positive? level)
                                            (list (command-optional (list (number->string level))))
                                            (list))
                                        command-props))
