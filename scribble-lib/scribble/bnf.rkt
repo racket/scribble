@@ -64,9 +64,8 @@
            [(cons lhs (cons rhs0 more-rhs))
             (cons
              (list (as-flow spacer) (as-flow lhs) (as-flow equals) (as-flow rhs0))
-             (map (lambda (i)
-                    (list (as-flow spacer) (as-flow " ") (as-flow alt) (as-flow i)))
-                  more-rhs))])
+             (for/list ([i (in-list more-rhs)])
+               (list (as-flow spacer) (as-flow " ") (as-flow alt) (as-flow i))))])
          defns))))
 
 ;; interleave : (listof content?) element? -> element?

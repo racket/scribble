@@ -386,9 +386,9 @@
                                                  (let ([sn (assq 'style row)]
                                                        [a (assq 'alignment row)]
                                                        [va (assq 'valignment row)])
-                                                   (if (or sn a va)
-                                                       (gen-columns sn a va)
-                                                       (error 'convert-style "no row style found"))))))]))))]
+                                                   (unless (or sn a va)
+                                                     (error 'convert-style "no row style found"))
+                                                   (gen-columns sn a va)))))]))))]
    [else (error 'convert-style "unrecognized style: ~e" s)]))
 
 (define (flatten-style s)
