@@ -949,7 +949,7 @@
 
 (define (do-splice l)
   (cond [(null? l) null]
-        [(splice? (car l)) `(,@(splice-run (car l)) ,@(do-splice (cdr l)))]
+        [(splice? (car l)) (append (splice-run (car l)) (do-splice (cdr l)))]
         [else (cons (car l) (do-splice (cdr l)))]))
 
 (define as-examples
