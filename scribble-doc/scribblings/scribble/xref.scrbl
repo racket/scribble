@@ -22,10 +22,10 @@ by @racket[load-xref], @racket[#f] otherwise.}
 @defproc[(load-xref [sources (listof (-> (or/c any/c (-> list?))))]
                     [#:demand-source-for-use
                      demand-source-for-use
-                     (tag? symbol? -> (or/c (-> any/c) #f)) 
+                     (-> tag? symbol? (or/c (-> any/c) #f)) 
                      (lambda (_tag _use-id) (demand-source _tag))]
                     [#:demand-source demand-source 
-                                     (tag? -> (or/c (-> any/c) #f)) 
+                                     (-> tag? (or/c (-> any/c) #f)) 
                                      (lambda (_tag) #f)]
                     [#:render% using-render% (implementation?/c render<%>)
                                (render-mixin render%)]
@@ -197,7 +197,7 @@ the binding and its original name.}
 @defproc[(xref-render [xref xref?]
                       [doc part?]
                       [dest (or/c path-string? false/c)]
-                      [#:render% using-render% (implemenation?/c render<%>)
+                      [#:render% using-render% (implementation?/c render<%>)
                                  (render-mixin render%)]
                       [#:refer-to-existing-files? use-existing? any/c (not dest)])
          (or/c void? any/c)]{
