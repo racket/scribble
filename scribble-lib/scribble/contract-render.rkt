@@ -145,9 +145,9 @@
 
 (define (r-blockss+cont blockss mode index-table)
   (for* ([blocks (in-list blockss)]
-         [block (in-list blocks)])
-    (unless (eq? block 'cont)
-      (r-block block mode index-table))))
+         [block (in-list blocks)]
+         #:unless (eq? block 'cont))
+    (r-block block mode index-table)))
 
 (define (r-blockss blockss mode index-table)
   (for ([blocks (in-list blockss)])
