@@ -116,7 +116,7 @@
   
   ;; we just take the first one here
   (define background-label-p (open-input-string (get-output-string background-label-port)))
-  (define background-label-line (read-line background-label-p))
+  (define background-label-line (read-line background-label-p 'any))
   
   (define text-p (the-text-p))
   (define-values (before-line _1 _2) (port-next-location text-p))
@@ -130,7 +130,7 @@
   ;; the spaces that appear at the ends of the lines
   (let ([p (open-input-string (get-output-string block-port))])
     (let loop ()
-      (define l (read-line p))
+      (define l (read-line p 'any))
       (unless (eof-object? l)
         (display (regexp-replace #rx" *$" l "") text-p)
         (newline text-p)
@@ -145,9 +145,9 @@
 
 (define (r-blockss+cont blockss mode index-table)
   (for* ([blocks (in-list blockss)]
-         [block (in-list blocks)])
-    (unless (eq? block 'cont)
-      (r-block block mode index-table))))
+         [block (in-list blocks)]
+         #:unless (eq? block 'cont))
+    (r-block block mode index-table)))
 
 (define (r-blockss blockss mode index-table)
   (for ([blocks (in-list blockss)])

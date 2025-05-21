@@ -57,27 +57,36 @@
          [load-source (lambda (src ci)
                         (parameterize ([current-namespace
                                         (namespace-anchor->empty-namespace here)])
-                          (let ([vs (src)])
-                            (for ([v (in-list (if (procedure? vs) (vs) (list vs)))])
-                              (when v
-                                (define data (if (data+root? v) (data+root-data v) v))
-                                (define root (if (data+root? v) (data+root-root v) root-path))
-                                (define doc-id (or (and (data+root+doc-id? v) (data+root+doc-id-doc-id v))
-                                                   doc-id-str))
-                                (define pkg (or (and (data+root+doc-id+pkg? v) (data+root+doc-id+pkg-pkg v))
-                                                pkg-str))
-                                (send renderer deserialize-info data ci
-                                      #:root root
-                                      #:doc-id doc-id
-                                      #:pkg pkg))))))]
+                          (define vs (src))
+                          (for ([v (in-list (if (procedure? vs)
+                                                (vs)
+                                                (list vs)))])
+                            (when v
+                              (define data
+                                (if (data+root? v)
+                                    (data+root-data v)
+                                    v))
+                              (define root
+                                (if (data+root? v)
+                                    (data+root-root v)
+                                    root-path))
+                              (define doc-id
+                                (or (and (data+root+doc-id? v) (data+root+doc-id-doc-id v))
+                                    doc-id-str))
+                              (define pkg
+                                (or (and (data+root+doc-id+pkg? v) (data+root+doc-id+pkg-pkg v))
+                                    pkg-str))
+                              (send renderer deserialize-info
+                                    data
+                                    ci
+                                    #:root root
+                                    #:doc-id doc-id
+                                    #:pkg pkg)))))]
          [use-ids (make-weak-hasheq)]
          [ci (send renderer collect null null fp
                    (lambda (key ci)
                      (define use-obj (collect-info-ext-ht ci))
-                     (define use-id (or (hash-ref use-ids use-obj #f)
-                                        (let ([s (gensym 'render)])
-                                          (hash-set! use-ids use-obj s)
-                                          s)))
+                     (define use-id (hash-ref! use-ids use-obj (λ () (gensym 'render))))
                      (define src (demand-source-for-use key use-id))
                      (and src
                           (load-source src ci))))])
