@@ -93,9 +93,27 @@
    [("--markdown") "generate markdown-format output"
     (current-html #f)
     (current-render-mixin markdown:render-mixin)]
+   [("--xexpr") "generate xexpr-format output file"
+    (current-html #t)
+    (current-xexpr #t)
+    (current-render-mixin html:render-mixin)]
+   [("--xexprs") "generate xexpr-format output directory"
+    (current-html #t)
+    (current-xexpr #t)
+    (current-render-mixin multi-html:render-mixin)]
+   [("--xexpr-tree") n "generate xexpr-format output directories <n> deep"
+    (let ([nv (string->number n)])
+      (unless (exact-nonnegative-integer? nv)
+        (raise-user-error 'scribble
+                          "invalid depth: ~a"
+                          n))
+      (current-directory-depth nv)
+      (current-html #t)
+      (current-xexpr #t)
+      (current-render-mixin (if (zero? nv)
+                                html:render-mixin
+                                multi-html:render-mixin)))]
    #:once-each
-   [("--xexpr") "generate xexpr body and navigation output instead of html output"
-    (current-xexpr #t)]
    [("--lib" "-l") "treat argument <file>s as library paths instead of filesystem paths"
     (current-lib-mode #t)]
    [("--dest") dir "write output in <dir>"
