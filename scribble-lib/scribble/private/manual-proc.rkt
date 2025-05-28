@@ -927,9 +927,7 @@
                (make-omitable-paragraph
                 (list
                  (to-element
-                  `(,(racket struct)
-                    ,the-name
-                    ,(map field-view fields)))))]
+                  (list (racket struct) the-name (map field-view fields)))))]
               [else
                ;; Multi-line view (leaving out last paren if keywords follow):
                (define one-right-column?
