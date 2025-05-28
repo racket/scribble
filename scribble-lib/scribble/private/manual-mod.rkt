@@ -299,12 +299,9 @@
                             pkg-spec))))
            libs-specs))
       (append (if link-target?
-                  (map (lambda (modpath)
-                         (make-part-tag-decl 
-                          (intern-taglet
-                           `(mod-path ,(datum-intern-literal
-                                        (element->string modpath))))))
-                       modpaths)
+                  (for/list ([modpath (in-list modpaths)])
+                    (make-part-tag-decl (intern-taglet `(mod-path ,(datum-intern-literal
+                                                                    (element->string modpath))))))
                   null)
               (flow-paragraphs (decode-flow content)))))))
 
