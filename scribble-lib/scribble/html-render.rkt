@@ -27,7 +27,8 @@
          "search.rkt"
          (except-in "base.rkt" url))
 (provide render-mixin
-         render-multi-mixin)
+         render-multi-mixin
+         (struct-out scribble-xexpr-page))
 
 (struct scribble-xexpr-page
   (title     ; string?
