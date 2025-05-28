@@ -2229,8 +2229,14 @@
                              (format "???~a" (eq-hash-code d))])))
                    "_")])
         (let ([fn (if (depth . < . directory-depth)
-                      (path->string (build-path base "index.html"))
-                      (format "~a.html" base))])
+                      (path->string
+                       (build-path base
+                                   (path-replace-extension (string->path "index")
+                                                           (super get-suffix))))
+                      (format
+                       (string-append "~a"
+                                      (path->string
+                                       (bytes->path (super get-suffix)))) base))])
           (when ((string-length fn) . >= . 48)
             (error "file name too long (need a tag):" fn))
           fn)))
@@ -2293,7 +2299,10 @@
                             [current-top-part d])
                ;; install files for each directory
                (install-extra-files ds)
-               (let ([fn (build-path fn "index.html")])
+               (let ([fn (build-path fn
+                                     (path-replace-suffix
+                                      (string->path "index")
+                                      (super get-suffix)))])
                  (with-output-to-file/clean
                   fn
                   (lambda () (render-one d ri fn))))))
