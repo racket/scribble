@@ -488,6 +488,9 @@ The recognized @tech{style properties} are as follows:
        to skip the generation of an entry for the part's title in the
        document index.}
 
+ @item{@racket['bare-anchors] --- For HTML, omits the ``Link to here''
+   hidden hover link on title and section headers.}
+
  @item{@racket[document-version] structure --- A version number for
        this part and its sub-parts (except as overridden). When it is
        not @racket[""] may be used when rendering a document; at a
