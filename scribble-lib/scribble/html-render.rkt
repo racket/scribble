@@ -767,7 +767,7 @@
                                               ,@(format-number
                                                  (collected-info-number
                                                   (part-collected-info p ri))
-                                                 '((tt nbsp)))))
+                                                 '((span ([class "stt"]) nbsp)))))
                                       '(""))
                                 ,@(if (toc-element? p)
                                       (render-content (toc-element-toc-content p)
@@ -1174,7 +1174,7 @@
                            '())
                        (list '[class "heading"])
                        (style->attribs (part-style d)))
-                     ,@(format-number number '((tt nbsp)))
+                     ,@(format-number number '((span ([class "stt"]) nbsp)))
                      ,@(map (lambda (t)
                               `(a ([name ,(format "~a" (anchor-name (add-current-tag-prefix (tag-key t ri))))])))
                             (part-tags d))
