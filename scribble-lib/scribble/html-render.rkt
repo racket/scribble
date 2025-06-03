@@ -1201,7 +1201,7 @@
                  (if (null? auths)
                      null
                      `((div ([class "SAuthorListBox"])
-                            (span ([class "SAuthorList"])
+                            (div ([class "SAuthorList"])
                                   ,@(apply
                                      append
                                      (for/list ([auth (in-list auths)]
