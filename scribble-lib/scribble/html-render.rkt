@@ -1150,9 +1150,10 @@
                            (= 2 (length t))
                            (cadr t))))
                   `((,(case (number-depth number)
-                        [(0) 'h2]
-                        [(1) 'h3]
-                        [(2) 'h4]
+                        [(0) 'h1]
+                        [(1) 'h2]
+                        [(2) 'h3]
+                        [(3) 'h4]
                         [else 'h5])
                      ,(append
                        (if (and src taglet)
