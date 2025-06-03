@@ -904,7 +904,6 @@
                            (extract js-addition? js-addition-path)
                            (extract js-style-addition? js-style-addition-path)
                            (reverse extra-script-files)))
-                   ,(xml:comment "[if IE 6]><style type=\"text/css\">.SIEHidden { overflow: hidden; }</style><![endif]")
                    ,@(extract head-addition? head-addition-xexpr)
                    ,@(for/list ([p (style-properties (part-style d))]
                                 #:when (head-extra? p))
