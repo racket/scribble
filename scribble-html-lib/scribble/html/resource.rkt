@@ -69,22 +69,23 @@
   (define file* (if (equal? file default-file) "" file))
   (define roots (current-url-roots))
   (define (find-root path mode)
-    (ormap (lambda (root+url+flags)
-             (let loop ([r (car root+url+flags)] [p path])
-               (if (pair? r)
-                 (and (pair? p) (equal? (car p) (car r))
-                      (loop (cdr r) (cdr p)))
-                 (case mode
-                   [(get-path) `(,(cadr root+url+flags) 
-                                 ,@p 
-                                 ,(if (and (equal? file* "")
-                                           (memq 'index (cddr root+url+flags)))
-                                      default-file
-                                      file*))]
-                   [(get-abs-or-true)
-                    (if (memq 'abs (cddr root+url+flags)) `("" ,@p) #t)]
-                   [else (error 'relativize "internal error: ~e" mode)]))))
-           roots))
+    (for/or ([root+url+flags (in-list roots)])
+      (let loop ([r (car root+url+flags)]
+                 [p path])
+        (if (pair? r)
+            (and (pair? p) (equal? (car p) (car r)) (loop (cdr r) (cdr p)))
+            (case mode
+              [(get-path)
+               `(,(cadr root+url+flags) ,@p
+                                        ,(if (and (equal? file* "")
+                                                  (memq 'index (cddr root+url+flags)))
+                                             default-file
+                                             file*))]
+              [(get-abs-or-true)
+               (if (memq 'abs (cddr root+url+flags))
+                   `("" ,@p)
+                   #t)]
+              [else (error 'relativize "internal error: ~e" mode)])))))
   (define result
     (let loop ([t tgtdir] [c curdir] [pfx '()])
       (cond
