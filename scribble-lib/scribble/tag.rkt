@@ -96,10 +96,7 @@
 
 (define collapsed (make-weak-hasheq))
 (define (module-path-index->taglet mod)
-  (or (hash-ref collapsed mod #f)
-      (let ([v (do-module-path-index->taglet mod)])
-        (hash-set! collapsed mod v)
-        v)))
+  (hash-ref! collapsed mod (λ () (do-module-path-index->taglet mod))))
 
 (define (module-path-prefix->string p)
   (datum-intern-literal
