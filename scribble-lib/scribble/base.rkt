@@ -140,10 +140,9 @@
      (case (length auths)
        [(1) auths]
        [(2) (list (car auths) nl "and " (cadr auths))]
-       [else (let ([r (reverse auths)])
-               (append (add-between (reverse (cdr r))
-                                    (make-element #f (list "," nl)))
-                       (list "," nl "and " (car r))))]))))
+       [else (define r (reverse auths))
+             (append (add-between (reverse (cdr r)) (make-element #f (list "," nl)))
+                     (list "," nl "and " (car r)))]))))
 
 (define (author+email name email #:obfuscate? [obfuscate? #f])
   (make-element #f
