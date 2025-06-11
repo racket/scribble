@@ -48,18 +48,17 @@
   (let ([v (if (list? v)
                (map intern-taglet v)
                (datum-intern-literal v))])
-    (if (or (string? v)
-            (bytes? v)
-            (list? v))
-        (let ([b (hash-ref interned v #f)])
-          (if b
-              (or (weak-box-value b)
-                  ;; just in case the value is GCed before we extract it:
-                  (intern-taglet v))
-              (begin
-                (hash-set! interned v (make-weak-box v))
-                v)))
-        v)))
+    (cond
+      [(or (string? v) (bytes? v) (list? v))
+       (define b (hash-ref interned v #f))
+       (if b
+           (or (weak-box-value b)
+               ;; just in case the value is GCed before we extract it:
+               (intern-taglet v))
+           (begin
+             (hash-set! interned v (make-weak-box v))
+             v))]
+      [else v])))
 
 (define (do-module-path-index->taglet mod)
   ;; Derive the name from the module path:
