@@ -156,12 +156,12 @@
               (values (reverse ds) (reverse es) exprs))]
          [(define-values (id ...) rhs)
           (andmap identifier? (syntax->list #'(id ...)))
-          (if (null? es)
-              (begin
-                (syntax-local-bind-syntaxes (syntax->list #'(id ...)) #f (car ctx))
-                (loop (cdr exprs) (cons (rebuild-bindings) ds) es))
-              ;; same note here
-              (values (reverse ds) (reverse es) exprs))]
+          (cond
+            [(null? es)
+             (syntax-local-bind-syntaxes (syntax->list #'(id ...)) #f (car ctx))
+             (loop (cdr exprs) (cons (rebuild-bindings) ds) es)]
+            ;; same note here
+            [else (values (reverse ds) (reverse es) exprs)])]
          [_ (loop (cdr exprs) ds (cons expr* es))])])))
 (define-syntax (begin/collect* stx) ; helper, has a boolean flag first
   (define-values [exprs always-list?]
