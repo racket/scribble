@@ -126,15 +126,16 @@
                   (filebox file t)
                   t))))
   (define filenames (map car more))
-  (define indent (let ([d (- max-textsample-width
-                             (for*/fold ([m 0])
-                                        ([s (in-list (cons strs1 strsm))]
-                                         [s (in-list s)])
-                               (max m (string-length s))))])
-                   (if (negative? d)
-                     (error 'textsample-verbatim-boxes
-                            "left box too wide for sample at line ~s" line)
-                     (make-element 'tt (list (hspace d))))))
+  (define d
+    (- max-textsample-width
+       (for*/fold ([m 0])
+                  ([s (in-list (cons strs1 strsm))]
+                   [s (in-list s)])
+         (max m (string-length s)))))
+  (define indent
+    (if (negative? d)
+        (error 'textsample-verbatim-boxes "left box too wide for sample at line ~s" line)
+        (make-element 'tt (list (hspace d)))))
   ;; Note: the font-size property is reset for every table, so we need it
   ;; everywhere there's text, and they don't accumulate for nested tables
   (values
