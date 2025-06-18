@@ -224,16 +224,14 @@
 
 
 (define (add-dot-right main class field) (add-dot-left-right/offset main class field 0 rc-find))
-(define add-dot-right/space 
-  (λ (main class field [count 1])
-    (add-dot-right/offset main class field (* count dot-edge-spacing))))
+(define (add-dot-right/space main class field [count 1])
+  (add-dot-right/offset main class field (* count dot-edge-spacing)))
 (define (add-dot-right/offset main class field offset)
   (add-dot-left-right/offset main class field offset rc-find))
 
 (define (add-dot-left main class field) (add-dot-left-right/offset main class field 0 lc-find))
-(define add-dot-left/space
-  (λ (main class field [count 1])
-    (add-dot-left/offset main class field (* count (- dot-edge-spacing)))))
+(define (add-dot-left/space main class field [count 1])
+  (add-dot-left/offset main class field (* count (- dot-edge-spacing))))
 (define (add-dot-left/offset main class field offset)
   (add-dot-left-right/offset main class field offset lc-find))
 
