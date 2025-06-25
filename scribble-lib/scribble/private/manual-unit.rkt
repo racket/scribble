@@ -35,7 +35,7 @@
 (define (signature-desc . l)
   (make-sig-desc l))
 
-(provide (contract-out [signature-desc (() () #:rest (listof pre-flow?) . ->* . sig-desc?)]))
+(provide (contract-out [signature-desc (-> pre-flow? ... sig-desc?)]))
 
 (define (*defsignature stx-id supers body-thunk indent?)
   (*defthing
