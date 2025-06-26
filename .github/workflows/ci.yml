@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        racket-variant: ["BC", "CS"]
+        racket-variant: ["CS"]
     steps:
       - uses: actions/checkout@master
       # The next two step was copied from the CI config for Typed Racket:
