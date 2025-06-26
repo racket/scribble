@@ -106,16 +106,14 @@
   ;; null body means a lone tag, tags that should always have a closer will
   ;; have a '(#f) as their body (see below)
   (list (with-writer #f "<" tag)
-        (map (lambda (attr)
-               (define name (car attr))
-               (define val (cdr attr))
-               (cond [(not val) #f]
-                     ;; #t means just mention the attribute
-                     [(eq? #t val) (with-writer #f (list " " name))]
-                     [else (list (with-writer #f (list " " name "=\""))
-                                 val
-                                 (with-writer #f "\""))]))
-             attrs)
+        (for/list ([attr (in-list attrs)])
+          (define name (car attr))
+          (define val (cdr attr))
+          (cond
+            [(not val) #f]
+            ;; #t means just mention the attribute
+            [(eq? #t val) (with-writer #f (list " " name))]
+            [else (list (with-writer #f (list " " name "=\"")) val (with-writer #f "\""))]))
         (if (null? body)
           (with-writer #f " />")
           (list (with-writer #f ">")

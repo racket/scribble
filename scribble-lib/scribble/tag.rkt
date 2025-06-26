@@ -48,58 +48,45 @@
   (let ([v (if (list? v)
                (map intern-taglet v)
                (datum-intern-literal v))])
-    (if (or (string? v)
-            (bytes? v)
-            (list? v))
-        (let ([b (hash-ref interned v #f)])
-          (if b
-              (or (weak-box-value b)
-                  ;; just in case the value is GCed before we extract it:
-                  (intern-taglet v))
-              (begin
-                (hash-set! interned v (make-weak-box v))
-                v)))
-        v)))
+    (cond
+      [(or (string? v) (bytes? v) (list? v))
+       (define b (hash-ref interned v #f))
+       (if b
+           (or (weak-box-value b)
+               ;; just in case the value is GCed before we extract it:
+               (intern-taglet v))
+           (begin
+             (hash-set! interned v (make-weak-box v))
+             v))]
+      [else v])))
 
 (define (do-module-path-index->taglet mod)
   ;; Derive the name from the module path:
-  (let ([p (collapse-module-path-index
-            mod
-            (lambda () (build-path (current-directory) "dummy")))])
-    (if (path? p)
-        ;; If we got a path back anyway, then it's best to use the resolved
-        ;; name; if the current directory has changed since we 
-        ;; the path-index was resolved, then p might not be right. Also,
-        ;; the resolved path might be a symbol instead of a path.
-        (let ([rp (resolved-module-path-name 
-                   (module-path-index-resolve mod))])
-          (if (path? rp)
-              (intern-taglet 
-               (path->collects-relative rp))
-              rp))
-        (let ([p (if (and (pair? p)
-                          (eq? (car p) 'planet))
-                     ;; Normalize planet verion number based on current
-                     ;; linking:
-                     (let-values ([(path pkg)
-                                   (get-planet-module-path/pkg p #f #f)])
-                       (list* 'planet
-                              (cadr p)
-                              (list (car (caddr p))
-                                    (cadr (caddr p))
-                                    (pkg-maj pkg)
-                                    (pkg-min pkg))
-                              (cdddr p)))
-                     ;; Otherwise the path is fully normalized:
-                     p)])
-          (intern-taglet p)))))
+  (define p (collapse-module-path-index mod (lambda () (build-path (current-directory) "dummy"))))
+  (if (path? p)
+      ;; If we got a path back anyway, then it's best to use the resolved
+      ;; name; if the current directory has changed since we
+      ;; the path-index was resolved, then p might not be right. Also,
+      ;; the resolved path might be a symbol instead of a path.
+      (let ([rp (resolved-module-path-name (module-path-index-resolve mod))])
+        (if (path? rp)
+            (intern-taglet (path->collects-relative rp))
+            rp))
+      (let ([p (if (and (pair? p) (eq? (car p) 'planet))
+                   ;; Normalize planet verion number based on current
+                   ;; linking:
+                   (let-values ([(path pkg) (get-planet-module-path/pkg p #f #f)])
+                     (list* 'planet
+                            (cadr p)
+                            (list (car (caddr p)) (cadr (caddr p)) (pkg-maj pkg) (pkg-min pkg))
+                            (cdddr p)))
+                   ;; Otherwise the path is fully normalized:
+                   p)])
+        (intern-taglet p))))
 
 (define collapsed (make-weak-hasheq))
 (define (module-path-index->taglet mod)
-  (or (hash-ref collapsed mod #f)
-      (let ([v (do-module-path-index->taglet mod)])
-        (hash-set! collapsed mod v)
-        v)))
+  (hash-ref! collapsed mod (λ () (do-module-path-index->taglet mod))))
 
 (define (module-path-prefix->string p)
   (datum-intern-literal
@@ -123,9 +110,8 @@
 (define (definition-tag->class/interface-tag t) (cons 'class/intf (cdr t)))
 (define (class/interface-tag->constructor-tag t) (cons 'constructor (cdr t)))
 (define (get-class/interface-and-method meth-tag)
-  (match meth-tag
-    [`(meth ((,_ ,class/interface) ,method))
-     (values class/interface method)]))
+  (match-define `(meth ((,_ ,class/interface) ,method)) meth-tag)
+  (values class/interface method))
 (define (definition-tag? x) (and (tag? x) (equal? (car x) 'def)))
 (define (class/interface-tag? x) (and (tag? x) (equal? (car x) 'class/intf)))
 (define (method-tag? x) (and (tag? x) (equal? (car x) 'meth)))
