@@ -11,18 +11,21 @@
 
 (define-struct a-bib-entry (key val))
 
-(provide/contract
- [cite ((string?) () #:rest (listof string?) . ->* . element?)]
- [bib-entry ((#:key string? #:title (or/c #f pre-content?))
-             (#:is-book? boolean? #:author (or/c #f pre-content?) 
-                         #:location (or/c #f pre-content?) 
-                         #:date (or/c #f pre-content?) 
-                         #:url (or/c #f pre-content?)
-                         #:note (or/c #f pre-content?))
-             . ->* .
-             a-bib-entry?)]
- [rename a-bib-entry? bib-entry? predicate/c]
- [bibliography (() (#:tag string?) #:rest (listof a-bib-entry?) . ->* . part?)]) 
+(provide (contract-out
+          [cite ((string?) () #:rest (listof string?) . ->* . element?)]
+          [bib-entry
+           ((#:key string? #:title (or/c #f pre-content?)) (#:is-book? boolean?
+                                                            #:author (or/c #f pre-content?)
+                                                            #:location (or/c #f pre-content?)
+                                                            #:date (or/c #f pre-content?)
+                                                            #:url (or/c #f pre-content?)
+                                                            #:note (or/c #f pre-content?))
+                                                           . ->* .
+                                                           a-bib-entry?)]
+          (rename a-bib-entry?
+                  bib-entry?
+                  predicate/c)
+          [bibliography (() (#:tag string?) #:rest (listof a-bib-entry?) . ->* . part?)])) 
 
 (define (cite key . keys)
   (make-element
@@ -65,7 +68,9 @@
        `(" " ,@(decode-content (list location)) ,(if date "," "."))
        null)
      (if date `(" " ,@(decode-content (list date)) ".") null)
-     (if url `(" " ,(link url (tt url))) null)
+     (if url (list " "
+                   (link url
+                         (tt url))) null)
      (if note (decode-content (list note)) null)))))
 
 (define-on-demand bib-style (make-style "RBibliography" scheme-properties))
@@ -81,12 +86,10 @@
     (list
      (make-table
       bib-style
-      (map (lambda (c)
-             (define key (a-bib-entry-key c))
-             (define val (a-bib-entry-val c))
-             (list
-              (to-flow (make-target-element #f `("[" ,key "]") `(cite ,key)))
+      (for/list ([c (in-list citations)])
+        (define key (a-bib-entry-key c))
+        (define val (a-bib-entry-val c))
+        (list (to-flow (make-target-element #f `("[" ,key "]") `(cite ,key)))
               flow-spacer
-              (to-flow val)))
-           citations))))
+              (to-flow val))))))
    null))
