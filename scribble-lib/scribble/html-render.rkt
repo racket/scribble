@@ -1128,7 +1128,12 @@
             [else l]))
         (let ([number (collected-info-number (part-collected-info d ri))])
           (add-title-and-content-wrapper
-           `(,@(let ([pres (extract-pretitle d)])
+           `((section ([class ,(format "SsectionLevel~a" (number-depth number))]
+                       [id ,(format "section ~a"
+                                    (if (null? number)
+                                        "0"
+                                        (car (format-number number ""))))])
+             ,@(let ([pres (extract-pretitle d)])
                  (append-map (lambda (pre)
                                (do-render-paragraph pre d ri #f #t))
                              pres))
@@ -1216,7 +1221,7 @@
                  (if (null? secs)
                      null
                      (append (render-part (car secs) ri)
-                             (loop (add1 pos) (cdr secs))))))))))
+                             (loop (add1 pos) (cdr secs)))))))))))
 
     (define/private (render-flow* p part ri starting-item? special-last?)
       ;; Wrap each table with <p>, except for a trailing table
