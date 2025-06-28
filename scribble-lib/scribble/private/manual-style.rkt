@@ -10,19 +10,27 @@
          "manual-utils.rkt"
          "on-demand.rkt"
          "manual-sprop.rkt"
+         racket/deprecation
          racket/list
          racket/contract/base
          racket/string)
 
-(provide (rename-out [hyperlink link])
-         (rename-out [other-doc other-manual])
-         (rename-out [centered centerline])
+(provide link
+         other-manual
+         centerline
          image
-         (rename-out [image image/plain])
+         image/plain
          itemize
          aux-elem
          code-inset)
 (provide/contract [filebox (((or/c core:element? string?)) () #:rest (listof pre-flow?) . ->* . block?)])
+
+
+(define-deprecated-alias link hyperlink)
+(define-deprecated-alias other-manual other-doc)
+(define-deprecated-alias centerline centered)
+(define-deprecated-alias image/plain image)
+
 
 (define styling-f/c
   (() () #:rest (listof pre-content?) . ->* . element?))
