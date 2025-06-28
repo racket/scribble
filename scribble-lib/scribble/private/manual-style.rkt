@@ -211,12 +211,6 @@
   (make-v+u-link
    (nonbreaking (racketresultfont "#<undefined>"))))
 
-(define (link url 
-              #:underline? [underline? #t]
-              #:style [style (if underline? #f "plainlink")]
-              . str)
-  (apply hyperlink url #:style (if style (make-style style null) plain) str))
-
 (define (math . s)
   (define c (decode-content s))
   (make-element
