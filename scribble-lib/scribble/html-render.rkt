@@ -1126,13 +1126,16 @@
                   ,(part-title-and-content-wrapper-attribs w)
                   ,@l))]
             [else l]))
-        (let ([number (collected-info-number (part-collected-info d ri))])
+        (let* ([number (collected-info-number (part-collected-info d ri))]
+               [depth (number-depth number)]
+               [formatted-number (format-number number "")]
+               [number-string
+                (if (null? formatted-number)
+                    "0"
+                    (car formatted-number))])
           (add-title-and-content-wrapper
-           `((section ([class ,(format "SsectionLevel~a" (number-depth number))]
-                       [id ,(format "section ~a"
-                                    (if (null? number)
-                                        "0"
-                                        (car (format-number number ""))))])
+           `((section ([class ,(format "SsectionLevel~a" depth)]
+                       [id ,(format "section ~a" number-string)])
              ,@(let ([pres (extract-pretitle d)])
                  (append-map (lambda (pre)
                                (do-render-paragraph pre d ri #f #t))
