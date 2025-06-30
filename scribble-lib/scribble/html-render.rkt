@@ -1127,7 +1127,7 @@
                   ,@l))]
             [else l]))
         (let* ([number (collected-info-number (part-collected-info d ri))]
-               [depth (number-depth number)]
+               [depth (add1 (number-depth number))]
                [formatted-number (format-number number "")]
                [number-string
                 (if (null? formatted-number)
