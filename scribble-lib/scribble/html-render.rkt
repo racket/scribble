@@ -1126,9 +1126,17 @@
                   ,(part-title-and-content-wrapper-attribs w)
                   ,@l))]
             [else l]))
-        (let ([number (collected-info-number (part-collected-info d ri))])
+        (let* ([number (collected-info-number (part-collected-info d ri))]
+               [depth (add1 (number-depth number))]
+               [formatted-number (format-number number "")]
+               [number-string
+                (if (null? formatted-number)
+                    "0"
+                    (car formatted-number))])
           (add-title-and-content-wrapper
-           `(,@(let ([pres (extract-pretitle d)])
+           `((section ([class ,(format "SsectionLevel~a" depth)]
+                       [id ,(format "section ~a" number-string)])
+             ,@(let ([pres (extract-pretitle d)])
                  (append-map (lambda (pre)
                                (do-render-paragraph pre d ri #f #t))
                              pres))
@@ -1216,7 +1224,7 @@
                  (if (null? secs)
                      null
                      (append (render-part (car secs) ri)
-                             (loop (add1 pos) (cdr secs))))))))))
+                             (loop (add1 pos) (cdr secs)))))))))))
 
     (define/private (render-flow* p part ri starting-item? special-last?)
       ;; Wrap each table with <p>, except for a trailing table
