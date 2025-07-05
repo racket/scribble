@@ -61,14 +61,14 @@
   (let ([text (datum-intern-literal text)])
     (hash-ref! hovers text (λ () (make-style #f (list (make-hover-property text)))))))
 
-(define (annote-exporting-library e)
+(define (annote-exporting-library e #:format-module-path [format-module-path ~s])
   (make-delayed-element
    (lambda (render p ri)
      (define from (resolve-get/tentative p ri '(exporting-libraries #f)))
      (if (and from (pair? from))
          (make-element
           (intern-hover-style
-           (string-join (map ~s from)
+           (string-join (map format-module-path from)
                         ", "
                         #:before-first "Provided from: "
                         #:after-last
