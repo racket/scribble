@@ -57,11 +57,10 @@
     (set! cached-roots
           (cons roots
                 (and (list? roots) (pair? roots)
-                     (map (lambda (root)
-                            (list* (regexp-match* #rx"[^/]+" (car root))
-                                   (regexp-replace #rx"/$" (cadr root) "")
-                                   (cddr root)))
-                          roots)))))
+                     (for/list ([root (in-list roots)])
+                       (list* (regexp-match* #rx"[^/]+" (car root))
+                              (regexp-replace #rx"/$" (cadr root) "")
+                              (cddr root)))))))
   (cdr cached-roots))
 
 ;; a utility for relative paths, taking the above `default-file' and
@@ -70,22 +69,23 @@
   (define file* (if (equal? file default-file) "" file))
   (define roots (current-url-roots))
   (define (find-root path mode)
-    (ormap (lambda (root+url+flags)
-             (let loop ([r (car root+url+flags)] [p path])
-               (if (pair? r)
-                 (and (pair? p) (equal? (car p) (car r))
-                      (loop (cdr r) (cdr p)))
-                 (case mode
-                   [(get-path) `(,(cadr root+url+flags) 
-                                 ,@p 
-                                 ,(if (and (equal? file* "")
-                                           (memq 'index (cddr root+url+flags)))
-                                      default-file
-                                      file*))]
-                   [(get-abs-or-true)
-                    (if (memq 'abs (cddr root+url+flags)) `("" ,@p) #t)]
-                   [else (error 'relativize "internal error: ~e" mode)]))))
-           roots))
+    (for/or ([root+url+flags (in-list roots)])
+      (let loop ([r (car root+url+flags)]
+                 [p path])
+        (if (pair? r)
+            (and (pair? p) (equal? (car p) (car r)) (loop (cdr r) (cdr p)))
+            (case mode
+              [(get-path)
+               `(,(cadr root+url+flags) ,@p
+                                        ,(if (and (equal? file* "")
+                                                  (memq 'index (cddr root+url+flags)))
+                                             default-file
+                                             file*))]
+              [(get-abs-or-true)
+               (if (memq 'abs (cddr root+url+flags))
+                   `("" ,@p)
+                   #t)]
+              [else (error 'relativize "internal error: ~e" mode)])))))
   (define result
     (let loop ([t tgtdir] [c curdir] [pfx '()])
       (cond
@@ -165,9 +165,11 @@
     (define t (make-hash))
     (define-syntax-rule (S body) (call-with-semaphore s (lambda () body)))
     (values (lambda (path renderer)
-              (S (if (hash-ref t path #f)
-                   (error 'resource "path used for two resources: ~e" path)
-                   (begin (hash-set! t path #t) (set! l (cons renderer l))))))
+              (S (cond
+                   [(hash-ref t path #f) (error 'resource "path used for two resources: ~e" path)]
+                   [else
+                    (hash-set! t path #t)
+                    (set! l (cons renderer l))])))
             (lambda () (S (begin0 (reverse l) (set! l '())))))))
 
 ;; `#:exists' determines what happens when the render destination exists, it
@@ -180,32 +182,33 @@
 (define (resource path0 renderer #:exists [exists 'delete-file])
   (define (bad reason) (error 'resource "bad path, ~a: ~e" reason path0))
   (unless (string? path0) (bad "must be a string"))
-  (for ([x (in-list '([#rx"^/" "must be relative"]
-                      [#rx"//" "must not have empty elements"]
-                      [#rx"(?:^|/)[.][.]?(?:/|$)"
-                          "must not contain `.' or `..'"]))])
-    (when (regexp-match? (car x) path0) (bad (cadr x))))
+  (for ([x (in-list '([#rx"^/" "must be relative"] [#rx"//" "must not have empty elements"]
+                                                   [#rx"(?:^|/)[.][.]?(?:/|$)"
+                                                    "must not contain `.' or `..'"]))]
+        #:when (regexp-match? (car x) path0))
+    (bad (cadr x)))
   (define path (regexp-replace #rx"(?<=^|/)$" path0 default-file))
   (define-values [dirpathlist filename]
     (let-values ([(l r) (split-at-right (regexp-split #rx"/" path) 1)])
       (values l (car r))))
   (define (render)
     (let loop ([ps dirpathlist])
-      (if (pair? ps)
-        (begin (unless (directory-exists? (car ps))
-                 (if (or (file-exists? (car ps)) (link-exists? (car ps)))
-                   (bad "exists as a file/link")
-                   (make-directory (car ps))))
-               (parameterize ([current-directory (car ps)])
-                 (loop (cdr ps))))
-        (begin (cond [(not exists)] ; do nothing
-                     [(or (file-exists? filename) (link-exists? filename))
-                      (delete-file filename)]
-                     [(directory-exists? filename)
-                      (bad "exists as directory")])
-               (parameterize ([rendered-dirpath dirpathlist])
-                 (printf "  ~a\n" path)
-                 (renderer filename))))))
+      (cond
+        [(pair? ps)
+         (unless (directory-exists? (car ps))
+           (if (or (file-exists? (car ps)) (link-exists? (car ps)))
+               (bad "exists as a file/link")
+               (make-directory (car ps))))
+         (parameterize ([current-directory (car ps)])
+           (loop (cdr ps)))]
+        [else
+         (cond
+           [(not exists)] ; do nothing
+           [(or (file-exists? filename) (link-exists? filename)) (delete-file filename)]
+           [(directory-exists? filename) (bad "exists as directory")])
+         (parameterize ([rendered-dirpath dirpathlist])
+           (printf "  ~a\n" path)
+           (renderer filename))])))
   (define absolute-url
     (lazy (define url (relativize filename dirpathlist '()))
           (if (url-roots)

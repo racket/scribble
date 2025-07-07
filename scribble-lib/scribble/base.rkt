@@ -29,23 +29,22 @@
        #:rest (listof pre-content?)
        part-start?))
 
-(provide/contract
- [title (->* ()
-             (#:tag (or/c #f string? (listof string?))
-                    #:tag-prefix (or/c #f string? module-path? hash?)
-                    #:style (or/c style? string? symbol? (listof symbol?) #f)
-                    #:version (or/c string? #f)
-                    #:date (or/c string? #f)
-                    #:index-extras desc-extras/c)
-             #:rest (listof pre-content?)
-             title-decl?)]
- [section (title-like-contract)]
- [subsection (title-like-contract)]
- [subsubsection (title-like-contract)]
- [subsubsub*section  (->* ()
-                          (#:tag (or/c #f string? (listof string?)))
-                          #:rest (listof pre-content?)
-                          block?)])
+(provide (contract-out
+          [title
+           (->* ()
+                (#:tag (or/c #f string? (listof string?))
+                       #:tag-prefix (or/c #f string? module-path? hash?)
+                       #:style (or/c style? string? symbol? (listof symbol?) #f)
+                       #:version (or/c string? #f)
+                       #:date (or/c string? #f)
+                       #:index-extras desc-extras/c)
+                #:rest (listof pre-content?)
+                title-decl?)]
+          [section (title-like-contract)]
+          [subsection (title-like-contract)]
+          [subsubsection (title-like-contract)]
+          [subsubsub*section
+           (->* () (#:tag (or/c #f string? (listof string?))) #:rest (listof pre-content?) block?)]))
 (provide include-section)
 
 (define (title #:tag [tag #f] #:tag-prefix [prefix #f] #:style [style plain]
@@ -131,9 +130,8 @@
 
 ;; ----------------------------------------
 
-(provide/contract 
- [author (->* (content?) () #:rest (listof content?) block?)]
- [author+email (->* (content? string?) (#:obfuscate? any/c) element?)])
+(provide (contract-out [author (->* (content?) () #:rest (listof content?) block?)]
+                       [author+email (->* (content? string?) (#:obfuscate? any/c) element?)]))
 
 (define (author . auths)
   (make-paragraph 
@@ -142,10 +140,9 @@
      (case (length auths)
        [(1) auths]
        [(2) (list (car auths) nl "and " (cadr auths))]
-       [else (let ([r (reverse auths)])
-               (append (add-between (reverse (cdr r))
-                                    (make-element #f (list "," nl)))
-                       (list "," nl "and " (car r))))]))))
+       [else (define r (reverse auths))
+             (append (add-between (reverse (cdr r)) (make-element #f (list "," nl)))
+                     (list "," nl "and " (car r)))]))))
 
 (define (author+email name email #:obfuscate? [obfuscate? #f])
   (make-element #f
@@ -173,15 +170,10 @@
 
 (provide items/c)
 
-(provide/contract 
- [itemlist (->* () 
-                (#:style (or/c style? string? symbol? #f)) 
-                #:rest (listof items/c)
-                itemization?)]
- [item (->* () 
-            () 
-            #:rest (listof pre-flow?)
-            item?)])
+(provide (contract-out
+          [itemlist
+           (->* () (#:style (or/c style? string? symbol? #f)) #:rest (listof items/c) itemization?)]
+          [item (->* () () #:rest (listof pre-flow?) item?)]))
 (provide/contract
  [item? (any/c . -> . boolean?)])
 

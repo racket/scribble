@@ -988,7 +988,7 @@
                                               ,@(format-number
                                                  (collected-info-number
                                                   (part-collected-info p ri))
-                                                 '((tt nbsp)))))
+                                                 '((span ([class "stt"]) nbsp)))))
                                       '(""))
                                 ,@(if (toc-element? p)
                                       (render-content (toc-element-toc-content p)
@@ -1129,7 +1129,6 @@
                            (extract js-addition? js-addition-path)
                            (extract js-style-addition? js-style-addition-path)
                            (reverse extra-script-files)))
-                   ,(xml:comment "[if IE 6]><style type=\"text/css\">.SIEHidden { overflow: hidden; }</style><![endif]")
                    ,@(extract head-addition? head-addition-xexpr)
                    ,@(for/list ([p (style-properties (part-style d))]
                                 #:when (head-extra? p))
@@ -1382,9 +1381,17 @@
                   ,(part-title-and-content-wrapper-attribs w)
                   ,@l))]
             [else l]))
-        (let ([number (collected-info-number (part-collected-info d ri))])
+        (let* ([number (collected-info-number (part-collected-info d ri))]
+               [depth (add1 (number-depth number))]
+               [formatted-number (format-number number "")]
+               [number-string
+                (if (null? formatted-number)
+                    "0"
+                    (car formatted-number))])
           (add-title-and-content-wrapper
-           `(,@(let ([pres (extract-pretitle d)])
+           `((section ([class ,(format "SsectionLevel~a" depth)]
+                       [id ,(format "section ~a" number-string)])
+             ,@(let ([pres (extract-pretitle d)])
                  (append-map (lambda (pre)
                                (do-render-paragraph pre d ri #f #t))
                              pres))
@@ -1405,9 +1412,10 @@
                            (= 2 (length t))
                            (cadr t))))
                   `((,(case (number-depth number)
-                        [(0) 'h2]
-                        [(1) 'h3]
-                        [(2) 'h4]
+                        [(0) 'h1]
+                        [(1) 'h2]
+                        [(2) 'h3]
+                        [(3) 'h4]
                         [else 'h5])
                      ,(append
                        (if (and src taglet)
@@ -1428,7 +1436,7 @@
                            '())
                        (list '[class "heading"])
                        (style->attribs (part-style d)))
-                     ,@(format-number number '((tt nbsp)))
+                     ,@(format-number number '((span ([class "stt"]) nbsp)))
                      ,@(map (lambda (t)
                               `(a ([name ,(format "~a" (anchor-name (add-current-tag-prefix (tag-key t ri))))])))
                             (part-tags d))
@@ -1456,7 +1464,7 @@
                  (if (null? auths)
                      null
                      `((div ([class "SAuthorListBox"])
-                            (span ([class "SAuthorList"])
+                            (div ([class "SAuthorList"])
                                   ,@(apply
                                      append
                                      (for/list ([auth (in-list auths)]
@@ -1471,7 +1479,7 @@
                  (if (null? secs)
                      null
                      (append (render-part (car secs) ri)
-                             (loop (add1 pos) (cdr secs))))))))))
+                             (loop (add1 pos) (cdr secs)))))))))))
 
     (define/private (render-flow* p part ri starting-item? special-last?)
       ;; Wrap each table with <p>, except for a trailing table

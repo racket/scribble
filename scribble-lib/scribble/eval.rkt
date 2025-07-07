@@ -166,15 +166,13 @@
                  (define val-list (cadar promptless?+val-list+outputs))
                  (if (equal? val-list (list (void)))
                      null
-                     (map (lambda (v)
-                            (list.flow.list
-                             (make-paragraph (list (if (formatted-result? v)
-                                                       (formatted-result-content v)
-                                                       (elem #:style result-color
-                                                             (to-element/no-color
-                                                              v
-                                                              #:expr? (print-as-expression))))))))
-                          val-list))])
+                     (for/list ([v (in-list val-list)])
+                       (list.flow.list
+                        (make-paragraph
+                         (list (if (formatted-result? v)
+                                   (formatted-result-content v)
+                                   (elem #:style result-color
+                                         (to-element/no-color v #:expr? (print-as-expression)))))))))])
               (if (and (caar promptless?+val-list+outputs)
                        (pair? (cdr promptless?+val-list+outputs)))
                   (list (list (list blank-line)))
@@ -381,10 +379,10 @@
            (vector-set! v2 i (loop (vector-ref v i))))
          v2)]
       [(box? v)
-       (let ([v2 (box #f)])
-         (hash-set! ht v v2)
-         (set-box! v2 (loop (unbox v)))
-         v2)]
+       (define v2 (box #f))
+       (hash-set! ht v v2)
+       (set-box! v2 (loop (unbox v)))
+       v2]
       [(hash? v)
        (define ph (make-placeholder #f))
        (hash-set! ht v ph)
@@ -469,12 +467,12 @@
   (define base-factory
     (apply make-base-eval-factory mod-paths #:lang lang #:pretty-print? pretty-print? ips))
   (lambda ()
-    (let ([ev (base-factory)])
-      (call-in-sandbox-context ev
-                               (lambda ()
-                                 (for ([mod-path (in-list mod-paths)])
-                                   (namespace-require mod-path))))
-      ev)))
+    (define ev (base-factory))
+    (call-in-sandbox-context ev
+                             (lambda ()
+                               (for ([mod-path (in-list mod-paths)])
+                                 (namespace-require mod-path))))
+    ev))
 
 (define (make-log-based-eval logfile mode)
   (case mode
@@ -494,39 +492,38 @@
    (lambda ()
      ;; Required for serialization to work.
      (namespace-attach-module (namespace-anchor->namespace anchor) 'racket/serialize)
-     (let ([old-eval (current-eval)]
-           [init-out-p (current-output-port)]
-           [init-err-p (current-error-port)]
-           [out-p (open-output-bytes)]
-           [err-p (open-output-bytes)])
-       (current-eval
-        (lambda (x)
-          (let* ([x (syntax->datum (datum->syntax #f x))]
-                 [x (if (and (pair? x) (eq? (car x) '#%top-interaction))
-                        (cdr x)
-                        x)]
-                 [result (with-handlers ([exn? values])
-                           (call-with-values (lambda ()
-                                               (parameterize ([current-eval old-eval]
-                                                              [current-custodian (make-custodian)]
-                                                              [current-output-port out-p]
-                                                              [current-error-port err-p])
-                                                 (begin0 (old-eval x)
-                                                   (wait-for-threads (current-custodian)
-                                                                     super-cust))))
-                                             list))]
-                 [out-s (get-output-bytes out-p #t)]
-                 [err-s (get-output-bytes err-p #t)])
-            (let ([result* (serialize (cond
-                                        [(list? result) (cons 'values result)]
-                                        [(exn? result) (list 'exn (exn-message result))]))])
-              (pretty-write (list x result* out-s err-s) out)
-              (flush-output out))
-            (display out-s init-out-p)
-            (display err-s init-err-p)
-            (cond
-              [(list? result) (apply values result)]
-              [(exn? result) (raise result)])))))))
+     (define old-eval (current-eval))
+     (define init-out-p (current-output-port))
+     (define init-err-p (current-error-port))
+     (define out-p (open-output-bytes))
+     (define err-p (open-output-bytes))
+     (current-eval
+      (lambda (x)
+        (let* ([x (syntax->datum (datum->syntax #f x))]
+               [x (if (and (pair? x) (eq? (car x) '#%top-interaction))
+                      (cdr x)
+                      x)]
+               [result (with-handlers ([exn? values])
+                         (call-with-values (lambda ()
+                                             (parameterize ([current-eval old-eval]
+                                                            [current-custodian (make-custodian)]
+                                                            [current-output-port out-p]
+                                                            [current-error-port err-p])
+                                               (begin0 (old-eval x)
+                                                 (wait-for-threads (current-custodian) super-cust))))
+                                           list))]
+               [out-s (get-output-bytes out-p #t)]
+               [err-s (get-output-bytes err-p #t)])
+          (let ([result* (serialize (cond
+                                      [(list? result) (cons 'values result)]
+                                      [(exn? result) (list 'exn (exn-message result))]))])
+            (pretty-write (list x result* out-s err-s) out)
+            (flush-output out))
+          (display out-s init-out-p)
+          (display err-s init-err-p)
+          (cond
+            [(list? result) (apply values result)]
+            [(exn? result) (raise result)]))))))
   ev)
 
 ;; Wait for threads created by evaluation so that the evaluator catches output
@@ -536,19 +533,19 @@
   (define give-up-evt (alarm-evt (+ (current-inexact-milliseconds) 200.0)))
   ;; find a thread to wait on
   (define (find-thread cust)
-    (let* ([managed (custodian-managed-list cust super-cust)]
-           [thds (filter thread? managed)]
-           [custs (filter custodian? managed)])
-      (cond
-        [(pair? thds) (car thds)]
-        [else (ormap find-thread custs)])))
+    (define managed (custodian-managed-list cust super-cust))
+    (define thds (filter thread? managed))
+    (define custs (filter custodian? managed))
+    (cond
+      [(pair? thds) (car thds)]
+      [else (ormap find-thread custs)]))
   ;; keep waiting on threads (one at a time) until time to give up
   (define (wait-loop cust)
-    (let ([thd (find-thread cust)])
-      (when thd
-        (cond
-          [(eq? give-up-evt (sync thd give-up-evt)) (void)]
-          [else (wait-loop cust)]))))
+    (define thd (find-thread cust))
+    (when thd
+      (cond
+        [(eq? give-up-evt (sync thd give-up-evt)) (void)]
+        [else (wait-loop cust)])))
   (wait-loop sub-cust))
 
 (define (make-eval/replay logfile)
@@ -558,37 +555,37 @@
    ev
    (lambda ()
      (namespace-attach-module (namespace-anchor->namespace anchor) 'racket/serialize)
-     (let ([old-eval (current-eval)]
-           [init-out-p (current-output-port)]
-           [init-err-p (current-error-port)])
-       (current-eval
-        (lambda (x)
-          (let* ([x (syntax->datum (datum->syntax #f x))]
-                 [x (if (and (pair? x) (eq? (car x) '#%top-interaction))
-                        (cdr x)
-                        x)])
-            (unless (and (pair? evaluations) (equal? x (car (car evaluations))))
-              ;; TODO: smarter resync
-              ;;  - can handle *additions* by removing next set!
-              ;;  - can handle *deletions* by searching forward (but may jump to far
-              ;;    if terms occur more than once, eg for stateful code)
-              ;; For now, just fail early and often.
-              (set! evaluations null)
-              (error 'eval "unable to replay evaluation of ~.s" x))
-            (let* ([evaluation (car evaluations)]
-                   [result (parameterize ([current-eval old-eval])
-                             (deserialize (cadr evaluation)))]
-                   [result (case (car result)
-                             [(values) (cdr result)]
-                             [(exn) (make-exn (cadr result) (current-continuation-marks))])]
-                   [output (caddr evaluation)]
-                   [error-output (cadddr evaluation)])
-              (set! evaluations (cdr evaluations))
-              (display output init-out-p #| (current-output-port) |#)
-              (display error-output init-err-p #| (current-error-port) |#)
-              (cond
-                [(exn? result) (raise result)]
-                [(list? result) (apply values result)]))))))))
+     (define old-eval (current-eval))
+     (define init-out-p (current-output-port))
+     (define init-err-p (current-error-port))
+     (current-eval
+      (lambda (x)
+        (let* ([x (syntax->datum (datum->syntax #f x))]
+               [x (if (and (pair? x) (eq? (car x) '#%top-interaction))
+                      (cdr x)
+                      x)])
+          (unless (and (pair? evaluations) (equal? x (car (car evaluations))))
+            ;; TODO: smarter resync
+            ;;  - can handle *additions* by removing next set!
+            ;;  - can handle *deletions* by searching forward (but may jump to far
+            ;;    if terms occur more than once, eg for stateful code)
+            ;; For now, just fail early and often.
+            (set! evaluations null)
+            (error 'eval "unable to replay evaluation of ~.s" x))
+          (let* ([evaluation (car evaluations)]
+                 [result (parameterize ([current-eval old-eval])
+                           (deserialize (cadr evaluation)))]
+                 [result (case (car result)
+                           [(values) (cdr result)]
+                           [(exn) (make-exn (cadr result) (current-continuation-marks))])]
+                 [output (caddr evaluation)]
+                 [error-output (cadddr evaluation)])
+            (set! evaluations (cdr evaluations))
+            (display output init-out-p #| (current-output-port) |#)
+            (display error-output init-err-p #| (current-error-port) |#)
+            (cond
+              [(exn? result) (raise result)]
+              [(list? result) (apply values result)])))))))
   ev)
 
 (define (close-eval e)
@@ -647,29 +644,27 @@
             ;; Also preserve syntax-original?, since that seems important
             ;; to some syntax-based code (eg redex term->pict).
             (define (get-source-location e)
-              (let* ([src (build-source-location-list e)]
-                     [old-source (source-location-source src)]
-                     [new-source
-                      (cond [(path? old-source) ;; not quotable/writable
-                             ;;(path->string old-source) ;; don't leak build paths
-                             'eval]
-                            [(or (string? old-source)
-                                 (symbol? old-source))
-                             ;; Okay? Or should this be replaced also?
-                             old-source]
-                            [else #f])])
-                (update-source-location src #:source new-source)))
+              (define src (build-source-location-list e))
+              (define old-source (source-location-source src))
+              (define new-source
+                (cond
+                  ;; not quotable/writable
+                  ;;(path->string old-source) ;; don't leak build paths
+                  [(path? old-source) 'eval]
+                  ;; Okay? Or should this be replaced also?
+                  [(or (string? old-source) (symbol? old-source)) old-source]
+                  [else #f]))
+              (update-source-location src #:source new-source))
             (let loop ([e #'e])
               (cond [(syntax? e)
-                     (let ([src (get-source-location e)]
-                           [original? (syntax-original? (syntax-local-introduce e))])
-                       #`(syntax-property
-                          (datum->syntax #f
-                                         #,(loop (syntax-e e))
-                                         (quote #,src)
-                                         #,(if original? #'orig-stx #'#f))
-                          'paren-shape
-                          (quote #,(syntax-property e 'paren-shape))))]
+                     (define src (get-source-location e))
+                     (define original? (syntax-original? (syntax-local-introduce e)))
+                     #`(syntax-property (datum->syntax #f
+                                                       #,(loop (syntax-e e))
+                                                       (quote #,src)
+                                                       #,(if original? #'orig-stx #'#f))
+                                        'paren-shape
+                                        (quote #,(syntax-property e 'paren-shape)))]
                     [(pair? e)
                      #`(cons #,(loop (car e)) #,(loop (cdr e)))]
                     [(vector? e)
@@ -865,15 +860,11 @@
     [(_ racketblock e ...)
      (racketblockX+eval racketblock #:eval (make-base-eval) #:escape unsyntax e ...)]))
 
-(define-syntax racketblock+eval
-  (syntax-rules ()
-    [(_ e ...)
-     (racketblockX+eval racketblock e ...)]))
+(define-syntax-rule (racketblock+eval e ...)
+  (racketblockX+eval racketblock e ...))
 
-(define-syntax racketblock0+eval
-  (syntax-rules ()
-    [(_ e ...)
-     (racketblockX+eval racketblock0 e ...)]))
+(define-syntax-rule (racketblock0+eval e ...)
+  (racketblockX+eval racketblock0 e ...))
 
 (define-syntax racketmod+eval
   (syntax-rules ()
@@ -958,7 +949,7 @@
 
 (define (do-splice l)
   (cond [(null? l) null]
-        [(splice? (car l)) `(,@(splice-run (car l)) ,@(do-splice (cdr l)))]
+        [(splice? (car l)) (append (splice-run (car l)) (do-splice (cdr l)))]
         [else (cons (car l) (do-splice (cdr l)))]))
 
 (define as-examples

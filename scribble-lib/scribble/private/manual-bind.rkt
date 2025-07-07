@@ -59,27 +59,23 @@
 (define hovers (make-weak-hasheq))
 (define (intern-hover-style text)
   (let ([text (datum-intern-literal text)])
-    (or (hash-ref hovers text #f)
-        (let ([s (make-style #f (list (make-hover-property text)))])
-          (hash-set! hovers text s)
-          s))))
+    (hash-ref! hovers text (λ () (make-style #f (list (make-hover-property text)))))))
 
-(define (annote-exporting-library e)
+(define (annote-exporting-library e #:format-module-path [format-module-path ~s])
   (make-delayed-element
    (lambda (render p ri)
      (define from (resolve-get/tentative p ri '(exporting-libraries #f)))
      (if (and from (pair? from))
          (make-element
           (intern-hover-style
-           (string-append
-            "Provided from: "
-            (string-join (map ~s from) ", ")
-            (let ([from-pkgs (resolve-get/tentative p ri '(exporting-packages #f))])
-              (if (and from-pkgs (pair? from-pkgs))
-                  (string-append
-                   " | Package: "
-                   (string-join (map ~a from-pkgs) ", "))
-                  ""))))
+           (string-join (map format-module-path from)
+                        ", "
+                        #:before-first "Provided from: "
+                        #:after-last
+                        (let ([from-pkgs (resolve-get/tentative p ri '(exporting-packages #f))])
+                          (if (and from-pkgs (pair? from-pkgs))
+                              (string-append " | Package: " (string-join (map ~a from-pkgs) ", "))
+                              ""))))
           e)
          e))
    (lambda () e)
@@ -114,30 +110,30 @@
         (lambda (x add) x)))
   (let ([lib
          (or (for/or ([lib (in-list (or source-libs null))])
-               (let ([checker
-                      (hash-ref
-                       checkers lib
-                       (lambda ()
-                         (define ns-id 
-                           (let ([ns (make-base-empty-namespace)])
-                             (parameterize ([current-namespace ns])
-                               ;; A `(namespace-require `(for-label ,lib))` can
-                               ;; fail if `lib` provides different bindings of the
-                               ;; same name at different phases. We can require phases
-                               ;; 1 and 0 separately, in which case the phase-0
-                               ;; binding shadows the phase-1 one in that case.
-                               ;; This strategy only works for documenting bindings
-                               ;; at phases 0 and 1, though.
-                               (namespace-require `(just-meta 1 (for-label ,lib)))
-                               (namespace-require `(just-meta 0 (for-label ,lib)))
-                               (namespace-syntax-introduce (datum->syntax #f 'x)))))
-                         (define (checker id intro)
-                           (free-label-identifier=?
-                            (intro (datum->syntax ns-id (syntax-e id)) 'add)
-                            (intro id 'add)))
-                         (hash-set! checkers lib checker)
-                         checker))])
-                 (and (checker id intro) lib)))
+               (define checker
+                 (hash-ref checkers
+                           lib
+                           (lambda ()
+                             (define ns-id
+                               (let ([ns (make-base-empty-namespace)])
+                                 (parameterize ([current-namespace ns])
+                                   ;; A `(namespace-require `(for-label ,lib))` can
+                                   ;; fail if `lib` provides different bindings of the
+                                   ;; same name at different phases. We can require phases
+                                   ;; 1 and 0 separately, in which case the phase-0
+                                   ;; binding shadows the phase-1 one in that case.
+                                   ;; This strategy only works for documenting bindings
+                                   ;; at phases 0 and 1, though.
+                                   (namespace-require `(just-meta 1 (for-label ,lib)))
+                                   (namespace-require `(just-meta 0 (for-label ,lib)))
+                                   (namespace-syntax-introduce (datum->syntax #f 'x)))))
+                             (define (checker id intro)
+                               (free-label-identifier=? (intro (datum->syntax ns-id (syntax-e id))
+                                                               'add)
+                                                        (intro id 'add)))
+                             (hash-set! checkers lib checker)
+                             checker)))
+               (and (checker id intro) lib))
              (and (pair? libs) (car libs)))])
     (and lib (module-path-index->taglet
               (module-path-index-join lib #f)))))
@@ -198,79 +194,64 @@
                        #:show-libs? [show-libs? #t])
   ;; This function could have more optional argument to select
   ;; whether to index the id, include a toc link, etc.
-  (let ([dep? #t])
-    (define maker
-      (if form?
-          (id-to-form-target-maker id dep?)
-          (id-to-target-maker id dep?)))
-    (define-values (elem elem-ref)
-      (if show-libs?
-          (definition-site (syntax-e id) id form?)
-          (values (to-element id #:defn? #t)
-                  (to-element id))))
-    (if maker
-        (maker elem
-               (lambda (tag)
-                 (let ([elem
-                        (if index?
-                            (make-index-element
-                             #f (list elem) tag
-                             (list (datum-intern-literal (symbol->string (syntax-e id))))
-                             (list elem)
-                             (and show-libs?
-                                  (with-exporting-libraries
-                                      (lambda (libs)
-                                        (make-exported-index-desc (syntax-e id)
-                                                                  libs)))))
-                            elem)])
-                   (make-target-element #f (list elem) tag))))
-        elem)))
+  (define dep? #t)
+  (define maker
+    (if form?
+        (id-to-form-target-maker id dep?)
+        (id-to-target-maker id dep?)))
+  (define-values (elem elem-ref)
+    (if show-libs?
+        (definition-site (syntax-e id) id form?)
+        (values (to-element id #:defn? #t) (to-element id))))
+  (if maker
+      (maker elem
+             (lambda (tag)
+               (let ([elem (if index?
+                               (make-index-element
+                                #f
+                                (list elem)
+                                tag
+                                (list (datum-intern-literal (symbol->string (syntax-e id))))
+                                (list elem)
+                                (and show-libs?
+                                     (with-exporting-libraries
+                                      (lambda (libs) (make-exported-index-desc (syntax-e id) libs)))))
+                               elem)])
+                 (make-target-element #f (list elem) tag))))
+      elem))
 
 (define (make-binding-redirect-elements mod-path redirects)
   (define taglet (module-path-index->taglet 
                   (module-path-index-join mod-path #f)))
   (make-element
    #f
-   (map
-    (lambda (redirect)
-      (define id (car redirect))
-      (define form? (cadr redirect))
-      (define path (caddr redirect))
-      (define anchor (cadddr redirect))
-      (define (make-one kind)
-        (make-redirect-target-element
-         #f
-         null
-         (intern-taglet (list kind (list taglet id)))
-         path
-         anchor))
-      (make-element
-       #f
-       (list (make-one (if form? 'form 'def))
-             (make-dep (list taglet id) null)
-             (let ([str (datum-intern-literal (symbol->string id))])
-               (make-index-element #f
-                                   null
-                                   (intern-taglet
-                                    (list (if form? 'form 'def)
-                                          (list taglet id)))
-                                   (list str)
-                                   (list
-                                    (make-element
-                                     symbol-color
-                                     (list
-                                      (make-element
-                                       (if form?
-                                           syntax-link-color
-                                           value-link-color)
-                                       (list str)))))
-                                   (make-exported-index-desc*
-                                    id
-                                    (list mod-path)
-                                    (hash 'kind (if form?
-                                                    "syntax"
-                                                    "procedure"))))))))
-    redirects)))
+   (for/list ([redirect (in-list redirects)])
+     (define id (car redirect))
+     (define form? (cadr redirect))
+     (define path (caddr redirect))
+     (define anchor (cadddr redirect))
+     (define (make-one kind)
+       (make-redirect-target-element #f
+                                     null
+                                     (intern-taglet (list kind (list taglet id)))
+                                     path
+                                     anchor))
+     (make-element
+      #f
+      (list (make-one (if form? 'form 'def))
+            (make-dep (list taglet id) null)
+            (let ([str (datum-intern-literal (symbol->string id))])
+              (make-index-element
+               #f
+               null
+               (intern-taglet (list (if form? 'form 'def) (list taglet id)))
+               (list str)
+               (list (make-element symbol-color
+                                   (list (make-element (if form? syntax-link-color value-link-color)
+                                                       (list str)))))
+               (make-exported-index-desc* id
+                                          (list mod-path)
+                                          (hash 'kind (if form? "syntax" "procedure"))))))))))
 
 
 (define (make-dep t content)

@@ -67,4 +67,4 @@
   (call-with-trusted-sandbox-configuration
     (lambda ()
       (for ([t (in-list (doc:tests))])
-        (begin (apply text-test t))))))
+        (apply text-test t)))))

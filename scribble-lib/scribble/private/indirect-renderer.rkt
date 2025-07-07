@@ -19,19 +19,14 @@
     (define/override (get-suffix) target-suffix)
     (define/override (render srcs dests ri)
       (define tmp-dir
-        (make-temporary-file
-         (format "scribble-~a-to-~a-~~a"
-                 (dotless base-suffix) (dotless target-suffix))
-         'directory))
+        (make-temporary-directory
+         (format "scribble-~a-to-~a-~~a" (dotless base-suffix) (dotless target-suffix))))
       (define (cleanup)
         (when (directory-exists? tmp-dir) (delete-directory/files tmp-dir)))
       (with-handlers ([void (lambda (e) (cleanup) (raise e))])
         (define tmp-dests
-          (map (lambda (dest)
-                 (build-path tmp-dir
-                             (path-replace-suffix (file-name-from-path dest)
-                                                  base-suffix)))
-               dests))
+          (for/list ([dest (in-list dests)])
+            (build-path tmp-dir (path-replace-suffix (file-name-from-path dest) base-suffix))))
         (set! tmp-dest-dir tmp-dir)
         ;; it would be better if it's ok to change current-directory for this
         (super render srcs tmp-dests ri)
