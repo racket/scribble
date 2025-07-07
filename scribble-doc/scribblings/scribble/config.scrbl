@@ -353,7 +353,14 @@ The style classes:
 
   [@spacer @spacer]
 
-  [@css{SSubSubSubSection} @elem{Deeply nested subsection (below @tt{<h5>}).}]
+  [@css{SsectionLevel1} @elem{@tt{<section>} tag enclosing the part introduced by @racket[title].}]
+  [@css{SsectionLevel2} @elem{@tt{<section>} tag enclosing a part introduced by @racket[section].}]
+  [@css{SsectionLevel3} @elem{@tt{<section>} tag enclosing a part introduced by @racket[subsection].}]
+  [@css{SsectionLevel4} @elem{@tt{<section>} tag enclosing a part introduced by @racket[subsubsection].}]
+
+  [@spacer @spacer]
+  
+  [@css{SSubSubSubSection} @elem{Deeply nested subsection heading (below @tt{<h4>}).}]
 
   [@spacer @spacer]
 
@@ -401,8 +408,11 @@ The style classes:
   [@css{badlink} @elem{Broken cross-reference.}]
   [@css{plainlink} @elem{Hyperlink without an underline.}])
 
-In addition, the @css{SIEHidden} style class is built in to all
-Scribble HTML output to hide an element on Internet Explorer 6.
+In addition, the @tt{<section>} tags are given @tt{id}s of the form @tt{id="section <n>"},
+where @tt{<n>} is the section or subsection or subsubsection number. For example, the second
+Scribble @racket[section] has an html @tt{<section>} tag with an @tt{id} of @tt{"section 2"},
+and the first Scribble @racket[subsection] of the second Scribble @racket[section] has an
+html @tt{<section>} tag with an @tt{id} of @tt{"section 2.1"}.
 
 @; ------------------------------------------------------------
 
