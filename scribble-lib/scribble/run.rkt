@@ -37,10 +37,9 @@
 (define current-image-prefs        (make-parameter null)) ; reverse order
 
 (define (read-one str)
-  (let ([i (open-input-string str)])
-    (with-handlers ([exn:fail:read? (lambda (x) #f)])
-      (let ([v (read i)])
-        (and (eof-object? (read i)) v)))))
+  (define i (open-input-string str))
+  (with-handlers ([exn:fail:read? (lambda (x) #f)])
+    (let ([v (read i)]) (and (eof-object? (read i)) v))))
 
 (define (run)
   (define doc-binding 'doc)
@@ -209,13 +208,15 @@
           #:quiet? (current-quiet)
           #:info-in-files (reverse (current-info-input-files))
           #:xrefs (for/list ([mod+id (in-list (reverse (current-xref-input-modules)))])
-                    (let* ([get-xref (dynamic-require (car mod+id) (cdr mod+id))]
-                           [xr (get-xref)])
-                      (unless (xref? xr)
-                        (raise-user-error
-                         'scribble "result from `~s' of `~s' is not an xref: ~e"
-                         (cdr mod+id) (car mod+id) xr))
-                      xr))
+                    (define get-xref (dynamic-require (car mod+id) (cdr mod+id)))
+                    (define xr (get-xref))
+                    (unless (xref? xr)
+                      (raise-user-error 'scribble
+                                        "result from `~s' of `~s' is not an xref: ~e"
+                                        (cdr mod+id)
+                                        (car mod+id)
+                                        xr))
+                    xr)
           #:info-out-file (current-info-output-file)))
 
 (run)
