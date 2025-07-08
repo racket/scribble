@@ -171,21 +171,19 @@
                      (make-compilation-manager-load/use-compiled-handler))])
      (parameterize ([current-command-line-arguments
                      (list->vector (reverse (doc-command-line-arguments)))])
-       (build-docs (map (lambda (file)
-                          (define (go)
-                            (let ([mp (if (current-lib-mode)
-                                          `(lib ,file)
-                                          `(file ,file))])
-                              ;; Try `doc' submodule, first:
-                              (if (module-declared? `(submod ,mp ,doc-binding) #t)
-                                  (dynamic-require `(submod ,mp ,doc-binding)
-                                                   doc-binding)
-                                  (dynamic-require mp doc-binding))))
-                          (if maker
-                              (parameterize ([current-load/use-compiled maker])
-                                (go))
-                              (go)))
-                        files)
+       (build-docs (for/list ([file (in-list files)])
+                     (define (go)
+                       (let ([mp (if (current-lib-mode)
+                                     `(lib ,file)
+                                     `(file ,file))])
+                         ;; Try `doc' submodule, first:
+                         (if (module-declared? `(submod ,mp ,doc-binding) #t)
+                             (dynamic-require `(submod ,mp ,doc-binding) doc-binding)
+                             (dynamic-require mp doc-binding))))
+                     (if maker
+                         (parameterize ([current-load/use-compiled maker])
+                           (go))
+                         (go)))
                    files)))))
 
 (define (build-docs docs files)
@@ -193,10 +191,9 @@
              ((length files) . > . 1))
     (raise-user-error 'scribble "cannot supply a destination name with multiple inputs"))
   (render docs
-          (map (lambda (fn)
-                 (let-values ([(base name dir?) (split-path fn)])
-                   (or (current-dest-name) name)))
-               files)
+          (for/list ([fn (in-list files)])
+            (define-values (base name dir?) (split-path fn))
+            (or (current-dest-name) name))
           #:dest-dir (current-dest-directory)
           #:render-mixin (current-render-mixin)
           #:image-preferences (reverse (current-image-prefs))
