@@ -568,7 +568,7 @@
                      (to-flow ((arg->elem #f) (car args) (next-args-depth (cdr args))))
                      not-end)
                     (list* 'cont 'cont not-end)))
-               (let loop ([args (if one-ok? (cdr args) args)])
+               (let loop ([args (if one-ok? (cdr args) args)] [prev-depth (if one-ok? (arg-depth (car args)) 0)])
                  (cond
                    [(null? args) null]
                    [else
@@ -577,14 +577,30 @@
                                (arg-special? (cadr args))
                                (not (eq? '_...superclass-args...
                                          (arg-id (cadr args)))))))
+                    (define (combine-for-depth left opt arg end)
+                      (if ((arg-depth (car args)) . < . prev-depth)
+                          ;; when a curried agument starts on a new line,
+                          ;; don't intent like non-curried arguments
+                          (list* (to-flow (list spacer
+                                                (if (arg-starts-optional? (car args))
+                                                    opt
+                                                    null)
+                                                arg))
+                                 'cont
+                                 'cont
+                                 end)
+                          (list* left
+                                 (to-flow opt)
+                                 (to-flow arg)
+                                 end)))
                     (cons
-                     (list*
+                     (combine-for-depth
                       (if (eq? mode 'new)
                           (flow-spacer/n 3)
                           flow-spacer)
                       (if (arg-starts-optional? (car args))
-                          (to-flow (make-element #f (list spacer (racketoptionalfont "["))))
-                          flow-spacer)
+                          (make-element #f (list spacer (racketoptionalfont "[")))
+                          spacer)
                       (let ([a ((arg->elem #f) (car args) (next-args-depth (cdr args)))]
                             [next (if dots-next?
                                       (make-element
@@ -593,21 +609,21 @@
                                                  (cadr args)
                                                  (next-args-depth (cddr args)))))
                                       "")])
-                        (to-flow
-                         (cond
-                           [(null? ((if dots-next? cddr cdr) args))
-                            (make-element
-                             #f
-                             (list a next (racketparenfont ")")))]
-                           [(equal? next "") a]
-                           [else
-                            (make-element #f (list a next))])))
+                        (cond
+                          [(null? ((if dots-next? cddr cdr) args))
+                           (make-element
+                            #f
+                            (list a next (racketparenfont ")")))]
+                          [(equal? next "") a]
+                          [else
+                           (make-element #f (list a next))]))
                       (if (and (null? ((if dots-next? cddr cdr) args))
                                (not result-next-line?))
                           end
                           not-end))
                      (loop ((if dots-next? cddr cdr)
-                            args)))])))))])))))
+                            args)
+                           (max prev-depth (arg-depth (car args)))))])))))])))))
      (if result-next-line?
        (list (list (make-flow (top-align
                                make-table-if-necessary
