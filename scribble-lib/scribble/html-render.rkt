@@ -37,6 +37,7 @@
    version   ; string? version number
    tags      ; (listof string?)
    tocset    ; (list?)
+   tocset-xexpr
    article   ; xexpr?
    ) #:prefab)
 
@@ -861,53 +862,57 @@
           (if (null? ps)
               null
               (list
-               (get-onthispage-label)
-               "tocsublist"
-               (map (lambda (p)
-                      (let ([p (vector-ref p 0)]
-                            [prefixes (vector-ref p 1)]
-                            [from-d (vector-ref p 2)]
-                            [add-tag-prefixes
-                             (lambda (t prefixes)
-                               (if (null? prefixes)
-                                   t
-                                   (cons (car t) (append prefixes (cdr t)))))])
-                        (list
-                         (if (part? p)
-                             (format-number
-                              (collected-info-number
-                               (part-collected-info p ri))
+               box-class
+               (list
+                (get-onthispage-label)
+                "tocsublist"
+                (map (lambda (p)
+                       (let ([p (vector-ref p 0)]
+                             [prefixes (vector-ref p 1)]
+                             [from-d (vector-ref p 2)]
+                             [add-tag-prefixes
+                              (lambda (t prefixes)
+                                (if (null? prefixes)
+                                    t
+                                    (cons (car t) (append prefixes (cdr t)))))])
+                         (list
+                          (if (part? p)
+                              (format-number
+                               (collected-info-number
+                                (part-collected-info p ri))
+                               null)
                               null)
-                             null)
-                         (if (toc-element? p)
-                             (render-content (toc-element-toc-content p)
-                                             from-d ri)
-                             (parameterize ([current-no-links #t]
-                                            [extra-breaking? #t])
-                               (list 
-                                (uri-unreserved-encode
-                                 (anchor-name
-                                  (add-tag-prefixes
-                                   (tag-key (if (part? p)
-                                                (car (part-tags/nonempty p))
-                                                (target-element-tag p))
-                                            ri)
-                                   prefixes)))
-                                (cond
-                                  [(part? p) "tocsubseclink"]
-                                  [any-parts? "tocsubnonseclink"]
-                                  [else "tocsublink"])
+                          (if (toc-element? p)
+                              (render-content (toc-element-toc-content p)
+                                              from-d ri)
+                              (parameterize ([current-no-links #t]
+                                             [extra-breaking? #t])
+                                (list 
+                                 (format
+                                  "#~a"
+                                  (uri-unreserved-encode
+                                   (anchor-name
+                                    (add-tag-prefixes
+                                     (tag-key (if (part? p)
+                                                  (car (part-tags/nonempty p))
+                                                  (target-element-tag p))
+                                              ri)
+                                     prefixes))))
+                                 (cond
+                                   [(part? p) "tocsubseclink"]
+                                   [any-parts? "tocsubnonseclink"]
+                                   [else "tocsublink"])
                                         
-                                (render-content
-                                 (if (part? p)
-                                     (strip-aux
-                                      (or (part-title-content p)
-                                          "???"))
-                                     (if (toc-target2-element? p)
-                                         (toc-target2-element-toc-content p)
-                                         (element-content p)))
-                                 from-d ri)))))))
-                    ps)))))
+                                 (render-content
+                                  (if (part? p)
+                                      (strip-aux
+                                       (or (part-title-content p)
+                                           "???"))
+                                      (if (toc-target2-element? p)
+                                          (toc-target2-element-toc-content p)
+                                          (element-content p)))
+                                  from-d ri)))))))
+                     ps))))))
 
     (define/private (render-onthispage-contents d ri top box-class sections-in-toc?)
         (let ([nearly-top? (lambda (d) 
@@ -1173,6 +1178,9 @@
                  (if (part-style? d 'no-toc+aux)
                      null
                      (list-of-toc-view d ri)) ; tocset
+                 (if (part-style? d 'no-toc+aux)
+                     null
+                     (render-toc-view d ri)) ; tocset-xexpr
                  article-xexpr       ; article
                  ))]
               [else (xml:write-xexpr part-xexpr)])))))
