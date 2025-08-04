@@ -127,12 +127,12 @@ span.RktValDef, span.RktStxDef, span.RktSymDef
 }
 
 /* for syntax links within headings */
-h2 a.RktStxLink, h3 a.RktStxLink, h4 a.RktStxLink, h5 a.RktStxLink,
-h2 a.RktValLink, h3 a.RktValLink, h4 a.RktValLink, h5 a.RktValLink,
-h2 .RktSym, h3 .RktSym, h4 .RktSym, h5 .RktSym,
-h2 .RktMod, h3 .RktMod, h4 .RktMod, h5 .RktMod,
-h2 .RktVal, h3 .RktVal, h4 .RktVal, h5 .RktVal,
-h2 .RktPn, h3 .RktPn, h4 .RktPn, h5 .RktPn {
+h1 a.RktStxLink, h2 a.RktStxLink, h3 a.RktStxLink, h4 a.RktStxLink, h5 a.RktStxLink,
+h1 a.RktValLink, h2 a.RktValLink, h3 a.RktValLink, h4 a.RktValLink, h5 a.RktValLink,
+h1 .RktSym, h2 .RktSym, h3 .RktSym, h4 .RktSym, h5 .RktSym,
+h1 .RktMod, h2 .RktMod, h3 .RktMod, h4 .RktMod, h5 .RktMod,
+h1 .RktVal, h2 .RktVal, h3 .RktVal, h4 .RktVal, h5 .RktVal,
+h1 .RktPn, h2 .RktPn, h3 .RktPn, h4 .RktPn, h5 .RktPn {
     color: #333;
     font-size: 1.50rem;
     font-weight: 400;
