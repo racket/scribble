@@ -42,16 +42,16 @@
 /* embolden the "Racket Guide" and "Racket Reference" links on the TOC */
 /* there isn't an obvious tag in the markup that designates the top TOC page, which is called "start.scrbl" */
 /* nor a tag that designates these two links as special */
-/* so we'll use this slightly tortured sibling selector that hooks onto the h2 tag */
-h2[x-source-module='(lib "scribblings/main/start.scrbl")'] ~ table a[href="guide/index.html"], 
-h2[x-source-module='(lib "scribblings/main/start.scrbl")'] ~ table a[href="reference/index.html"] {
+/* so we'll use this slightly tortured sibling selector that hooks onto the h1 tag */
+h1[x-source-module='(lib "scribblings/main/start.scrbl")'] ~ table a[href="guide/index.html"], 
+h1[x-source-module='(lib "scribblings/main/start.scrbl")'] ~ table a[href="reference/index.html"] {
   font-weight: bold;
 }
 
 
-h2 .stt {
+h1 .stt {
     font-size: 2.3rem;
-    /* prevent automatic bolding from h2 */
+    /* prevent automatic bolding from h1 */
     font-weight: 400;
 }
 
@@ -68,7 +68,7 @@ h2 .stt {
     font-size: 0.9rem;
 }
 
-h3 .stt, h4 .stt, h5 .stt {
+h2 .stt, h3 .stt, h4 .stt, h5 .stt {
     color: #333;
     font-size: 1.65rem;
     font-weight: 400;
@@ -128,13 +128,13 @@ h1, h2, h3, h4, h5, h6, h7, h8 {
 
 }
 
-h3, h4, h5, h6, h7, h8 {
+h2, h3, h4, h5, h6, h7, h8 {
     border-top: 1px solid black;
 }
 
 
 
-h2 { /* per-page main title */
+h1 { /* per-page main title */
     font-family: 'Cooper-Hewitt';
     margin-top: 4rem;
     font-size: 2.3rem;
@@ -146,7 +146,7 @@ h2 { /* per-page main title */
     top: 6px;
 }
 
-h3, h4, h5, h6, h7, h8 {
+h2, h3, h4, h5, h6, h7, h8 {
     margin-top: 2em;
     padding-top: 0.1em;
     margin-bottom: 0.75em;
