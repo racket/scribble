@@ -10,20 +10,28 @@
          "manual-utils.rkt"
          "on-demand.rkt"
          "manual-sprop.rkt"
+         racket/deprecation
          racket/list
          racket/contract/base
          racket/string)
 
-(provide (rename-out [hyperlink link])
-         (rename-out [other-doc other-manual])
-         (rename-out [centered centerline])
+(provide link
+         other-manual
+         centerline
          image
-         (rename-out [image image/plain])
+         image/plain
          itemize
          aux-elem
          code-inset)
 (provide (contract-out
           [filebox (((or/c core:element? string?)) () #:rest (listof pre-flow?) . ->* . block?)]))
+
+
+(define-deprecated-alias link hyperlink)
+(define-deprecated-alias other-manual other-doc)
+(define-deprecated-alias centerline centered)
+(define-deprecated-alias image/plain image)
+
 
 (define styling-f/c
   (-> pre-content? ... element?))
@@ -200,12 +208,6 @@
 (define-on-demand undefined-const
   (make-v+u-link
    (nonbreaking (racketresultfont "#<undefined>"))))
-
-(define (link url 
-              #:underline? [underline? #t]
-              #:style [style (if underline? #f "plainlink")]
-              . str)
-  (apply hyperlink url #:style (if style (make-style style null) plain) str))
 
 (define (math . s)
   (define c (decode-content s))
