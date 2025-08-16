@@ -45,8 +45,8 @@
                               #:email (or/c pre-content? email? (listof email?)))
                              #:rest (listof pre-content?)
                              block?)]
-                       [authorsaddresses (->* () () #:rest (listof pre-content?) block?)]
-                       [shortauthors (->* () () #:rest (listof pre-content?) element?)]
+                       [authorsaddresses (-> pre-content? ... block?)]
+                       [shortauthors (-> pre-content? ... element?)]
                        [institution
                         (->* ()
                              (#:departments (listof (or/c pre-content? institution?)))
@@ -67,7 +67,7 @@
                               #:country (or/c pre-content? #f))
                              affiliation?)]
                        [affiliation? (-> any/c boolean?)]
-                       [abstract (->* () () #:rest (listof pre-content?) block?)]
+                       [abstract (-> pre-content? ... block?)]
                        [acmConference (-> string? string? string? block?)]
                        [grantsponsor (-> string? string? string? content?)]
                        [grantnum (->* (string? string?) (#:url string?) content?)]
@@ -76,7 +76,7 @@
                        [received (->* (string?) (#:stage string?) block?)]
                        [citestyle (-> content? block?)]
                        [ccsdesc (->* (string?) (#:number exact-integer?) block?)]
-                       [CCSXML (->* () () #:rest (listof pre-content?) any/c)]))
+                       [CCSXML (-> pre-content? ... any/c)]))
 (provide
   invisible-element-to-collect-for-acmart-extras
   include-abstract)
