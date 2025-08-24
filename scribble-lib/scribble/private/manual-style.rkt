@@ -217,7 +217,7 @@
         (cond
           [(string? i)
            (cond
-             [(regexp-match #px"^(.*)_([a-zA-Z0-9]+)(.*)$" i)
+             [(regexp-match #px"^(.*)_([a-z\\-A-Z0-9]+)(.*)$" i)
               => (lambda (m)
                    (append (loop (cadr m))
                            (list (make-element 'subscript
