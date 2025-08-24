@@ -2197,11 +2197,11 @@ An alias for @racket[centered] for backward compatibility.}
         strings are left as-is, but any other immediate string is
         italicized.}
 
-  @item{When @litchar{_} appears before a non-empty sequence of numbers
-        and letters, the sequence is typeset as a subscript.}
+  @item{When @litchar{_} appears before a non-empty sequence of numbers,
+        letters, and @litchar{-}, the sequence is typeset as a subscript.}
 
-  @item{When @litchar{^} appears before a non-empty sequence of numbers
-        and letters, the sequence is typeset as a superscript.}
+  @item{When @litchar{^} appears before a non-empty sequence of numbers,
+        letters, and @litchar{-},  the sequence is typeset as a superscript.}
 
  ]}
 
