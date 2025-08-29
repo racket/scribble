@@ -2290,7 +2290,7 @@ receive additional key--value mappings via @tech{part context} using
 the @racket['index-extras] key. See @racket[index-element] for more
 information.
 
-The @racket[index-desc/c] contract is equivalent to
+The @racket[desc-extras/c] contract is equivalent to
 
 @racketblock[
   (hash/dc [k symbol?]
