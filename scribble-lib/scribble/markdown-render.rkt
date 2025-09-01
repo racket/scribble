@@ -221,7 +221,7 @@
            (let ([s (element-style i)])
              (or (eq? 'tt s)
                  (and (style? s)
-                      (style-name s)
+                      (string? (style-name s))
                       (regexp-match? #rx"^Rkt[A-Z]" (style-name s)))))))
 
     (define (link? i)
