@@ -39,7 +39,7 @@
 
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesClass{acmart}
-[2025/08/21 v2.15 Typesetting articles for the Association for Computing Machinery]
+[2025/08/27 v2.16 Typesetting articles for the Association for Computing Machinery]
 \def\@classname{acmart}
 \InputIfFileExists{acmart-preload-hook.tex}{%
   \ClassWarning{\@classname}{%
@@ -1178,12 +1178,12 @@
   \def\@journalNameShort{ACM J. Comput. Sustain. Soc.}%
   \def\@permissionCodeOne{2834-5533}%
   \def\@permissionCodeTwo{2834-5533}%
-\relax % ACMJCDS
+\or % ACMJCDS
   \def\@journalName{ACM Journal of Data Science}%
   \def\@journalNameShort{ACM J. Data Sci.}%
   \def\@permissionCodeOne{0000-0000}%
   \def\@permissionCodeTwo{0000-0000}%
-\relax % AILET
+\or % AILET
   \def\@journalName{ACM AI Letters}%
   \def\@journalNameShort{ACM AI Lett.}%
   \def\@permissionCodeOne{3068-8590}%
