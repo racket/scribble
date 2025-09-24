@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base)
          racket/contract/base
+         racket/deprecation
          racket/provide-syntax
          racket/struct-info
          (rename-in (except-in "core.rkt" target-url struct:target-url target-url? target-url-addr)
@@ -56,6 +57,15 @@
     [(_ [id (field-id ...)]...)
      #'(combine-out (struct*-out [id (field-id ...)]) ...)]))
 
+
+(define-deprecated-alias part-flow part-blocks)
+(define-deprecated-alias styled-paragraph? paragraph?)
+(define-deprecated-alias styled-paragraph-style paragraph-style)
+(define-deprecated-alias styled-itemization? itemization?)
+(define-deprecated-alias styled-itemization-style itemization-style)
+(define-deprecated-alias element->string content->string)
+
+
 (provide (struct-out collect-info)
          (struct-out resolve-info)
          tag? block?
@@ -63,16 +73,16 @@
          make-flow flow? flow-paragraphs
 
          (except-out (compat-out part) part-title-content)
-         (rename-out [part-blocks part-flow]
-                     [part-title-content/compat part-title-content])
+         part-flow
+         (rename-out [part-title-content/compat part-title-content])
          make-versioned-part versioned-part?
          make-unnumbered-part unnumbered-part?
 
          (except-out (compat-out paragraph) paragraph-content)
          (rename-out [paragraph-content/compat paragraph-content])
          make-styled-paragraph
-         (rename-out [paragraph? styled-paragraph?]
-                     [paragraph-style styled-paragraph-style])
+         styled-paragraph?
+         styled-paragraph-style
          make-omitable-paragraph omitable-paragraph?
 
          (compat-out table) 
@@ -82,9 +92,9 @@
          (struct-out delayed-block)
 
          (compat-out itemization)
-         (rename-out [itemization-blockss itemization-flows]
-                     [itemization? styled-itemization?]
-                     [itemization-style styled-itemization-style])
+         styled-itemization?
+         styled-itemization-style
+         (rename-out [itemization-blockss itemization-flows])
          make-styled-itemization
 
          make-blockquote
@@ -127,8 +137,8 @@
          ; generate-tag tag-key current-tag-prefixes add-current-tag-prefix
 
          content->string
-         (rename-out [content->string element->string]
-                     [content-width element-width])
+         element->string
+         (rename-out [content-width element-width])
          ; strip-aux
 
          block-width
