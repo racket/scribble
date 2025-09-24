@@ -52,8 +52,17 @@
 
 (define (resolve-get/ext-id* part ri key search-key)
   (define-values (v ext-id) (resolve-get/where part ri key))
-  (when ext-id
-    (hash-set! (resolve-info-undef ri) (tag-key key ri) (if v 'found search-key)))
+  (when (or ext-id
+            ;; if `v`, make sure it's counted as found; this can happen if external saved
+            ;; information has the key originally, but then it's defined locally, such
+            ;; as when rendering an installed document with `scribble +m ...`
+            (and search-key
+                 v))
+    (hash-set! (resolve-info-undef ri) (tag-key key ri) (if v
+                                                            (if ext-id
+                                                                'found
+                                                                'local)
+                                                            search-key)))
   (values v ext-id))
 
 (define (resolve-get part ri key)

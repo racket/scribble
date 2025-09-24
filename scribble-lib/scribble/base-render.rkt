@@ -403,18 +403,22 @@
         (hash-map ht (lambda (k v) k))))
 
     (define/public (get-external ri)
-      (hash-map (resolve-info-undef ri) (lambda (k v) k)))
+      (for/list ([(k v) (in-hash (resolve-info-undef ri))]
+                 #:unless (eq? v 'local))
+        k))
 
     (define/public (get-undefined ri)
       (for/list ([(k v) (in-hash (resolve-info-undef ri))]
                  #:unless (or (eq? v 'found)
+                              (eq? v 'local)
                               (and v
                                    ;; v is a search key; see if any key in the set was resolved:
                                    (or
                                     (not (car v)) ; search key where failure was an option
                                     (let ([ht (hash-ref (resolve-info-searches ri) v)])
                                       (for/or ([k2 (in-hash-keys ht)])
-                                        (eq? 'found (hash-ref (resolve-info-undef ri) k2 #f))))))))
+                                        (memq (hash-ref (resolve-info-undef ri) k2 #f)
+                                              '(found local))))))))
         k))
 
     (define/public (transfer-info ci src-ci)
