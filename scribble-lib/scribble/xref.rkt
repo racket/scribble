@@ -125,9 +125,8 @@
          [_ (send renderer transfer-info ci (resolve-info-ci (xrefs-ri xrefs)))]
          [ri (send renderer resolve (list doc) (list dest-file) ci)]
          [xs (send renderer render (list doc) (list dest-file) ri)])
-    (if dest-file
-        (void)
-        (car xs))))
+    (unless dest-file
+      (car xs))))
 
 (define (xref-transfer-info renderer ci xrefs)
   (send renderer transfer-info ci (resolve-info-ci (xrefs-ri xrefs))))
