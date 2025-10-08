@@ -78,14 +78,15 @@
   (define fp (send renderer traverse docs fns))
   (define info (send renderer collect docs fns fp))
   (for ([file (in-list info-input-files)])
-    (let ([s (with-input-from-file file read)]) (send renderer deserialize-info s info)))
+    (define s (with-input-from-file file read))
+    (send renderer deserialize-info s info))
   (for ([xr (in-list xrefs)])
     (xref-transfer-info renderer info xr))
   (let ([r-info (send renderer resolve docs fns info)])
     (send renderer render docs fns r-info)
     (when info-output-file
-      (let ([s (send renderer serialize-info r-info)])
-        (with-output-to-file info-output-file #:exists 'truncate/replace (lambda () (write s)))))
+      (define s (send renderer serialize-info r-info))
+      (with-output-to-file info-output-file #:exists 'truncate/replace (lambda () (write s))))
     (when warn-undefined?
       (let ([undef (send renderer get-undefined r-info)])
         (unless (null? undef)
