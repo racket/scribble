@@ -85,10 +85,7 @@
          [ci (send renderer collect null null fp
                    (lambda (key ci)
                      (define use-obj (collect-info-ext-ht ci))
-                     (define use-id (or (hash-ref use-ids use-obj #f)
-                                        (let ([s (gensym 'render)])
-                                          (hash-set! use-ids use-obj s)
-                                          s)))
+                     (define use-id (hash-ref! use-ids use-obj (λ () (gensym 'render))))
                      (define src (demand-source-for-use key use-id))
                      (and src
                           (load-source src ci))))])
