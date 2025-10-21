@@ -696,7 +696,7 @@
           (if dest
             (content->port op
                            (strip-aux
-                            (if (pair? dest) (cadr dest) (vector-ref dest 1)))
+                            (if (pair? dest) (cadr dest) (vector-ref dest 0)))
                            renderer sec ri)
             (display "???" op)))]
        [(element? c) (content->port op (element-content c) renderer sec ri)]
