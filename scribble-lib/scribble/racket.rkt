@@ -1294,41 +1294,43 @@
                          [no-cons? 1]    ; '('
                          [else 6])       ; `(list '
                        1))
-     (define r (let ([l (let loop ([col (+ col delta vec-sz graph-sz)]
-                                   [v (cond
-                                        [(vector? v)
-                                         (vector->short-list v values)]
-                                        [(struct? v)
-                                         (cons (let ([pf (prefab-struct-key v)])
-                                                 (if pf
-                                                     (prefab-struct-key v)
-                                                     (object-name v)))
-                                               (cdr (vector->list (struct->vector v qq-ellipses))))]
-                                        [else v])])
-                          (cond
-                            [(null? v) null]
-                            [else
-                             (define i (do-syntax-ize (car v) col line ht #f qq #f))
-                             (cons i (loop (+ col 1 (syntax-span i)) (cdr v)))]))])
-                 (datum->syntax #f
-                                (cond
-                                  [(vector? v) (short-list->vector v l)]
-                                  [(struct? v)
-                                   (define pf (prefab-struct-key v))
-                                   (if pf
-                                       (apply make-prefab-struct (prefab-struct-key v) (cdr l))
-                                       (make-struct-proxy (car l) (cdr l)))]
-                                  [else l])
-                                (vector #f line
-                                        (+ graph-sz col)
-                                        (+ 1 graph-sz col)
-                                        (+ 1
-                                           vec-sz
-                                           delta
-                                           (if (zero? (length l))
-                                               0
-                                               (sub1 (length l)))
-                                           (apply + (map syntax-span l)))))))
+     (define l
+       (let loop ([col (+ col delta vec-sz graph-sz)]
+                  [v (cond
+                       [(vector? v) (vector->short-list v values)]
+                       [(struct? v)
+                        (cons (let ([pf (prefab-struct-key v)])
+                                (if pf
+                                    (prefab-struct-key v)
+                                    (object-name v)))
+                              (cdr (vector->list (struct->vector v qq-ellipses))))]
+                       [else v])])
+         (cond
+           [(null? v) null]
+           [else
+            (define i (do-syntax-ize (car v) col line ht #f qq #f))
+            (cons i (loop (+ col 1 (syntax-span i)) (cdr v)))])))
+     (define r
+       (datum->syntax #f
+                      (cond
+                        [(vector? v) (short-list->vector v l)]
+                        [(struct? v)
+                         (define pf (prefab-struct-key v))
+                         (if pf
+                             (apply make-prefab-struct (prefab-struct-key v) (cdr l))
+                             (make-struct-proxy (car l) (cdr l)))]
+                        [else l])
+                      (vector #f
+                              line
+                              (+ graph-sz col)
+                              (+ 1 graph-sz col)
+                              (+ 1
+                                 vec-sz
+                                 delta
+                                 (if (zero? (length l))
+                                     0
+                                     (sub1 (length l)))
+                                 (apply + (map syntax-span l))))))
      (unless graph?
        (set-box! ht (hash-set (unbox ht) v #f)))
      (cond
