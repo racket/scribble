@@ -51,13 +51,14 @@
     (cond
       [(or (string? v) (bytes? v) (list? v))
        (define b (hash-ref interned v #f))
-       (if b
-           (or (weak-box-value b)
-               ;; just in case the value is GCed before we extract it:
-               (intern-taglet v))
-           (begin
-             (hash-set! interned v (make-weak-box v))
-             v))]
+       (cond
+         [b
+          (or (weak-box-value b)
+              ;; just in case the value is GCed before we extract it:
+              (intern-taglet v))]
+         [else
+          (hash-set! interned v (make-weak-box v))
+          v])]
       [else v])))
 
 (define (do-module-path-index->taglet mod)
