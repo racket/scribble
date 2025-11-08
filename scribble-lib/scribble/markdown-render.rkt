@@ -150,12 +150,12 @@
       (if (null? flows)
           null
           (append* (begin
-                     (printf "* ")
+                     (display "* ")
                      (parameterize ([current-indent (make-indent 2)])
                        (render-flow (car flows) part ht #t)))
                    (for/list ([d (in-list (cdr flows))])
                      (indented-newline)
-                     (printf "* ")
+                     (display "* ")
                      (parameterize ([current-indent (make-indent 2)])
                        (render-flow d part ht #f))))))
 
