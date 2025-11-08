@@ -885,11 +885,9 @@
                 ;; constructed:
                 [(and expr? (zero? quote-depth))
                  (define l (apply append
-                                  (map (lambda (p)
-                                         (let ([p (syntax-e p)])
-                                           (list (forced-pair-car p)
-                                                 (forced-pair-cdr p))))
-                                       (reverse l2))))
+                                  (for/list ([p (in-list (reverse l2))])
+                                    (let ([p (syntax-e p)])
+                                      (list (forced-pair-car p) (forced-pair-cdr p))))))
                  (datum->syntax
                   #f
                   (cons (datum->syntax #f
@@ -942,10 +940,9 @@
     (hash-set! next-col-map init-col dest-col)
     ((loop (lambda () (set! src-col init-col) (set! dest-col 0)) 0 expr? #f) c #f)
     (if (list? suffix)
-        (map (lambda (sfx)
-               (finish-line!)
-               (out sfx #f))
-             suffix)
+        (for/list ([sfx (in-list suffix)])
+          (finish-line!)
+          (out sfx #f))
         (out suffix #f))
     (unless (null? content)
       (finish-line!))
@@ -1441,11 +1438,8 @@
                        [(hash-eq? v) make-immutable-hasheq]
                        [(hash-eqv? v) make-immutable-hasheqv]
                        [else make-immutable-hash])
-                     (map (lambda (p)
-                            (let ([p (syntax-e p)])
-                              (cons (syntax->datum (car p))
-                                    (cdr p))))
-                          (syntax->list pairs)))
+                     (for/list ([p (in-list (syntax->list pairs))])
+                       (let ([p (syntax-e p)]) (cons (syntax->datum (car p)) (cdr p)))))
                     (vector (syntax-source pairs)
                             (syntax-line pairs)
                             (max 0 (- (syntax-column pairs) undelta))
