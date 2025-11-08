@@ -793,9 +793,8 @@
                     (out ". " (if (positive? quote-depth) value-color paren-color))
                     (set! src-col (+ src-col 3)))
                   (hash-set! next-col-map src-col dest-col)
-                  ((loop init-line! quote-depth first-expr? #f) l (if (and expr? (zero? quote-depth))
-                                                                      srcless-step
-                                                                      #f))]))
+                  ((loop init-line! quote-depth first-expr? #f) l (and (and expr? (zero? quote-depth))
+                                                                       srcless-step))]))
              (out (case sh
                     [(#\[) "]"]
                     [(#\{) "}"]
@@ -1179,15 +1178,13 @@
          [(and (struct? v)
                (prefab-struct-key v))
           (andmap quotable? (vector->list (struct->vector v)))]
-         [(struct? v) (if (custom-write? v)
-                          (case (or (and (custom-print-quotable? v)
-                                         (custom-print-quotable-accessor v))
-                                    'self)
-                            [(self always) #t]
-                            [(never) #f]
-                            [(maybe)
-                             (andmap quotable? (vector->list (struct->vector v)))])
-                          #f)]
+         [(struct? v) (and (custom-write? v)
+                           (case (or (and (custom-print-quotable? v)
+                                          (custom-print-quotable-accessor v))
+                                     'self)
+                             [(self always) #t]
+                             [(never) #f]
+                             [(maybe) (andmap quotable? (vector->list (struct->vector v)))]))]
          [(struct-proxy? v) #f]
          [(mpair? v) #f]
          [else #t])])))
