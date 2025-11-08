@@ -1152,10 +1152,12 @@
   (do-syntax-ize v col line (box #hasheq()) #f (and expr? 0) #f))
 
 (define (graph-count ht graph?)
-  (and graph?
-       (let ([n (hash-ref (unbox ht) '#%graph-count 0)])
-         (set-box! ht (hash-set (unbox ht) '#%graph-count (add1 n)))
-         n)))
+  (cond
+    [graph?
+     (define n (hash-ref (unbox ht) '#%graph-count 0))
+     (set-box! ht (hash-set (unbox ht) '#%graph-count (add1 n)))
+     n]
+    [else #f]))
 
 (define-struct forced-pair (car cdr))
 
