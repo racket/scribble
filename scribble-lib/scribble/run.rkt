@@ -12,8 +12,8 @@
 
 (module test racket/base)
 
-(define multi-html:render-mixin
-  (lambda (%) (html:render-multi-mixin (html:render-mixin %))))
+(define (multi-html:render-mixin %)
+  (html:render-multi-mixin (html:render-mixin %)))
 
 (define current-render-mixin       (make-parameter html:render-mixin))
 (define current-html               (make-parameter #t))
@@ -37,10 +37,9 @@
 (define current-image-prefs        (make-parameter null)) ; reverse order
 
 (define (read-one str)
-  (let ([i (open-input-string str)])
-    (with-handlers ([exn:fail:read? (lambda (x) #f)])
-      (let ([v (read i)])
-        (and (eof-object? (read i)) v)))))
+  (define i (open-input-string str))
+  (with-handlers ([exn:fail:read? (lambda (x) #f)])
+    (let ([v (read i)]) (and (eof-object? (read i)) v))))
 
 (define (run)
   (define doc-binding 'doc)
@@ -171,21 +170,19 @@
                      (make-compilation-manager-load/use-compiled-handler))])
      (parameterize ([current-command-line-arguments
                      (list->vector (reverse (doc-command-line-arguments)))])
-       (build-docs (map (lambda (file)
-                          (define (go)
-                            (let ([mp (if (current-lib-mode)
-                                          `(lib ,file)
-                                          `(file ,file))])
-                              ;; Try `doc' submodule, first:
-                              (if (module-declared? `(submod ,mp ,doc-binding) #t)
-                                  (dynamic-require `(submod ,mp ,doc-binding)
-                                                   doc-binding)
-                                  (dynamic-require mp doc-binding))))
-                          (if maker
-                              (parameterize ([current-load/use-compiled maker])
-                                (go))
-                              (go)))
-                        files)
+       (build-docs (for/list ([file (in-list files)])
+                     (define (go)
+                       (let ([mp (if (current-lib-mode)
+                                     `(lib ,file)
+                                     `(file ,file))])
+                         ;; Try `doc' submodule, first:
+                         (if (module-declared? `(submod ,mp ,doc-binding) #t)
+                             (dynamic-require `(submod ,mp ,doc-binding) doc-binding)
+                             (dynamic-require mp doc-binding))))
+                     (if maker
+                         (parameterize ([current-load/use-compiled maker])
+                           (go))
+                         (go)))
                    files)))))
 
 (define (build-docs docs files)
@@ -193,10 +190,9 @@
              ((length files) . > . 1))
     (raise-user-error 'scribble "cannot supply a destination name with multiple inputs"))
   (render docs
-          (map (lambda (fn)
-                 (let-values ([(base name dir?) (split-path fn)])
-                   (or (current-dest-name) name)))
-               files)
+          (for/list ([fn (in-list files)])
+            (define-values (base name dir?) (split-path fn))
+            (or (current-dest-name) name))
           #:dest-dir (current-dest-directory)
           #:render-mixin (current-render-mixin)
           #:image-preferences (reverse (current-image-prefs))
@@ -212,13 +208,15 @@
           #:quiet? (current-quiet)
           #:info-in-files (reverse (current-info-input-files))
           #:xrefs (for/list ([mod+id (in-list (reverse (current-xref-input-modules)))])
-                    (let* ([get-xref (dynamic-require (car mod+id) (cdr mod+id))]
-                           [xr (get-xref)])
-                      (unless (xref? xr)
-                        (raise-user-error
-                         'scribble "result from `~s' of `~s' is not an xref: ~e"
-                         (cdr mod+id) (car mod+id) xr))
-                      xr))
+                    (define get-xref (dynamic-require (car mod+id) (cdr mod+id)))
+                    (define xr (get-xref))
+                    (unless (xref? xr)
+                      (raise-user-error 'scribble
+                                        "result from `~s' of `~s' is not an xref: ~e"
+                                        (cdr mod+id)
+                                        (car mod+id)
+                                        xr))
+                    xr)
           #:info-out-file (current-info-output-file)))
 
 (run)
