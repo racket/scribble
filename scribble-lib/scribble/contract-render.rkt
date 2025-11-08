@@ -139,9 +139,8 @@
   (define-values (after-line _3 _4) (port-next-location text-p))
   (define txt-loc (cons before-position (- after-line before-line)))
   (define ri (the-ri))
-  (for ([(k v) (in-hash ents)])
-    (let ([k (tag-key k ri)])
-      (hash-set! index-table k (cons txt-loc (hash-ref index-table k '()))))))
+  (for ([k (in-hash-keys ents)])
+    (let ([k (tag-key k ri)]) (hash-set! index-table k (cons txt-loc (hash-ref index-table k '()))))))
 
 (define (r-blockss+cont blockss mode index-table)
   (for* ([blocks (in-list blockss)]
