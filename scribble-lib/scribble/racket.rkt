@@ -112,7 +112,8 @@
 ;; create a line break after the hyphen. For interior hyphens,
 ;; line breaking is usually fine.
 (define (nonbreak-leading-hyphens s)
-  (define m (regexp-match-positions #rx"^-+" s))
+  (define m (and (string? s)
+                 (regexp-match-positions #rx"^-+" s)))
   (if m
       (cond
         [(= (cdar m) (string-length s)) (make-element 'no-break s)]
@@ -172,6 +173,7 @@
 (define (make-id-element c s defn?
                          #:space [space #f]
                          #:suffix [suffix space]
+                         #:link-style [link-style #f]
                          #:unlinked-ok? [unlinked-ok? #f])
   (define b (identifier-label-binding c))
   (unless b (error 'make-id-element "no for-label binding for identifier: ~s" c))
@@ -197,23 +199,25 @@
             (list
              (case (car tag)
                [(form)
-                (make-link-element (if defn?
-                                       syntax-def-color
-                                       syntax-link-color)
+                (make-link-element (or link-style
+                                       (if defn?
+                                           syntax-def-color
+                                           syntax-link-color))
                                    (nonbreak-leading-hyphens s)
                                    tag)]
                [else
-                (make-link-element (if defn?
-                                       value-def-color
-                                       value-link-color)
+                (make-link-element (or link-style
+                                       (if defn?
+                                           value-def-color
+                                           value-link-color))
                                    (nonbreak-leading-hyphens s)
                                    tag)])))]
          [unlinked-ok?
-          (list (make-element (if defn? syntax-def-color symbol-color) s))]
+          (list (make-element (or link-style (if defn? syntax-def-color symbol-color)) s))]
          [else
           (list
            (make-element "badlink"
-                         (make-element value-link-color s)))]))
+                         (make-element (or link-style value-link-color) s)))]))
      (lambda () s)
      (lambda () s)
      (intern-taglet key)))
