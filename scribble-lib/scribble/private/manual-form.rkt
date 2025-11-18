@@ -9,6 +9,7 @@
          "manual-vars.rkt"
          "manual-scheme.rkt"
          "manual-bind.rkt"
+         racket/deprecation
          racket/list
          (for-syntax racket/base
                      syntax/parse
@@ -22,11 +23,16 @@
          specsubform/inline
          defsubidform defsubform defsubform*
          racketgrammar racketgrammar*
-         (rename-out [racketgrammar schemegrammar]
-                     [racketgrammar* schemegrammar*])
+         schemegrammar
+         schemegrammar*
          var svar
          (for-syntax kind-kw id-kw link-target?-kw
                      literals-kw subs-kw contracts-kw))
+
+
+(define-deprecated-alias schemegrammar racketgrammar)
+(define-deprecated-alias schemegrammar* racketgrammar*)
+
 
 (begin-for-syntax
  (define-splicing-syntax-class kind-kw
