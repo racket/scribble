@@ -8,6 +8,7 @@
          racket/path
          racket/file
          racket/port
+         racket/pretty
          racket/list
          racket/string
          file/convertible
@@ -26,7 +27,19 @@
          "search.rkt"
          (except-in "base.rkt" url))
 (provide render-mixin
-         render-multi-mixin)
+         render-multi-mixin
+         (struct-out scribble-xexpr-page))
+
+(struct scribble-xexpr-page
+  (title     ; string?
+   author    ; string?
+   date      ; string? - 8601 datetime format
+   version   ; string? version number
+   tags      ; (listof string?)
+   tocset    ; (list?)
+   tocset-xexpr
+   article   ; xexpr?
+   ) #:prefab)
 
 (define (number->decimal-string s)
   (number->string (if (integer? s) s (exact->inexact s))))
@@ -273,9 +286,10 @@
              extract-part-style-files
              extract-version
              extract-authors
+             extract-date
              extract-pretitle
              link-render-style-at-element)
-    (inherit-field prefix-file style-file style-extra-files image-preferences)
+    (inherit-field prefix-file style-file style-extra-files image-preferences xexpr-out?)
 
     (init-field [alt-paths null]
                 ;; `up-path' is either a link "up", or #t which goes
@@ -290,7 +304,10 @@
     (define/override (current-render-mode)
       '(html))
 
-    (define/override (get-suffix) #".html")
+    (define/override (get-suffix)
+      (if xexpr-out?
+          #".rktd"
+          #".html"))
 
     (define/override (index-manual-newlines?)
       #t)
@@ -564,6 +581,102 @@
     (define/public (render-top ds fns ri)
       (super render ds fns ri))
 
+    (define/public (list-of-toc-view d ri)
+      (define has-sub-parts?
+        (pair? (part-parts d)))
+      (define sub-parts-on-other-page?
+        (and has-sub-parts?
+             (part-whole-page? (car (part-parts d)) ri)))
+      (define toc-chain
+        (let loop ([d d] [r (if has-sub-parts? (list d) '())])
+          (cond [(collected-info-parent (part-collected-info d ri))
+                 => (lambda (p) (loop p (cons p r)))]
+                [(pair? r) r]
+                ;; we have no toc, so use just the current part
+                [else (list d)])))
+      (define top (car toc-chain))
+      (define (toc-item->title+num t show-mine?)
+        (values
+         (dest->url (resolve-get t ri (car (part-tags/nonempty t))))
+         (if (or (eq? t d) (and show-mine? (memq t toc-chain)))
+             "tocviewselflink"
+             "tocviewlink")
+         (render-content (strip-aux (or (part-title-content t) '("???"))) d ri)
+         (format-number (collected-info-number (part-collected-info t ri))
+                        null)))
+      (define (toc-item->block t i)
+        (define-values (url linktype title num) (toc-item->title+num t #f))
+        (define children  ; note: might be empty
+          (filter (lambda (p) (not (part-style? p 'toc-hidden)))
+                  (part-parts t)))
+        (define id (format "tocview_~a" i))
+        (define last? (eq? t (last toc-chain)))
+        (define expand? (or (and last? 
+                                 (or (not has-sub-parts?)
+                                     sub-parts-on-other-page?))
+                            (and has-sub-parts?
+                                 (not sub-parts-on-other-page?)
+                                 ;; next-to-last?
+                                 (let loop ([l toc-chain])
+                                   (cond
+                                    [(null? l) #f]
+                                    [(eq? t (car l))
+                                     (and (pair? (cdr l)) (null? (cddr l)))]
+                                    [else (loop (cdr l))])))))
+        (define top? (eq? t top))
+        (define header (list num title))
+        (list
+         (if top?
+             "tocviewlist tocviewlisttopspace"
+             "tocviewlist")
+         (if top? (list  "tocviewtitle" header) header)
+         (if (null? children)
+             ""
+             (list (list
+                    (cond
+                      [(and top? last?) "tocviewsublistonly"]
+                      [top? "tocviewsublisttop"]
+                      [last? "tocviewsublistbottom"]
+                      [else "tocviewsublist"])
+                    (if expand? 'block 'none)
+                    id)
+                   (for/list ([c children])
+                     (let-values ([(u l t n) (toc-item->title+num c #t)])
+                       (list n u l t)))))))
+      (define (toc-content)
+        ;; no links -- the code constructs links where needed
+        (parameterize ([current-no-links #t]
+                       [extra-breaking? #t])
+          (for/list ([t toc-chain] [i (in-naturals)])
+            (toc-item->block t i))))
+      (list
+       "tocset"
+       (if (part-style? d 'no-toc)
+              null
+              ;; toc-wrap determines if we get the toc or just the title !!!
+              (toc-content))
+          (if (part-style? d 'no-sidebar)
+                null
+                (list-of-onthispage-contents
+                 d ri top (if (part-style? d 'no-toc) "tocview" "tocsub")
+                 sub-parts-on-other-page?))
+          (parameterize ([extra-breaking? #t])
+              (append-map (lambda (e)
+                            (let loop ([e e])
+                              (cond
+                               [(and (table? e)
+                                     (memq 'aux (style-properties (table-style e)))
+                                     (pair? (table-blockss e)))
+                                (render-table e d ri #f)]
+                               [(delayed-block? e)
+                                (loop (delayed-block-blocks e ri))]
+                               [(traverse-block? e)
+                                (loop (traverse-block-block e ri))]
+                               [(compound-paragraph? e)
+                                (append-map loop (compound-paragraph-blocks e))]
+                               [else null])))
+                          (part-blocks d)))))
+
     (define/public (render-toc-view d ri)
       (define has-sub-parts?
         (pair? (part-parts d)))
@@ -687,6 +800,119 @@
                                           (part-parts p))))
                   (hash-set! hidden-memo p h?)
                   h?)))
+
+    (define/private (list-of-onthispage-contents d ri top box-class sections-in-toc?)
+        (let ([nearly-top? (lambda (d) 
+                             ;; If ToC would be collapsed, then 
+                             ;; no section is nearly the top
+                             (if (not sections-in-toc?)
+                                 #f
+                                 (nearly-top? d ri top)))])
+          (define (flow-targets flow)
+            (append-map block-targets flow))
+          (define (block-targets e)
+            (cond [(table? e) (table-targets e)]
+                  [(paragraph? e) (para-targets e)]
+                  [(itemization? e)
+                   (append-map flow-targets (itemization-blockss e))]
+                  [(nested-flow? e)
+                   (append-map block-targets (nested-flow-blocks e))]
+                  [(compound-paragraph? e)
+                   (append-map block-targets (compound-paragraph-blocks e))]
+                  [(delayed-block? e) null]
+                  [(traverse-block? e) (block-targets (traverse-block-block e ri))]))
+          (define (para-targets para)
+            (let loop ([a (paragraph-content para)])
+              (cond
+                [(list? a) (append-map loop a)]
+                [(toc-target-element? a) (list a)]
+                [(toc-element? a) (list a)]
+                [(element? a) (loop (element-content a))]
+                [(delayed-element? a) (loop (delayed-element-content a ri))]
+                [(traverse-element? a) (loop (traverse-element-content a ri))]
+                [(part-relative-element? a) (loop (part-relative-element-content a ri))]
+                [else null])))
+          (define  (table-targets table)
+            (append-map
+             (lambda (blocks)
+               (append-map (lambda (f) (if (eq? f 'cont) null (block-targets f)))
+                           blocks))
+             (table-blockss table)))
+          (define ps
+            ((if (or (nearly-top? d) (eq? d top)) values (lambda (p) (if (pair? p) (cdr p) null)))
+             (let flatten ([d d] [prefixes null] [top? #t])
+               (let ([prefixes (if (and (not top?) (part-tag-prefix-string d))
+                                   (cons (part-tag-prefix-string d) prefixes)
+                                   prefixes)])
+                 (append*
+                  ;; don't include the section if it's in the TOC
+                  (if (or (nearly-top? d) 
+                          (part-style? d 'toc-hidden))
+                      null 
+                      (list (vector d prefixes d)))
+                  ;; get internal targets:
+                  (map (lambda (v) (vector v prefixes d)) (append-map block-targets (part-blocks d)))
+                  (map (lambda (p) (if (or (part-whole-page? p ri) 
+                                           (and (part-style? p 'toc-hidden)
+                                                (all-toc-hidden? p)))
+                                       null
+                                       (flatten p prefixes #f)))
+                       (part-parts d)))))))
+          (define any-parts? (ormap (compose part? (lambda (p) (vector-ref p 0))) ps))
+          (if (null? ps)
+              null
+              (list
+               box-class
+               (list
+                (get-onthispage-label)
+                "tocsublist"
+                (map (lambda (p)
+                       (let ([p (vector-ref p 0)]
+                             [prefixes (vector-ref p 1)]
+                             [from-d (vector-ref p 2)]
+                             [add-tag-prefixes
+                              (lambda (t prefixes)
+                                (if (null? prefixes)
+                                    t
+                                    (cons (car t) (append prefixes (cdr t)))))])
+                         (list
+                          (if (part? p)
+                              (format-number
+                               (collected-info-number
+                                (part-collected-info p ri))
+                               null)
+                              null)
+                          (if (toc-element? p)
+                              (render-content (toc-element-toc-content p)
+                                              from-d ri)
+                              (parameterize ([current-no-links #t]
+                                             [extra-breaking? #t])
+                                (list 
+                                 (format
+                                  "#~a"
+                                  (uri-unreserved-encode
+                                   (anchor-name
+                                    (add-tag-prefixes
+                                     (tag-key (if (part? p)
+                                                  (car (part-tags/nonempty p))
+                                                  (target-element-tag p))
+                                              ri)
+                                     prefixes))))
+                                 (cond
+                                   [(part? p) "tocsubseclink"]
+                                   [any-parts? "tocsubnonseclink"]
+                                   [else "tocsublink"])
+                                        
+                                 (render-content
+                                  (if (part? p)
+                                      (strip-aux
+                                       (or (part-title-content p)
+                                           "???"))
+                                      (if (toc-target2-element? p)
+                                          (toc-target2-element-toc-content p)
+                                          (element-content p)))
+                                  from-d ri)))))))
+                     ps))))))
 
     (define/private (render-onthispage-contents d ri top box-class sections-in-toc?)
         (let ([nearly-top? (lambda (d) 
@@ -846,6 +1072,10 @@
                                   `(title ,@(format-number number '(nbsp))
                                           ,(content->string (strip-aux c) this d ri)))]
                             [else `(title)])]
+               [title-string (cond [(part-title-content d)
+                             => (lambda (c)
+                                  (content->string (strip-aux c) this d ri))]
+                            [else null])]
                [dir-depth (part-nesting-depth d ri)]
                [extract (lambda (pred get) (extract-part-style-files 
                                             d
@@ -863,16 +1093,16 @@
           (define script-file-path
             (or (lookup-path script-file alt-paths) 
                 (install-file/as-url script-file)))
-          (if (bytes? prefix-file)
+          (unless xexpr-out?
+            (if (bytes? prefix-file)
               (display prefix-file)
               (call-with-input-file*
                prefix-file
                (lambda (in)
-                 (copy-port in (current-output-port)))))
+                 (copy-port in (current-output-port))))))
           (parameterize ([xml:empty-tag-shorthand xml:html-empty-tags])
-            (xml:write-xexpr
-              `(html ,(style->attribs (part-style d))
-                 (head ()
+            (define head-xexpr
+                 `(head ()
                    (meta ([http-equiv "content-type"]
                           [content "text/html; charset=utf-8"]))
                    (meta ([name "viewport"]
@@ -907,20 +1137,53 @@
                    ,@(extract head-addition? head-addition-xexpr)
                    ,@(for/list ([p (style-properties (part-style d))]
                                 #:when (head-extra? p))
-                       (head-extra-xexpr p)))
-                 (body ([id ,(or (extract-part-body-id d ri)
-                                 "scribble-racket-lang-org")])
-                   ,@(if (part-style? d 'no-toc+aux)
-                         null
-                         (render-toc-view d ri))
-                   (div ([class "maincolumn"])
+                       (head-extra-xexpr p))))
+            (define content-xexpr (render-part d ri))
+            (define main-xexpr
+                   `(div ([class "maincolumn"])
                      (div ([class "main"])
                        ,@(parameterize ([current-version (extract-version d)])
                            (render-version d ri))
                        ,@(navigation d ri #t)
-                       ,@(render-part d ri)
-                       ,@(navigation d ri #f)))
-                   (div ([id "contextindicator"]) nbsp))))))))
+                       ,@content-xexpr
+                       ,@(navigation d ri #f))))
+            (define body-xexpr
+                 `(body ([id ,(or (extract-part-body-id d ri)
+                                 "scribble-racket-lang-org")])
+                   ,@(if (part-style? d 'no-toc+aux)
+                         null
+                         (render-toc-view d ri))
+                   ,main-xexpr
+                   (div ([id "contextindicator"]) nbsp)))
+            (define part-xexpr
+              `(html ,(style->attribs (part-style d))
+                     ,head-xexpr
+                     ,body-xexpr))
+            (define article-xexpr
+                   `(article ([class "document"])
+                       ,@content-xexpr))
+            (define (authors-list)
+              (define authors-paragraph-list (extract-authors d))
+              (for/list ([p authors-paragraph-list])
+                (car (paragraph-content p))))
+            (cond
+              [xexpr-out?
+               (pretty-write
+                (scribble-xexpr-page
+                 title-string        ; title
+                 (authors-list)      ; authors
+                 (extract-date d)    ; date
+                 (extract-version d) ; document version
+                 null                ; tags
+                 (if (part-style? d 'no-toc+aux)
+                     null
+                     (list-of-toc-view d ri)) ; tocset
+                 (if (part-style? d 'no-toc+aux)
+                     null
+                     (render-toc-view d ri)) ; tocset-xexpr
+                 article-xexpr       ; article
+                 ))]
+              [else (xml:write-xexpr part-xexpr)])))))
 
     (define (toc-part? d ri)
       (and (part-style? d 'toc)
@@ -1198,13 +1461,13 @@
                                            [class "heading-anchor"]
                                            [title "Link to here"])
                                           "🔗"))])
-                           ,@(if (and src taglet)
-                                 (list '(a ([class "heading-source"]
-                                            [title "Internal Scribble link and Scribble source"]) "ℹ"))
-                                 '())
-                           ;; this is a dummy node so that the line height of heading-anchor
-                           ;; and heading-source are correct (even when their font size is not 100%)
-                           (span ([style "visibility: hidden"]) " "))))])
+                             ,@(if (and src taglet)
+                                   (list '(a ([class "heading-source"]
+                                              [title "Internal Scribble link and Scribble source"]) "ℹ"))
+                                   '())
+                             ;; this is a dummy node so that the line height of heading-anchor
+                             ;; and heading-source are correct (even when their font size is not 100%)
+                             (span ([style "visibility: hidden"]) " "))))])
              ,@(let ([auths (extract-authors d)])
                  (if (null? auths)
                      null
@@ -1983,8 +2246,14 @@
                              (format "???~a" (eq-hash-code d))])))
                    "_")])
         (let ([fn (if (depth . < . directory-depth)
-                      (path->string (build-path base "index.html"))
-                      (format "~a.html" base))])
+                      (path->string
+                       (build-path base
+                                   (path-replace-extension (string->path "index")
+                                                           (super get-suffix))))
+                      (format
+                       (string-append "~a"
+                                      (path->string
+                                       (bytes->path (super get-suffix)))) base))])
           (when ((string-length fn) . >= . 48)
             (error "file name too long (need a tag):" fn))
           fn)))
@@ -2047,7 +2316,10 @@
                             [current-top-part d])
                ;; install files for each directory
                (install-extra-files ds)
-               (let ([fn (build-path fn "index.html")])
+               (let ([fn (build-path fn
+                                     (path-replace-suffix
+                                      (string->path "index")
+                                      (super get-suffix)))])
                  (with-output-to-file/clean
                   fn
                   (lambda () (render-one d ri fn))))))
