@@ -1188,23 +1188,25 @@
                      ,@(if (part-title-content d)
                            (render-content (part-title-content d) d ri)
                            null)
-                     (span ([class "button-group"])
-                           ,@(match (part-tags d)
-                               ['() '()]
-                               [(cons t _)
-                                (list `(a ([href ,(format "#~a" (anchor-name
-                                                                 (add-current-tag-prefix
-                                                                  (tag-key t ri))))]
-                                           [class "heading-anchor"]
-                                           [title "Link to here"])
-                                          "🔗"))])
-                           ,@(if (and src taglet)
-                                 (list '(a ([class "heading-source"]
-                                            [title "Internal Scribble link and Scribble source"]) "ℹ"))
-                                 '())
-                           ;; this is a dummy node so that the line height of heading-anchor
-                           ;; and heading-source are correct (even when their font size is not 100%)
-                           (span ([style "visibility: hidden"]) " "))))])
+                     ,@(if (part-style? d 'no-header-controls)
+                           null
+                           `((span ([class "button-group"])
+                                   ,@(match (part-tags d)
+                                       ['() '()]
+                                       [(cons t _)
+                                        (list `(a ([href ,(format "#~a" (anchor-name
+                                                                         (add-current-tag-prefix
+                                                                          (tag-key t ri))))]
+                                                   [class "heading-anchor"]
+                                                   [title "Link to here"])
+                                                  "🔗"))])
+                                   ,@(if (and src taglet)
+                                         (list '(a ([class "heading-source"]
+                                                    [title "Internal Scribble link and Scribble source"]) "ℹ"))
+                                         '())
+                                   ;; this is a dummy node so that the line height of heading-anchor
+                                   ;; and heading-source are correct (even when their font size is not 100%)
+                                   (span ([style "visibility: hidden"]) " "))))))])
              ,@(let ([auths (extract-authors d)])
                  (if (null? auths)
                      null

@@ -115,10 +115,12 @@ removed.}
 @def-section-like[subsubsection part-start?]{ Like @racket[section], but
  generates a @racket[part-start] of depth @racket[2].}
 
-@def-section-like[subsubsub*section paragraph?]{ Similar to
- @racket[section], but merely generates a paragraph that looks like an
- unnumbered section heading (for when the nesting gets too deep to
- include in a table of contents).}
+@defproc[(subsubsub*section [#:tag tag (or/c #f string? (listof string?)) #f]
+                            [pre-content pre-content?] ...+)
+         paragraph?]{
+Similar to @racket[section], but merely generates a paragraph that
+ looks like an unnumbered section heading (for when the nesting gets
+ too deep to include in a table of contents).}
 
 @defform[(include-section module-path)]{ Requires @racket[module-path]
  and returns its @racket[doc] export (without making any imports

@@ -480,6 +480,10 @@ The recognized @tech{style properties} are as follows:
        document, causes the HTML output to not include an ``on this 
        page'' margin box.}
 
+ @item{@indexed-racket['no-header-controls] --- Suppresses link and
+       link-information icons (if any) as part of a section header in
+       HTML output.}
+
  @item{@indexed-racket['no-index] --- Has no effect as a @tech{style
        property} on a @racket[part], but as a style property on a
        @racket[title] or @racket[part-start] that provides a
@@ -585,7 +589,8 @@ The @racket[parts] field contains sub-parts.
          #:changed "1.26" @elem{Added @racket[link-render-style] support.}
          #:changed "1.27" @elem{Added @racket['no-toc+aux] support.}
          #:changed "1.54" @elem{Changed @racket[tag-prefix] field to allow a
-                                @tech{part context} hash table.}]}
+                                @tech{part context} hash table.}
+         #:changed "1.57" @elem{Added @racket['no-header-controls] support.}]}
 
 
 @defstruct[paragraph ([style style?] [content content?])]{
@@ -1191,7 +1196,7 @@ such as when @racket[element->string] is used before the @tech{collect
 pass}.}
 
 
-@defstruct[part-relative-element ([resolve (collect-info? . -> . content?)]
+@defstruct[part-relative-element ([collect (collect-info? . -> . content?)]
                                   [sizer (-> any/c)]
                                   [plain (-> any/c)])]{
 
