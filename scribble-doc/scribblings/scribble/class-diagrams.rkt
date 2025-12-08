@@ -48,23 +48,18 @@
 
 ;; field-spec : string string -> pict
 (define (field-spec type fd #:default [default #f] [comment #f])
-  (let ([code-line
-         (hbl-append (if type 
-                         (hbl-append (type-spec type)
-                                     (normal-font " "))
-                         (blank))
-                     (field-name-font fd)
-                     (if default
-                         (hbl-append (normal-font " = ")
-                                     (normal-font default))
-                         (blank))
-                     #;
-                     (normal-font ";"))])
-    (if comment
-        (hbl-append code-line 
-                    (normal-font " ")
-                    (comment-font (format "[in ~a]" comment)))
-        code-line)))
+  (define code-line
+    (hbl-append (if type
+                    (hbl-append (type-spec type) (normal-font " "))
+                    (blank))
+                (field-name-font fd)
+                (if default
+                    (hbl-append (normal-font " = ") (normal-font default))
+                    (blank))
+                #;(normal-font ";")))
+  (if comment
+      (hbl-append code-line (normal-font " ") (comment-font (format "[in ~a]" comment)))
+      code-line))
 
 (define (method-spec range name #:body [body #f] . args)
   (unless (even? (length args))
@@ -81,15 +76,16 @@
         (hbl-append
          (normal-font "(")
          (let loop ([args args])
-           (let* ([type (car args)]
-                  [param (cadr args)]
-                  [single-arg (if param
-                                  (hbl-append (type-spec type) (normal-font " ") (var-font param))
-                                  (type-spec type))])
-  
-             (cond
-               [(null? (cddr args)) (hbl-append single-arg (normal-font ")"))]
-               [else (hbl-append single-arg (normal-font ", ") (loop (cddr args)))]))))])
+           (define type (car args))
+           (define param (cadr args))
+           (define single-arg
+             (if param
+                 (hbl-append (type-spec type) (normal-font " ") (var-font param))
+                 (type-spec type)))
+         
+           (cond
+             [(null? (cddr args)) (hbl-append single-arg (normal-font ")"))]
+             [else (hbl-append single-arg (normal-font ", ") (loop (cddr args)))])))])
      (if body
          (hbl-append (normal-font " {"))
          (blank))))
@@ -415,9 +411,9 @@
     (connect-dots #t main4 dot1 dot2 dot4 dot3)))
 
 (define (find-middle main p1 find1 p2 find2)
-  (let-values ([(x1 y1) (find1 main p1)]
-               [(x2 y2) (find2 main p2)])
-    (- (/ (+ x1 x2) 2) (min x1 x2))))
+  (define-values (x1 y1) (find1 main p1))
+  (define-values (x2 y2) (find2 main p2))
+  (- (/ (+ x1 x2) 2) (min x1 x2)))
 
 (define right-top-reference
   (λ (main0 start-class start-field finish-class [count 1] #:connect-dots [connect-dots connect-dots])
