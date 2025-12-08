@@ -438,74 +438,56 @@
 (define connect-dots-contract (-> boolean? pict? pict? pict? ... (values pict?)))
 
 (provide type-link-color)
-(provide/contract
- [field-spec (->* ((or/c #f string?) string?) (string? #:default string?) pict?)]
- [class-name (->* (string?) (#:spacing-word string?) pict?)]
- [class-box (-> pict? (or/c #f (listof pict?)) (or/c #f (listof pict?)) pict?)]
- [hierarchy/layout 
-  (->* ((cons/c pict? (listof pict?)) (cons/c pict? (listof pict?)))
-       (#:top-space 
-        integer? 
-        #:bottom-space integer? 
-        #:vertical-space integer?
-        #:every-other-space integer?)
-       pict?)]
- [user-type-font (-> string? pict?)]
- [prim-type-font (-> string? pict?)]
- [var-font (-> string? pict?)]
- [normal-font (-> string? pict?)]
- [comment-font (-> string? pict?)]
- 
- [hierarchy (-> pict? 
-                (cons/c pict? (listof pict?)) 
-                (cons/c pict? (listof pict?))
+(provide (contract-out
+          [field-spec (->* ((or/c #f string?) string?) (string? #:default string?) pict?)]
+          [class-name (->* (string?) (#:spacing-word string?) pict?)]
+          [class-box (-> pict? (or/c #f (listof pict?)) (or/c #f (listof pict?)) pict?)]
+          [hierarchy/layout
+           (->* ((cons/c pict? (listof pict?)) (cons/c pict? (listof pict?)))
+                (#:top-space integer?
+                             #:bottom-space integer?
+                             #:vertical-space integer?
+                             #:every-other-space integer?)
                 pict?)]
- [right-right-reference (->* (pict? pict? pict? pict? pict?)
-                             (number?
-                              #:connect-dots connect-dots-contract
-                              #:dot-delta number?)
-                             pict?)]
- [left-left-reference (->* (pict? pict? pict? pict? pict?)
-                           (number?
-                            #:connect-dots connect-dots-contract
-                            #:dot-delta number?)
-                           pict?)]
- [right-left-reference (->* (pict? pict? pict? pict? pict?)
-                            (number?
-                             #:connect-dots connect-dots-contract)
-                            pict?)]
- [left-right-reference (->* (pict? pict? pict? pict? pict?)
-                            (number?
-                             #:connect-dots connect-dots-contract)
-                            pict?)]
- [left-top-reference (->* (pict? pict? pict? pict?)
-                          (number?
-                           #:connect-dots connect-dots-contract)
-                          pict?)]
- [right-top-reference (->* (pict? pict? pict? pict?)
-                           (number?
-                            #:connect-dots connect-dots-contract)
-                           pict?)]
- 
- [dot-edge-spacing number?]
- [connect-dots connect-dots-contract]
- [add-dot-right (-> pict? pict? pict? (values pict? pict?))]
- [add-dot-right/space (-> pict? pict? pict? (values pict? pict?))]
- [add-dot-left (-> pict? pict? pict? (values pict? pict?))]
- [add-dot-left/space (-> pict? pict? pict? (values pict? pict?))]
- [add-dot-junction 
-  (case->
-   (-> pict? pict? pict? (values pict? pict?))
-   (-> pict? 
-       pict? (-> pict? pict? (values number? number?))
-       pict? (-> pict? pict? (values number? number?))
-       (values pict? pict?)))]
- [add-dot-offset (-> pict? pict? number? number? (values pict? pict?))]
- [add-dot (-> pict? number? number? (values pict? pict?))]
- [method-spec 
-  (->* (string? string?) 
-       (#:body (or/c #f pict?)) 
-       #:rest (listof (or/c #f string?)) 
-       pict?)]
- [java-this (-> pict?)]
- [field-arrowhead-size number?])
+          [user-type-font (-> string? pict?)]
+          [prim-type-font (-> string? pict?)]
+          [var-font (-> string? pict?)]
+          [normal-font (-> string? pict?)]
+          [comment-font (-> string? pict?)]
+          [hierarchy (-> pict? (cons/c pict? (listof pict?)) (cons/c pict? (listof pict?)) pict?)]
+          [right-right-reference
+           (->* (pict? pict? pict? pict? pict?)
+                (number? #:connect-dots connect-dots-contract #:dot-delta number?)
+                pict?)]
+          [left-left-reference
+           (->* (pict? pict? pict? pict? pict?)
+                (number? #:connect-dots connect-dots-contract #:dot-delta number?)
+                pict?)]
+          [right-left-reference
+           (->* (pict? pict? pict? pict? pict?) (number? #:connect-dots connect-dots-contract) pict?)]
+          [left-right-reference
+           (->* (pict? pict? pict? pict? pict?) (number? #:connect-dots connect-dots-contract) pict?)]
+          [left-top-reference
+           (->* (pict? pict? pict? pict?) (number? #:connect-dots connect-dots-contract) pict?)]
+          [right-top-reference
+           (->* (pict? pict? pict? pict?) (number? #:connect-dots connect-dots-contract) pict?)]
+          [dot-edge-spacing number?]
+          [connect-dots connect-dots-contract]
+          [add-dot-right (-> pict? pict? pict? (values pict? pict?))]
+          [add-dot-right/space (-> pict? pict? pict? (values pict? pict?))]
+          [add-dot-left (-> pict? pict? pict? (values pict? pict?))]
+          [add-dot-left/space (-> pict? pict? pict? (values pict? pict?))]
+          [add-dot-junction
+           (case-> (-> pict? pict? pict? (values pict? pict?))
+                   (-> pict?
+                       pict?
+                       (-> pict? pict? (values number? number?))
+                       pict?
+                       (-> pict? pict? (values number? number?))
+                       (values pict? pict?)))]
+          [add-dot-offset (-> pict? pict? number? number? (values pict? pict?))]
+          [add-dot (-> pict? number? number? (values pict? pict?))]
+          [method-spec
+           (->* (string? string?) (#:body (or/c #f pict?)) #:rest (listof (or/c #f string?)) pict?)]
+          [java-this (-> pict?)]
+          [field-arrowhead-size number?]))
