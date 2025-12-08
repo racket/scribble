@@ -130,13 +130,14 @@
                                  (apply vl-append methods)))])
        (add-hline (add-hline (frame (inset main class-box-margin)) top-spacer) bottom-spacer))]
     [fields
-     (let* ([top-spacer (mk-blank)]
-            [main (vl-append name
-                             top-spacer
-                             (if (null? fields)
-                                 (blank)
-                                 (apply vl-append fields)))])
-       (add-hline (frame (inset main class-box-margin)) top-spacer))]
+     (define top-spacer (mk-blank))
+     (define main
+       (vl-append name
+                  top-spacer
+                  (if (null? fields)
+                      (blank)
+                      (apply vl-append fields))))
+     (add-hline (frame (inset main class-box-margin)) top-spacer)]
     [methods (class-box name methods fields)]
     [else (frame (inset name class-box-margin))]))
 
