@@ -342,82 +342,98 @@
   
   (connect-dots #t (connect-dots #f main6 dot1 dot2 dot4 dot3) dot6 dot5))
 
-(define left-left-reference
-  (λ (main0 start-class start-field finish-class finish-name [count 1] 
-            #:connect-dots [connect-dots connect-dots]
-            #:dot-delta [dot-delta 0])
-    (let ([going-down? (let-values ([(_1 start-y) (find-cc main0 start-field)]
-                                    [(_2 finish-y) (find-cc main0 finish-name)])
-                         (< start-y finish-y))])
-      (define-values (main1 dot1) (add-dot-delta (λ () (add-dot-left main0 start-class start-field))
-                                                 0
-                                                 (if going-down?
-                                                     dot-delta
-                                                     (- dot-delta))))
-      (define-values (main2 dot2) (add-dot-delta (λ () (add-dot-left/space main1 start-class start-field count))
-                                                 (- dot-delta)
-                                                 (if going-down?
-                                                     dot-delta
-                                                     (- dot-delta))))
-      (define-values (main3 dot3) (add-dot-delta (λ () (add-dot-left main2 finish-class finish-name))
-                                                 0
-                                                 (if going-down?
-                                                     (- dot-delta)
-                                                     dot-delta)))
-      (define-values (main4 dot4) (add-dot-delta (λ () (add-dot-junction main3 dot2 dot3))
-                                                 0
-                                                 0))
-      (define-values (main5 dot5) (add-dot-left main4 finish-class finish-name))
-      (define-values (main6 dot6) (add-dot-delta (λ () (add-dot-left main5 finish-class finish-name))
-                                                 -1 ;; just enough to get the arrowhead going the right direction; not enough to see the line
-                                                 0))
-      
-      (connect-dots
-       #t
-       (connect-dots #f main6 dot1 dot2 dot4 dot3)
-       dot6 
-       dot5))))
+(define (left-left-reference main0
+                             start-class
+                             start-field
+                             finish-class
+                             finish-name
+                             [count 1]
+                             #:connect-dots [connect-dots connect-dots]
+                             #:dot-delta [dot-delta 0])
+  (let ([going-down? (let-values ([(_1 start-y) (find-cc main0 start-field)]
+                                  [(_2 finish-y) (find-cc main0 finish-name)])
+                       (< start-y finish-y))])
+    (define-values (main1 dot1)
+      (add-dot-delta (λ () (add-dot-left main0 start-class start-field))
+                     0
+                     (if going-down?
+                         dot-delta
+                         (- dot-delta))))
+    (define-values (main2 dot2)
+      (add-dot-delta (λ () (add-dot-left/space main1 start-class start-field count))
+                     (- dot-delta)
+                     (if going-down?
+                         dot-delta
+                         (- dot-delta))))
+    (define-values (main3 dot3)
+      (add-dot-delta (λ () (add-dot-left main2 finish-class finish-name))
+                     0
+                     (if going-down?
+                         (- dot-delta)
+                         dot-delta)))
+    (define-values (main4 dot4) (add-dot-delta (λ () (add-dot-junction main3 dot2 dot3)) 0 0))
+    (define-values (main5 dot5) (add-dot-left main4 finish-class finish-name))
+    (define-values (main6 dot6)
+      (add-dot-delta
+       (λ () (add-dot-left main5 finish-class finish-name))
+       -1 ;; just enough to get the arrowhead going the right direction; not enough to see the line
+       0))
 
-(define left-top-reference
-  (λ (main0 start-class start-field finish-class [count 1] #:connect-dots [connect-dots connect-dots])
-    (define-values (main1 dot1) (add-dot-left main0 start-class start-field))
-    (define-values (main2 dot2) (add-dot-left/space main1 start-class start-field count))
-    (define-values (main3 dot3) (add-dot-junction main2 dot2 cc-find finish-class ct-find))
-    (connect-dots #t main3 dot1 dot2 dot3)))
+    (connect-dots #t (connect-dots #f main6 dot1 dot2 dot4 dot3) dot6 dot5)))
 
-(define right-left-reference
-  (λ (main0 start-class start-field finish-class finish-name 
-            [offset 
-             (find-middle main0 start-class rc-find finish-class lc-find)]
-            #:connect-dots [connect-dots connect-dots])
-    (define-values (main1 dot1) (add-dot-right main0 start-class start-field))
-    (define-values (main2 dot2) (add-dot-right/offset main1 start-class start-field offset))
-    (define-values (main3 dot3) (add-dot-left main2 finish-class finish-name))
-    (define-values (main4 dot4) (add-dot-junction main3 dot2 dot3))
-    (connect-dots #t main4 dot1 dot2 dot4 dot3)))
+(define (left-top-reference main0
+                            start-class
+                            start-field
+                            finish-class
+                            [count 1]
+                            #:connect-dots [connect-dots connect-dots])
+  (define-values (main1 dot1) (add-dot-left main0 start-class start-field))
+  (define-values (main2 dot2) (add-dot-left/space main1 start-class start-field count))
+  (define-values (main3 dot3) (add-dot-junction main2 dot2 cc-find finish-class ct-find))
+  (connect-dots #t main3 dot1 dot2 dot3))
 
-(define left-right-reference
-  (λ (main0 start-class start-field finish-class finish-name 
-            [offset 
-             (- (find-middle main0 start-class lc-find finish-class rc-find))]
-            #:connect-dots [connect-dots connect-dots])
-    (define-values (main1 dot1) (add-dot-left main0 start-class start-field))
-    (define-values (main2 dot2) (add-dot-left/offset main1 start-class start-field offset))
-    (define-values (main3 dot3) (add-dot-right main2 finish-class finish-name))
-    (define-values (main4 dot4) (add-dot-junction main3 dot2 dot3))
-    (connect-dots #t main4 dot1 dot2 dot4 dot3)))
+(define (right-left-reference main0
+                              start-class
+                              start-field
+                              finish-class
+                              finish-name
+                              [offset (find-middle main0 start-class rc-find finish-class lc-find)]
+                              #:connect-dots [connect-dots connect-dots])
+  (define-values (main1 dot1) (add-dot-right main0 start-class start-field))
+  (define-values (main2 dot2) (add-dot-right/offset main1 start-class start-field offset))
+  (define-values (main3 dot3) (add-dot-left main2 finish-class finish-name))
+  (define-values (main4 dot4) (add-dot-junction main3 dot2 dot3))
+  (connect-dots #t main4 dot1 dot2 dot4 dot3))
+
+(define (left-right-reference main0
+                              start-class
+                              start-field
+                              finish-class
+                              finish-name
+                              [offset
+                               (- (find-middle main0 start-class lc-find finish-class rc-find))]
+                              #:connect-dots [connect-dots connect-dots])
+  (define-values (main1 dot1) (add-dot-left main0 start-class start-field))
+  (define-values (main2 dot2) (add-dot-left/offset main1 start-class start-field offset))
+  (define-values (main3 dot3) (add-dot-right main2 finish-class finish-name))
+  (define-values (main4 dot4) (add-dot-junction main3 dot2 dot3))
+  (connect-dots #t main4 dot1 dot2 dot4 dot3))
 
 (define (find-middle main p1 find1 p2 find2)
   (define-values (x1 y1) (find1 main p1))
   (define-values (x2 y2) (find2 main p2))
   (- (/ (+ x1 x2) 2) (min x1 x2)))
 
-(define right-top-reference
-  (λ (main0 start-class start-field finish-class [count 1] #:connect-dots [connect-dots connect-dots])
-    (define-values (main1 dot1) (add-dot-right main0 start-class start-field))
-    (define-values (main2 dot2) (add-dot-right/space main1 start-class start-field count))
-    (define-values (main3 dot3) (add-dot-junction main2 dot2 cc-find finish-class ct-find))
-    (connect-dots #t main3 dot1 dot2 dot3)))
+(define (right-top-reference main0
+                             start-class
+                             start-field
+                             finish-class
+                             [count 1]
+                             #:connect-dots [connect-dots connect-dots])
+  (define-values (main1 dot1) (add-dot-right main0 start-class start-field))
+  (define-values (main2 dot2) (add-dot-right/space main1 start-class start-field count))
+  (define-values (main3 dot3) (add-dot-junction main2 dot2 cc-find finish-class ct-find))
+  (connect-dots #t main3 dot1 dot2 dot3))
 
 (define connect-dots-contract (->* (boolean? pict? pict?) () #:rest (listof pict?) (values pict?)))
 
