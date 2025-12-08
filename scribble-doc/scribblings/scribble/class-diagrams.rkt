@@ -149,16 +149,14 @@
 (define (hierarchy main supers subs)
   (define supers-bottoms
     (apply max
-           (map (λ (x)
-                  (let-values ([(x y) (cb-find main x)])
-                    y))
-                supers)))
+           (for/list ([x (in-list supers)])
+             (let-values ([(x y) (cb-find main x)])
+               y))))
   (define subs-tops
     (apply min
-           (map (λ (x)
-                  (let-values ([(x y) (ct-find main x)])
-                    y))
-                subs)))
+           (for/list ([x (in-list subs)])
+             (let-values ([(x y) (ct-find main x)])
+               y))))
   (define sorted-subs (sort subs (λ (x y) (< (left-edge-x main x) (left-edge-x main y)))))
   (unless (< supers-bottoms subs-tops)
     (error 'hierarchy
@@ -176,23 +174,21 @@
               (λ (_1 _2) (values main-line-end-x main-line-y))
               #:color hierarchy-color))
   (define super-lines
-    (map (λ (super)
-           (let-values ([(x y) (cb-find main super)])
-             (pin-over (pin-line (ghost main) super cb-find main (λ (_1 _2) (values x main-line-y)))
-                       (- x (/ (pict-width triangle) 2))
-                       (- (/ (+ y main-line-y) 2) (/ (pict-height triangle) 2))
-                       triangle)))
-         supers))
+    (for/list ([super (in-list supers)])
+      (define-values (x y) (cb-find main super))
+      (pin-over (pin-line (ghost main) super cb-find main (λ (_1 _2) (values x main-line-y)))
+                (- x (/ (pict-width triangle) 2))
+                (- (/ (+ y main-line-y) 2) (/ (pict-height triangle) 2))
+                triangle)))
   (define sub-lines
-    (map (λ (sub)
-           (let-values ([(x y) (ct-find main sub)])
-             (pin-line (ghost main)
-                       sub
-                       ct-find
-                       main
-                       (λ (_1 _2) (values x main-line-y))
-                       #:color hierarchy-color)))
-         subs))
+    (for/list ([sub (in-list subs)])
+      (define-values (x y) (ct-find main sub))
+      (pin-line (ghost main)
+                sub
+                ct-find
+                main
+                (λ (_1 _2) (values x main-line-y))
+                #:color hierarchy-color)))
   (apply cc-superimpose w/main-line (append sub-lines super-lines)))
 
 (define triangle-width 12)
