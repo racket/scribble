@@ -205,7 +205,8 @@
          (cond
            [(not exists)] ; do nothing
            [(or (file-exists? filename) (link-exists? filename)) (delete-file filename)]
-           [(directory-exists? filename) (bad "exists as directory")])
+           [(directory-exists? filename) (bad "exists as directory")]
+           [else (void)])
          (parameterize ([rendered-dirpath dirpathlist])
            (printf "  ~a\n" path)
            (renderer filename))])))
