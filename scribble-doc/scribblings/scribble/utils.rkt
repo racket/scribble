@@ -78,24 +78,26 @@
       (define p1 (file-position p))
       (define stx (scribble:read-syntax #f p))
       (define p2 (file-position p))
-      (if (not (eof-object? stx))
-          (let ([str (substring lines p1 p2)])
-            (loop (cons (list str stx) r) (or newlines? (regexp-match? #rx#"\n" str))))
-          (let* ([r (reverse r)]
-                 [r (if newlines?
-                        (cdr (apply append (map (lambda (x) (list #f x)) r)))
-                        r)])
-            (make-table plain
-                        (map (lambda (x)
-                               (let ([@expr (if x
-                                                (litchar/lines (car x))
-                                                "")]
-                                     [sexpr (if x
-                                                (racket:to-paragraph ((norm-spacing 0) (cadr x)))
-                                                "")]
-                                     [reads-as (if x reads-as "")])
-                                 (map as-flow (list spacer @expr reads-as sexpr))))
-                             r)))))))
+      (cond
+        [(not (eof-object? stx))
+         (define str (substring lines p1 p2))
+         (loop (cons (list str stx) r) (or newlines? (regexp-match? #rx#"\n" str)))]
+        [else
+         (let* ([r (reverse r)]
+                [r (if newlines?
+                       (cdr (apply append (map (lambda (x) (list #f x)) r)))
+                       r)])
+           (make-table plain
+                       (map (lambda (x)
+                              (let ([@expr (if x
+                                               (litchar/lines (car x))
+                                               "")]
+                                    [sexpr (if x
+                                               (racket:to-paragraph ((norm-spacing 0) (cadr x)))
+                                               "")]
+                                    [reads-as (if x reads-as "")])
+                                (map as-flow (list spacer @expr reads-as sexpr))))
+                            r)))]))))
 
 ;; stuff for the scribble/text examples
 

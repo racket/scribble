@@ -48,23 +48,18 @@
 
 ;; field-spec : string string -> pict
 (define (field-spec type fd #:default [default #f] [comment #f])
-  (let ([code-line
-         (hbl-append (if type 
-                         (hbl-append (type-spec type)
-                                     (normal-font " "))
-                         (blank))
-                     (field-name-font fd)
-                     (if default
-                         (hbl-append (normal-font " = ")
-                                     (normal-font default))
-                         (blank))
-                     #;
-                     (normal-font ";"))])
-    (if comment
-        (hbl-append code-line 
-                    (normal-font " ")
-                    (comment-font (format "[in ~a]" comment)))
-        code-line)))
+  (define code-line
+    (hbl-append (if type
+                    (hbl-append (type-spec type) (normal-font " "))
+                    (blank))
+                (field-name-font fd)
+                (if default
+                    (hbl-append (normal-font " = ") (normal-font default))
+                    (blank))
+                #;(normal-font ";")))
+  (if comment
+      (hbl-append code-line (normal-font " ") (comment-font (format "[in ~a]" comment)))
+      code-line))
 
 (define (method-spec range name #:body [body #f] . args)
   (unless (even? (length args))
@@ -81,15 +76,16 @@
         (hbl-append
          (normal-font "(")
          (let loop ([args args])
-           (let* ([type (car args)]
-                  [param (cadr args)]
-                  [single-arg (if param
-                                  (hbl-append (type-spec type) (normal-font " ") (var-font param))
-                                  (type-spec type))])
-  
-             (cond
-               [(null? (cddr args)) (hbl-append single-arg (normal-font ")"))]
-               [else (hbl-append single-arg (normal-font ", ") (loop (cddr args)))]))))])
+           (define type (car args))
+           (define param (cadr args))
+           (define single-arg
+             (if param
+                 (hbl-append (type-spec type) (normal-font " ") (var-font param))
+                 (type-spec type)))
+         
+           (cond
+             [(null? (cddr args)) (hbl-append single-arg (normal-font ")"))]
+             [else (hbl-append single-arg (normal-font ", ") (loop (cddr args)))])))])
      (if body
          (hbl-append (normal-font " {"))
          (blank))))
@@ -134,13 +130,14 @@
                                  (apply vl-append methods)))])
        (add-hline (add-hline (frame (inset main class-box-margin)) top-spacer) bottom-spacer))]
     [fields
-     (let* ([top-spacer (mk-blank)]
-            [main (vl-append name
-                             top-spacer
-                             (if (null? fields)
-                                 (blank)
-                                 (apply vl-append fields)))])
-       (add-hline (frame (inset main class-box-margin)) top-spacer))]
+     (define top-spacer (mk-blank))
+     (define main
+       (vl-append name
+                  top-spacer
+                  (if (null? fields)
+                      (blank)
+                      (apply vl-append fields))))
+     (add-hline (frame (inset main class-box-margin)) top-spacer)]
     [methods (class-box name methods fields)]
     [else (frame (inset name class-box-margin))]))
 
@@ -152,16 +149,14 @@
 (define (hierarchy main supers subs)
   (define supers-bottoms
     (apply max
-           (map (λ (x)
-                  (let-values ([(x y) (cb-find main x)])
-                    y))
-                supers)))
+           (for/list ([x (in-list supers)])
+             (let-values ([(x y) (cb-find main x)])
+               y))))
   (define subs-tops
     (apply min
-           (map (λ (x)
-                  (let-values ([(x y) (ct-find main x)])
-                    y))
-                subs)))
+           (for/list ([x (in-list subs)])
+             (let-values ([(x y) (ct-find main x)])
+               y))))
   (define sorted-subs (sort subs (λ (x y) (< (left-edge-x main x) (left-edge-x main y)))))
   (unless (< supers-bottoms subs-tops)
     (error 'hierarchy
@@ -179,23 +174,21 @@
               (λ (_1 _2) (values main-line-end-x main-line-y))
               #:color hierarchy-color))
   (define super-lines
-    (map (λ (super)
-           (let-values ([(x y) (cb-find main super)])
-             (pin-over (pin-line (ghost main) super cb-find main (λ (_1 _2) (values x main-line-y)))
-                       (- x (/ (pict-width triangle) 2))
-                       (- (/ (+ y main-line-y) 2) (/ (pict-height triangle) 2))
-                       triangle)))
-         supers))
+    (for/list ([super (in-list supers)])
+      (define-values (x y) (cb-find main super))
+      (pin-over (pin-line (ghost main) super cb-find main (λ (_1 _2) (values x main-line-y)))
+                (- x (/ (pict-width triangle) 2))
+                (- (/ (+ y main-line-y) 2) (/ (pict-height triangle) 2))
+                triangle)))
   (define sub-lines
-    (map (λ (sub)
-           (let-values ([(x y) (ct-find main sub)])
-             (pin-line (ghost main)
-                       sub
-                       ct-find
-                       main
-                       (λ (_1 _2) (values x main-line-y))
-                       #:color hierarchy-color)))
-         subs))
+    (for/list ([sub (in-list subs)])
+      (define-values (x y) (ct-find main sub))
+      (pin-line (ghost main)
+                sub
+                ct-find
+                main
+                (λ (_1 _2) (values x main-line-y))
+                #:color hierarchy-color)))
   (apply cc-superimpose w/main-line (append sub-lines super-lines)))
 
 (define triangle-width 12)
@@ -349,154 +342,152 @@
   
   (connect-dots #t (connect-dots #f main6 dot1 dot2 dot4 dot3) dot6 dot5))
 
-(define left-left-reference
-  (λ (main0 start-class start-field finish-class finish-name [count 1] 
-            #:connect-dots [connect-dots connect-dots]
-            #:dot-delta [dot-delta 0])
-    (let ([going-down? (let-values ([(_1 start-y) (find-cc main0 start-field)]
-                                    [(_2 finish-y) (find-cc main0 finish-name)])
-                         (< start-y finish-y))])
-      (define-values (main1 dot1) (add-dot-delta (λ () (add-dot-left main0 start-class start-field))
-                                                 0
-                                                 (if going-down?
-                                                     dot-delta
-                                                     (- dot-delta))))
-      (define-values (main2 dot2) (add-dot-delta (λ () (add-dot-left/space main1 start-class start-field count))
-                                                 (- dot-delta)
-                                                 (if going-down?
-                                                     dot-delta
-                                                     (- dot-delta))))
-      (define-values (main3 dot3) (add-dot-delta (λ () (add-dot-left main2 finish-class finish-name))
-                                                 0
-                                                 (if going-down?
-                                                     (- dot-delta)
-                                                     dot-delta)))
-      (define-values (main4 dot4) (add-dot-delta (λ () (add-dot-junction main3 dot2 dot3))
-                                                 0
-                                                 0))
-      (define-values (main5 dot5) (add-dot-left main4 finish-class finish-name))
-      (define-values (main6 dot6) (add-dot-delta (λ () (add-dot-left main5 finish-class finish-name))
-                                                 -1 ;; just enough to get the arrowhead going the right direction; not enough to see the line
-                                                 0))
-      
-      (connect-dots
-       #t
-       (connect-dots #f main6 dot1 dot2 dot4 dot3)
-       dot6 
-       dot5))))
+(define (left-left-reference main0
+                             start-class
+                             start-field
+                             finish-class
+                             finish-name
+                             [count 1]
+                             #:connect-dots [connect-dots connect-dots]
+                             #:dot-delta [dot-delta 0])
+  (let ([going-down? (let-values ([(_1 start-y) (find-cc main0 start-field)]
+                                  [(_2 finish-y) (find-cc main0 finish-name)])
+                       (< start-y finish-y))])
+    (define-values (main1 dot1)
+      (add-dot-delta (λ () (add-dot-left main0 start-class start-field))
+                     0
+                     (if going-down?
+                         dot-delta
+                         (- dot-delta))))
+    (define-values (main2 dot2)
+      (add-dot-delta (λ () (add-dot-left/space main1 start-class start-field count))
+                     (- dot-delta)
+                     (if going-down?
+                         dot-delta
+                         (- dot-delta))))
+    (define-values (main3 dot3)
+      (add-dot-delta (λ () (add-dot-left main2 finish-class finish-name))
+                     0
+                     (if going-down?
+                         (- dot-delta)
+                         dot-delta)))
+    (define-values (main4 dot4) (add-dot-delta (λ () (add-dot-junction main3 dot2 dot3)) 0 0))
+    (define-values (main5 dot5) (add-dot-left main4 finish-class finish-name))
+    (define-values (main6 dot6)
+      (add-dot-delta
+       (λ () (add-dot-left main5 finish-class finish-name))
+       -1 ;; just enough to get the arrowhead going the right direction; not enough to see the line
+       0))
 
-(define left-top-reference
-  (λ (main0 start-class start-field finish-class [count 1] #:connect-dots [connect-dots connect-dots])
-    (define-values (main1 dot1) (add-dot-left main0 start-class start-field))
-    (define-values (main2 dot2) (add-dot-left/space main1 start-class start-field count))
-    (define-values (main3 dot3) (add-dot-junction main2 dot2 cc-find finish-class ct-find))
-    (connect-dots #t main3 dot1 dot2 dot3)))
+    (connect-dots #t (connect-dots #f main6 dot1 dot2 dot4 dot3) dot6 dot5)))
 
-(define right-left-reference
-  (λ (main0 start-class start-field finish-class finish-name 
-            [offset 
-             (find-middle main0 start-class rc-find finish-class lc-find)]
-            #:connect-dots [connect-dots connect-dots])
-    (define-values (main1 dot1) (add-dot-right main0 start-class start-field))
-    (define-values (main2 dot2) (add-dot-right/offset main1 start-class start-field offset))
-    (define-values (main3 dot3) (add-dot-left main2 finish-class finish-name))
-    (define-values (main4 dot4) (add-dot-junction main3 dot2 dot3))
-    (connect-dots #t main4 dot1 dot2 dot4 dot3)))
+(define (left-top-reference main0
+                            start-class
+                            start-field
+                            finish-class
+                            [count 1]
+                            #:connect-dots [connect-dots connect-dots])
+  (define-values (main1 dot1) (add-dot-left main0 start-class start-field))
+  (define-values (main2 dot2) (add-dot-left/space main1 start-class start-field count))
+  (define-values (main3 dot3) (add-dot-junction main2 dot2 cc-find finish-class ct-find))
+  (connect-dots #t main3 dot1 dot2 dot3))
 
-(define left-right-reference
-  (λ (main0 start-class start-field finish-class finish-name 
-            [offset 
-             (- (find-middle main0 start-class lc-find finish-class rc-find))]
-            #:connect-dots [connect-dots connect-dots])
-    (define-values (main1 dot1) (add-dot-left main0 start-class start-field))
-    (define-values (main2 dot2) (add-dot-left/offset main1 start-class start-field offset))
-    (define-values (main3 dot3) (add-dot-right main2 finish-class finish-name))
-    (define-values (main4 dot4) (add-dot-junction main3 dot2 dot3))
-    (connect-dots #t main4 dot1 dot2 dot4 dot3)))
+(define (right-left-reference main0
+                              start-class
+                              start-field
+                              finish-class
+                              finish-name
+                              [offset (find-middle main0 start-class rc-find finish-class lc-find)]
+                              #:connect-dots [connect-dots connect-dots])
+  (define-values (main1 dot1) (add-dot-right main0 start-class start-field))
+  (define-values (main2 dot2) (add-dot-right/offset main1 start-class start-field offset))
+  (define-values (main3 dot3) (add-dot-left main2 finish-class finish-name))
+  (define-values (main4 dot4) (add-dot-junction main3 dot2 dot3))
+  (connect-dots #t main4 dot1 dot2 dot4 dot3))
+
+(define (left-right-reference main0
+                              start-class
+                              start-field
+                              finish-class
+                              finish-name
+                              [offset
+                               (- (find-middle main0 start-class lc-find finish-class rc-find))]
+                              #:connect-dots [connect-dots connect-dots])
+  (define-values (main1 dot1) (add-dot-left main0 start-class start-field))
+  (define-values (main2 dot2) (add-dot-left/offset main1 start-class start-field offset))
+  (define-values (main3 dot3) (add-dot-right main2 finish-class finish-name))
+  (define-values (main4 dot4) (add-dot-junction main3 dot2 dot3))
+  (connect-dots #t main4 dot1 dot2 dot4 dot3))
 
 (define (find-middle main p1 find1 p2 find2)
-  (let-values ([(x1 y1) (find1 main p1)]
-               [(x2 y2) (find2 main p2)])
-    (- (/ (+ x1 x2) 2) (min x1 x2))))
+  (define-values (x1 y1) (find1 main p1))
+  (define-values (x2 y2) (find2 main p2))
+  (- (/ (+ x1 x2) 2) (min x1 x2)))
 
-(define right-top-reference
-  (λ (main0 start-class start-field finish-class [count 1] #:connect-dots [connect-dots connect-dots])
-    (define-values (main1 dot1) (add-dot-right main0 start-class start-field))
-    (define-values (main2 dot2) (add-dot-right/space main1 start-class start-field count))
-    (define-values (main3 dot3) (add-dot-junction main2 dot2 cc-find finish-class ct-find))
-    (connect-dots #t main3 dot1 dot2 dot3)))
+(define (right-top-reference main0
+                             start-class
+                             start-field
+                             finish-class
+                             [count 1]
+                             #:connect-dots [connect-dots connect-dots])
+  (define-values (main1 dot1) (add-dot-right main0 start-class start-field))
+  (define-values (main2 dot2) (add-dot-right/space main1 start-class start-field count))
+  (define-values (main3 dot3) (add-dot-junction main2 dot2 cc-find finish-class ct-find))
+  (connect-dots #t main3 dot1 dot2 dot3))
 
-(define connect-dots-contract (->* (boolean? pict? pict?) () #:rest (listof pict?) (values pict?)))
+(define connect-dots-contract (-> boolean? pict? pict? pict? ... (values pict?)))
 
 (provide type-link-color)
-(provide/contract
- [field-spec (->* ((or/c #f string?) string?) (string? #:default string?) pict?)]
- [class-name (->* (string?) (#:spacing-word string?) pict?)]
- [class-box (-> pict? (or/c #f (listof pict?)) (or/c #f (listof pict?)) pict?)]
- [hierarchy/layout 
-  (->* ((cons/c pict? (listof pict?)) (cons/c pict? (listof pict?)))
-       (#:top-space 
-        integer? 
-        #:bottom-space integer? 
-        #:vertical-space integer?
-        #:every-other-space integer?)
-       pict?)]
- [user-type-font (-> string? pict?)]
- [prim-type-font (-> string? pict?)]
- [var-font (-> string? pict?)]
- [normal-font (-> string? pict?)]
- [comment-font (-> string? pict?)]
- 
- [hierarchy (-> pict? 
-                (cons/c pict? (listof pict?)) 
-                (cons/c pict? (listof pict?))
+(provide (contract-out
+          [field-spec (->* ((or/c #f string?) string?) (string? #:default string?) pict?)]
+          [class-name (->* (string?) (#:spacing-word string?) pict?)]
+          [class-box (-> pict? (or/c #f (listof pict?)) (or/c #f (listof pict?)) pict?)]
+          [hierarchy/layout
+           (->* ((cons/c pict? (listof pict?)) (cons/c pict? (listof pict?)))
+                (#:top-space integer?
+                             #:bottom-space integer?
+                             #:vertical-space integer?
+                             #:every-other-space integer?)
                 pict?)]
- [right-right-reference (->* (pict? pict? pict? pict? pict?)
-                             (number?
-                              #:connect-dots connect-dots-contract
-                              #:dot-delta number?)
-                             pict?)]
- [left-left-reference (->* (pict? pict? pict? pict? pict?)
-                           (number?
-                            #:connect-dots connect-dots-contract
-                            #:dot-delta number?)
-                           pict?)]
- [right-left-reference (->* (pict? pict? pict? pict? pict?)
-                            (number?
-                             #:connect-dots connect-dots-contract)
-                            pict?)]
- [left-right-reference (->* (pict? pict? pict? pict? pict?)
-                            (number?
-                             #:connect-dots connect-dots-contract)
-                            pict?)]
- [left-top-reference (->* (pict? pict? pict? pict?)
-                          (number?
-                           #:connect-dots connect-dots-contract)
-                          pict?)]
- [right-top-reference (->* (pict? pict? pict? pict?)
-                           (number?
-                            #:connect-dots connect-dots-contract)
-                           pict?)]
- 
- [dot-edge-spacing number?]
- [connect-dots connect-dots-contract]
- [add-dot-right (-> pict? pict? pict? (values pict? pict?))]
- [add-dot-right/space (-> pict? pict? pict? (values pict? pict?))]
- [add-dot-left (-> pict? pict? pict? (values pict? pict?))]
- [add-dot-left/space (-> pict? pict? pict? (values pict? pict?))]
- [add-dot-junction 
-  (case->
-   (-> pict? pict? pict? (values pict? pict?))
-   (-> pict? 
-       pict? (-> pict? pict? (values number? number?))
-       pict? (-> pict? pict? (values number? number?))
-       (values pict? pict?)))]
- [add-dot-offset (-> pict? pict? number? number? (values pict? pict?))]
- [add-dot (-> pict? number? number? (values pict? pict?))]
- [method-spec 
-  (->* (string? string?) 
-       (#:body (or/c #f pict?)) 
-       #:rest (listof (or/c #f string?)) 
-       pict?)]
- [java-this (-> pict?)]
- [field-arrowhead-size number?])
+          [user-type-font (-> string? pict?)]
+          [prim-type-font (-> string? pict?)]
+          [var-font (-> string? pict?)]
+          [normal-font (-> string? pict?)]
+          [comment-font (-> string? pict?)]
+          [hierarchy (-> pict? (cons/c pict? (listof pict?)) (cons/c pict? (listof pict?)) pict?)]
+          [right-right-reference
+           (->* (pict? pict? pict? pict? pict?)
+                (number? #:connect-dots connect-dots-contract #:dot-delta number?)
+                pict?)]
+          [left-left-reference
+           (->* (pict? pict? pict? pict? pict?)
+                (number? #:connect-dots connect-dots-contract #:dot-delta number?)
+                pict?)]
+          [right-left-reference
+           (->* (pict? pict? pict? pict? pict?) (number? #:connect-dots connect-dots-contract) pict?)]
+          [left-right-reference
+           (->* (pict? pict? pict? pict? pict?) (number? #:connect-dots connect-dots-contract) pict?)]
+          [left-top-reference
+           (->* (pict? pict? pict? pict?) (number? #:connect-dots connect-dots-contract) pict?)]
+          [right-top-reference
+           (->* (pict? pict? pict? pict?) (number? #:connect-dots connect-dots-contract) pict?)]
+          [dot-edge-spacing number?]
+          [connect-dots connect-dots-contract]
+          [add-dot-right (-> pict? pict? pict? (values pict? pict?))]
+          [add-dot-right/space (-> pict? pict? pict? (values pict? pict?))]
+          [add-dot-left (-> pict? pict? pict? (values pict? pict?))]
+          [add-dot-left/space (-> pict? pict? pict? (values pict? pict?))]
+          [add-dot-junction
+           (case-> (-> pict? pict? pict? (values pict? pict?))
+                   (-> pict?
+                       pict?
+                       (-> pict? pict? (values number? number?))
+                       pict?
+                       (-> pict? pict? (values number? number?))
+                       (values pict? pict?)))]
+          [add-dot-offset (-> pict? pict? number? number? (values pict? pict?))]
+          [add-dot (-> pict? number? number? (values pict? pict?))]
+          [method-spec
+           (->* (string? string?) (#:body (or/c #f pict?)) #:rest (listof (or/c #f string?)) pict?)]
+          [java-this (-> pict?)]
+          [field-arrowhead-size number?]))
