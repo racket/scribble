@@ -699,6 +699,8 @@
               (when (string? s-name)
                 (printf "\\end{~a}" s-name)))
             (unless (or (null? blockss) (null? (car blockss)))
+              (define cell-paddingss (extract-cell-paddingss cell-styless))
+              (define column-paddings (extract-column-paddings cell-paddingss))
               (define all-left-line?s
                 (if (null? cell-styless)
                     null
@@ -737,16 +739,32 @@
                               "")
                           (string-append*
                            (let ([l
-                                  (map (lambda (i cell-style left-line?)
-                                         (format "~a~a@{}"
-                                                 (if left-line? "|@{}" "")
+                                  (map (lambda (i cell-style left-line? padding)
+                                         (format "~a~a@{~a}"
+                                                 (if left-line?
+                                                     (format "|@{~a}"
+                                                             (if (and padding
+                                                                      (not (= 0 (cell-padding-property-left padding))))
+                                                                 (format "\\hspace{~aex}" (exact->inexact (cell-padding-property-left padding)))
+                                                                 ""))
+                                                     "")
                                                  (cond
                                                   [(memq 'center (style-properties cell-style)) "c"]
                                                   [(memq 'right (style-properties cell-style)) "r"]
-                                                  [else "l"])))
+                                                  [else "l"])
+                                                 (if (and padding
+                                                          (not (= 0 (cell-padding-property-right padding))))
+                                                     (format "\\hspace{~aex}"
+                                                             (exact->inexact
+                                                              (+ (if left-line?
+                                                                     0
+                                                                     (cell-padding-property-left padding))
+                                                                 (cell-padding-property-right padding))))
+                                                     "")))
                                        (car blockss)
                                        (car cell-styless)
-                                       all-left-line?s)])
+                                       all-left-line?s
+                                       column-paddings)])
                              (let ([l (if all-right-line? (append l '("|")) l)])
                                (if boxed? (cons "@{\\SBoxedLeft}" l) l))))
                           "")])
@@ -777,9 +795,11 @@
                 ;; Loop through rows:
                 (let loop ([blockss blockss]
                            [cell-styless cell-styless]
+                           [cell-paddingss cell-paddingss]
                            [prev-styles #f]) ; for 'bottom-border styles
                   (let ([flows (car blockss)]
-                        [cell-styles (car cell-styless)])
+                        [cell-styles (car cell-styless)]
+                        [cell-paddings (car cell-paddingss)])
                     (unless index? (add-clines prev-styles cell-styles))
                     (define group-size
                       (cond
@@ -792,9 +812,18 @@
                               (loop (cdr blockss) (add1 group-size))]
                              [else group-size]))]
                         [else 1]))
+                    (unless index?
+                      (define top-pad (for/fold ([pad 0]) ([padding (in-list cell-paddings)])
+                                        (max pad (cell-padding-property-top padding))))
+                      (unless (= 0 top-pad)
+                        (printf "~a\\\\[\\dimexpr-\\normalbaselineskip+~aex]\n"
+                                (make-string (sub1 (length column-paddings)) #\&)
+                                (exact->inexact top-pad))))
                     (let loop ([flows flows]
                                [cell-styles cell-styles]
                                [all-left-line?s all-left-line?s]
+                               [cell-paddings cell-paddings]
+                               [column-paddings column-paddings]
                                [need-left? #f])
                       (unless (null? flows)
                         (define (render-cell cnt)
@@ -822,7 +851,13 @@
                                              (memq 'left-border (style-properties (car cell-styles)))
                                              (memq 'border (style-properties (car cell-styles)))))
                                 (printf "\\vline "))
+                              (when (and (not (car column-paddings))
+                                         (not (= 0 (cell-padding-property-left (car cell-paddings)))))
+                                (printf "\\hspace{~aex}" (cell-padding-property-left (car cell-paddings))))
                               (render-cell cnt)
+                              (when (and (not (car column-paddings))
+                                         (not (= 0 (cell-padding-property-right (car cell-paddings)))))
+                                (printf "\\hspace{~aex}" (cell-padding-property-right (car cell-paddings))))
                               (define right-line? (or (memq 'right-border (style-properties (list-ref cell-styles (sub1 cnt))))
                                                       (memq 'border (style-properties (list-ref cell-styles (sub1 cnt))))))
                               (when (and right-line? (null? (list-tail flows cnt)) (not all-right-line?))
@@ -834,6 +869,8 @@
                         (unless (null? (cdr flows)) (loop (cdr flows)
                                                           (cdr cell-styles)
                                                           (cdr all-left-line?s)
+                                                          (cdr cell-paddings)
+                                                          (cdr column-paddings)
                                                           right-line?))))
                     (define rest-blockss (list-tail blockss group-size))
                     (unless (or index?
@@ -843,15 +880,23 @@
                                                 (memq 'border (style-properties cell-style)))))))
                       (let ([row-skip (for/or ([cell-style (in-list cell-styles)])
                                         (for/or ([prop (style-properties cell-style)])
-                                          (and (table-row-skip? prop) prop)))])
-                        (printf " \\\\~a\n" (if row-skip
-                                                (format "[~a]" (table-row-skip-amount row-skip))
+                                          (and (table-row-skip? prop) prop)))]
+                            [bottom-pad (for/fold ([pad 0]) ([padding (in-list cell-paddings)])
+                                          (max pad (cell-padding-property-bottom padding)))])
+                        (printf " \\\\~a\n" (if (or row-skip
+                                                    (not (= bottom-pad 0)))
+                                                (format "[~a]" (if row-skip
+                                                                   (table-row-skip-amount row-skip)
+                                                                   (format "~aex" (exact->inexact bottom-pad))))
                                                 ""))))
                     (cond
                      [(null? rest-blockss)
                       (unless index? (add-clines cell-styles #f))]
                      [else
-                      (loop rest-blockss (list-tail cell-styless group-size) cell-styles)])))
+                      (loop rest-blockss
+                            (list-tail cell-styless group-size)
+                            (list-tail cell-paddingss group-size)
+                            cell-styles)])))
                 (unless inline?
                   (printf "\\end{~a}~a"
                           tableform

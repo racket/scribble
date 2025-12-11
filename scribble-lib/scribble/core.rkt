@@ -299,6 +299,7 @@
  [color-property ([color (or/c string? (list/c byte? byte? byte?))])]
  [background-color-property ([color (or/c string? (list/c byte? byte? byte?))])]
  [numberer-property ([numberer numberer?] [argument any/c])]
+ [cell-padding-property ([left real?] [top real?] [right real?] [bottom real?])]
 
  [table-columns ([styles (listof style?)])]
  [table-cells ([styless (listof (listof style?))])]

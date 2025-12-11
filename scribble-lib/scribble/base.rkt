@@ -338,6 +338,7 @@
                 compound-paragraph?)]
  [tabular (->* ((listof (listof (or/c 'cont block? content?))))
                (#:style (or/c style? string? symbol? #f)
+                #:pad (or/c real? (list/c real? real?) (list/c real? real? real? real?))
                 #:sep (or/c content? block? #f)
                 #:column-properties (listof any/c)
                 #:row-properties (listof any/c)
@@ -364,6 +365,7 @@
                            (decode-flow c)))
 
 (define (tabular #:style [style #f]
+                 #:pad [pad 0]
                  #:sep [sep #f]
                  #:sep-properties [sep-props #f]
                  #:column-properties [column-properties null]
@@ -486,7 +488,7 @@
                 (define all-column-properties
                   (and (pair? column-properties)
                        full-column-properties))
-                ;; Will werge `cell-properties` and `column-properties` into
+                ;; Will merge `cell-properties` and `column-properties` into
                 ;; `s`. Start by finding any existing `table-columns`
                 ;; and `table-cells` properties with the right number of
                 ;; styles:
@@ -510,6 +512,21 @@
                                                    (table-cells-styless tl)))
                                       tl
                                       #f))))
+                (define pad-prop
+                  (cond
+                    [(number? pad)
+                     (and (not (= 0 pad)) (cell-padding-property pad pad pad pad))]
+                    [(= 2 (length pad))
+                     (and (not (= 0 (car pad) (cadr pad)))
+                          (cell-padding-property (car pad) (cadr pad) (car pad) (cadr pad)))]
+                    [(not (= 0 (list-ref pad 0) (list-ref pad 1) (list-ref pad 2) (list-ref pad 3)))
+                     (cell-padding-property (list-ref pad 0) (list-ref pad 1)
+                                            (list-ref pad 2) (list-ref pad 3))]))
+                (define (add-padding props)
+                  (if (or (not pad-prop)
+                          (ormap cell-padding-property? props))
+                      props
+                      (cons pad-prop props)))
                 ;; Merge:
                 (define (cons-maybe v l) (if v (cons v l) l))
                 (make-style (style-name s)
@@ -520,22 +537,31 @@
                                        (for/list ([ps (in-list all-column-properties)]
                                                   [cs (in-list (table-columns-styles tc))])
                                          (make-style (style-name cs)
-                                                     (append ps (style-properties cs))))
+                                                     (add-padding
+                                                      (append ps (style-properties cs)))))
                                        (for/list ([ps (in-list all-column-properties)])
-                                         (make-style #f ps)))))
+                                         (make-style #f (add-padding ps))))))
                              (cons-maybe
-                              (and all-cell-properties
-                                   (table-cells
-                                    (if tl
-                                        (for/list ([pss (in-list all-cell-properties)]
-                                                   [css (in-list (table-cells-styless tl))])
-                                          (for/list ([ps (in-list pss)]
-                                                     [cs (in-list css)])
-                                            (make-style (style-name cs)
-                                                        (append ps (style-properties cs)))))
-                                        (for/list ([pss (in-list all-cell-properties)])
-                                          (for/list ([ps (in-list pss)])
-                                            (make-style #f ps))))))
+                              (if all-cell-properties
+                                  (table-cells
+                                   (if tl
+                                       (for/list ([pss (in-list all-cell-properties)]
+                                                  [css (in-list (table-cells-styless tl))])
+                                         (for/list ([ps (in-list pss)]
+                                                    [cs (in-list css)])
+                                           (make-style (style-name cs)
+                                                       (add-padding
+                                                        (append ps (style-properties cs))))))
+                                       (for/list ([pss (in-list all-cell-properties)])
+                                         (for/list ([ps (in-list pss)])
+                                           (make-style #f (add-padding ps))))))
+                                  (if (and pad-prop
+                                           (not all-column-properties))
+                                      (table-cells
+                                       (for/list ([row (in-list cells)])
+                                         (for/list ([cell (in-list row)])
+                                           (make-style #f (list pad-prop)))))
+                                      #f))
                               (remq tc (remq tl props))))))
               ;; Process cells:
               (map (lambda (row)

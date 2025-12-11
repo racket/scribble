@@ -269,6 +269,7 @@ Returns @racket[#t] if @racket[v] is an item produced by
 
 @defproc[(tabular [cells (listof (listof (or/c block? content? 'cont)))]
                   [#:style style (or/c style? string? symbol? #f) #f]
+                  [#:pad pad (or/c real? (list/c real? real?) (list/c real? real? real? real?)) 0]
                   [#:sep sep (or/c block? content? #f) #f]
                   [#:column-properties column-properties (listof any/c) '()]
                   [#:row-properties row-properties (listof any/c) '()]
@@ -288,8 +289,17 @@ cell in a row.
 The @racket[style] argument is handled the same as @racket[para].
 See @racket[table] for a list of recognized @tech{style names} and @tech{style properties}.
 
-The default style places no space between table columns. If
-@racket[sep] is not @racket[#f], it is inserted as a new column
+The default style places no space between table columns. Specify a
+@racket[pad] list to add padding around each cell's content, where the
+numbers in a @racket[pad] list are in ``ex'' units (roughly
+corresponding to the size of a character). If @racket[pad] is a single
+number, it is used for all sides of the cell. If @racket[pad] is a
+list of two numbers, the first is used on the left and right, and the
+last is used on the top and bottom. If @racket[pad] is a list of four
+numbers, they are used in order for left, top, right, and bottom
+padding.
+
+If @racket[sep] is not @racket[#f], it is inserted as a new column
 between every column in the table; the new column's properties are the
 same as the preceding column's, unless @racket[sep-properties]
 provides a list of @tech{style properties} to use. When @racket[sep]
@@ -351,21 +361,17 @@ redundant information. In that case, @racket[column-attributes]
 properties will be used from @racket[table-columns], while other
 properties will be used from the merger into @racket[table-cells].}
 
-@history[#:changed "1.1" @elem{Added the @racket[#:column-properties],
-                               @racket[#:row-properties],
-                               and @racket[#:cell-properties] arguments.}
-         #:changed "1.12" @elem{Changed @racket[sep] insertion before a
-                                @racket['cont].}
-         #:changed "1.28" @elem{Added @racket[sep-properties] and made
-                                the preceding column's properties used
-                                consistently if not specified.}]
-
 Examples:
 @codeblock[#:keep-lang-line? #f]|{
 #lang scribble/manual
 @tabular[#:sep @hspace[1]
          (list (list "soup" "gazpacho")
                (list "soup" "tonjiru"))]
+
+@tabular[#:pad '(1 0)
+         #:column-properties '(border)
+         (list (list "gazpacho" "cold")
+               (list "tonjiru"  "hot"))]
 
 @tabular[#:style 'boxed
          #:column-properties '(left right)
@@ -380,6 +386,11 @@ Examples:
            (list (list "soup" "gazpacho")
                  (list "soup" "tonjiru"))]
 
+  @tabular[#:pad '(1 0)
+           #:column-properties '(border)
+           (list (list "gazpacho" "cold")
+                 (list "tonjiru"  "hot"))]
+
   @tabular[#:style 'boxed
            #:column-properties '(left right)
            #:row-properties '(bottom-border ())
@@ -387,6 +398,16 @@ Examples:
                  (list "caldo verde"   "kale")
                  (list "kinpira gobō"  "burdock")
                  (list "makizushi"     'cont))]]
+
+@history[#:changed "1.1" @elem{Added the @racket[#:column-properties],
+                               @racket[#:row-properties],
+                               and @racket[#:cell-properties] arguments.}
+         #:changed "1.12" @elem{Changed @racket[sep] insertion before a
+                                @racket['cont].}
+         #:changed "1.28" @elem{Added the @racket[sep-properties] argument and made
+                                the preceding column's properties used
+                                consistently if not specified.}
+         #:changed "1.59" @elem{Added the @racket[pad] argument.}]
 }
 
 @defproc[(verbatim [#:indent indent exact-nonnegative-integer? 0] [elem content?] ...+)

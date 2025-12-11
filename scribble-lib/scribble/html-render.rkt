@@ -184,6 +184,13 @@
                       `((style ,(format "background-color: ~a" (color->string (background-color-property-color v)))))]
                      [(hover-property? v)
                       `((title ,(hover-property-text v)))]
+                     [(cell-padding-property? v)
+                      (define (ex n) (exact->inexact n))
+                      `((style ,(format "padding: ~aex ~aex ~aex ~aex;"
+                                        (ex (cell-padding-property-top v))
+                                        (ex (cell-padding-property-right v))
+                                        (ex (cell-padding-property-bottom v))
+                                        (ex (cell-padding-property-left v)))))]
                      [else null]))
                   (style-properties style))))])
     (let ([name (style-name style)])
@@ -1735,7 +1742,8 @@
                                                 (filter (lambda (a)
                                                           (or (attributes? a)
                                                               (color-property? a)
-                                                              (background-color-property? a)))
+                                                              (background-color-property? a)
+                                                              (cell-padding-property? a)))
                                                         (style-properties column-style)))
                                                (let ([ps (style-properties column-style)])
                                                  (cond

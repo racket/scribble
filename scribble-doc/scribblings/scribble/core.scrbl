@@ -1355,6 +1355,9 @@ The following are recognized as cell-@tech{style properties}:
  @item{@racket[background-color-property] structure --- For HTML,
        applies a color to the background of the cell.}
 
+ @item{@racket[cell-padding-property] structure --- Specifies padding
+       to add around a cell's content.}
+
  @item{@racket[attributes] --- Provides additional HTML attributes
        for the cell's @tt{<td>} tag.}
 
@@ -1380,6 +1383,15 @@ For HTML table rendering, for each column that has a
 @racket[column-attributes] property in the corresponding element of
 @racket[styles], the attributes are put into an HTML @tt{col} tag
 within the table.}
+
+
+@defstruct[cell-padding-property ([left real?] [top real?] [right real?] [bottom real?])]{
+
+When used as a cell property for a @racket[table], specifies padding
+to add around the cell content. Padding is expressed in ``ex'' units,
+which corresponds roughly to the width of a character.
+
+@history[#:added "1.58"]}
 
 
 @deftogether[(

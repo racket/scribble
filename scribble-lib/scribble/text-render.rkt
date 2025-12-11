@@ -73,21 +73,35 @@
 
     (define/override (render-table i part ht inline?)
       (define flowss (table-blockss i))
+      (define cell-styless (extract-table-cell-styles i))
       (if (null? flowss)
           null
-          (let* ([strs (map (lambda (flows)
-                              (map (lambda (d)
+          (let* ([strs (map (lambda (flows styles)
+                              (map (lambda (d style)
                                      (if (eq? d 'cont)
                                          d
                                          (let ([o (open-output-string)])
+                                           (define padding
+                                             (or (findf cell-padding-property? (style-properties style))
+                                                 (cell-padding-property 0 0 0 0)))
+                                           (define (int n) (inexact->exact (floor n)))
                                            (parameterize ([current-indent 0]
                                                           [current-output-port o])
                                              (render-block d part ht #f))
-                                           (regexp-split
-                                            #rx"\n"
-                                            (regexp-replace #rx"\n$" (get-output-string o) "")))))
-                                   flows))
-                            flowss)]
+                                           (define strs (regexp-split
+                                                         #rx"\n"
+                                                         (regexp-replace #rx"\n$" (get-output-string o) "")))
+                                           (append
+                                            (make-list (int (cell-padding-property-top padding)) "")
+                                            (for/list ([str (in-list strs)])
+                                              (string-append (make-string (int (cell-padding-property-left padding)) #\space)
+                                                             str
+                                                             (make-string (int (cell-padding-property-right padding)) #\space)))
+                                            (make-list (int (cell-padding-property-bottom padding)) "")))))
+                                   flows
+                                   styles))
+                            flowss
+                            cell-styless)]
                  [extract-align
                   (lambda (s)
                     (define p (style-properties s))
@@ -96,22 +110,9 @@
                      [(member 'center p) 'center]
                      [else 'left]))]
                  [alignss
-                  (cond
-                   [(ormap (lambda (v) (and (table-cells? v) v)) (style-properties (table-style i)))
-                    => (lambda (tc)
-                         (for/list ([l (in-list (table-cells-styless tc))])
-                           (for/list ([s (in-list l)])
-                             (extract-align s))))]
-                   [(ormap (lambda (v) (and (table-columns? v) v)) (style-properties (table-style i)))
-                    => (lambda (tc)
-                         (make-list
-                          (length flowss)
-                          (for/list ([s (in-list (table-columns-styles tc))])
-                            (extract-align s))))]
-                   [else
-                    (if (null? flowss)
-                        null
-                        (make-list (length flowss) (make-list (length (car flowss)) 'left)))])]
+                  (for/list ([l (in-list cell-styless)])
+                    (for/list ([s (in-list l)])
+                      (extract-align s)))]
                  [extract-border
                   (lambda (s)
                     (define p (style-properties s))
@@ -122,22 +123,9 @@
                               (memq 'top-border p) (memq 'bottom-border p))]))]
                  [borderss
                   ;; A border is (vector left? right? top? bottom?)
-                  (cond
-                   [(ormap (lambda (v) (and (table-cells? v) v)) (style-properties (table-style i)))
-                    => (lambda (tc)
-                         (for/list ([l (in-list (table-cells-styless tc))])
-                           (for/list ([s (in-list l)])
-                             (extract-border s))))]
-                   [(ormap (lambda (v) (and (table-columns? v) v)) (style-properties (table-style i)))
-                    => (lambda (tc)
-                         (make-list
-                          (length flowss)
-                          (for/list ([s (in-list (table-columns-styles tc))])
-                            (extract-border s))))]
-                   [else
-                    (if (null? flowss)
-                        null
-                        (make-list (length flowss) (make-list (length (car flowss)) '#(#f #f #f #f))))])]
+                  (for/list ([l (in-list cell-styless)])
+                    (for/list ([s (in-list l)])
+                      (extract-border s)))]
                  [border-left? (lambda (v) (vector-ref v 0))]
                  [border-right? (lambda (v) (vector-ref v 1))]
                  [border-top? (lambda (v) (vector-ref v 2))]

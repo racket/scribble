@@ -5,7 +5,9 @@
          part-tag-prefix-string
          select-suffix
          extract-table-cell-styles
-         empty-content?)
+         empty-content?
+         extract-cell-paddingss
+         extract-column-paddings)
 
 (define (part-style? p s)
   (memq s (style-properties (part-style p))))
@@ -61,3 +63,34 @@
      (define s (hash-ref p 'tag-prefix #f))
      (and (string? s) s)]
     [else #f]))
+
+(define (extract-cell-paddingss cell-styless)
+  (for/list ([cell-styles (in-list cell-styless)])
+    (for/list ([cell-style (in-list cell-styles)])
+      (define pad (findf cell-padding-property? (style-properties cell-style)))
+      (or pad
+          (cell-padding-property 0 0 0 0)))))
+
+;; extract common padding, if any, for all rows in each column;
+;; result is `#f` in a column that doesn't have consistent padding
+(define (extract-column-paddings cell-paddingss)
+  (cond
+    [(null? cell-paddingss)
+     null]
+    [else
+     (let loop ([cell-paddingss cell-paddingss])
+       (cond
+         [(null? (car cell-paddingss)) null]
+         [else
+          (define column (map car cell-paddingss))
+          (define next (map cdr cell-paddingss))
+          (cons (let loop ([padding (car column)] [column (cdr column)])
+                  (cond
+                    [(null? column) padding]
+                    [(and (= (cell-padding-property-left padding)
+                             (cell-padding-property-left (car column)))
+                          (= (cell-padding-property-right padding)
+                             (cell-padding-property-right (car column))))
+                     (loop padding (cdr column))]
+                    [else #f]))
+                (loop next))]))]))
