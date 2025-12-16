@@ -86,10 +86,13 @@ provided for backward compatibility.}
 
 
 @defproc[(figure-ref [tag string?] ...+
-                     [#:link-render-style link-style (or/c link-render-style? #f)])
+                     [#:and-word and-word string? "and"]
+                     [#:link-render-style link-style (or/c link-render-style? #f) #f])
          element?]{
 
 Generates a reference to one or more figures, using a lowercase word ``figure''.
+When two tags are given, the @racket[connecting-word] is used to
+connect the two. 
 
 If @racket[link-style] or @racket[(current-link-render-style)] at the
 time of rendering indicates the @racket['number] style mode, then the

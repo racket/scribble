@@ -18,11 +18,11 @@
                               (#:continue? any/c)
                               element?)]
           [Figure-ref (->* (string?)
-                           (#:link-render-style link-render-style?)
+                           (#:link-render-style link-render-style? #:and-word string?)
                            #:rest (listof string?)
                            element?)]
           [figure-ref (->* (string?)
-                           (#:link-render-style link-render-style?)
+                           (#:link-render-style link-render-style? #:and-word string?)
                            #:rest (listof string?)
                            element?)])
          left-figure-style
@@ -141,6 +141,7 @@
 
 (define (ref-proc initial)
   (lambda (tag #:link-render-style [link-style #f]
+               #:and-word (and-word "and")
                . tags)
     (cond
       [(null? tags)
@@ -153,7 +154,7 @@
        (define tag2 (car tags))
        (make-element #f (list (counter-ref figures tag1 (string-append initial "igures")
                                            #:link-render-style link-style)
-                              " and "
+                              (string-append " " and-word " ")
                               (counter-ref figures tag2 #f
                                            #:link-render-style link-style)))]
       [else
