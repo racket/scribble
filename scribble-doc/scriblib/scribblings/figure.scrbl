@@ -91,7 +91,7 @@ provided for backward compatibility.}
          element?]{
 
 Generates a reference to one or more figures, using a lowercase word ``figure''.
-When two tags are given, the @racket[connecting-word] is used to
+When two tags are given, the @racket[and-word] is used to
 connect the two. 
 
 If @racket[link-style] or @racket[(current-link-render-style)] at the
