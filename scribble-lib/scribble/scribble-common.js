@@ -2,6 +2,8 @@
 
 // Page Parameters ------------------------------------------------------------
 
+var plt_root_as_query = false;
+
 function GetURL() {
   return new URL(location);
 }
@@ -19,15 +21,19 @@ function GetPageArg(key, def) {
 }
 
 function MergePageArgsIntoLink(a) {
-  if (GetPageArgs().size === 0 || !a.dataset.pltdoc) return;
+  if ((GetPageArgs().size === 0 || !a.dataset.pltdoc) && !plt_root_as_query) return;
   a.href = MergePageArgsIntoUrl(a.href);
 }
 
 function MergePageArgsIntoUrl(href) {
   const url = new URL(href, window.location.href);
   for (const [key, val] of GetPageArgs()) {
+    if (key[0] == "q") continue; // use "q" to mean "don't propagate automatcially"
     if (url.searchParams.has(key)) continue;
     url.searchParams.append(key, val)
+  }
+  if (plt_root_as_query && !url.searchParams.has("PLT_Root")) {
+      url.searchParams.append("PLT_Root", plt_root_as_query);
   }
   return url.href;
 }
@@ -72,18 +78,35 @@ function SetCookie(key, val) {
 
 // note that this always stores a directory name, ending with a "/"
 function SetPLTRoot(ver, relative) {
-  var root = location.protocol + "//" + location.host
-           + NormalizePath(location.pathname.replace(/[^\/]*$/, relative));
-  SetCookie("PLT_Root."+ver, root);
+    var root = location.protocol + "//" + location.host
+        + NormalizePath(location.pathname.replace(/[^\/]*$/, relative));
+    if (location.protocol == "file:") {
+        // local storage or cookies are not going to work in modern browsers,
+        // so add a query parameter to all URLs
+        plt_root_as_query=root
+    } else {
+        SetCookie("PLT_Root."+ver, root);
+    }
 }
 
 // adding index.html works because of the above
 function GotoPLTRoot(ver, relative) {
+  var famroot = (GetPageArg("fam", false) ? GetPageArg("famroot", false) : false)
   var u = GetRootPath(ver);
-  if (u == null) return true; // no cookie: use plain up link
+  if (u == null) {
+    // no cookie: use plain up link
+    if (famroot) {
+        location = MergePageArgsIntoUrl("../" + famroot + "/index.html");
+        return false;
+    }
+    return true;
+  }
   // the relative path is optional, default goes to the toplevel start page
   if (!relative) relative = "index.html";
-  location = u + relative;
+  if (relative == "index.html" && famroot) {
+      relative = famroot + "/index.html";
+  }
+  location = MergePageArgsIntoUrl(u + relative);
   return false;
 }
 
@@ -91,9 +114,16 @@ function GetRootPath(ver) {
     var u = GetCookie("PLT_Root."+ver, null);
     if (u != null)
         return u;
+
+    // via query argument? (especially for `file://` URLs)
+    u = GetPageArg("PLT_Root", null)
+    if (u != null)
+        return u;
+
     // use root specified by local-redirect wrapper, if present
     if (typeof user_doc_root != "undefined")
         return user_doc_root;
+
     return null;
 }
 

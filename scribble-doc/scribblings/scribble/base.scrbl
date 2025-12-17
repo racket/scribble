@@ -91,7 +91,11 @@ path, it is converted to a string using
 @racket[module-path-prefix->string]. Similarly, if @racket[tag-prefix]
 is a hash table with @racket['tag-prefix] mapped to a module path,
 then it is replaced with a hash table where @racket['tag-prefix] is
-mapped to a string.
+mapped to a string. When @racket[tag-prefix] as a hash table is
+used for the main part in a document rendered by @exec{raco setup},
+@exec{raco setup} uses some keys to configure the document's
+rendering; see @racket[scribblings] in @secref[#:doc '(lib
+"scribblings/raco/raco.scrbl") "setup-info"] for more information.
 
 The @racket[vers] argument is propagated to the @racket[title-decl]
 structure. Use @racket[""] as @racket[vers] to suppress version
@@ -729,7 +733,8 @@ the section hyperlink's resolution in HTML is potentially delayed; see
          element?]{
 
 Like @racket[secref] for the document's implicit @racket["top"]
-tag. Use this function to refer to a whole manual instead of
+tag that @exec{raco setup} adds to every document that it renders.
+Use this function to refer to a whole manual instead of
 @racket[secref], in case a special style in the future is used for
 manual titles.
 

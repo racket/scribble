@@ -239,7 +239,7 @@
          [placeholder ,emptylabel]
          [title "Enter a search string to search the manuals"]
          [onkeypress ,(format "return DoSearchKey(event, this, ~s, ~s);"
-                              (version) top-path)])))))
+                              (get-installation-name) top-path)])))))
 (define search-box (make-search-box "../"))
 (define top-search-box (make-search-box ""))
 
@@ -290,6 +290,7 @@
                 ;; user start page). If it's a path, then it's also
                 ;; used for the "top" link on the page.
                 [up-path #f]
+                [search-up-path up-path]
                 [script-path #f]
                 [script-file #f]
                 [search-box? #f])
@@ -1029,7 +1030,7 @@
          "up" (if (path? up-path)
                   (url->string* (path->url up-path))
                   "../index.html")
-         `[onclick . ,(format "return GotoPLTRoot(\"~a\");" (version))]))
+         `[onclick . ,(format "return GotoPLTRoot(\"~a\");" (get-installation-name))]))
       (define tocset-toggle
         (make-element "tocsettoggle"
                       (list
@@ -1041,14 +1042,15 @@
                                          '([title . "show/hide table of contents"]
                                            [onclick . "TocsetToggle();"]))))
                         "contents"))))
+      (define no-nav? (and (memq 'no-navigation (style-properties (part-style d))) #t))
       (define navleft
         `(span ([class "navleft"])
            ,@(if search-box?
-                 (list (if up-path search-box top-search-box))
+                 (list (if search-up-path search-box top-search-box))
                  (list `(div ([class "nosearchform"]))))
            ,@(render
               sep-element
-              (and up-path (make-element top-link top-content))
+              (and up-path (not no-nav?) (make-element top-link top-content))
               tocset-toggle
               ;; sep-element
               ;; (make-element
@@ -1060,7 +1062,7 @@
               ;;   (make-link-element #f index-content (car (part-tags/nonempty index))))
               )))
       (define navright
-        (if (not (or parent up-path next))
+        (if (or (not (or parent up-path next)) no-nav?)
           ""
           `(span ([class "navright"])
              ,@(render

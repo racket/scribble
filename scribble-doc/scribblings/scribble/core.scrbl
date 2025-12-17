@@ -370,7 +370,9 @@ each key in the table, the value in the table is merged with the
 context from enclosing parts. A value is merged by adding the key and
 value to the accumulation if the key is not yet present, or by
 @racket[cons]ing the new value to the context's current value when the
-key is present. Use @racket[current-part-context-accumulation] during
+key is present. For example, the key @racket['index-extras] is used
+to merge with an @racket[index-desc] within a discovered @racket[index-element].
+Use @racket[current-part-context-accumulation] during
 the @techlink{collect pass} or @techlink{resolve pass} to retrieve the
 value that has been accumulated from enclosing parts.
 
@@ -390,7 +392,11 @@ The @racket[tag-prefix] field determines the optional @techlink{tag
 prefix} for the part and/or @techlink{part context} accumulation. When
 @racket[tag-prefix] is a hash table, the value associated with the
 @racket['tag-prefix] key is used as the tag prefix when the value
-is a string.
+is a string. When @racket[tag-prefix] as a hash table is
+used for the main part in a document rendered by @exec{raco setup},
+@exec{raco setup} uses recognizes some keys to configure the document's
+rendering; see @racket[scribblings] in @secref[#:doc '(lib
+"scribblings/raco/raco.scrbl") "setup-info"] for more information.
 
 The @racket[tags] indicates a list of @techlink{tags} that each link
 to the section. Normally, @racket[tags] should be a non-empty list, so
@@ -479,6 +485,11 @@ The recognized @tech{style properties} are as follows:
  @item{@indexed-racket['no-sidebar] --- As a @tech{style property} for the main part of a
        document, causes the HTML output to not include an ``on this 
        page'' margin box.}
+
+ @item{@indexed-racket['no-navigation] --- As a @tech{style property}
+       for the main part of a rendered page, causes the HTML output to
+       not include ``top,'' ``up,'', ``prev,'' and ``next'' controls
+       if they would otherwise apply.}
 
  @item{@indexed-racket['no-header-controls] --- Suppresses link and
        link-information icons (if any) as part of a section header in
@@ -590,7 +601,8 @@ The @racket[parts] field contains sub-parts.
          #:changed "1.27" @elem{Added @racket['no-toc+aux] support.}
          #:changed "1.54" @elem{Changed @racket[tag-prefix] field to allow a
                                 @tech{part context} hash table.}
-         #:changed "1.57" @elem{Added @racket['no-header-controls] support.}]}
+         #:changed "1.57" @elem{Added @racket['no-header-controls] support.}
+         #:changed "1.59" @elem{Added @racket['no-navigation] support.}]}
 
 
 @defstruct[paragraph ([style style?] [content content?])]{
