@@ -2349,6 +2349,7 @@ exhaustive, because new modules can re-export the binding).}
                                                                                     [(method-name) symbol?]
                                                                                     [(constructor?) boolean?]
                                                                                     [(class-tag) tag?]
+                                                                                    [(long-key) string?]
                                                                                     [else any/c])]
                                                                                #:immutable #t))])]{
 
@@ -2375,12 +2376,17 @@ Some additional keys are well-known:
        in the case of a method or constructor index entry, where the
        @racket[name] field has the class name in both cases.}
 
+ @item{@racket['long-key]: An alternative string for searches to match.
+       This string is useful when the name that is normally used to refer to
+       a binding has an extra prefix that is added on import, for example.}
+
 ]
 
 The @racket[exported-index-desc*] struct is preferable over
 other index entry descriptions below.
 
-@history[#:added "1.53"]}
+@history[#:added "1.53"
+         #:changed "1.59" @elem{Added @racket['long-key].}]}
 
 @defstruct[(form-index-desc exported-index-desc) ()]{
 

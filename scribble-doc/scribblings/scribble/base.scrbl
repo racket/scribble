@@ -9,7 +9,7 @@
    (syntax-rules ()
      [(_ id result/c x ...)
       (defproc (id [#:tag tag (or/c #f string? (listof string?)) #f]
-                   [#:tag-prefix tag-prefix (or/c #f string? module-path?) #f]
+                   [#:tag-prefix tag-prefix (or/c #f string? module-path? hash?) #f]
                    [#:style style (or/c style? #f string? symbol? (listof symbol?)) #f]
                    [pre-content pre-content?] (... ...+))
         result/c
@@ -63,7 +63,7 @@ have @racketmodname[scribble/manual]).
 @section{Document Structure}
 
 @defproc[(title [#:tag tag (or/c #f string? (listof string?)) #f]
-                [#:tag-prefix tag-prefix (or/c #f string? module-path?) #f]
+                [#:tag-prefix tag-prefix (or/c #f string? module-path? hash?) #f]
                 [#:style style (or/c style? #f string? symbol? (listof symbol?)) #f]
                 [#:version vers (or/c string? #f) #f]
                 [#:date date (or/c string? #f) #f]
@@ -88,7 +88,10 @@ multi-page HTML output.
 The @racket[tag-prefix] argument is propagated to the generated
 structure (see @secref["tags"]). If @racket[tag-prefix] is a module
 path, it is converted to a string using
-@racket[module-path-prefix->string].
+@racket[module-path-prefix->string]. Similarly, if @racket[tag-prefix]
+is a hash table with @racket['tag-prefix] mapped to a module path,
+then it is replaced with a hash table where @racket['tag-prefix] is
+mapped to a string.
 
 The @racket[vers] argument is propagated to the @racket[title-decl]
 structure. Use @racket[""] as @racket[vers] to suppress version
