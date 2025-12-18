@@ -12,9 +12,7 @@
                "at-exp-lib"
                "draw-lib" 
                "syntax-color-lib"
-               "sandbox-lib"
-               "typed-racket-lib"
-               ))
+               "sandbox-lib"))
 (define build-deps '("rackunit-lib")) ; for embedded module+ test
 
 (define implies '("scribble-html-lib"))
