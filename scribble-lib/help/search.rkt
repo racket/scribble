@@ -4,8 +4,24 @@
          net/uri-codec
          net/url
          racket/string
-         setup/dirs)
-(provide perform-search send-main-page)
+         setup/dirs
+         racket/contract
+         racket/list)
+
+(provide
+ (contract-out
+  [perform-search
+   (->* (any/c)
+        (any/c #:query-table (hash/c symbol? string? #:immutable #t))
+        void?)]
+  [send-main-page
+   (->* ()
+        (#:sub string?
+         #:fragment (or/c string? #f)
+         #:query (or/c string? #f)
+         #:notify (-> (or/c string? path?) any)
+         #:query-table (hash/c symbol? string? #:immutable #t))
+        void?)]))
 
 (define search-dir "search/")
 
@@ -14,7 +30,11 @@
 
 (define (send-main-page #:sub [sub "index.html"]
                         #:fragment [fragment #f] #:query [query #f]
-                        #:notify [notify void])
+                        #:notify [notify void]
+                        #:query-table [query-table (hash)])
+  (define query-table-list-of-pairs
+    (for/list ([k (in-list (sort (hash-keys query-table) symbol<?))])
+      (cons k (hash-ref query-table k))))
   (define open-url (get-doc-open-url))
   (cond
    [open-url
@@ -35,7 +55,8 @@
                                         (url-query
                                          (string->url
                                           (format "q?~a" query)))
-                                        null))])))]
+                                        null)
+                                   query-table-list-of-pairs)])))]
     [else
      (define path (or (for/or ([dir (in-list (get-doc-search-dirs))])
                         (define path (build-path dir sub))
@@ -44,13 +65,26 @@
                       ;; Doesn't exist, but notify and then fall back below:
                       (build-path (find-doc-dir) sub)))
      (notify path)
+     (define parsed-query-table
+       (if (null? query-table-list-of-pairs)
+           #f
+           (substring (url->string (url #f #f #f #f #f (list) query-table-list-of-pairs #f))
+                      1)))
+     (define combined-query
+       (cond
+         [(and query parsed-query-table)
+          (string-append query "&" parsed-query-table)]
+         [else
+          (or query parsed-query-table)]))
      (cond
-       [(file-exists? path) (send-url/file path #:fragment fragment #:query query)]
+       [(file-exists? path) (send-url/file path #:fragment fragment #:query combined-query)]
        [else
         (define (part pfx x)
           (if x (string-append pfx x) ""))
         (send-url
-         (string-append "https://docs.racket-lang.org/" sub (part "#" fragment) (part "?" query)))])]))
+         (string-append "https://docs.racket-lang.org/" sub
+                        (part "#" fragment)
+                        (part "?" combined-query)))])]))
 
 ;; This is an example of changing this code to use the online manuals.
 ;; Normally, it's better to set `doc-open-url` in "etc/config.rktd",
@@ -67,7 +101,8 @@
 ;;              "http://download.racket-lang.org/docs/" (version) "/html/"
 ;;              sub (part "#" fragment) (part "?" query))))
 
-(define (perform-search str [context #f])
+(define (perform-search str [context #f]
+                        #:query-table [query-table (hash)])
   ;; `context' can be a pre-filter query string to use for a context,
   ;; optionally a list of one and a label to display for that context.
   ;; In any case, when a context is specified, the search actually
@@ -85,4 +120,5 @@
                               (format "&label=~a" (uri-encode label))
                               ""))
                     query)])
-    (send-main-page #:sub (string-append search-dir page) #:query query)))
+    (send-main-page #:sub (string-append search-dir page) #:query query
+                    #:query-table query-table)))
