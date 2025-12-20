@@ -207,7 +207,9 @@
      (as-modname-link 'n (**racketmodname n) #t)]))
 
 (define-syntax racketmodlink
-  (syntax-rules (unsyntax)
+  (syntax-rules ()
+    [(racketmodlink n #:indirect content ...)
+     (*as-modname-link 'n (elem #:style #f content ...) #t)]
     [(racketmodlink n content ...)
      (*as-modname-link 'n (elem #:style #f content ...) #f)]))
 

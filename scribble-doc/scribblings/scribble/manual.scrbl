@@ -519,10 +519,14 @@ hyperlink's resolution in HTML potentially delayed; see
 @history[#:changed "1.21" @elem{Disabled @racket[racket]-style special
                                 treatment of identifiers.}]}
 
-@defform[(racketmodlink datum pre-content-expr ...)]{
+@defform[(racketmodlink datum maybe-indirect pre-content-expr ...)
+         #:grammar ([maybe-indirect code:blank
+                                   #:indirect])]{
 Like @racket[racketmodname], but separating the module path to link
 from the content to be linked. The @racket[datum] module path is always
-linked, even if it is not an identifier.}
+linked, even if it is not an identifier.
+
+@history[#:changed "1.59" @elem{Added support for @racket[#:indirect].}]}
 
 @defproc[(litchar [str string?] ...) element?]{Typesets @racket[str]s as a
 representation of literal text. Use this when you have to talk about
