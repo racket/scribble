@@ -491,6 +491,12 @@ The recognized @tech{style properties} are as follows:
        not include ``top,'' ``up,'', ``prev,'' and ``next'' controls
        if they would otherwise apply.}
 
+ @item{@indexed-racket['family-navigation] --- As a @tech{style
+       property} for the main part of a rendered page, causes the HTML
+       output to include ``top,'' ``up,'', ``prev,'' and ``next''
+       controls only when the viewing context indicates a language
+       family not in the page's language families.}
+
  @item{@indexed-racket['no-header-controls] --- Suppresses link and
        link-information icons (if any) as part of a section header in
        HTML output.}
@@ -602,7 +608,8 @@ The @racket[parts] field contains sub-parts.
          #:changed "1.54" @elem{Changed @racket[tag-prefix] field to allow a
                                 @tech{part context} hash table.}
          #:changed "1.57" @elem{Added @racket['no-header-controls] support.}
-         #:changed "1.59" @elem{Added @racket['no-navigation] support.}]}
+         #:changed "1.59" @elem{Added @racket['no-navigation] and
+                                @racket['family-navigation] support.}]}
 
 
 @defstruct[paragraph ([style style?] [content content?])]{

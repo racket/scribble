@@ -281,6 +281,7 @@
              extract-version
              extract-authors
              extract-pretitle
+             extend-part-context
              link-render-style-at-element)
     (inherit-field prefix-file style-file style-extra-files image-preferences)
 
@@ -1025,12 +1026,29 @@
            `([title . ,(if title* (string-append label " to " title*) label)]
              [data-pltdoc . "x"]
              ,@more)))))
+      (define no-nav? (and (memq 'no-navigation (style-properties (part-style d))) #t))
+      (define family-nav? (and (memq 'family-navigation (style-properties (part-style d))) #t))
+      (define fam (and family-nav?
+                       (or (search-extras (hash-ref (extend-part-context d) 'index-extras #hasheq()) 'language-family)
+                           '("Racket"))))
+      (define (wrap-family c)
+        (if family-nav?
+            `((div ([style "display: none;"]
+                    [class "family-navigation"]
+                    [data-familynav ,(string-join fam ",")])
+                   ,@c))
+            c))
       (define top-link
         (titled-url
-         "up" (if (path? up-path)
-                  (url->string* (path->url up-path))
-                  "../index.html")
-         `[onclick . ,(format "return GotoPLTRoot(\"~a\");" (get-installation-name))]))
+         "up" (cond
+                [(path? up-path) (url->string* (path->url up-path))]
+                [up-path "../index.html"]
+                [else "index.html"])
+         `[onclick . ,(format "return GotoPLTRoot(\"~a\", \"index.html\", \"~a\");"
+                              (get-installation-name)
+                              (if up-path
+                                  "../"
+                                  ""))]))
       (define tocset-toggle
         (make-element "tocsettoggle"
                       (list
@@ -1042,58 +1060,61 @@
                                          '([title . "show/hide table of contents"]
                                            [onclick . "TocsetToggle();"]))))
                         "contents"))))
-      (define no-nav? (and (memq 'no-navigation (style-properties (part-style d))) #t))
       (define navleft
         `(span ([class "navleft"])
            ,@(if search-box?
                  (list (if search-up-path search-box top-search-box))
                  (list `(div ([class "nosearchform"]))))
-           ,@(render
-              sep-element
-              (and up-path (not no-nav?) (make-element top-link top-content))
-              tocset-toggle
-              ;; sep-element
-              ;; (make-element
-              ;;  (if parent (make-target-url "index.html" #f) "nonavigation")
-              ;;  contents-content)
-              ;; sep-element
-              ;; (if (or (not index) (eq? d index))
-              ;;   (make-element "nonavigation" index-content)
-              ;;   (make-link-element #f index-content (car (part-tags/nonempty index))))
-              )))
+           ,@(wrap-family
+              (render
+               sep-element
+               (and (or up-path family-nav?) (not no-nav?) (make-element top-link top-content))
+               tocset-toggle
+               ;; sep-element
+               ;; (make-element
+               ;;  (if parent (make-target-url "index.html" #f) "nonavigation")
+               ;;  contents-content)
+               ;; sep-element
+               ;; (if (or (not index) (eq? d index))
+               ;;   (make-element "nonavigation" index-content)
+               ;;   (make-link-element #f index-content (car (part-tags/nonempty index))))
+               ))))
       (define navright
-        (if (or (not (or parent up-path next)) no-nav?)
-          ""
-          `(span ([class "navright"])
-             ,@(render
-                ;; put space here for text browsers and to avoid an Opera issue
-                sep-element
-                (make-element
-                 (cond [(not parent) "nonavigation"]
-                       [prev (titled-url "backward" prev '[rel . "prev"])]
-                       [else (titled-url "backward" "index.html" '[rel . "prev"]
-                                         #:title-from
-                                         (and (part? parent) parent))])
-                 prev-content)
-                sep-element
-                (make-element
-                 (cond
-                   [(and (part? parent) (toc-part? parent ri)
-                         (part-parent parent ri))
-                    (titled-url "up" parent)]
-                   [parent (titled-url "up" "index.html" #:title-from parent)]
-                   ;; up-path = #t => go up to the start page, using
-                   ;; cookies to get to the user's version of it (see
-                   ;; scribblings/main/private/utils for the code that
-                   ;; creates these cookies.)
-                   [(eq? #t up-path) top-link]
-                   [up-path (titled-url "up" up-path)]
-                   [else "nonavigation"])
-                 up-content)
-                sep-element
-                (make-element
-                 (if next (titled-url "forward" next '[rel . "next"]) "nonavigation")
-                 next-content)))))
+        (if (or (not (or parent up-path next family-nav?)) no-nav?)
+            ""
+            `(span ([class "navright"])
+                   ,@(wrap-family
+                      (render
+                       ;; put space here for text browsers and to avoid an Opera issue
+                       sep-element
+                       (make-element
+                        (cond [(not parent) "nonavigation"]
+                              [prev (titled-url "backward" prev '[rel . "prev"])]
+                              [else (titled-url "backward" "index.html" '[rel . "prev"]
+                                                #:title-from
+                                                (and (part? parent) parent))])
+                        prev-content)
+                       sep-element
+                       (make-element
+                        (cond
+                          [(and (part? parent) (toc-part? parent ri)
+                                (part-parent parent ri))
+                           (titled-url "up" parent)]
+                          [parent
+                           (titled-url "up" "index.html" #:title-from parent)]
+                          ;; up-path = #t => go up to the start page using
+                          ;; query or cookies to get to the user's version of it (see
+                          ;; scribblings/main/private/utils for the code that
+                          ;; creates these cookies.)
+                          [(or (eq? #t up-path) family-nav?)
+                           top-link]
+                          [up-path (titled-url "up" up-path)]
+                          [else "nonavigation"])
+                        up-content)
+                       sep-element
+                       (make-element
+                        (if next (titled-url "forward" next '[rel . "next"]) "nonavigation")
+                        next-content))))))
       (define navbar
         `(div ([class ,(if top? "navsettop" "navsetbottom")])
            ,navleft ,navright nbsp)) ; need nbsp to make the navset bg visible
@@ -2167,3 +2188,10 @@
             (string-append "file://" (path->string p))
             (url->string (path->url p))))
       (url->string (path->url p))))
+
+(define (search-extras extras-tree key)
+  (cond
+    [(hash? extras-tree) (hash-ref extras-tree key #f)]
+    [(pair? extras-tree) (or (search-extras (car extras-tree) key)
+                             (search-extras (cdr extras-tree) key))]
+    [else #f]))

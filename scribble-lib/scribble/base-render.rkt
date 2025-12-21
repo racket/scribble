@@ -326,7 +326,7 @@
              (cons p (current-tag-prefixes)))]
        [else (current-tag-prefixes)]))
 
-    (define/private (extend-part-context d)
+    (define/public (extend-part-context d)
       (define p (part-tag-prefix d))
       (cond
         [(hash? p) (merge-part-contexts p (current-part-context))]

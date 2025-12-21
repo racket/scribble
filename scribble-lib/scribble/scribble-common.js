@@ -90,23 +90,26 @@ function SetPLTRoot(ver, relative) {
 }
 
 // adding index.html works because of the above
-function GotoPLTRoot(ver, relative) {
-  var famroot = (GetPageArg("fam", false) ? GetPageArg("famroot", false) : false)
+function GotoPLTRoot(ver, root_relative, here_to_root_relative) {
+  // the relative path is optional, default goes to the toplevel start page
+  if (!root_relative) root_relative = "index.html";
+  if (here_to_root_relative == undefined) here_to_root_relative = "../"
+  var famroot = false;
+  if (root_relative == "index.html") {
+    famroot = (GetPageArg("fam", false) ? GetPageArg("famroot", false) : false)
+    root_relative = famroot + "/index.html";
+  }
+
   var u = GetRootPath(ver);
   if (u == null) {
-    // no cookie: use plain up link
     if (famroot) {
-        location = MergePageArgsIntoUrl("../" + famroot + "/index.html");
-        return false;
+      location = MergePageArgsIntoUrl(here_to_root_relative + famroot + "/index.html");
+      return false;
     }
+    // no cookie and no famroot => follow href, instead
     return true;
   }
-  // the relative path is optional, default goes to the toplevel start page
-  if (!relative) relative = "index.html";
-  if (relative == "index.html" && famroot) {
-      relative = famroot + "/index.html";
-  }
-  location = MergePageArgsIntoUrl(u + relative);
+  location = MergePageArgsIntoUrl(u + root_relative);
   return false;
 }
 
@@ -199,4 +202,18 @@ AddOnLoad(function(){
       }
     }
   }, false);
+});
+
+AddOnLoad(function(){
+  var es = document.getElementsByClassName("family-navigation");
+  if (es.length > 0) {
+    var fams = es[0].dataset.familynav.split(/,/);
+    var fam = GetPageArg("famroot", false) && GetPageArg("fam", false);
+    if (!fam) fam = "Racket";
+    if (fams.indexOf(fam) == -1) {
+      for (var i=0; i < es.length; i++) {
+        es[i].style.display = "inline-block";
+      }
+    }
+  }
 });
