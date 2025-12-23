@@ -22,7 +22,7 @@
 }
 
 /* Sans-serif: */
-.version, .versionNoNav, .ssansserif {
+.version, .versionNoNav, .ssansserif, .navfamily {
   font-family: sans-serif;
 }
 .ssansserif {
@@ -208,6 +208,23 @@ table td {
 
 .version:before, .versionNoNav:before {
   content: "Version ";
+}
+
+/* ---------------------------------------- */
+/* Language Family */
+
+.navfamily {
+  float: right;
+  white-space: nowrap;
+  left: 2em;
+  height: 0em;
+  width: 13em;
+  margin: 0em -13em 0em 0em;
+  font-size: small;
+}
+
+.docfamily:after {
+  content: " language family";
 }
 
 /* ---------------------------------------- */

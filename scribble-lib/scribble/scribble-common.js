@@ -97,7 +97,9 @@ function GotoPLTRoot(ver, root_relative, here_to_root_relative) {
   var famroot = false;
   if (root_relative == "index.html") {
     famroot = (GetPageArg("fam", false) ? GetPageArg("famroot", false) : false)
-    root_relative = famroot + "/index.html";
+    if (famroot) {
+      root_relative = famroot + "/index.html";
+    }
   }
 
   var u = GetRootPath(ver);
@@ -213,6 +215,43 @@ AddOnLoad(function(){
     if (fams.indexOf(fam) == -1) {
       for (var i=0; i < es.length; i++) {
         es[i].style.display = "inline-block";
+      }
+    }
+  }
+});
+
+AddOnLoad(function(){
+  var es = document.getElementsByClassName("navfamily");
+  for (var i=0; i < es.length; i++) {
+    var e = es[i];
+    if (e.dataset.fam != undefined) {
+      var fams = e.dataset.fam.split(/,/);
+      var fam = GetPageArg("fam", false);
+      if (!fam) fam = "Racket";
+      var link = document.createElement('a');
+      var root = GetRootPath(e.dataset.version)
+      var family_url;
+      if (root == null) {
+        family_url = new URL(e.dataset.famPath + "family/index.html", window.location.href);
+      } else {
+        family_url = new URL(root + "family/index.html", window.location.href);
+      }
+      family_url.searchParams.append("qfrom", window.location.href)
+      if (fams.indexOf(fam) == -1) {
+        var nav_as = document.createElement('div');
+        link.textContent = "navigating as " + fam;
+        link.href = family_url
+        nav_as.appendChild(link)
+        e.appendChild(nav_as)
+      } else {
+        var link = document.createElement('a');
+        var span = e.children[0]
+        link.textContent = span.textContent;
+        link.href = family_url
+        span.textContent = ''; // Clear span
+        e.removeChild(span);
+        link.appendChild(span);
+        e.appendChild(link);
       }
     }
   }

@@ -86,7 +86,7 @@ it fouls up loading for reasons mysterious */
 
 
 /* Sans-serif: */
-.version, .versionNoNav, .ssansserif {
+.version, .versionNoNav, .ssansserif, .navfamily, .famlink {
     font-family: 'Fira', sans-serif;
 }
 
@@ -311,6 +311,22 @@ a:hover {
     content: "v";
 }
 
+/* ---------------------------------------- */
+/* Language Family */
+
+.navfamily {
+    position: absolute;
+    float: none;
+    top: 0.25rem;
+    left: auto;
+    right: 0rem;
+    margin: 0em;
+    margin-right: 1rem;
+    height: auto;
+    width: auto;
+    font-size: 70%;
+    font-weight: lighter;
+}
 
 /* ---------------------------------------- */
 /* Margin notes */

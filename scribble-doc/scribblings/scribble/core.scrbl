@@ -497,6 +497,12 @@ The recognized @tech{style properties} are as follows:
        controls only when the viewing context indicates a language
        family not in the page's language families.}
 
+ @item{@indexed-racket['show-language-family] --- As a @tech{style
+       property} for the main part of a rendered page or any enclosing
+       part, causes the HTML output to include an indication of the
+       document's primary language family, as well as the language
+       family being used to navigate documentation.}
+
  @item{@indexed-racket['no-header-controls] --- Suppresses link and
        link-information icons (if any) as part of a section header in
        HTML output.}
@@ -608,8 +614,9 @@ The @racket[parts] field contains sub-parts.
          #:changed "1.54" @elem{Changed @racket[tag-prefix] field to allow a
                                 @tech{part context} hash table.}
          #:changed "1.57" @elem{Added @racket['no-header-controls] support.}
-         #:changed "1.59" @elem{Added @racket['no-navigation] and
-                                @racket['family-navigation] support.}]}
+         #:changed "1.59" @elem{Added @racket['no-navigation],
+                                @racket['family-navigation], and
+                                @racket['show-language-family] support.}]}
 
 
 @defstruct[paragraph ([style style?] [content content?])]{

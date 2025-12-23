@@ -825,6 +825,9 @@
     (define/public (extract-part-source d ri)
       (extract-inherited d ri document-source? document-source-module-path))
 
+    (define/public (extract-show-language-family d ri)
+      (extract-inherited d ri (lambda (v) (eq? v 'show-language-family)) values))
+
     (define/public (part-nesting-depth d ri)
       0)
 
@@ -1028,7 +1031,8 @@
              ,@more)))))
       (define no-nav? (and (memq 'no-navigation (style-properties (part-style d))) #t))
       (define family-nav? (and (memq 'family-navigation (style-properties (part-style d))) #t))
-      (define fam (and family-nav?
+      (define show-fam? (extract-show-language-family d ri))
+      (define fam (and (or family-nav? show-fam?)
                        (or (search-extras (hash-ref (extend-part-context d) 'index-extras #hasheq()) 'language-family)
                            '("Racket"))))
       (define (wrap-family c)
@@ -1118,9 +1122,21 @@
       (define navbar
         `(div ([class ,(if top? "navsettop" "navsetbottom")])
            ,navleft ,navright nbsp)) ; need nbsp to make the navset bg visible
-      (if (include-navigation?)
-          (list navbar)
-          null))
+      (append
+       (if (include-navigation?)
+           (list navbar)
+           null)
+       (if (and top? show-fam?)
+           (let ([fam (or fam '("Racket"))])
+             (list `(div ([class "navfamily"]
+                          [data-fam ,(string-join fam ",")]
+                          [data-fam-path ,(if search-up-path "../" "")]
+                          [data-version ,(get-installation-name)])
+                         ,@(if (null? fam)
+                               null
+                               `((span ([class "docfamily"])
+                                       ,(car fam)))))))
+           null)))
 
     (define/override (render-one d ri fn)
       (render-one-part d ri fn null))
