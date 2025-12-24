@@ -6,21 +6,27 @@
          racket/string
          setup/dirs
          racket/contract
-         racket/list)
+         racket/list
+         scribble/xref
+         setup/language-family)
 
 (provide
  (contract-out
   [perform-search
    (->* (any/c)
-        (any/c #:query-table (hash/c symbol? string? #:immutable #t))
+        (any/c #:language-family (or string? #f))
         void?)]
   [send-main-page
    (->* ()
-        (#:sub string?
+        (#:sub path-string?
          #:fragment (or/c string? #f)
          #:query (or/c string? #f)
          #:notify (-> (or/c string? path?) any)
          #:query-table (hash/c symbol? string? #:immutable #t))
+        void?)]
+  [send-language-family-page
+   (->* ((or/c #f string?))
+        ()
         void?)]))
 
 (define search-dir "search/")
@@ -59,7 +65,9 @@
                                    query-table-list-of-pairs)])))]
     [else
      (define doc-dirs (get-doc-search-dirs))
-     (define path (or (for/or ([dir (in-list doc-dirs)])
+     (define path (or (and (absolute-path? sub)
+                           sub)
+                      (for/or ([dir (in-list doc-dirs)])
                         (define path (build-path dir sub))
                         (and (file-exists? path)
                              path))
@@ -89,7 +97,8 @@
               root)]
          [else combined-base-query]))
      (cond
-       [(file-exists? path) (send-url/file path #:fragment fragment #:query combined-query)]
+       [(or (file-exists? path) (path? sub))
+        (send-url/file path #:fragment fragment #:query combined-query)]
        [else
         (define (part pfx x)
           (if x (string-append pfx x) ""))
@@ -114,7 +123,7 @@
 ;;              sub (part "#" fragment) (part "?" query))))
 
 (define (perform-search str [context #f]
-                        #:query-table [query-table (hash)])
+                        #:language-family [language-family #f])
   ;; `context' can be a pre-filter query string to use for a context,
   ;; optionally a list of one and a label to display for that context.
   ;; In any case, when a context is specified, the search actually
@@ -131,6 +140,43 @@
                             (if label
                               (format "&label=~a" (uri-encode label))
                               ""))
-                    query)])
-    (send-main-page #:sub (string-append search-dir page) #:query query
-                    #:query-table query-table)))
+                    query)]
+         [fam (and language-family (get-language-family language-family))]
+         [famroot (and fam (hash-ref fam 'famroot #f))])
+    (send-main-page #:sub (string-append search-dir page)
+                    #:query query
+                    #:query-table (if fam
+                                      (family-query-table fam language-family)
+                                      (hash)))))
+
+(define (send-language-family-page name)
+  (define fam (get-language-family name))
+  (define start-doc (and fam
+                         (or (hash-ref fam 'start-doc #f)
+                             (hash-ref fam 'doc #f))))
+  (define famroot (and fam (hash-ref fam 'famroot #f)))
+  (cond
+    [start-doc
+     (define xref ((dynamic-require 'setup/xref 'load-collections-xref)))
+     (define-values (path anchor)
+       (xref-tag->path+anchor xref `(part (,(format "~a" start-doc) "top"))))
+     (cond
+       [path (send-main-page #:sub path #:query-table (family-query-table fam name))]
+       [else (send-main-page)])]
+    [famroot
+     (send-main-page #:sub (format "~a/index.html" famroot) #:query-table (family-query-table fam name))]
+    [else
+     (send-main-page)]))
+
+(define (get-language-family name)
+  (define fams (get-language-families))
+  (for/or ([fam (in-list fams)])
+    (and (equal? name (hash-ref fam 'fam #f))
+         fam)))
+
+(define (family-query-table fam name)
+  (define ht (hash 'fam (hash-ref fam 'fam name)))
+  (define famroot (hash-ref fam 'famroot #f))
+  (if famroot
+      (hash-set ht 'famroot famroot)
+      ht))
