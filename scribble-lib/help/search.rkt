@@ -58,7 +58,8 @@
                                         null)
                                    query-table-list-of-pairs)])))]
     [else
-     (define path (or (for/or ([dir (in-list (get-doc-search-dirs))])
+     (define doc-dirs (get-doc-search-dirs))
+     (define path (or (for/or ([dir (in-list doc-dirs)])
                         (define path (build-path dir sub))
                         (and (file-exists? path)
                              path))
@@ -70,12 +71,23 @@
            #f
            (substring (url->string (url #f #f #f #f #f (list) query-table-list-of-pairs #f))
                       1)))
-     (define combined-query
+     (define combined-base-query
        (cond
          [(and query parsed-query-table)
           (string-append query "&" parsed-query-table)]
          [else
           (or query parsed-query-table)]))
+     (define combined-query
+       (cond
+         [(and (not (equal? sub "index.html"))
+               (pair? doc-dirs)
+               (file-exists? (build-path (car doc-dirs) "index.html")))
+          ;; the entry point may or may not try to set `PLT_Root` itself
+          (define root (format "PLT_Root=~a" (uri-encode (path->string (path->directory-path (car doc-dirs))))))
+          (if combined-base-query
+              (string-append combined-base-query "&" root)
+              root)]
+         [else combined-base-query]))
      (cond
        [(file-exists? path) (send-url/file path #:fragment fragment #:query combined-query)]
        [else
