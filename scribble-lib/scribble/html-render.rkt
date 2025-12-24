@@ -929,6 +929,7 @@
                      (div ([class "main"])
                        ,@(parameterize ([current-version (extract-version d)])
                            (render-version d ri))
+                       ,@(render-language-family d ri)
                        ,@(navigation d ri #t)
                        ,@(render-part d ri)
                        ,@(navigation d ri #f)))
@@ -1122,21 +1123,9 @@
       (define navbar
         `(div ([class ,(if top? "navsettop" "navsetbottom")])
            ,navleft ,navright nbsp)) ; need nbsp to make the navset bg visible
-      (append
-       (if (include-navigation?)
-           (list navbar)
-           null)
-       (if (and top? show-fam?)
-           (let ([fam (or fam '("Racket"))])
-             (list `(div ([class "navfamily"]
-                          [data-fam ,(string-join fam ",")]
-                          [data-fam-path ,(if search-up-path "../" "")]
-                          [data-version ,(get-installation-name)])
-                         ,@(if (null? fam)
-                               null
-                               `((span ([class "docfamily"])
-                                       ,(car fam)))))))
-           null)))
+      (if (include-navigation?)
+          (list navbar)
+          null))
 
     (define/override (render-one d ri fn)
       (render-one-part d ri fn null))
@@ -1155,6 +1144,23 @@
                                           v))
                       d
                       ri))))))
+
+    (define/private (render-language-family d ri)
+      (define show-fam? (extract-show-language-family d ri))
+      (define fam (and show-fam?
+                       (or (search-extras (hash-ref (extend-part-context d) 'index-extras #hasheq()) 'language-family)
+                           '("Racket"))))
+      (if show-fam?
+          (let ([fam (or fam '("Racket"))])
+            (list `(div ([class "navfamily"]
+                         [data-fam ,(string-join fam ",")]
+                         [data-fam-path ,(if search-up-path "../" "")]
+                         [data-version ,(get-installation-name)])
+                        ,@(if (null? fam)
+                              null
+                              `((span ([class "docfamily"])
+                                      ,(car fam)))))))
+          null))
 
     (define/public (extract-render-convertible-as d)
       (for/or ([v (in-list (style-properties (part-style d)))])
