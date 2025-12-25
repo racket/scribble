@@ -27,6 +27,11 @@ function MergePageArgsIntoLink(a) {
 
 function MergePageArgsIntoUrl(href) {
   const url = new URL(href, window.location.href);
+  MergePageArgsIntoUrlObject(url);
+  return url.href;
+}
+
+function MergePageArgsIntoUrlObject(url) {
   for (const [key, val] of GetPageArgs()) {
     if (key[0] == "q") continue; // use "q" to mean "don't propagate automatcially"
     if (url.searchParams.has(key)) continue;
@@ -35,7 +40,6 @@ function MergePageArgsIntoUrl(href) {
   if (plt_root_as_query && !url.searchParams.has("PLT_Root")) {
       url.searchParams.append("PLT_Root", plt_root_as_query);
   }
-  return url.href;
 }
 
 // Cookies --------------------------------------------------------------------
@@ -237,6 +241,7 @@ AddOnLoad(function(){
         family_url = new URL(root + "family/index.html", window.location.href);
       }
       family_url.searchParams.append("qfrom", window.location.href)
+      MergePageArgsIntoUrlObject(family_url);
       if (fams.indexOf(fam) == -1) {
         var nav_as = document.createElement('div');
         link.textContent = "navigating as " + fam;
