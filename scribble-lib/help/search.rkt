@@ -14,7 +14,7 @@
  (contract-out
   [perform-search
    (->* (any/c)
-        (any/c #:language-family (or string? #f))
+        (any/c #:language-family (or/c string? #f))
         void?)]
   [send-main-page
    (->* ()
