@@ -566,7 +566,7 @@
                         #:location (book-chapter-location
                                       #:editor (parse-author (raw-attr "editor")) ;; see above
                                       #:chapter (raw-attr "chapter") ;; chapter OR pages is required
-                                      #:pages (raw-attr "pages")
+                                      #:pages (parse-pages (raw-attr "pages"))
                                       #:publisher (raw-attr "publisher")
                                       ;; optional:
                                       #:volume (raw-attr "volume") ;; volume OR number
@@ -598,7 +598,7 @@
                                       #:number (raw-attr "number")
                                       #:series (raw-attr "series")
                                       #:chapter (raw-attr "chapter")
-                                      #:pages (raw-attr "pages")
+                                      #:pages (parse-pages (raw-attr "pages"))
                                       #:address (raw-attr "address")
                                       #:edition (raw-attr "edition"))
                         ;; optional:
