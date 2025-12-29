@@ -29,7 +29,7 @@
            (->* [any/c] [#:pages (or/c (list/c any/c any/c) #f) #:volume any/c #:number any/c] element?)]
           [book-location
            (->* []
-                [#:edition any/c #:editor any/c #:chapter any/c
+                [#:edition any/c #:chapter any/c #:editor any/c
                  #:series any/c #:volume any/c #:number any/c #:pages (or/c (list/c any/c any/c) #f)
                  #:publisher any/c #:address any/c] (or/c element? #f))]
           [booklet-location
@@ -540,8 +540,8 @@
   (check-equal? (given-names->initials "Matthew Raymond") "M. R. "))
 
 (define (proceedings-location
-         location
          #:editor [editor_ #f]
+         location
          #:series [series #f]
          #:volume [volume #f]
          #:number [number #f]
@@ -562,9 +562,9 @@
 
 (define (journal-location
          location
-         #:pages [pages #f]
+         #:volume [volume #f]
          #:number [number #f]
-         #:volume [volume #f])
+         #:pages [pages #f])
   (concatenate-elements
    @italic{@to-string[location]}
    #:separator " "
@@ -662,24 +662,7 @@
   (concatenate-elements #:separator " "
    @elem{In @italic{@elem{@to-string[location]}}}
    (book-location #:edition edition #:chapter chapter #:editor editor_
-         #:series series #:volume volume #:number number #:pages pages #f
-         #:publisher publisher #:address address)))
-
-(define (collection-location
-         location
-         #:edition [edition #f]
-         #:chapter [chapter #f]
-         #:editor [editor_ #f]
-         #:series [series #f]
-         #:volume [volume #f]
-         #:number [number #f]
-         #:pages [pages #f]
-         #:publisher [publisher #f]
-         #:address [address #f])
-  (concatenate-elements #:separator " "
-   @elem{In @italic{@elem{@to-string[location]}}}
-   (book-location #:edition edition #:chapter chapter #:editor editor_
-         #:series series #:volume volume #:number number #:pages pages #f
+         #:series series #:volume volume #:number number #:pages pages
          #:publisher publisher #:address address)))
 
 ;; ----------------------------------------

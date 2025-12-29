@@ -10,7 +10,7 @@
                "planet-lib" ; used dynamically
                "net-lib"
                "at-exp-lib"
-               "draw-lib" 
+               "draw-lib"
                "syntax-color-lib"
                "sandbox-lib"))
 (define build-deps '("rackunit-lib")) ; for embedded module+ test
@@ -21,7 +21,7 @@
 
 (define pkg-authors '(mflatt eli))
 
-(define version "1.60")
+(define version "1.61")
 
 (define license
   '((Apache-2.0 OR MIT)
