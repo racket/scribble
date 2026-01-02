@@ -279,9 +279,9 @@ describing a manual's location.
 
 
 @defproc[(techrpt-location [#:institution institution any/c]
-                           [#:type type any/c]
-                           [#:number number any/c]
-                           [#:address address any/c])
+                           [#:type type any/c #f]
+                           [#:number number any/c #f]
+                           [#:address address any/c #f])
          element?]{
 
 Combines elements to generate an element that is suitable for
@@ -292,8 +292,8 @@ describing a technical report's location.
 
 @defproc[(dissertation-location [#:institution institution any/c]
                                 [#:degree degree any/c "PhD"]
-                                [#:type type any/c]
-                                [#:address address any/c])
+                                [#:type type any/c #f]
+                                [#:address address any/c #f])
          element?]{
 
 Combines elements to generate an element that is suitable for
@@ -328,26 +328,6 @@ describing a dissertation.
 
 Combines elements to generate an element that is suitable for
 describing a paper's location within a chapter or part of a book or collection of books.
-
-@history[#:changed "1.61"
-  @elem{Added fields for bibtex support: editor chapter number address.}]
-}
-
-
-@defproc[(collection-location [title any/c]
-                              [#:edition edition any/c #f]
-                              [#:chapter chapter any/c #f]
-                              [#:editor editor any/c #f]
-                              [#:series series any/c #f]
-                              [#:volume volume any/c #f]
-                              [#:number number any/c #f]
-                              [#:pages pages any/c #f]
-                              [#:publisher publisher any/c #f]
-                              [#:address address any/c #f])
-         element?]{
-
-Combines elements to generate an element that is suitable for
-describing a paper's location within a chapter or part of a book.
 
 @history[#:changed "1.61"
   @elem{Added fields for bibtex support: editor chapter number address.}]
@@ -392,16 +372,16 @@ same way as by @racket[make-bib].}
   Shortens given names in calls to @racket[author] and @racket[make-bib]
   to just the first initial when the parameter value is not @racket[#f].
   Otherwise, does not change the author names.
-  
+
   Defaults to @racket[#f].
-  
+
   @history[#:added "1.5"]
 }
 
 @defparam[url-rendering rendering-function (-> string? any)]{
   Accepts a URL as a string and renders it for use in a bibliography entry.
-  
+
   Defaults to @racket[(λ (url) (link url (make-element 'url (list url))))].
-  
+
   @history[#:added "1.39"]
 }
