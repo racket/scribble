@@ -11,7 +11,7 @@
 
 This library provides support for bibliography management in a Scribble
 document. The @racket[define-cite] form is used to bind procedures
-that create in-line citations and generate the bibilography in the
+that create in-line citations and generate the bibliography in the
 document.
 
 Individual bibliography entries are created with the @racket[make-bib]
@@ -91,10 +91,15 @@ or more bibliography entries which have the same authors. It has the contract
 ]
 
 The function bound to @racket[generate-bibliography-id] generates the
-section for the bibliography. It has the contract
+section for the bibliography, with a title as per the @racket[#:sec-title] argument
+(defaults to @racket["Bibliography"]) and a tag as per the @racket[#:tag] argument
+(defaults to @racket["doc-bibliography"]).
+If the @racket[#:sec-title] argument is @racket[#f] instead a string,
+only the content of the bibliography, a table of books, is created,
+and not the enclosing section.
 
 @racketblock[
-(->* () (#:tag string? #:sec-title string?) part?)
+(->* () (#:tag string? #:sec-title (or/c #f string?) part?)
 ]
 
 If provided, the function bound to @racket[cite-author-id]
