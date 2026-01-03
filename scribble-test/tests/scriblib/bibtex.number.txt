@@ -1,9 +1,11 @@
 Bibliography
 
 [1]Ran Canetti. Universally Composable Security: A New Paradigm for     
-   Cryptographic Protocols. 2000.                                       
+   Cryptographic Protocols. Cryptology ePrint Archive, Report 2000/067, 
+   2000.                                                                
 [2]Michael Salib. Starkiller: A Static Type Inferencer and Compiler for 
-   Python. Massachusetts Institute of Technology, 2004.                 
+   Python. Master’s dissertation, Massachusetts Institute of Technology,
+   2004.                                                                
 [3]Sam Tobin-Hochstadt, Vincent St-Amour, Ryan Culpepper, Matthew Flatt,
    and Matthias Felleisen. Languages as Libraries. In Proc. PLDI, 2011. 
 [4]ZA ZAuThOr. StrIngS ArE TerriblE. 2000.                              
