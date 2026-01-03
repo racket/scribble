@@ -95,11 +95,12 @@ section for the bibliography, with a title as per the @racket[#:sec-title] argum
 (defaults to @racket["Bibliography"]) and a tag as per the @racket[#:tag] argument
 (defaults to @racket["doc-bibliography"]).
 If the @racket[#:sec-title] argument is @racket[#f] instead a string,
-only the content of the bibliography, a table of books, is created,
-and not the enclosing section.
+only the content of the bibliography is created, as a table,
+and not the enclosing section as a part.
 
 @racketblock[
-(->* () (#:tag string? #:sec-title (or/c #f string?) part?)
+(->* () (#:tag string? #:sec-title (or/c #f string?))
+     (or/c part? block?))
 ]
 
 If provided, the function bound to @racket[cite-author-id]
@@ -127,15 +128,12 @@ The functions bound to @racket[cite-author-id] and
  library is pretty nifty.
 }|
 
-The default value for the @racket[#:tag] argument is @racket["doc-bibliography"]
-and for @racket[#:sec-title] is @racket["Bibliography"].
-
 The optional @racket[spaces-expr] determines the number of blank lines that appear
 between citations. The default number of lines is 1.
 
 The optional @racket[style-expr] determines the way that citations and
 the bibliography are rendered.@margin-note*{Programmer-defined styles
-may be supported in the future.} Currently, two built-in style are
+may be supported in the future.} Currently, two built-in styles are
 provided, and @racket[author+date-style] is the default.
 
 For @racket[author+date-style],
