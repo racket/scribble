@@ -366,17 +366,22 @@
       (make-paragraph (make-style #f '()) '(""))
       (make-paragraph (make-style #f '()) '(""))))
 
-  (make-part #f
-             `((part ,tag))
-             (list sec-title)
-             (make-style #f '(unnumbered))
-             null
-             (list (make-table (send style bibliography-table-style)
+  (define table
+    (make-table (send style bibliography-table-style)
                                (add-between #:splice? #t
                                             disambiguated
                                             (for/list ([i (in-range 1 spaces)])
                                               (make-space)))))
-             null))
+
+  (if sec-title
+    (make-part #f
+               `((part ,tag))
+               (list sec-title)
+               (make-style #f '(unnumbered))
+               null
+               (list table)
+               null)
+    table))
 
 (define (bib->entry bib style disambiguation render-date-bib i)
   (define-values (author date title location url note is-book? doi)
