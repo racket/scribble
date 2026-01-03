@@ -50,7 +50,6 @@ includes a citation to section 8 of the Racket reference.
 
 @history[#:changed "1.61"
   @elem{Added fields and location types for better bibtex support.}]
-}
 
 @defform/subs[(define-cite ~cite-id citet-id generate-bibliography-id
                            option ...)
@@ -119,7 +118,8 @@ The functions bound to @racket[cite-author-id] and
 
 @codeblock[#:keep-lang-line? #f]|{
  #lang scribble/base
- @citeauthor[scribble-cite]'s (@citeyear[scribble-cite])  autobib library is pretty nifty.
+ @citeauthor[scribble-cite]'s (@citeyear[scribble-cite]) autobib
+ library is pretty nifty.
 }|
 
 The default value for the @racket[#:tag] argument is @racket["doc-bibliography"]
