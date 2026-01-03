@@ -315,12 +315,15 @@ a:hover {
 /* Language Family */
 
 .navfamily {
-    float: right;
-    margin: -4.25em 0em 0em 0em;
+    position: sticky;
+    top: 0;
+    left: 100%;
+    margin-top: -4.75em;
+    margin-right: -15em;
     font-size: 70%;
     font-weight: lighter;
     height: auto;
-    width: auto;
+    padding-top: 0.5em;
  }
 
 /* ---------------------------------------- */
@@ -361,6 +364,10 @@ a:hover {
          margin-top: 1.2rem; 
      }
 
+     .navfamily {
+         position: static;
+         margin: -4.75em 0em 0em 0em;
+     }
 }
 
 .refcontent, .refcontent p {
@@ -780,6 +787,7 @@ blockquote > blockquote.SVInsetFlow {
         }
 
         .navfamily {
+            position: static;
             margin: -3.25em 0em 0em 0em;
         }
 
