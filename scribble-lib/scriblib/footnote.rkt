@@ -29,23 +29,23 @@
 
 (define note-number (make-parameter #f))
 
-(define (note #:number (number (note-number)) . text)
+(define (note #:number [number (note-number)] . text)
   (define (no-number)
     (make-element
       note-box-style
       (make-element note-content-style
                     (decode-content text))))
   (cond-element
-    (html
+    [html
       (if number
-        (let* ((n (if (integer? number)
+        (let* ([n (if (integer? number)
                     number
-                    (let ((nn (note-number)))
-                      (if (integer? nn) nn 1))))
-               (f (lambda (s d)
-                    (define a `(a ((name ,(format "~a~a" s n)) (href ,(format "#~a~a" d n)))
-                                  (sup () ,(format "~a" n))))
-                    (make-element (make-style #f (list (xexpr-property a ""))) '()))))
+                    (let ([nn (note-number)])
+                      (if (integer? nn) nn 1)))]
+               [f (lambda (s d)
+                    (define a `(a ([name ,(format "~a~a" s n)] [href ,(format "#~a~a" d n)])
+                                  [sup () ,(format "~a" n)]))
+                    (make-element (make-style #f (list (xexpr-property a ""))) '()))])
           (note-number (+ n 1))
           (make-element plain
             (list
@@ -57,9 +57,9 @@
                     (f "__footnote_dst_" "__footnote_src_")
                     ": "
                     (decode-content text)))))))
-        (no-number)))
-    (else
-      (no-number))))
+        (no-number))]
+    [else
+      (no-number)]))
 
 (define footnote-style (make-style "Footnote" footnote-style-extras))
 (define footnote-ref-style (make-style "FootnoteRef" footnote-style-extras))
