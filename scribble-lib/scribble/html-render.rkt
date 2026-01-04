@@ -828,6 +828,9 @@
     (define/public (extract-show-language-family d ri)
       (extract-inherited d ri (lambda (v) (eq? v 'show-language-family)) values))
 
+    (define/public (extract-part-initial-scale d ri)
+      (extract-inherited d ri initial-scale? initial-scale-value))
+
     (define/public (part-nesting-depth d ri)
       0)
 
@@ -883,12 +886,17 @@
                  (copy-port in (current-output-port)))))
           (parameterize ([xml:empty-tag-shorthand xml:html-empty-tags])
             (xml:write-xexpr
+              ;; Adding newlines before `>` closers can make editing
+              ;; the generated HTML (for experiments) nicer:
+              ;; #:insert-newlines? #t
               `(html ,(style->attribs (part-style d))
                  (head ()
                    (meta ([http-equiv "content-type"]
                           [content "text/html; charset=utf-8"]))
                    (meta ([name "viewport"]
-                          [content "width=device-width, initial-scale=0.8"]))
+                          [content ,(format "width=device-width, initial-scale=~a"
+                                            (or (extract-part-initial-scale d ri)
+                                                "1.0"))]))
                    ,title
                    ,(scribble-css-contents scribble-css
                                            scribble-css-path

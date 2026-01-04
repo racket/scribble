@@ -4,7 +4,9 @@
           (for-label scribble/manual-struct
                      racket/list
                      version/utils
-                     syntax/quote))
+                     syntax/quote
+                     (only-in scribble/html-properties
+                              initial-scale)))
 
 @(define lit-ellipses (racket ...))
 @(define lit-ellipses+ (racket ...+))
@@ -2499,6 +2501,9 @@ For HTML rendering:
  @item{The file @filepath{manual-racket.css} from the
        @filepath{scribble} collection is added as a
        @racket[css-style-addition].}
+
+ @item{The document's initial scale (for responsive modes such as mobile
+       devices) via a @racket[(initial-scale "0.8")] style property.}
 
 ]
 

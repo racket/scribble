@@ -20,7 +20,8 @@
                               (css-style-addition
                                (scribble-file "manual-racket.css"))
                               (js-style-addition
-                               (scribble-file "manual-racket.js")))
+                               (scribble-file "manual-racket.js"))
+                              (initial-scale 0.8))
                 #t))
 
 (define-on-demand manual-doc-style

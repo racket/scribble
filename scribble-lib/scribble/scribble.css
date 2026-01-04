@@ -218,8 +218,8 @@ table td {
   white-space: nowrap;
   left: 2em;
   height: 0em;
-  width: 13em;
-  margin: 0em -13em 0em 0em;
+  width: 10.5em;
+  margin: 1.5em -13em 0em 0em;
   font-size: small;
 }
 
@@ -282,6 +282,15 @@ table td {
   margin: 0 0 0 0;
 }
 
+/* narrow display => inline right-hand margin notes */
+@media screen and (max-width: 55em) {
+    .refpara, .refelem, .reffootnote {
+        all: unset !important;
+        display: block !important;
+        margin: 1em 0 !important;
+        padding: 0.75em !important;
+    }
+}
 
 /* ---------------------------------------- */
 /* Table of contents, inline */

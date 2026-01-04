@@ -597,6 +597,9 @@ The recognized @tech{style properties} are as follows:
        multiple @litchar{,}-separated labels and generate a suitable set of
        references. See also @racketmodname[scriblib/book-index].}
 
+ @item{@racket[initial-scale] structure --- For HTML, adjusts the initial
+       scale for responsive views, such as on mobile devices.}
+
 ]
 
 The @racket[to-collect] field contains @techlink{content} that is
@@ -1982,6 +1985,14 @@ nested HTML pages like @racket[css-addition]. Additions to @tt{<head>}
 via @racket[head-addition] appear before additions via @racket[head-extra].
 
 @history[#:added "1.38"]}
+
+
+@defstruct[initial-scale ([value (real-in 0.0 10.0)])]{
+
+Adjusts @litchar{initial-scale} in a @litchar{meta} tag with name
+@litchar{viewport}. The default is @racket[1.0].
+
+@history[#:added "1.61"]}
 
 
 @defstruct[render-convertible-as ([types (listof (or/c 'png-bytes 'svg-bytes 'gif-bytes))])]{
