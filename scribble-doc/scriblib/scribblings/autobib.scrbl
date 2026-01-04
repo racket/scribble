@@ -11,7 +11,7 @@
 
 This library provides support for bibliography management in a Scribble
 document. The @racket[define-cite] form is used to bind procedures
-that create in-line citations and generate the bibilography in the
+that create in-line citations and generate the bibliography in the
 document.
 
 Individual bibliography entries are created with the @racket[make-bib]
@@ -91,10 +91,16 @@ or more bibliography entries which have the same authors. It has the contract
 ]
 
 The function bound to @racket[generate-bibliography-id] generates the
-section for the bibliography. It has the contract
+section for the bibliography, with a title as per the @racket[#:sec-title] argument
+(defaults to @racket["Bibliography"]) and a tag as per the @racket[#:tag] argument
+(defaults to @racket["doc-bibliography"]).
+If the @racket[#:sec-title] argument is @racket[#f] instead a string,
+only the content of the bibliography is created, as a table,
+and not the enclosing section as a part.
 
 @racketblock[
-(->* () (#:tag string? #:sec-title string?) part?)
+(->* () (#:tag string? #:sec-title (or/c #f string?))
+     (or/c part? block?))
 ]
 
 If provided, the function bound to @racket[cite-author-id]
@@ -122,15 +128,12 @@ The functions bound to @racket[cite-author-id] and
  library is pretty nifty.
 }|
 
-The default value for the @racket[#:tag] argument is @racket["doc-bibliography"]
-and for @racket[#:sec-title] is @racket["Bibliography"].
-
 The optional @racket[spaces-expr] determines the number of blank lines that appear
 between citations. The default number of lines is 1.
 
 The optional @racket[style-expr] determines the way that citations and
 the bibliography are rendered.@margin-note*{Programmer-defined styles
-may be supported in the future.} Currently, two built-in style are
+may be supported in the future.} Currently, two built-in styles are
 provided, and @racket[author+date-style] is the default.
 
 For @racket[author+date-style],
