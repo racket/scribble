@@ -33,4 +33,5 @@
 
  [head-extra ([xexpr xexpr/c])]
  [head-addition ([xexpr xexpr/c])]
+ [initial-scale ([value (real-in 0.0 10.0)])]
  [render-convertible-as ([types (listof (or/c 'png-bytes 'svg-bytes 'gif-bytes))])])
