@@ -8,9 +8,36 @@
 
 @defmodule[scriblib/footnote]
 
-@defproc[(note [pre-content pre-content?] ...) element?]{
+@defparam[note-number number (or/c integer? boolean?)]{
+  This parameter controls the number of footnotes in the HTML renderer.
+  See @racket[note] for how it is interpreted.
+
+  To enable footnote numbers in HTML,
+  add @racket[#:number #t] to your first call to @racket[note]
+  (you can also add it to subsequent calls, but that is not necessary);
+  or set this parameter to either 1 or @racket[#t].
+  To disable footnote numbers again in HTML,
+  set this parameter back to @racket[#f] (the default).
+
+@history[#:added "1.62"]
+}
+
+@defproc[(note [#:number number (or/c integer? boolean?) (note-number)]
+               [pre-content pre-content?] ...) element?]{
 
 Creates a margin note for HTML and a footnote for Latex/PDF output.
+
+If rendering HTML, then the number parameter is used, which default to @racket[(note-number)].
+If it is @racket[#f] then no number is used (default / legacy behavior).
+If it is @racket[#t] and @racket[(note-number)] is an integer,
+then the latter value is used.
+If it is @racket[#t] and @racket[(note-number)] is not integer,
+then the value 1 will be used instead.
+If it is an integer, then its value is used.
+If an integer value is used, then @racket[(note-number)] is set to the next integer.
+
+@history[#:changed "1.63" @elem{Added @racket[#:number].}]
+}
 
 To produce a numbered note for HTML (which can useful if a CSS
 specialization changes how ``margin notes'' are rendered), use
