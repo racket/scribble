@@ -21,7 +21,7 @@
 
 (define pkg-authors '(mflatt eli))
 
-(define version "1.61")
+(define version "1.62")
 
 (define license
   '((Apache-2.0 OR MIT)

@@ -1,5 +1,5 @@
 
-.NoteBox {
+.NoteBox, .FootnoteMarginContent {
   position: relative;
   float: right;
   left: 2em;

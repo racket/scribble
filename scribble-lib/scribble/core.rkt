@@ -637,7 +637,8 @@
 (define (tag-key tg ri)
   (if (generated-tag? (cadr tg))
       (list (car tg)
-            (hash-ref (collect-info-tags (resolve-info-ci ri)) (cadr tg)))
+            (hash-ref (collect-info-tags (resolve-info-ci ri)) (cadr tg)
+                      'unknown))
       tg))
 
 (define current-tag-prefixes (make-parameter null))

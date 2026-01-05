@@ -1,11 +1,13 @@
 #lang racket/base
 
-(require scribble/core
+(require (for-syntax racket/base)
+         scribble/core
          scribble/decode
          scribble/html-properties
          scribble/latex-properties
          racket/promise
          setup/main-collects
+         scriblib/render-cond
          "private/counter.rkt")
 
 (provide note
@@ -32,31 +34,56 @@
 (define footnote-style (make-style "Footnote" footnote-style-extras))
 (define footnote-ref-style (make-style "FootnoteRef" footnote-style-extras))
 (define footnote-content-style (make-style "FootnoteContent" footnote-style-extras))
+(define footnote-margin-content-style (make-style "FootnoteMarginContent" footnote-style-extras))
 (define footnote-target-style (make-style "FootnoteTarget" footnote-style-extras))
 (define footnote-block-style (make-style "FootnoteBlock" footnote-style-extras))
 (define footnote-block-content-style (make-style "FootnoteBlockContent" footnote-style-extras))
 
-(define-syntax-rule (define-footnote footnote footnote-part)
-  (begin
-    (define footnotes (new-counter "footnote"))
-    (define id (gensym))
-    (define (footnote . text) (do-footnote footnotes id text))
-    (define (footnote-part . text) (do-footnote-part footnotes id))))
+(define-syntax (define-footnote stx)
+  (define (check-identifier id)
+    (unless (identifier? id)
+      (raise-syntax-error #f "expected an identifier" stx id)))
+  (define (generate-footnote footnote-id margin?)
+    #`(begin
+        (define footnotes (new-counter "footnote"))
+        (define id (gensym))
+        (define (#,footnote-id . text) (do-footnote footnotes id text #,margin?))))
+  (syntax-case stx ()
+    [(_ footnote #:margin)
+     (begin
+       (check-identifier #'footnote)
+       (generate-footnote #'footnote #t))]
+    [(_ footnote footnote-part)
+     (begin
+       (check-identifier #'footnote)
+       (check-identifier #'footnote-part)
+       #`(begin
+           #,(generate-footnote #'footnote #f)
+           (define (footnote-part . text) (do-footnote-part footnotes id))))]))
 
-(define (do-footnote footnotes id text)
+(define (do-footnote footnotes id text margin?)
   (define tag (generated-tag))
   (define content (decode-content text))
+  (define target (cons (make-element footnote-target-style
+                                     (make-element 'superscript
+                                                   (counter-target footnotes tag #f
+                                                                   #:use-ref? #t)))
+                       content))
   (make-traverse-element
    (lambda (get set)
-     (set id
-          (cons (cons (make-element footnote-target-style
-                                    (make-element 'superscript (counter-target footnotes tag #f)))
-                      content)
-                (get id null)))
+     (unless margin?
+       (set id (cons target (get id null))))
      (make-element footnote-style
                    (list (make-element footnote-ref-style
-                                       (make-element 'superscript (counter-ref footnotes tag #f)))
-                         (make-element footnote-content-style content))))))
+                                       (make-element 'superscript (counter-ref footnotes tag #f
+                                                                               #:use-target? #t)))
+                         (if margin?
+                             (make-element footnote-margin-content-style target)
+                             (cond-element
+                              [latex
+                               (make-element footnote-content-style content)]
+                              [else
+                               null])))))))
 
 (define (do-footnote-part footnotes id)
   (make-part
@@ -71,5 +98,8 @@
        (make-compound-paragraph
         footnote-block-style
         (for/list ([content (in-list (reverse (get id null)))])
-          (make-paragraph footnote-block-content-style content))))))
+          (make-paragraph footnote-block-content-style
+                          (cond-element
+                           [latex null]
+                           [else content])))))))
    null))
