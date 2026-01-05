@@ -25,12 +25,17 @@
                         #:label-style [label-style #f]
                         #:label-suffix [label-suffix '()]
                         #:continue? [continue? #f]
+                        #:use-ref? [use-ref? #f]
                         . content)
+  (define (wrap-ref e)
+    (if use-ref?
+        (make-link-element #f e (tag->counter-tag counter tag "use"))
+        e))
   (let ([content (decode-content content)])
     (define c
       (make-target-element
        target-style
-       (list
+       (wrap-ref
         (make-collect-element
          #f
          (list
@@ -79,35 +84,41 @@
        [else (format "x~x" (char->integer c))]))))
 
 (define (counter-ref counter tag label
+                     #:use-target? [use-target? #f]
                      #:link-render-style [link-style #f])
-  (make-delayed-element
-   (lambda (renderer part ri)
-     (define n (resolve-get part ri (tag->counter-tag counter tag "value")))
-     (let ([n (if (counter-ref-wrap counter)
-                  ((counter-ref-wrap counter)
-                   (format "~a" n)
-                   ;; Don't use this argument:
-                   (format "t:~a" (t-encode (list 'counter (list (counter-name counter) tag)))))
-                  (list (format "~a" n)))]
-           [link-number-only?
-            (eq? (link-render-style-mode (or link-style (current-link-render-style))) 'number)])
-       (cond
-         [(and label link-number-only?)
-          (make-element
-           #f
-           (list label 'nbsp (make-link-element #f (list n) (tag->counter-tag counter tag))))]
-         [else
-          (make-link-element #f
-                             (if label
-                                 (list label 'nbsp n)
-                                 n)
-                             (tag->counter-tag counter tag))])))
-   (lambda () (if label
-                  (list label 'nbsp "N")
-                  (list "N")))
-   (lambda () (if label
-                  (list label 'nbsp "N")
-                  (list "N")))))
+  (define (wrap-target e)
+    (if use-target?
+             (make-target-element #f e (tag->counter-tag counter tag "use"))
+             e))
+  (wrap-target
+   (make-delayed-element
+    (lambda (renderer part ri)
+      (define n (resolve-get part ri (tag->counter-tag counter tag "value")))
+      (let ([n (if (counter-ref-wrap counter)
+                   ((counter-ref-wrap counter)
+                    (format "~a" n)
+                    ;; Don't use this argument:
+                    (format "t:~a" (t-encode (list 'counter (list (counter-name counter) tag)))))
+                   (list (format "~a" n)))]
+            [link-number-only?
+             (eq? (link-render-style-mode (or link-style (current-link-render-style))) 'number)])
+        (cond
+          [(and label link-number-only?)
+           (make-element
+            #f
+            (list label 'nbsp (make-link-element #f (list n) (tag->counter-tag counter tag))))]
+          [else
+           (make-link-element #f
+                              (if label
+                                  (list label 'nbsp n)
+                                  n)
+                              (tag->counter-tag counter tag))])))
+    (lambda () (if label
+                   (list label 'nbsp "N")
+                   (list "N")))
+    (lambda () (if label
+                   (list label 'nbsp "N")
+                   (list "N"))))))
 
 (define (counter-collect-value counter)
   (counter-n counter))
