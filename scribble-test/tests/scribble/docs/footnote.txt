@@ -1,8 +1,8 @@
 Document
 
-Left.1A
+Left.1
 
-Right.2A♯
+Right.2
 
 1A
 
