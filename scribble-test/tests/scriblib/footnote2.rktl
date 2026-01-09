@@ -57,7 +57,7 @@
    ((class "maincolumn"))
    (div
     ((class "main"))
-    (div (span ((class "versionNoNav")) "9.0.0.11"))
+    (div (span ((class "versionNoNav"))))
     (section
      h1
      (section

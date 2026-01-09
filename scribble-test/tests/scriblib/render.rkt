@@ -42,6 +42,7 @@
   (define keep-with-attrs '(div span a))
   (define keeps '(html body section table tr td p blockquote h2))
   (define skip-attr-classes '("tocset"  "versionbox"))
+  (define skip-content-classes '("versionNoNav"))
 
   (define (filter html)
     (define (filter-body htmls)
@@ -55,19 +56,27 @@
                        (define val (cadr key+val))]
                  #:when (member key '(class style href name)))
         (list key val)))
-    (define (has-skip-attr-class? keys+vals)
+    (define (has-skip-class? keys+vals skip-classes)
       (for/or ([key+val (in-list keys+vals)])
         (define key (car key+val))
         (define val (cadr key+val))
         (and (eq? key 'class)
-             (member val skip-attr-classes))))
+             (member val skip-classes))))
+    (define (has-skip-attr-class? keys+vals)
+      (has-skip-class? keys+vals skip-attr-classes))
+    (define (has-skip-content-class? keys+vals)
+      (has-skip-class? keys+vals skip-content-classes))
     (match html
       [`(,tag ,keys+vals ,body ...)
        (cond
          [(member tag keep-with-attrs)
-          (if (has-skip-attr-class? keys+vals)
-              `(,tag ,@(filter-body body))
-              `(,tag ,(filter-attrs keys+vals) ,@(filter-body body)))]
+          (cond
+            [(has-skip-attr-class? keys+vals)
+             `(,tag ,@(filter-body body))]
+            [(has-skip-content-class? keys+vals)
+             `(,tag ,(filter-attrs keys+vals))]
+            [else
+             `(,tag ,(filter-attrs keys+vals) ,@(filter-body body))])]
          [(member tag keeps)
           `(,tag ,@(filter-body body))]
          [else
