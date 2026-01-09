@@ -205,7 +205,8 @@
          (cond
            [(not exists)] ; do nothing
            [(or (file-exists? filename) (link-exists? filename)) (delete-file filename)]
-           [(directory-exists? filename) (bad "exists as directory")])
+           [(directory-exists? filename) (bad "exists as directory")]
+           [else (void)])
          (parameterize ([rendered-dirpath dirpathlist])
            (printf "  ~a\n" path)
            (renderer filename))])))
@@ -235,12 +236,12 @@
 ;; runs all renderers, and any renderers that might have been added on the way
 (provide render-all)
 (define (render-all)
-  (printf "Rendering...\n")
+  (displayln "Rendering...")
   (define todo (get/reset-renderers))
   (if (null? todo)
-    (printf "  Warning: no content to render\n")
+    (displayln "  Warning: no content to render")
     (let loop ([todo todo])
       (unless (null? todo)
         (for-each (lambda (r) (r)) todo)
         (loop (get/reset-renderers))))) ; if more were created
-  (printf "Rendering done.\n"))
+  (displayln "Rendering done."))
