@@ -29,6 +29,10 @@
 
 (define note-number (make-parameter #f))
 
+;; TODO: move this utility function somewhere it can be exported from
+(define (xexpr-element xexpr)
+  (make-element (make-style #f (list (xexpr-property xexpr ""))) '()))
+
 (define (note #:number [number (note-number)] . text)
   (define (no-number)
     (make-element
@@ -42,19 +46,19 @@
                     number
                     (let ([nn (note-number)])
                       (if (integer? nn) nn 1)))]
-               [f (lambda (s d)
-                    (define a `(a ([name ,(format "~a~a" s n)] [href ,(format "#~a~a" d n)])
-                                  [sup () ,(format "~a" n)]))
-                    (make-element (make-style #f (list (xexpr-property a ""))) '()))])
+               [a (lambda (x y)
+                    (xexpr-element `[a ([name ,(format "__footnote_~a_~a__" x n)]
+                                        [href ,(format "#__footnote_~a_~a__" y n)])
+                                       [sup () ,(format "~a" n)]]))])
           (note-number (+ n 1))
           (make-element plain
             (list
-              (f "__footnote_src_" "__footnote_dst_")
+              (a "source" "target")
               (make-element
                 note-box-style
                 (make-element note-content-style
                   (list
-                    (f "__footnote_dst_" "__footnote_src_")
+                    (a "target" "source")
                     ": "
                     (decode-content text)))))))
         (no-number))]
