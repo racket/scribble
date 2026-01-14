@@ -33,9 +33,11 @@
 
 (define footnote-style (make-style "Footnote" footnote-style-extras))
 (define footnote-ref-style (make-style "FootnoteRef" footnote-style-extras))
+(define footnote-ref-number-style (make-style "FootnoteRefNumber" footnote-style-extras))
 (define footnote-content-style (make-style "FootnoteContent" footnote-style-extras))
 (define footnote-margin-content-style (make-style "FootnoteMarginContent" footnote-style-extras))
 (define footnote-target-style (make-style "FootnoteTarget" footnote-style-extras))
+(define footnote-target-number-style (make-style "FootnoteTargetNumber" footnote-style-extras))
 (define footnote-block-style (make-style "FootnoteBlock" footnote-style-extras))
 (define footnote-block-content-style (make-style "FootnoteBlockContent" footnote-style-extras))
 
@@ -65,7 +67,7 @@
   (define tag (generated-tag))
   (define content (decode-content text))
   (define target (cons (make-element footnote-target-style
-                                     (make-element 'superscript
+                                     (make-element footnote-target-number-style
                                                    (counter-target footnotes tag #f
                                                                    #:use-ref? #t)))
                        content))
@@ -75,13 +77,14 @@
        (set id (cons target (get id null))))
      (make-element footnote-style
                    (list (make-element footnote-ref-style
-                                       (make-element 'superscript (counter-ref footnotes tag #f
-                                                                               #:use-target? #t)))
+                                       (make-element footnote-ref-number-style
+                                                     (counter-ref footnotes tag #f
+                                                                  #:use-target? #t)))
                          (if margin?
                              (make-element footnote-margin-content-style target)
                              (cond-element
                               [latex
-                               (make-element footnote-content-style content)]
+                               (make-element footnote-content-style target)]
                               [else
                                null])))))))
 

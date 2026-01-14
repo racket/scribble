@@ -81,10 +81,22 @@ redefined as CSS classes or Latex macros to adjust the result:
  note. For Latex, this name is mapped to a macro that returns nothing,
  leaving the reference managment to @tt{\footnote}.}
 
+ @item{@racket["FootnoteRefNumber"]: Wrapped around the footnote
+ number as a reference (inside of @racket["FootnoteRef"]), so that the
+ default superscript style for a footnote reference can be changed for
+ HTML output (or potentially for Latex, if @racket["Footnote"] is not
+ mapped to @tt{\footnote}).}
+
  @item{@racket["FootnoteTarget"]: Wrapped around the footnote that is
  rendered by @racket[footnote-part-id] or as a margin note. For Latex,
  this name is mapped to a macro that returns nothing, leaving the
  reference managment to @tt{\footnote}.}
+
+ @item{@racket["FootnoteTargetNumber"]: Wrapped around the footnote
+ number rendered by @racket[footnote-part-id] or as a margin note, so
+ that the default superscript style within a footnote can be changed
+ for HTML (or potentially for Latex, if @racket["Footnote"] is not
+ mapped to @tt{\footnote}).}
 
  @item{@racket["FootnoteContent"]: For Latex, wrapped around the
  content of a footnote as rendered by @racket[footnote-part-id].}
