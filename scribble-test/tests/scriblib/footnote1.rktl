@@ -88,7 +88,7 @@
         (span
          ((class "FootnoteRef"))
          (span
-          ((style "vertical-align: super; font-size: 80%"))
+          ((class "FootnoteRefNumber"))
           (a ((name "(counter-(use)._(gentag._0))")))
           (a ((href "#%28counter-%28%29._%28gentag._0%29%29")) "1"))))))
      (section
@@ -111,7 +111,7 @@
          (span
           ((class "FootnoteTarget"))
           (span
-           ((style "vertical-align: super; font-size: 80%"))
+           ((class "FootnoteTargetNumber"))
            (a ((name "(counter-()._(gentag._0))")))
            (a ((href "#%28counter-%28use%29._%28gentag._0%29%29")) "1")))
          "In leap years,\nFebruary has 29 days.")))))))
