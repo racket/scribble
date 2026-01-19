@@ -57,11 +57,14 @@
       0))
   ;; combines a prefix with a target column to get to
   (define (pfx+col pfx)
-    (and pfx (let ([col (getcol)])
-               (cond [(number? pfx) (max pfx col)]
-                     [(>= (string-length pfx) col) pfx]
-                     [else (string-append
-                            pfx (make-spaces (- col (string-length pfx))))]))))
+    (cond
+      [pfx
+       (define col (getcol))
+       (cond
+         [(number? pfx) (max pfx col)]
+         [(>= (string-length pfx) col) pfx]
+         [else (string-append pfx (make-spaces (- col (string-length pfx))))])]
+      [else #f]))
   ;; adds two prefixes
   (define (pfx+ pfx1 pfx2)
     (and pfx1 pfx2
