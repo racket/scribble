@@ -287,7 +287,7 @@
                                      ((box-mode-selector as-box-mode) a)))
                               (style-properties
                                (paragraph-style p)))
-                       "hbox")]
+                       (format "adjustbox{valign=~a}" as-box-mode))]
                      [(eq? sn 'author) "SAuthor"]
                      [(eq? sn 'pretitle) #f]
                      [(eq? sn 'wraps) #f]
