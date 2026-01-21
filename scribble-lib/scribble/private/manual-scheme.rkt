@@ -9,7 +9,8 @@
          "manual-utils.rkt" ;; used via datum->syntax
          "on-demand.rkt"
          (for-syntax racket/base)
-         (for-label racket/base))
+         (for-label racket/base)
+         racket/deprecation)
 
 (provide racketblock RACKETBLOCK racketblock/form
          racketblock0 RACKETBLOCK0 racketblock0/form
@@ -24,25 +25,44 @@
          racketmodname
          racketmodlink indexed-racket
          racketlink
-         
-         (rename-out [racketblock schemeblock]
-                     [RACKETBLOCK SCHEMEBLOCK]
-                     [racketblock/form schemeblock/form]
-                     [racketblock0 schemeblock0]
-                     [RACKETBLOCK0 SCHEMEBLOCK0]
-                     [racketblock0/form schemeblock0/form]
-                     [racketblockelem schemeblockelem]
-                     [racketinput schemeinput]
-                     [racketmod schememod]
-                     [racket scheme]
-                     [RACKET SCHEME]
-                     [racket/form scheme/form]
-                     [racketresult schemeresult]
-                     [racketid schemeid]
-                     [racketmodname schememodname]
-                     [racketmodlink schememodlink]
-                     [indexed-racket indexed-scheme]
-                     [racketlink schemelink]))
+         schemeblock
+         SCHEMEBLOCK
+         schemeblock/form
+         schemeblock0
+         SCHEMEBLOCK0
+         schemeblock0/form
+         schemeblockelem
+         schemeinput
+         schememod
+         scheme
+         SCHEME
+         scheme/form
+         schemeresult
+         schemeid
+         schememodname
+         schememodlink
+         indexed-scheme)
+
+
+(define-deprecated-alias schemeblock racketblock)
+(define-deprecated-alias SCHEMEBLOCK RACKETBLOCK)
+(define-deprecated-alias schemeblock/form racketblock/form)
+(define-deprecated-alias schemeblock0 racketblock0)
+(define-deprecated-alias SCHEMEBLOCK0 RACKETBLOCK0)
+(define-deprecated-alias schemeblock0/form racketblock0/form)
+(define-deprecated-alias schemeblockelem racketblockelem)
+(define-deprecated-alias schemeinput racketinput)
+(define-deprecated-alias schememod racketmod)
+(define-deprecated-alias scheme racket)
+(define-deprecated-alias SCHEME RACKET)
+(define-deprecated-alias scheme/form racket/form)
+(define-deprecated-alias schemeresult racketresult)
+(define-deprecated-alias schemeid racketid)
+(define-deprecated-alias schememodname racketmodname)
+(define-deprecated-alias schememodlink racketmodlink)
+(define-deprecated-alias indexed-scheme indexed-racket)
+(define-deprecated-alias schemelink racketlink)
+
 
 (define-code racketblock0 to-paragraph)
 (define-code racketblock to-block-paragraph)
