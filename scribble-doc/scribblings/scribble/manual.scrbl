@@ -249,7 +249,9 @@ definition in the reference manual.
 
 Like other forms defined via @racket[define-code],
 @racket[racketblock] expands identifiers that are bound as
-@tech{element transformers}.
+@tech{element transformers}. Also, since @racket[racketblock] uses
+@racket[to-paragraph], the @racket['display-string] syntax property on
+any form can supply a string for the typeset version of the form.
 
 An @racket[#:escape] clause specifies an identifier to escape back to
 an expression that produces an @racket[element]. By default,
@@ -1039,7 +1041,8 @@ Examples:
                            (code:line #:link-target? link-target?-expr)]
                [maybe-id code:blank
                          (code:line #:id id)
-                         (code:line #:id [id id-expr])]
+                         (code:line #:id [id id-expr])
+                         (code:line #:id [(id ...) ids-expr])]
                [maybe-literals code:blank
                                (code:line #:literals (literal-id ...))]
                [maybe-grammar code:blank
@@ -1050,29 +1053,46 @@ Examples:
 
 Produces a sequence of flow elements (encapsulated in a
 @racket[splice]) to document a syntatic form named by @racket[id] (or the
-result of @racket[id-expr]) whose syntax is described by
+result of @racket[id-expr] or @racket[ids-expr]).
+The documented form's syntax is described by
 @racket[form-datum]. If no @racket[#:id] is used to specify
-@racket[id], then @racket[form-datum] must have the form @racket[(id
+@racket[id]s, then @racket[form-datum] must have the form @racket[(id
 . _datum)].
 
 If @racket[#:kind kind-content-expr] is supplied, it is used in the
 same way as for @racket[defproc], but the default kind is
 @racket["syntax"].
 
-If @racket[#:id [id id-expr]] is supplied, then @racket[id] is the
-identifier as it appears in the @racket[form-datum] (to be replaced by
-a defining instance), and @racket[id-expr] produces the identifier to
-be documented. This split between @racket[id] and @racket[id-expr]
-roles is useful for functional abstraction of @racket[defform].
-
 Unless @racket[link-target?-expr] is specified
 and produces @racket[#f], 
-the @racket[id] (or result of @racket[id-expr]) is indexed, and it is
+the @racket[id] (or result of @racket[id-expr] or @racket[ids-expr]) is indexed, and it is
 also registered so that @racket[racket]-typeset uses of the identifier
-(with the same for-label binding) are hyperlinked to this
+(with the same @racket[for-label] binding) are hyperlinked to this
 documentation. The @racket[defmodule] or @racket[declare-exporting]
 requirements, as well as the binding requirements for @racket[id] (or
 result of @racket[id-expr]), are the same as for @racket[defproc].
+
+If @racket[#:id [id id-expr]] is supplied, then @racket[id] is the
+identifier as it appears in the @racket[form-datum], and @racket[id-expr] produces the identifier to
+be documented (i.e., one with a @racket[for-label] binding). The
+@racket[id] in @racket[form-datum] is replaced with a defining
+typeset form of the identifier from @racket[id-expr]. This
+split between @racket[id] and @racket[id-expr] roles is useful for
+functional abstraction of @racket[defform]. Even more generally, the
+name to show as defined in @racket[form-datum] can be different than
+the symbolic part of @racket[id-expr]'s result, because a
+@racket['display-string] syntax property can provide alternate
+text for typesetting; see @racket[racketblock] for more information.
+
+If @racket[#:id [(id ...) ids-expr]] is supplied, then
+@racket[ids-expr] should produce a list of identifiers, one for each
+@racket[id] listed. Each @racket[id] is replaced in
+@racket[form-datum] with the corresponding defining instance from
+@racket[ids-expr]. At least one of the @racket[id]s must appear in
+@racket[form-datum], but they need not all appear; all identifiers
+listed by @racket[ids-expr] will still be documented and linked to some
+@racket[id] that does appear (as long as @racket[link-target?-expr]
+does not produce @racket[#f]).
 
 The @tech{decode}d @racket[pre-flow] documents the form. In this
 description, a reference to any identifier in @racket[form-datum] via
@@ -1162,6 +1182,9 @@ Examples:
     the factory will be named. Each of the @racket[factory-component]
     clauses adds an additional ingredient to the sandwich pipeline.
   }]
+
+ @history[#:changed "1.63" @elem{Added support for multiple
+                                 @racket[id]s after @racket[#:id].}]
 }
 
 @defform[(defform* options [form-datum ...+]

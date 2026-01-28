@@ -116,14 +116,13 @@
                                       (do-proc (car s-exp)))))])
                         (do-proc s-exp))]
                      [(form form/none form/maybe non-term)
-                      (define skip-id (case (syntax-e kind)
-                                         [(form) 
-                                          (syntax-case s-exp ()
-                                            [(defined-id actual-s-exp) (let ([id #'defined-id])
-                                                                         (and (identifier? id)
-                                                                              id))]
-                                            [_ #f])]
-                                         [else #f]))
+                      (define skip-ids (case (syntax-e kind)
+                                         [(form)
+                                          (syntax-parse s-exp
+                                            [((defined-id:id ...) actual-s-exp) (syntax->list #'(defined-id ...))]
+                                            [(defined-id:id actual-s-exp) (list #'defined-id)]
+                                            [_ null])]
+                                         [else null]))
                       (let loop ([form (case (syntax-e kind)
                                          [(form) 
                                           (syntax-case s-exp ()
@@ -135,8 +134,8 @@
                                             [(#t (id . form)) #'form])]
                                          [(non-term) s-exp])])
                         (if (identifier? form)
-                            (unless (or (and skip-id
-                                             (free-identifier=? skip-id form))
+                            (unless (or (for/or ([skip-id (in-list skip-ids)])
+                                          (free-identifier=? skip-id form))
                                         (eq? (syntax-e form) '...)
                                         (eq? (syntax-e form) '...+)
                                         (eq? (syntax-e form) 'code:line)

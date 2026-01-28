@@ -72,6 +72,10 @@ In addition, the given @racket[v] can contain @racket[var-id],
 structure type for details), or it can contain @racket[element]
 structures that are used directly in the output.
 
+If a syntax object within @racket[v] has the @racket['display-string]
+syntax property on any form can supply a string to use for the typeset
+form, instead of the way it would typeset otherwise.
+
 If @racket[expr?] is true, then @racket[v] is rendered in expression
 style, much like @racket[print] with the @racket[print-as-expression]
 parameter set to @racket[#t]. In that case, @racket[for-label]

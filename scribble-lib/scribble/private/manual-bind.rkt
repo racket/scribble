@@ -2,7 +2,8 @@
 (require racket/string
          racket/format
          "../struct.rkt"
-         "../scheme.rkt"
+         "../racket.rkt"
+         (submod "../racket.rkt" id-element)
          "../search.rkt"
          "../basic.rkt"
          "../manual-struct.rkt"
@@ -89,13 +90,20 @@
    (lambda (render part ri)
      (proc (or (get-exporting-libraries render part ri) null)))))
 
-(define (definition-site name stx-id form?)
+(define (definition-site name stx-id form? [display-string #f])
   (define sig (current-signature))
   (define (gen defn?)
     (if sig
         (*sig-elem #:defn? defn? (sig-id sig) name)
         ((if defn? annote-exporting-library values)
-         (to-element #:defn? defn? (make-just-context name stx-id)))))
+         (if display-string
+             (make-element
+              symbol-color
+              (make-id-element (datum->syntax stx-id name)
+                               display-string
+                               #t
+                               #:unlinked-ok? #t))
+             (to-element #:defn? defn? (make-just-context name stx-id))))))
   (values (gen #t) (gen #f)))
 
 (define checkers (make-hash))

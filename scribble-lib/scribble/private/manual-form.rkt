@@ -1,7 +1,8 @@
 #lang racket/base
 (require "../decode.rkt"
          "../struct.rkt"
-         "../scheme.rkt"
+         "../racket.rkt"
+         (submod "../racket.rkt" id-element)
          "../basic.rkt"
          "../manual-struct.rkt"
          "qsloc.rkt"
@@ -37,14 +38,20 @@
 
  (define-splicing-syntax-class id-kw
    #:description "#:id keyword"
-   (pattern (~seq #:id [defined-id:id defined-id-expr]))
-   (pattern (~seq #:id defined-id:id)
-            #:with defined-id-expr #'(quote-syntax defined-id))
+   (pattern (~seq #:id [(defined-id:id ...) defined-id-expr]))
+   (pattern (~seq #:id [one-defined-id:id defined-id-expr])
+            #:with (defined-id ...) #'(one-defined-id))
+   (pattern (~seq #:id one-defined-id:id)
+            #:with defined-id-expr #'(quote-syntax one-defined-id)
+            #:with (defined-id ...) #'(one-defined-id))
    (pattern (~seq #:id [#f #f])
-            #:with defined-id #'#f
+            #:with (defined-id ...) #'(#f)
+            #:with defined-id-expr #'#f)
+   (pattern (~seq #:id [(#f) #f])
+            #:with (defined-id ...) #'(#f)
             #:with defined-id-expr #'#f)
    (pattern (~seq)
-            #:with defined-id #'#f
+            #:with (defined-id ...) #'(#f)
             #:with defined-id-expr #'#f))
 
  (define-splicing-syntax-class link-target?-kw
@@ -82,42 +89,56 @@
         g:grammar
         c:contracts-kw
         desc:expr ...)
-     (with-syntax* ([defined-id (if (syntax-e #'d.defined-id)
-                                    #'d.defined-id
-                                    (syntax-case #'spec ()
-                                      [(spec-id . _) #'spec-id]))]
+     (with-syntax* ([(defined-id ...) (if (ormap syntax-e (syntax->list #'(d.defined-id ...)))
+                                          #'(d.defined-id ...)
+                                          (syntax-case #'spec ()
+                                            [(spec-id . _) #'(spec-id)]))]
                     [defined-id-expr (if (syntax-e #'d.defined-id-expr)
                                          #'d.defined-id-expr
-                                         #'(quote-syntax defined-id))]
-                    [(new-spec ...)
-                     (for/list ([spec (in-list (syntax->list #'(spec spec1 ...)))])
-                       (let loop ([spec spec])
-                         (if (and (identifier? spec)
-                                  (free-identifier=? spec #'defined-id))
-                             (datum->syntax #'here '(unsyntax x) spec spec)
-                             (syntax-case spec ()
-                               [(a . b)
-                                (datum->syntax spec
-                                               (cons (loop #'a) (loop #'b))
-                                               spec
-                                               spec)]
-                               [_ spec]))))])
-       #'(with-togetherable-racket-variables
-            (l.lit ...)
-            ([form [defined-id spec]] [form [defined-id spec1]] ...
-             [non-term (g.non-term-id g.non-term-form ...)] ...)
-            (*defforms k.kind lt.expr defined-id-expr
-                       '(spec spec1 ...)
-                       (list (lambda (x) (racketblock0/form new-spec)) ...)
-                       '((g.non-term-id g.non-term-form ...) ...)
-                       (list (list (lambda () (racket g.non-term-id))
-                                   (lambda () (racketblock0/form g.non-term-form))
-                                   ...)
-                             ...)
-                       (list (list (lambda () (racket c.contract-nonterm))
-                                   (lambda () (racketblock0 c.contract-expr)))
-                             ...)
-                       (lambda () (list desc ...)))))]))
+                                         ;; there will be one `defined-id`
+                                         #'(quote-syntax defined-id ...))]
+                    [(x ...) (generate-temporaries #'(defined-id ...))])
+       (define-values (add-unused is-used?s)
+         (make-unused-name-adder #'spec (syntax->list #'(defined-id ...)) (syntax->list #'(x ...))))
+       (with-syntax* ([(is-used? ...) is-used?s]
+                      [(new-spec ...)
+                       (let ([defined-ids (syntax->list #'(defined-id ...))]
+                             [xs (syntax->list #'(x ...))])
+                         (for/list ([spec (in-list (syntax->list #'(spec spec1 ...)))]
+                                    [pos (in-naturals)])
+                           (define add-unused-now (if (eqv? pos 0)
+                                                      add-unused
+                                                      (lambda (x) x)))
+                           (let loop ([spec spec])
+                             (or (and (identifier? spec)
+                                      (for/or ([defined-id (in-list defined-ids)]
+                                               [x (in-list xs)])
+                                        (and (free-identifier=? spec defined-id)
+                                             (datum->syntax #'here `(unsyntax ,(add-unused x)) spec spec))))
+                                 (syntax-case spec ()
+                                   [(a . b)
+                                    (datum->syntax spec
+                                                   (cons (loop #'a) (loop #'b))
+                                                   spec
+                                                   spec)]
+                                   [_ spec])))))])
+         #'(with-togetherable-racket-variables
+             (l.lit ...)
+             ([form [(defined-id ...) spec]] [form [(defined-id ...) spec1]] ...
+                                             [non-term (g.non-term-id g.non-term-form ...)] ...)
+             (*defforms k.kind lt.expr defined-id-expr
+                        '(is-used? ...)
+                        '(spec spec1 ...)
+                        (list (lambda (x ...) (racketblock0/form new-spec)) ...)
+                        '((g.non-term-id g.non-term-form ...) ...)
+                        (list (list (lambda () (racket g.non-term-id))
+                                    (lambda () (racketblock0/form g.non-term-form))
+                                    ...)
+                              ...)
+                        (list (list (lambda () (racket c.contract-nonterm))
+                                    (lambda () (racketblock0 c.contract-expr)))
+                              ...)
+                        (lambda () (list desc ...))))))]))
 
 (define-syntax (defform* stx)
   (syntax-parse stx
@@ -126,7 +147,7 @@
      (syntax/loc stx
        (defform*/subs #:kind k.kind 
          #:link-target? lt.expr
-         #:id [d.defined-id d.defined-id-expr] 
+         #:id [(d.defined-id ...) d.defined-id-expr]
          #:literals (l.lit ...)
          [spec ...] subs.g #:contracts c.cs desc ...))]))
 
@@ -137,7 +158,7 @@
      (syntax/loc stx
        (defform*/subs #:kind k.kind
          #:link-target? lt.expr
-         #:id [d.defined-id d.defined-id-expr] 
+         #:id [(d.defined-id ...) d.defined-id-expr]
          #:literals (l.lit ...)
          [spec] subs.g #:contracts c.cs desc ...))]))
 
@@ -147,7 +168,7 @@
      (syntax/loc stx
        (defform*/subs #:kind k.kind 
          #:link-target? lt.expr
-         #:id [d.defined-id d.defined-id-expr] 
+         #:id [(d.defined-id ...) d.defined-id-expr]
          #:literals (l.lit ...)
          [spec] subs #:contracts c.cs desc ...))]))
 
@@ -160,6 +181,7 @@
         ([form/none spec]
          [non-term (subs.g.non-term-id subs.g.non-term-form ...)] ...)
         (*defforms k.kind lt.expr #f
+                   '(#t)
                    '(spec)
                    (list (lambda (ignored) (racketblock0/form spec)))
                    '((subs.g.non-term-id subs.g.non-term-form ...) ...)
@@ -187,6 +209,7 @@
         ()
         ()
         (*defforms k.kind lt.expr (quote-syntax/loc spec-id)
+                   '(#t)
                    '(spec-id)
                    (list (lambda (x) (make-omitable-paragraph (list x))))
                    null
@@ -305,9 +328,10 @@
 
 (define (meta-symbol? s) (memq s '(... ...+ ?)))
 
-(define (defform-site kw-id #:kind [kind "syntax"])
+(define (defform-site kw-id #:kind [kind "syntax"] #:is-used? [is-used? #t])
   (define target-maker (id-to-form-target-maker kw-id #t))
-  (define-values (content ref-content) (definition-site (syntax-e kw-id) kw-id #t))
+  (define str (syntax-property kw-id 'display-string))
+  (define-values (content ref-content) (definition-site (syntax-e kw-id) kw-id #t str))
   (if target-maker
       (target-maker
        content
@@ -316,7 +340,7 @@
           #f
           (if kw-id
               (make-index-element
-               #f content tag
+               #f (if is-used? content null) tag
                (list (datum-intern-literal (symbol->string (syntax-e kw-id))))
                (list ref-content)
                (with-exporting-libraries
@@ -327,10 +351,16 @@
               content)
           tag
           ref-content)))
-      content))
+      (if is-used?
+          content
+          null)))
 
-(define (*defforms kind link? kw-id forms form-procs subs sub-procs contract-procs content-thunk)
+(define (*defforms kind link? kw-id/s is-used?s forms form-procs subs sub-procs contract-procs content-thunk)
   (define kind* (or kind "syntax"))
+  (define (map-kw-id/s kw/ids is-used?s proc)
+    (if (list? kw/ids)
+        (map proc kw-id/s is-used?s)
+        (list (proc kw-id/s #t))))
   (parameterize ([current-meta-list '(... ...+)])
     (make-box-splice
      (cons
@@ -346,16 +376,21 @@
             (list
              ((if (zero? i) (add-background-label kind*) values)
               (list
-               ((or form-proc
+               (apply
+                (or form-proc
                     (lambda (x)
                       (make-omitable-paragraph
                        (list (to-element `(,x . ,(cdr form)))))))
-                (and kw-id
-                     (if (eq? form (car forms))
-                         (if link?
-                             (defform-site kw-id #:kind kind*)
-                             (to-element #:defn? #t kw-id))
-                         (to-element #:defn? #t kw-id))))))))
+                (if kw-id/s
+                    (map-kw-id/s
+                     kw-id/s
+                     is-used?s
+                     (lambda (kw-id is-used?)
+                       (define linking? (and link? (eq? form (car forms))))
+                       (if linking?
+                           (defform-site kw-id #:kind kind* #:is-used? is-used?)
+                           (to-element #:defn? #t kw-id))))
+                    (list #f)))))))
           (if (null? sub-procs)
               null
               (list (list flow-empty-line)
@@ -451,3 +486,28 @@
                                               (to-flow ":")
                                               flow-spacer
                                               (make-flow (list ((cadr c))))))))))))))
+
+(define-for-syntax (make-unused-name-adder spec defined-ids xs)
+  (define unused xs)
+  (let loop ([spec spec])
+    (cond
+      [(null? unused) (void)]
+      [(identifier? spec)
+       (for ([defined-id (in-list defined-ids)]
+             [x (in-list xs)])
+         (when (free-identifier=? spec defined-id)
+           (set! unused (remq x unused))))]
+      [(syntax? spec)
+       (loop (syntax-e spec))]
+      [(pair? spec)
+       (loop (car spec))
+       (loop (cdr spec))]))
+  (values
+   (lambda (x)
+     (if (null? unused)
+         x
+         (let ([e `(make-element #f (list ,x ,@unused))])
+           (set! unused null)
+           e)))
+   (for/list ([x (in-list xs)])
+     (not (memq x unused)))))
