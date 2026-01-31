@@ -2,7 +2,10 @@
 @(require scribble/manual "utils.rkt"
           (for-syntax racket/base)
           (for-label scribble/manual-struct
+                     scribble/manual-def
                      racket/list
+                     racket/format
+                     racket/serialize
                      version/utils
                      syntax/quote
                      (only-in scribble/html-properties
@@ -1847,6 +1850,109 @@ Typesets the identifier @racket[id] with a hyperlink to its definition
 as a member of the signature named by @racket[sig-id].}
 
 @; ------------------------------------------------------------------------
+@section[#:tag "doc-create"]{Defining Documentation Forms}
+
+@defmodule[scribble/manual-def]{The
+@racketmodname[scribble/manual-def] module provides utilities for
+building new documentation forms like @racket[defform] and
+@racket[defproc]. See also @racket[boxed-style] and
+@racket[add-background-label].}
+
+@history[#:added "1.64"]
+
+@defproc[(make-id-element [id identifier?]
+                          [str string?]
+                          [defn? any/c]
+                          [#:space space (or/c #f symbol?) #f]
+                          [#:suffix suffix (or/c #f symbol? serializable?) #f]
+                          [#:link-style link-style (or/c #f style?) #f]
+                          [#:unlinked-ok? unlinked-ok? any/c #f])
+         content?]{
+
+Creates an element that typesets @racket[id] as code hyperlinked to
+its definition. The given @racket[str] is used as the identifier's
+typeset form, while @racket[id] is used for its @racket[for-label]
+binding information. If @racket[defn?] is true, the identifier is a
+typeset as the defining instance (for use in a definition box,
+normally).
+
+The @racket[space] argument indicates a space (in the sense of
+@racket[only-space-in]) for the binding. The @racket[suffix] argument
+provides an additional suffix on the documentation key, when not
+@racket[#f], and it normally should include @racket[space] if
+@racket[space] is not @racket[#f]. The @racket[suffix] might have
+additional components to, for example, indicate a name syntactically
+accessible via @racket[id], such as through a field-selecting dot
+notation.
+
+If @racket[unlinked-ok?] is @racket[#false], then if no link target is
+found based on the @racket[for-label] binding of @racket[id] in
+@racket[space], the identifier is typeset as a failed hyperlink.
+Otherwise, it is typeset without linking.
+
+}
+
+@defproc[(id-to-target-maker [id identifier?]
+                             [dep? any/c]
+                             [#:space space (or/c #f symbol?) #f]
+                             [#:suffix suffix (or/c #f symbol? serializable?) #f])
+         (content? (-> tag? content?) . -> . content?)]{
+
+Produces a function to wrap content as a cross-reference link target
+for the defining instance of the binding indicated by @racket[id],
+@racket[space] and @racket[suffix]---which are used as in
+@racket[make-id-element].
+
+The resulting @racket[_make-target] procedure expects content that is
+used before the @tech{resolve pass} (e.g., to extract content text)
+plus a procedure that takes a cross-reference tag and produces a
+content representing the specific cross reference target. The
+procedure passed to @racket[_make-target] receives a tag representing
+the binding, and it typically generates a @racket[target-element]
+(possibly a @racket[toc-target2-element]) using that tag. The
+generated @racket[target-element] may also include indexing
+information using the same tag, and where
+@racket[with-exporting-libraries] is used to construct the index
+description.
+
+}
+         
+@defproc[(id-to-form-target-maker [id identifier?]
+                                  [dep? any/c]
+                                  [#:space space (or/c #f symbol?) #f]
+                                  [#:suffix suffix (or/c #f symbol? serializable?) #f])
+         (content? (-> tag? content?) . -> . content?)]{
+
+ Like @racket[id-to-target-maker], but intended for syntactic forms
+ instead than value bindings. In the default manual style, both are
+ style the same.
+ 
+}
+         
+
+@defproc[(annote-exporting-library [content content?]
+                                   [#:format-module-path fmt (any/c . -> . string?) ~s])
+         content?]{
+
+Wraps content for a defining instance of some identifier to indicate
+the module path that exports the identifier. This module will be
+determined via @racket[defmodule] or @racket[declare-exporting] in an
+enclosing section.
+
+}
+
+@defproc[(with-exporting-libraries [make-desc (list? . -> . exported-index-desc?)])
+         delayed-index-desc?]{
+
+Creates an index description that incorporates information about
+relevant modules. Relevant module paths will be determined via
+@racket[defmodule] or @racket[declare-exporting] in an enclosing
+section and passed to @racket[make-desc], whose result will replace
+the result of @racket[with-exporting-libraries] for indexing.
+
+}
+
+@; ------------------------------------------------------------------------
 @section[#:tag "doc-strings"]{Various String Forms}
 
 @defproc[(aux-elem [pre-content pre-content?] ...) element?]{
@@ -2256,6 +2362,20 @@ initial deprecation message.}
          element?]{
 
  An alias for @racket[image] for backward compatibility.}
+
+@defthing[boxed-style style?]{
+
+The style used for a @racket[table] for defining a binding, such as
+the one produced by @racket[defform] or @racket[defproc].
+
+}
+  
+@defproc[(add-background-label [kind string?])
+         (-> (list/c block?) block?)]{
+
+Produces a function that adds a label to a block in the same way as
+the block produces by @racket[defform], @racket[defproc], etc. The
+block is provided in a flow that has a single block.}
 
 @; ------------------------------------------------------------------------
 @section[#:tag "index-entries"]{Index-Entry Descriptions}
