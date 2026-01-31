@@ -833,7 +833,8 @@
             (define e (index-element-desc i))
             (when (delayed-index-desc? e)
               (define v ((delayed-index-desc-resolve e) this d ri))
-              (hash-set! (resolve-info-delays ri) e (merge-desc-context v)))]
+              (hash-set! (resolve-info-delays ri) e (merge-desc-context v)))
+            (resolve-content (index-element-entry-seq i) d ri)]
            [(link-element? i) (resolve-get d ri (link-element-tag i))])
          (resolve-content (element-content i) d ri)
          (cond
