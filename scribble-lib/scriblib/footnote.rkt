@@ -2,6 +2,8 @@
 
 (require (for-syntax racket/base)
          scribble/core
+         (only-in scribble/base superscript)
+         (only-in scriblib/render-cond cond-element)
          scribble/decode
          scribble/html-properties
          scribble/latex-properties
@@ -11,6 +13,7 @@
          "private/counter.rkt")
 
 (provide note
+         note-number
          define-footnote)
 
 (define footnote-style-extras
@@ -24,12 +27,43 @@
 (define note-box-style (make-style "NoteBox" footnote-style-extras))
 (define note-content-style (make-style "NoteContent" footnote-style-extras))
 
-(define (note . text)
-  (make-element 
-   note-box-style
-   (make-element note-content-style
-                 (decode-content text))))
+(define note-number (make-parameter #f))
 
+;; TODO: move this utility function somewhere it can be exported from
+(define (xexpr-element xexpr)
+  (make-element (make-style #f (list (xexpr-property xexpr ""))) '()))
+
+(define (note #:number [number (note-number)] . text)
+  (define (no-number)
+    (make-element
+      note-box-style
+      (make-element note-content-style
+                    (decode-content text))))
+  (cond-element
+    [html
+      (if number
+        (let* ([n (if (integer? number)
+                    number
+                    (let ([nn (note-number)])
+                      (if (integer? nn) nn 1)))]
+               [a (lambda (x y)
+                    (xexpr-element `[a ([name ,(format "__footnote_~a_~a__" x n)]
+                                        [href ,(format "#__footnote_~a_~a__" y n)])
+                                       [sup () ,(format "~a" n)]]))])
+          (note-number (+ n 1))
+          (make-element plain
+            (list
+              (a "source" "target")
+              (make-element
+                note-box-style
+                (make-element note-content-style
+                  (list
+                    (a "target" "source")
+                    ": "
+                    (decode-content text)))))))
+        (no-number))]
+    [else
+      (no-number)]))
 
 (define footnote-style (make-style "Footnote" footnote-style-extras))
 (define footnote-ref-style (make-style "FootnoteRef" footnote-style-extras))
