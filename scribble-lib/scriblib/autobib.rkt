@@ -208,7 +208,7 @@
 
 (define (extract-bib-author b)
   (or (auto-bib-author b)
-      (org-author-name (auto-bib-title b))))
+      (org-author-name (content->string (auto-bib-title b)))))
 
 (define (extract-bib-key b)
   (author-element-names (extract-bib-author b)))
