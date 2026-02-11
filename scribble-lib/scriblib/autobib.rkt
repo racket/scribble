@@ -700,7 +700,7 @@
   (make-other-author-element
    #f
    (list "Alia")
-   (list "al" ._)
+   "al."
    (list "al" ._)))
 
 (define (authors name . names*)
