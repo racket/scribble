@@ -87,7 +87,7 @@
 (define-struct auto-bib (author date title location url note is-book? doi key specific))
 (define-struct bib-group (ht))
 
-(define-struct (author-element element) (names cite))
+(define-struct (author-element element) (names cite)) ;; NB: names should always be a string
 (define-struct (other-author-element author-element) ())
 
 (define (author-element-names* x)
@@ -693,19 +693,19 @@
   (make-author-element
    #f
    (list org)
-   org
+   (content->string org)
    org))
 
 (define (other-authors)
   (make-other-author-element
    #f
    (list "Alia")
-   (list "al" ._)
+   "al."
    (list "al" ._)))
 
 (define (authors name . names*)
   (define names (map parse-author (cons name names*)))
-  (define slash-names (string-join (map (compose1 content->string author-element-names) names) " / "))
+  (define slash-names (string-join (map author-element-names names) " / "))
   (define cite
     (case (length names)
       [(1) (author-element-cite (car names))]
