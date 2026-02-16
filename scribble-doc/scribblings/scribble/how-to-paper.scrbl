@@ -645,7 +645,7 @@ renders as
 @; ----------------------------------------
 @section[#:tag "pictures"]{Pictures}
 
-Any value that is convertable to an image can be used directly within
+Any value that is convertible to an image can be used directly within
 a Scribble document. Functions from the @racketmodname[pict]
 and @racketmodname[2htdp/image #:indirect] libraries, for example, generate
 images. For example,
