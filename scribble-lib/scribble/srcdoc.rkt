@@ -75,14 +75,13 @@
      (syntax-shift-phase-level s #f)))
   (with-syntax ([((req ...) ...)
                  (for/list ([rs (in-list (reverse requires))])
-                   (map (lambda (r)
-                          (syntax-case r ()
-                            [(op arg ...)
-                             (with-syntax ([(arg ...) (map shift-and-introduce
-                                                           (syntax->list #'(arg ...)))])
-                               #'(op arg ...))]
-                            [else (shift-and-introduce r)]))
-                        (syntax->list rs)))]
+                   (for/list ([r (in-list (syntax->list rs))])
+                     (syntax-case r ()
+                       [(op arg ...)
+                        (with-syntax ([(arg ...) (map shift-and-introduce
+                                                      (syntax->list #'(arg ...)))])
+                          #'(op arg ...))]
+                       [else (shift-and-introduce r)])))]
                 [(expr ...)
                  (map shift-and-introduce (reverse doc-exprs))]
                 [doc-body
@@ -128,11 +127,12 @@
                         (let ([t (syntax-local-value #'id (lambda () #f))])
                           (unless (provide/doc-transformer? t)
                             (raise-syntax-error #f "not bound as a provide/doc transformer" stx #'id))
-                          (let* ([i (make-syntax-introducer)]
-                                 [i2 (lambda (x) (syntax-local-introduce (i x)))])
-                            (let-values ([(p/c d req/d id) ((provide/doc-transformer-proc t)
-                                                            (i (syntax-local-introduce form)))])
-                              (list (i2 p/c) (i req/d) (i d) (i id)))))]
+                          (define i (make-syntax-introducer))
+                          (define (i2 x)
+                            (syntax-local-introduce (i x)))
+                          (let-values ([(p/c d req/d id) ((provide/doc-transformer-proc t)
+                                                          (i (syntax-local-introduce form)))])
+                            (list (i2 p/c) (i req/d) (i d) (i id))))]
                        [_ (raise-syntax-error #f "not a provide/doc sub-form" stx form)]))])
       (with-syntax ([(p/c ...)
                      (map (lambda (form f)
