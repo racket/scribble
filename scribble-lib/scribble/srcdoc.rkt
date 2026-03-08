@@ -503,12 +503,9 @@
                               "expected an identifier or sequence of two identifiers"
                               stx
                               #'struct-name)])
-       (for ([f (in-list (syntax->list #'(field-name ...)))])
-         (unless (identifier? f)
-           (raise-syntax-error #f 
-                               "expected an identifier"
-                               stx
-                               f)))
+       (for ([f (in-list (syntax->list #'(field-name ...)))]
+             #:unless (identifier? f))
+         (raise-syntax-error #f "expected an identifier" stx f))
        (define omit-constructor? #f)
        (define-values (ds-args desc)
          (let loop ([ds-args '()]
