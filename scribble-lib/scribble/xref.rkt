@@ -55,21 +55,32 @@
   (let* ([renderer (new render% [dest-dir (find-system-path 'temp-dir)])]
          [fp (send renderer traverse null null)]
          [load-source (lambda (src ci)
-                        (parameterize ([current-namespace
-                                        (namespace-anchor->empty-namespace here)])
-                          (let ([vs (src)])
-                            (for ([v (in-list (if (procedure? vs) (vs) (list vs)))])
-                              (when v
-                                (define data (if (data+root? v) (data+root-data v) v))
-                                (define root (if (data+root? v) (data+root-root v) root-path))
-                                (define doc-id (or (and (data+root+doc-id? v) (data+root+doc-id-doc-id v))
-                                                   doc-id-str))
-                                (define pkg (or (and (data+root+doc-id+pkg? v) (data+root+doc-id+pkg-pkg v))
-                                                pkg-str))
-                                (send renderer deserialize-info data ci
-                                      #:root root
-                                      #:doc-id doc-id
-                                      #:pkg pkg))))))]
+                        (parameterize ([current-namespace (namespace-anchor->empty-namespace here)])
+                          (define vs (src))
+                          (for ([v (in-list (if (procedure? vs)
+                                                (vs)
+                                                (list vs)))])
+                            (when v
+                              (define data
+                                (if (data+root? v)
+                                    (data+root-data v)
+                                    v))
+                              (define root
+                                (if (data+root? v)
+                                    (data+root-root v)
+                                    root-path))
+                              (define doc-id
+                                (or (and (data+root+doc-id? v) (data+root+doc-id-doc-id v))
+                                    doc-id-str))
+                              (define pkg
+                                (or (and (data+root+doc-id+pkg? v) (data+root+doc-id+pkg-pkg v))
+                                    pkg-str))
+                              (send renderer deserialize-info
+                                    data
+                                    ci
+                                    #:root root
+                                    #:doc-id doc-id
+                                    #:pkg pkg)))))]
          [use-ids (make-weak-hasheq)]
          [ci (send renderer collect null null fp
                    (lambda (key ci)
@@ -125,42 +136,31 @@
   (send renderer transfer-info ci (resolve-info-ci (xrefs-ri xrefs))))
 
 ;; Returns (values <tag-or-#f> <form?>)
-(define (xref-binding-tag xrefs id/binding mode
-                          #:space [space #f]
-                          #:suffix [suffix space])
-    (let ([search
-           (lambda (id/binding)
-             (let ([tag (find-scheme-tag #f (xrefs-ri xrefs) id/binding mode
-                                         #:space space
-                                         #:suffix suffix)])
-               (if tag
-                   (values tag (eq? (car tag) 'form))
-                   (values #f #f))))])
-      (cond
-        [(identifier? id/binding)
-         (search id/binding)]
-        [(and (list? id/binding)
-              (= 7 (length id/binding)))
-         (search id/binding)]
-        [(and (list? id/binding)
-              (= 2 (length id/binding)))
-         (let loop ([src (car id/binding)])
-           (cond
-            [(module-path-index? src)
-             (search (list src (cadr id/binding)))]
-            [(module-path? src)
-             (loop (module-path-index-join src #f))]
-            [else
-             (raise-argument-error 'xref-binding-definition->tag
-                                   "(list/c (or/c module-path? module-path-index?) any/c)"
-                                   id/binding)]))]
-        [else (raise-argument-error 'xref-binding-definition->tag
-                                    (string-append
-                                     "(or/c identifier? (lambda (l)\n"
-                                     "                    (and (list? l)\n"
-                                     "                         (or (= (length l) 2)\n"
-                                     "                             (= (length l) 7)))))")
-                                    id/binding)])))
+(define (xref-binding-tag xrefs id/binding mode #:space [space #f] #:suffix [suffix space])
+  (define (search id/binding)
+    (let ([tag (find-scheme-tag #f (xrefs-ri xrefs) id/binding mode #:space space #:suffix suffix)])
+      (if tag
+          (values tag (eq? (car tag) 'form))
+          (values #f #f))))
+  (cond
+    [(identifier? id/binding) (search id/binding)]
+    [(and (list? id/binding) (= 7 (length id/binding))) (search id/binding)]
+    [(and (list? id/binding) (= 2 (length id/binding)))
+     (let loop ([src (car id/binding)])
+       (cond
+         [(module-path-index? src) (search (list src (cadr id/binding)))]
+         [(module-path? src) (loop (module-path-index-join src #f))]
+         [else
+          (raise-argument-error 'xref-binding-definition->tag
+                                "(list/c (or/c module-path? module-path-index?) any/c)"
+                                id/binding)]))]
+    [else
+     (raise-argument-error 'xref-binding-definition->tag
+                           (string-append "(or/c identifier? (lambda (l)\n"
+                                          "                    (and (list? l)\n"
+                                          "                         (or (= (length l) 2)\n"
+                                          "                             (= (length l) 7)))))")
+                           id/binding)]))
 
 (define (xref-binding->definition-tag xrefs id/binding mode
                                       #:space [space #f]
