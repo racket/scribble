@@ -80,6 +80,7 @@ A function, again, not a link target, documented to return @racket[10] using a d
 @defthing[#:link-target? #f val:kw any/c #:auto-value]{Test auto-value keyword reading.}
 @defthing[#:link-target? #f val:list any/c #:auto-value]{Test auto-value list reading.}
 @defthing[#:link-target? #f val:vector any/c #:auto-value]{Test auto-value vector reading.}
+@defthing[#:link-target? #f val:flonum any/c #:auto-value]{Test auto-value flonum reading.}
 
 @defstruct[pt ([x real?] [y real?])]{A structure type with extra name.}
 

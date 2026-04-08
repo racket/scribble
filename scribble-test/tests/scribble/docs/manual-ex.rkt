@@ -31,3 +31,4 @@
 (define val:list '(1 2 3 4))
 (define val:vector #(1 2 3 4))
 (define val:param (make-parameter 'foo))
+(define val:flonum 1.25)

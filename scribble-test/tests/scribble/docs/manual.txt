@@ -186,6 +186,10 @@ val:vector : any/c = #(1 2 3 4)
 
 Test auto-value vector reading.
 
+val:flonum : any/c = 1.25
+
+Test auto-value flonum reading.
+
 (struct pt (x y)                     
     #:extra-constructor-name make-pt)
   x : real?                          
