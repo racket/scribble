@@ -79,16 +79,15 @@
       (strip-comments (cdr body))]
      [(eq? ad 'code:blank)
       (strip-comments (cdr body))]
-     [(and (or (eq? ad 'code:hilite)
-               (eq? ad 'code:quote))
-           (let* ([d (cdr body)]
-                  [dd (if (syntax? d)
-                          (syntax-e d)
-                          d)])
-             (and (pair? dd)
-                  (or (null? (cdr dd))
-                      (and (syntax? (cdr dd))
-                           (null? (syntax-e (cdr dd))))))))
+     [(cond
+        [(or (eq? ad 'code:hilite) (eq? ad 'code:quote))
+         (define d (cdr body))
+         (define dd
+           (if (syntax? d)
+               (syntax-e d)
+               d))
+         (and (pair? dd) (or (null? (cdr dd)) (and (syntax? (cdr dd)) (null? (syntax-e (cdr dd))))))]
+        [else #f])
       (define d (cdr body))
       (define r
         (strip-comments (car (if (syntax? d) (syntax-e d) d))))
