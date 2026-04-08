@@ -88,16 +88,15 @@
                        (cdr (apply append (map (lambda (x) (list #f x)) r)))
                        r)])
            (make-table plain
-                       (map (lambda (x)
-                              (let ([@expr (if x
-                                               (litchar/lines (car x))
-                                               "")]
-                                    [sexpr (if x
-                                               (racket:to-paragraph ((norm-spacing 0) (cadr x)))
-                                               "")]
-                                    [reads-as (if x reads-as "")])
-                                (map as-flow (list spacer @expr reads-as sexpr))))
-                            r)))]))))
+                       (for/list ([x (in-list r)])
+                         (let ([@expr (if x
+                                          (litchar/lines (car x))
+                                          "")]
+                               [sexpr (if x
+                                          (racket:to-paragraph ((norm-spacing 0) (cadr x)))
+                                          "")]
+                               [reads-as (if x reads-as "")])
+                           (map as-flow (list spacer @expr reads-as sexpr))))))]))))
 
 ;; stuff for the scribble/text examples
 
