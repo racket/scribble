@@ -2,8 +2,7 @@
 
 (define collection 'multi)
 
-(define deps '("scheme-lib"
-               ["base" #:version "8.2.0.7"]
+(define deps '(["base" #:version "8.2.0.7"]
                "at-exp-lib"))
 
 (define pkg-desc "Language for text with embedded Racket code")
