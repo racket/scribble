@@ -659,7 +659,8 @@ Generates a literal hyperlinked URL.}
                  [#:doc module-path (or/c module-path? #f) #f]
                  [#:tag-prefixes prefixes (or/c (listof string?) #f) #f]
                  [#:underline? underline? any/c #t]
-                 [#:link-render-style ref-style (or/c link-render-style? #f) #f])
+                 [#:link-render-style ref-style (or/c link-render-style? #f) #f]
+                 [#:query query (or/c #f (listof (cons/c symbol? string?))) #f])
          element?]{
 
 Inserts a reference to the section tagged @racket[tag].
@@ -689,26 +690,32 @@ for more information about the rendering of section references.
 
 If @racket[underline?] is @racket[#f], then a @tech{style} is attached
 to the result @racket[link-element] so that the hyperlink is rendered
-in HTML without an underline
+in HTML without an underline.
+
+If @racket[query] is not @racket[#f], it adds query parameters to the
+link along the same lines as @racket[link-query-addition].
        
 In Racket documentation that is rendered to HTML, clicking on a
 section title normally shows the @racket[secref] call that is needed
 to link to the section.
 
-@history[#:changed "1.25" @elem{Added the @racket[#:link-render-style] argument.}]}
+@history[#:changed "1.25" @elem{Added the @racket[#:link-render-style] argument.}
+         #:changed "1.65" @elem{Added the @racket[#:query] argument.}]}
 
 
 @defproc[(Secref [tag string?]
                  [#:doc module-path (or/c module-path? #f) #f]
                  [#:tag-prefixes prefixes (or/c (listof string?) #f) #f]
                  [#:underline? underline? any/c #t]
-                 [#:link-render-style ref-style (or/c link-render-style? #f) #f])
+                 [#:link-render-style ref-style (or/c link-render-style? #f) #f]
+                 [#:query query (or/c #f (listof (cons/c symbol? string?))) #f])
          element?]{
 
 Like @racket[secref], but if the rendered form of the reference starts
 with a word (e.g., ``section''), then the word is capitalized.
 
-@history[#:changed "1.25" @elem{Added the @racket[#:link-render-style] argument.}]}
+@history[#:changed "1.25" @elem{Added the @racket[#:link-render-style] argument.}
+         #:changed "1.65" @elem{Added the @racket[#:query] argument.}]}
 
 
 @defproc[(seclink [tag string?] 
@@ -716,6 +723,7 @@ with a word (e.g., ``section''), then the word is capitalized.
                   [#:tag-prefixes prefixes (or/c (listof string?) #f) #f]
                   [#:underline? underline? any/c #t]
                   [#:indirect? indirect? any/c #f]
+                  [#:query query (or/c #f (listof (cons/c symbol? string?))) #f]
                   [pre-content pre-content?] ...) element?]{
 
 Like @racket[secref], but the link label is the @tech{decode}d
@@ -724,12 +732,15 @@ Like @racket[secref], but the link label is the @tech{decode}d
 In addition to @racket[secref]'s arguments, @racket[seclink] supports
 a @racket[indirect?] argument. When @racket[indirect?] is true, then
 the section hyperlink's resolution in HTML is potentially delayed; see
-@racket['indirect-link] for @racket[link-element].}
+@racket['indirect-link] for @racket[link-element].
+
+@history[#:changed "1.65" @elem{Added the @racket[#:query] argument.}]}
 
 
 @defproc[(other-doc [module-path module-path?]
                     [#:underline? underline? any/c #t]
-                    [#:indirect indirect (or/c #f content?) #f])
+                    [#:indirect indirect (or/c #f content?) #f]
+                    [#:query query (or/c #f (listof (cons/c symbol? string?))) #f])
          element?]{
 
 Like @racket[secref] for the document's implicit @racket["top"]
@@ -753,7 +764,9 @@ renders as a hyperlink with the text:
 
 @verbatim[#:indent 2]|{
   the Parsec implementation in Racket documentation
-}|}
+}|
+
+@history[#:changed "1.65" @elem{Added the @racket[#:query] argument.}]}
 
 
 @defproc[(elemtag [t (or/c taglet? generated-tag?)] [pre-content pre-content?] ...) element?]{
@@ -763,10 +776,15 @@ The tag @racket[t] refers to the content form of
 
 
 @defproc[(elemref [t (or/c taglet? generated-tag?)] [pre-content pre-content?] ... 
-                  [#:underline? underline? any/c #t]) element?]{
+                  [#:underline? underline? any/c #t]
+                  [#:query query (or/c #f (listof (cons/c symbol? string?))) #f])
+         element?]{
 
-The @tech{decode}d @racket[pre-content] is hyperlinked to @racket[t],
-which is normally defined using @racket[elemtag].}
+Similar to @racket[seclink],
+but the @tech{decode}d @racket[pre-content] is hyperlinked to @racket[t],
+which is normally defined using @racket[elemtag].
+
+@history[#:changed "1.65" @elem{Added the @racket[#:query] argument.}]}
 
 @; ------------------------------------------------------------------------
 

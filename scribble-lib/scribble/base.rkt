@@ -596,53 +596,64 @@
                 #:rest (listof pre-content?)
                 element?)]
   [elemref (->* ((or/c taglet? generated-tag?))
-                (#:underline? any/c)
+                (#:underline? any/c
+                 #:query (or/c #f (listof (cons/c symbol? string?))))
                 #:rest (listof pre-content?)
                 element?)]
   [secref (->* (string?)
                (#:doc (or/c #f module-path?)
                 #:tag-prefixes (or/c #f (listof string?))
                 #:underline? any/c
-                #:link-render-style (or/c #f link-render-style?))
+                #:link-render-style (or/c #f link-render-style?)
+                #:query (or/c #f (listof (cons/c symbol? string?))))
                element?)]
   [Secref (->* (string?)
                (#:doc (or/c #f module-path?)
                 #:tag-prefixes (or/c #f (listof string?))
                 #:underline? any/c
-                #:link-render-style (or/c #f link-render-style?))
+                #:link-render-style (or/c #f link-render-style?)
+                #:query (or/c #f (listof (cons/c symbol? string?))))
                element?)]
   [seclink (->* (string?)
                 (#:doc (or/c #f module-path?)
                  #:tag-prefixes (or/c #f (listof string?))
                  #:underline? any/c
-                 #:indirect? any/c)
+                 #:indirect? any/c
+                 #:query (or/c #f (listof (cons/c symbol? string?))))
                 #:rest (listof pre-content?)
                 element?)]
   [other-doc (->* (module-path?)
                   (#:underline? any/c
-                   #:indirect (or/c #f content?))
+                   #:indirect (or/c #f content?)
+                   #:query (or/c #f (listof (cons/c symbol? string?))))
                   element?)]))
 
 (define (elemtag t . body)
   (make-target-element #f (decode-content body) `(elem ,t)))
-(define (elemref #:underline? [u? #t] t . body)
-  (make-link-element (if u? #f "plainlink") (decode-content body) `(elem ,t)))
+(define (elemref #:underline? [u? #t]
+                 #:query [query #f]
+                 t . body)
+  (make-link-element (add-query (if u? #f "plainlink") query) (decode-content body) `(elem ,t)))
 
 (define (secref s #:underline? [u? #t] #:doc [doc #f] #:tag-prefixes [prefix #f]
-                #:link-render-style [link-style #f])
-  (make-link-element (let ([name (if u? #f "plainlink")])
-                       (if link-style
-                           (style name (list link-style))
-                           name))
+                #:link-render-style [link-style #f]
+                #:query [query #f])
+  (make-link-element (add-query (let ([name (if u? #f "plainlink")])
+                                  (if link-style
+                                      (style name (list link-style))
+                                      name))
+                                query)
                      null
                      (make-section-tag s #:doc doc #:tag-prefixes prefix)))
 (define (Secref s #:underline? [u? #t] #:doc [doc #f] #:tag-prefixes [prefix #f]
-                #:link-render-style [link-style #f])
+                #:link-render-style [link-style #f]
+                #:query [query #f])
   (let ([le (secref s #:underline? u? #:doc doc #:tag-prefixes prefix
                     #:link-render-style link-style)])
     (make-link-element
-     (let ([es (or (element-style le) plain)])
-       (style (style-name es) (cons 'uppercase (style-properties es))))
+     (add-query (let ([es (or (element-style le) plain)])
+                  (style (style-name es) (cons 'uppercase (style-properties es))))
+                query)
      (element-content le)
      (link-element-tag le))))
 
@@ -654,24 +665,46 @@
                  #:underline? [u? #t] 
                  #:tag-prefixes [prefix #f]
                  #:indirect? [indirect? #f]
+                 #:query [query #f]
                  . s)
-  (make-link-element (if indirect?
-                         (if u?
-                             normal-indirect
-                             plain-indirect)
-                         (if u? 
-                             #f 
-                             "plainlink"))
+  (make-link-element (add-query (if indirect?
+                                    (if u?
+                                        normal-indirect
+                                        plain-indirect)
+                                    (if u? 
+                                        #f 
+                                        "plainlink"))
+                                query)
                      (decode-content s)
                      `(part ,(doc-prefix doc prefix tag))))
 
 (define (other-doc doc 
                    #:underline? [u? #t]
-                   #:indirect [indirect #f])
+                   #:indirect [indirect #f]
+                   #:query [query #f])
   (if indirect
-      (seclink "top" #:doc doc #:underline? u? #:indirect? #t
+      (seclink "top" #:doc doc #:underline? u? #:indirect? #t #:query query
                (list "the " indirect " documentation"))
-      (secref "top" #:doc doc #:underline? u?)))
+      (secref "top" #:doc doc #:underline? u? #:query query)))
+
+(define (add-query s query)
+  (if query
+      (let ([s (if (style? s)
+                   s
+                   (style s null))])
+        (define props (style-properties s))
+        (struct-copy style s
+                     [properties
+                      (if (ormap link-query-addition? props)
+                          (for/list ([prop (in-list props)])
+                            (if (link-query-addition? prop)
+                                (struct-copy link-query-addition prop
+                                             [params (append (link-query-addition-params prop)
+                                                             query)])
+                                prop))
+                          (cons (link-query-addition query)
+                                props))]))
+      s))
 
 ;; ----------------------------------------
 

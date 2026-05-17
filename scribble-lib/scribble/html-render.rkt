@@ -1478,7 +1478,22 @@
                                           (string=? "" (apply string-append (format-number n '("")))))))
                                (eq? 'number (link-render-style-at-element e))
                                (empty-content? (element-content e)))])
-             
+             (define (extract-query)
+               (let ([s (element-style e)])
+                 (or (and (style? s)
+                          (for/or ([prop (in-list (style-properties s))])
+                            (and (link-query-addition? prop)
+                                 (link-query-addition-params prop))))
+                     null)))
+             (define (add-query url-string)
+               (define query (extract-query))
+               (if (null? query)
+                   url-string
+                   (let ([u (string->url url-string)])
+                     (url->string
+                      (struct-copy url u
+                                   [query (append (url-query u)
+                                                  query)])))))
              (if (or indirect-link? dest)
                  `(,@(cond
                        [number-link?
@@ -1488,53 +1503,56 @@
                                "section "))]
                        [else '()])
                    (a ([href
-                      ,(cond
-                        [(and ext-id external-root-url dest
-                              (let* ([ref-path (relative->path (dest-path dest))]
-                                     [rel (if (relative-path? ref-path)
-                                              #f
-                                              (find-relative-path
-                                               (find-doc-dir)
-                                               ref-path))])
-                                (and rel
-                                     (relative-path? rel)
-                                     (not (memq 'up (explode-path rel)))
-                                     rel)))
-                         => (lambda (rel)
-                              (url->string*
-                               (struct-copy
-                                url
-                                (combine-url/relative
-                                 (string->url external-root-url)
-                                 (string-join (map (lambda (s)
-                                                     (case s
-                                                       [(up) ".."]
-                                                       [(same) "."]
-                                                       [else (path-element->string s)]))
-                                                   (explode-path rel))
-                                              "/"))
-                                [fragment
-                                 (and (not (dest-page? dest))
-                                      (anchor-name (dest-anchor dest)))])))]
-                        [(or indirect-link?
-                             (and ext-id external-tag-path))
-                         ;; Redirected to search:
-                         (url->string*
-                          (let ([u (string->url (or external-tag-path
-                                                    (get-doc-search-url)))])
-                            (struct-copy
-                             url
-                             u
-                             [query
-                              (if (string? ext-id)
-                                  (list* (cons 'doc ext-id)
-                                         (cons 'rel (or (dest->url-in-doc dest ext-id) "???"))
-                                         (url-query u))
-                                  (cons (cons 'tag (tag->query-string (link-element-tag e)))
-                                        (url-query u)))])))]
-                        [else
-                         ;; Normal link:
-                         (dest->url dest)])]
+                        ,(cond
+                           [(and ext-id external-root-url dest
+                                 (let* ([ref-path (relative->path (dest-path dest))]
+                                        [rel (if (relative-path? ref-path)
+                                                 #f
+                                                 (find-relative-path
+                                                  (find-doc-dir)
+                                                  ref-path))])
+                                   (and rel
+                                         (relative-path? rel)
+                                         (not (memq 'up (explode-path rel)))
+                                         rel)))
+                            => (lambda (rel)
+                                 (url->string*
+                                  (struct-copy
+                                   url
+                                   (combine-url/relative
+                                    (string->url external-root-url)
+                                    (string-join (map (lambda (s)
+                                                        (case s
+                                                          [(up) ".."]
+                                                          [(same) "."]
+                                                          [else (path-element->string s)]))
+                                                      (explode-path rel))
+                                                 "/"))
+                                   [query (extract-query)]
+                                   [fragment
+                                    (and (not (dest-page? dest))
+                                         (anchor-name (dest-anchor dest)))])))]
+                            [(or indirect-link?
+                                 (and ext-id external-tag-path))
+                             ;; Redirected to search:
+                             (url->string*
+                              (let ([u (string->url (or external-tag-path
+                                                        (get-doc-search-url)))])
+                                (struct-copy
+                                 url
+                                 u
+                                 [query
+                                  (append
+                                   (if (string? ext-id)
+                                       (list* (cons 'doc ext-id)
+                                              (cons 'rel (or (dest->url-in-doc dest ext-id) "???"))
+                                              (url-query u))
+                                       (cons (cons 'tag (tag->query-string (link-element-tag e)))
+                                             (url-query u)))
+                                   (extract-query))])))]
+                            [else
+                             ;; Normal link:
+                             (add-query (dest->url dest))])]
                      ,@(attribs (if (or indirect-link?
                                         (and ext-id external-tag-path))
                                     '([class "Sq"])

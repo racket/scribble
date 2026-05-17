@@ -1134,9 +1134,12 @@ properties for all @racket[element]s:
        @racket[racketmodname], @racket[tech], and @racket[techlink] provide
        higher-level interfaces for creating supported kinds of indirect links.}
 
+ @item{@racket[link-query-addition] structure --- Adds query parameters to the link.}
+
 ]
 
-@history[#:changed "1.26" @elem{Added @racket[link-render-style] support.}]}
+@history[#:changed "1.26" @elem{Added @racket[link-render-style] support.}
+         #:changed "1.65" @elem{Added @racket[link-query-addition] support.}]}
 
 
 @defstruct[(index-element element) ([tag tag?]
@@ -1837,7 +1840,7 @@ tag.}
 
 @defstruct[alt-tag ([name (and/c string? #rx"^[a-zA-Z0-9]+$")])]{
 
-Use as a @tech{style property} for an @racket[element],
+Used as a @tech{style property} for an @racket[element],
 @racket[paragraph], or @racket[compound-paragraph] to substitute an
 alternate HTML tag (instead of @tt{<span>}, @tt{<p>}, @tt{<div>},
 @|etc|).}
@@ -1847,6 +1850,16 @@ alternate HTML tag (instead of @tt{<span>}, @tt{<p>}, @tt{<div>},
 
 Used as a @tech{style property} on a style with @racket[table-columns]
 to add arbitrary attributes to an HTML @tt{col} tag within the table.}
+
+
+@defstruct[link-query-addition ([params (listof (cons/c symbol? string?))])]{
+
+Used as a @tech{style property} for an @racket[link-element] to add
+query parameters to the link. The @racket[params] field provides a
+list of symbol keys and string values, which are added in order to the
+hyperlink.
+
+@history[#:added "1.65"]}
 
 
 @defstruct[url-anchor ([name string?])]{
