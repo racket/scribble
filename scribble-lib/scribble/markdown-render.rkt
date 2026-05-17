@@ -102,7 +102,8 @@
           (indent)
           (parameterize ([in-code? #t])
             (render-table i part ht inline?))
-          (indent)
+          (unless (null? flowss)
+            (indent))
           (displayln "```")]
 
         [else

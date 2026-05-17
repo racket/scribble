@@ -495,13 +495,6 @@
                                     tag
                                     (serialize tag)))))
 
-    (define/private (link-element-indirect? e)
-      (memq 'indirect-link 
-            (let ([s (element-style e)])
-              (or (and (style? s)
-                       (style-properties s))
-                  null))))
-
     (define/override (resolve-content i d ri)
       (cond
         [(and (link-element? i)

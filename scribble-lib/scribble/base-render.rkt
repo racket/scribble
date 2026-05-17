@@ -835,7 +835,9 @@
               (define v ((delayed-index-desc-resolve e) this d ri))
               (hash-set! (resolve-info-delays ri) e (merge-desc-context v)))
             (resolve-content (index-element-entry-seq i) d ri)]
-           [(link-element? i) (resolve-get d ri (link-element-tag i))])
+           [(link-element? i) (if (link-element-indirect? i)
+                                  (resolve-get/tentative d ri (link-element-tag i))
+                                  (resolve-get d ri (link-element-tag i)))])
          (resolve-content (element-content i) d ri)
          (cond
           [(toc-target2-element? i) (resolve-content (toc-target2-element-toc-content i) d ri)]
@@ -996,7 +998,9 @@
                      [v (in-list (render-content i part ri))])
            v)]
         [(and (link-element? i) (null? (element-content i)))
-         (define v (resolve-get part ri (link-element-tag i)))
+         (define v (if (link-element-indirect? i)
+                       (resolve-get/tentative part ri (link-element-tag i))
+                       (resolve-get part ri (link-element-tag i))))
          (if v
              (render-content (strip-aux (or (vector-ref v 0) "???")) part ri)
              (render-content (list "[missing]") part ri))]

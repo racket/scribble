@@ -7,7 +7,8 @@
          extract-table-cell-styles
          empty-content?
          extract-cell-paddingss
-         extract-column-paddings)
+         extract-column-paddings
+         link-element-indirect?)
 
 (define (part-style? p s)
   (memq s (style-properties (part-style p))))
@@ -94,3 +95,10 @@
                      (loop padding (cdr column))]
                     [else #f]))
                 (loop next))]))]))
+
+(define (link-element-indirect? e)
+  (memq 'indirect-link
+        (let ([s (element-style e)])
+          (or (and (style? s)
+                   (style-properties s))
+              null))))
