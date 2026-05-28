@@ -109,8 +109,8 @@ var prefixes = { "github.com": "tree",
 
 
 function AddSourceUrl(source, mod_path, collection, info) {
-    // multi is encoded as an array, empty as false
-    single_collection = (typeof collection === "string");
+    // multi is encoded as an array, single is either false or a string
+    single_collection = (collection === false || typeof collection === "string");
 
     var parsed = source && mod_path && ParseSource(source, mod_path, single_collection);
 
