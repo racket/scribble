@@ -20,7 +20,7 @@
 \def\SToAuthorDoneX#1{\ifx\next\SAutoAuthorDone \let\Snext\SAddAuthorInfo \else \let\Snext\SToAuthorDone \fi \Snext}
 \newcommand{\SAddAuthorInfo}[1]{\SAuthorinfo{#1}{}{}}
 
-\renewcommand{\SAuthorinfo}[4]{\author{#1}{#2}{#3}{#4}}
+\renewcommand{\SAuthorinfo}[4]{\author{#1}#2#3#4}
 \renewcommand{\SAuthorSep}[1]{}
 \renewcommand{\SAuthorOrcid}[1]{\orcid{#1}}
 \renewcommand{\SAuthorPlace}[1]{\affiliation{#1}}
