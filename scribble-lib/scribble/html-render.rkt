@@ -26,7 +26,11 @@
          "search.rkt"
          (except-in "base.rkt" url))
 (provide render-mixin
-         render-multi-mixin)
+         render-multi-mixin
+         current-html-render-head-prefix)
+
+(define current-html-render-head-prefix
+  (make-parameter '()))
 
 (define (number->decimal-string s)
   (number->string (if (integer? s) s (exact->inexact s))))
@@ -884,6 +888,7 @@
               ;; #:insert-newlines? #t
               `(html ,(style->attribs (part-style d))
                  (head ()
+                   ,@(current-html-render-head-prefix)
                    (meta ([http-equiv "content-type"]
                           [content "text/html; charset=utf-8"]))
                    (meta ([name "viewport"]
