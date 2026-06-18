@@ -847,9 +847,9 @@ END-OF-TESTS
   (values (read-all x inside-reader #t) (read-all y read)))
 
 (define (x . (mk-eval-test syntax-reader) . y)
-  (define r (void))
-  (for ([x (read-all x (lambda (i) (syntax-reader 'test i)))])
-    (set! r (call-with-values (lambda () (eval x ns)) list)))
+  (define r
+    (for/fold ([r (void)]) ([x (read-all x (lambda (i) (syntax-reader 'test i)))])
+      (call-with-values (lambda () (eval x ns)) list)))
   (values r (read-all y read)))
 
 (define (x . (mk-syntax-test syntax-reader) . y)
@@ -949,12 +949,12 @@ END-OF-TESTS
                 (regexp-match #px"^(.*\\S)\\s+(-\\S+->)\\s+(\\S.*)$" t)))
           (unless (and m (= 4 (length m)))
             (error 'bad-test "~a" t))
-          (let-values ([(x y) ((string->tester (caddr m)) (cadr m) (cadddr m))])
-            (test #:failure-message (format "bad result in\n    ~a\n  results:\n    ~s != ~s"
-                                            (regexp-replace* #rx"\n" t "\n    ")
-                                            x
-                                            y)
-                  (matching? x y))))))
+          (define-values (x y) ((string->tester (caddr m)) (cadr m) (cadddr m)))
+          (test #:failure-message (format "bad result in\n    ~a\n  results:\n    ~s != ~s"
+                                          (regexp-replace* #rx"\n" t "\n    ")
+                                          x
+                                          y)
+                (matching? x y)))))
 
     ;; Check static versus dynamic readtable for command (dynamic when "c" in the
     ;; name) and datum (dynamic when "d" in the name) parts:
