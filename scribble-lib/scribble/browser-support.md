@@ -28,14 +28,16 @@ styling or links) may be missing.
   shipped to users within the past 12 months, it is fully supported.
   
 - Partial support includes any browser released within the past 5
-  years with at least 1% use on https://docs.racket-lang.org As of
-  June 1, 2020, that includes the above browsers only.
-  
-  Note that the only browser not in the above set with more than 1%
-  share is Chrome 38 as distributed on the Nexus 5, which was
-  discontinued in March 2015.
-  
-- Minimal support applies to all widely-distributed browsers. That is,
-  it is important that the text of the documentation appears in Links,
-  IE 6, Opera Mini, etc.
-    
+  years with at least 1% use on https://docs.racket-lang.org. In
+  practice this is usually the same set as the fully-supported
+  evergreen browsers; the current usage share should be consulted when
+  deciding whether a specific older browser still qualifies.
+
+- Minimal support applies to all widely-distributed browsers that can
+  reach the documentation. That is, it is important that the text of
+  the documentation is readable in text-mode browsers such as `lynx`
+  and `links`, in screen readers, and in other browsers with limited
+  styling or scripting. (Very old browsers that can no longer establish
+  a modern TLS connection to the documentation site, such as IE 6, are
+  out of scope: they cannot load the pages at all.)
+
