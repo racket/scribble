@@ -87,7 +87,7 @@
 (define (fetch-blueboxes-method-tags sym #:blueboxes-cache [cache (make-blueboxes-cache #f)])
   (populate-cache! cache)
   (define ht (blueboxes-cache-method->tags cache))
-  (or (and ht (hash-ref ht sym (λ () '()))) '()))
+  (or (and ht (hash-ref ht sym '())) '()))
 
 (define (populate-cache! cache)
   (define cache-content (blueboxes-cache-info-or-paths cache))
