@@ -75,7 +75,7 @@
                    (port-count-lines! port)
                    (file-position port (+ (car offset+len) (or offset 0)))
                    (for/list ([i (in-range (cdr offset+len))])
-                     (read-line port)))))))
+                     (read-line port 'any)))))))
           (cond
             [(not (andmap string? lines)) #f]
             [(null? lines) #f]
@@ -133,7 +133,7 @@
      (call-with-input-file blueboxes.rktd
        (λ (port)
          (port-count-lines! port)
-         (define first-line (read-line port))
+         (define first-line (read-line port 'any))
          (define pos (file-position port))
          (define desed 
            (with-handlers ([exn:fail? (λ (x)
