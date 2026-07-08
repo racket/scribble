@@ -949,12 +949,12 @@ END-OF-TESTS
                 (regexp-match #px"^(.*\\S)\\s+(-\\S+->)\\s+(\\S.*)$" t)))
           (unless (and m (= 4 (length m)))
             (error 'bad-test "~a" t))
-          (let-values ([(x y) ((string->tester (caddr m)) (cadr m) (cadddr m))])
-            (test #:failure-message (format "bad result in\n    ~a\n  results:\n    ~s != ~s"
-                                            (regexp-replace* #rx"\n" t "\n    ")
-                                            x
-                                            y)
-                  (matching? x y))))))
+          (define-values (x y) ((string->tester (caddr m)) (cadr m) (cadddr m)))
+          (test #:failure-message (format "bad result in\n    ~a\n  results:\n    ~s != ~s"
+                                          (regexp-replace* #rx"\n" t "\n    ")
+                                          x
+                                          y)
+                (matching? x y)))))
 
     ;; Check static versus dynamic readtable for command (dynamic when "c" in the
     ;; name) and datum (dynamic when "d" in the name) parts:
