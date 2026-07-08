@@ -74,26 +74,33 @@
           null
           (let* ([strs (map (lambda (flows styles)
                               (map (lambda (d style)
-                                     (if (eq? d 'cont)
-                                         d
-                                         (let ([o (open-output-string)])
-                                           (define padding
-                                             (or (findf cell-padding-property? (style-properties style))
-                                                 (cell-padding-property 0 0 0 0)))
-                                           (define (int n) (inexact->exact (floor n)))
-                                           (parameterize ([current-indent 0]
-                                                          [current-output-port o])
-                                             (render-block d part ht #f))
-                                           (define strs (regexp-split
-                                                         #rx"\n"
-                                                         (regexp-replace #rx"\n$" (get-output-string o) "")))
-                                           (append
-                                            (make-list (int (cell-padding-property-top padding)) "")
-                                            (for/list ([str (in-list strs)])
-                                              (string-append (make-string (int (cell-padding-property-left padding)) #\space)
-                                                             str
-                                                             (make-string (int (cell-padding-property-right padding)) #\space)))
-                                            (make-list (int (cell-padding-property-bottom padding)) "")))))
+                                     (cond
+                                       [(eq? d 'cont) d]
+                                       [else
+                                        (define o (open-output-string))
+                                        (define padding
+                                          (or (findf cell-padding-property? (style-properties style))
+                                              (cell-padding-property 0 0 0 0)))
+                                        (define (int n)
+                                          (inexact->exact (floor n)))
+                                        (parameterize ([current-indent 0]
+                                                       [current-output-port o])
+                                          (render-block d part ht #f))
+                                        (define strs
+                                          (regexp-split
+                                           #rx"\n"
+                                           (regexp-replace #rx"\n$" (get-output-string o) "")))
+                                        (append
+                                         (make-list (int (cell-padding-property-top padding)) "")
+                                         (for/list ([str (in-list strs)])
+                                           (string-append
+                                            (make-string (int (cell-padding-property-left padding))
+                                                         #\space)
+                                            str
+                                            (make-string (int (cell-padding-property-right padding))
+                                                         #\space)))
+                                         (make-list (int (cell-padding-property-bottom padding))
+                                                    ""))]))
                                    flows
                                    styles))
                             flowss
