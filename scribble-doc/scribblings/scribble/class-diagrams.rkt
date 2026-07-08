@@ -117,18 +117,19 @@
     (blank 0 (+ class-box-margin class-box-margin)))
   (cond
     [(and methods fields)
-     (let* ([top-spacer (mk-blank)]
-            [bottom-spacer (mk-blank)]
-            [main (vl-append name
-                             top-spacer
-                             (if (null? fields)
-                                 (blank 0 4)
-                                 (apply vl-append fields))
-                             bottom-spacer
-                             (if (null? methods)
-                                 (blank 0 4)
-                                 (apply vl-append methods)))])
-       (add-hline (add-hline (frame (inset main class-box-margin)) top-spacer) bottom-spacer))]
+     (define top-spacer (mk-blank))
+     (define bottom-spacer (mk-blank))
+     (define main
+       (vl-append name
+                  top-spacer
+                  (if (null? fields)
+                      (blank 0 4)
+                      (apply vl-append fields))
+                  bottom-spacer
+                  (if (null? methods)
+                      (blank 0 4)
+                      (apply vl-append methods))))
+     (add-hline (add-hline (frame (inset main class-box-margin)) top-spacer) bottom-spacer)]
     [fields
      (define top-spacer (mk-blank))
      (define main
