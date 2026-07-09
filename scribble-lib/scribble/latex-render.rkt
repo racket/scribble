@@ -402,7 +402,7 @@
                                  (link-element? e)
                                  (not (disable-hyperref))
                                  (let-values ([(dest ext?) (resolve-get/ext? part ri (link-element-tag e))])
-                                   (and dest (not ext?))))]
+                                   (and (not ext?) dest)))]
                  [check-render
                   (lambda ()
                     (when (render-element? e)
@@ -544,7 +544,7 @@
                 (core-render e tt?)]))
             (when hyperref?
               (printf "\\hyperref[t:~a]{"
-                      (t-encode (link-element-tag e))))
+                      (t-encode (vector-ref hyperref? 1))))
             (let loop ([l (if style (style-properties style) null)] [tt? #f])
               (if (null? l)
                   (if hyperref?
