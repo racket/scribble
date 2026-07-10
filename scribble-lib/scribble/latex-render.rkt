@@ -563,13 +563,16 @@
                                             [s (regexp-replace* #rx"}" s "%7d")]
                                             [s (regexp-replace* #rx"%" s "\\\\%")])
                                        s))
-                      (if (regexp-match? #rx"^[^#]*#[^#]*$" target)
-                          ;; work around a problem with `\href' as an
-                          ;; argument to other macros, such as `\marginpar':
-                          (let ([l (string-split target "#")])
-                            (printf "\\Shref{~a}{~a}{" (car l) (cadr l)))
-                          ;; normal:
-                          (printf "\\href{~a}{" target))
+                      (cond
+                        [(equal? target "#") (printf "{")]
+                        [(regexp-match? #rx"^[^#]*#[^#]*$" target)
+                         ;; work around a problem with `\href' as an
+                         ;; argument to other macros, such as `\marginpar':
+                         (let ([l (string-split target "#")])
+                           (printf "\\Shref{~a}{~a}{" (car l) (cadr l)))]
+                        [else
+                         ;; normal:
+                         (printf "\\href{~a}{" target)])
                       (loop (cdr l) #t)
                       (printf "}")]
                      [(color-property? v)

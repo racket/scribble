@@ -219,7 +219,16 @@
         [(element? e)
          (when (style? (element-style e))
            (extract-style-style-files (element-style e) ht pred extract))
-         (extract-content-style-files (element-content e) d ri ht pred extract)]
+         (extract-content-style-files (element-content e) d ri ht pred extract)
+         ;; handle special case of a part reference where the part title gets
+         ;; used in place of empty content
+         (when (and (link-element? e)
+                    (pair? (link-element-tag e))
+                    (eq? 'part (car (link-element-tag e)))
+                    (empty-content? (element-content e)))
+           (define-values (dest ext?) (resolve-get/ext? d ri (link-element-tag e)))
+           (when (vector? dest)
+             (extract-content-style-files (vector-ref dest 0) d ri ht pred extract)))]
         [(multiarg-element? e)
          (when (style? (multiarg-element-style e))
            (extract-style-style-files (multiarg-element-style e) ht pred extract))
