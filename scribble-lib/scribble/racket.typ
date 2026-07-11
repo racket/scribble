@@ -70,9 +70,12 @@
 #let defmodule(columns: [], ..content) = block(width: 100%,
                                                fill: rgb("#F5F5DC"),
                                                inset: 3pt,
-                                                Stable(columns: columns, ..content))
+                                               Stable(columns: columns, ..content))
 #let prototype = Stable
 #let together = Stable
 #let specgrammar = Stable
 #let argcontract = Stable
 #let RBibliography = Stable
+
+#let leftindent = SInset
+#let insetpara = SInset

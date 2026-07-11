@@ -239,7 +239,6 @@
                              scribble-style-typ)]
              [all-style-files (list* prefix-file
                                      scribble-typ
-                                     style-file
                                      (append (extract-part-style-files
                                               d
                                               ri
@@ -727,12 +726,14 @@
                         (if (null? sides)
                             null
                             (list (format "stroke: (~a)" (string-join sides ", "))))])))
-                  (display (if (string? (style-name (car styles)))
-                               (style-name (car styles))
-                               "table.cell"))
+                  (define sn (and (string? (style-name (car styles)))
+                                  (style-name (car styles))))
+                  (display "table.cell")
                   (if (null? opts)
                       (printf "[")
                       (printf "(~a)[" (string-join opts ", ")))
+                  (when sn
+                    (printf "#~a[" sn))
                   (define o (open-output-string))
                   (parameterize ([current-indent 0]
                                  [current-output-port o]
@@ -743,6 +744,8 @@
                     ;; (such as a blank line in a code block) from
                     ;; collapsing:
                     (display (if (regexp-match? #px"^\\s*$" s) "\uA0" s)))
+                  (when sn
+                    (printf "]"))
                   (printf "], ")
                   (loop (list-tail row cnt) (list-tail styles cnt))])))
            (newline))

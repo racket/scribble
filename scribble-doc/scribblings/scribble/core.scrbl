@@ -1361,7 +1361,8 @@ Used as a @tech{style property} for a @racket[table] to set its cells'
 styles.
 
 If a cell style has a string name, it is used as an HTML class for the
-@tt{<td>} tag, as a Latex command name, or as a Typst function name.
+@tt{<td>} tag, as a Latex command name, or as a Typst function name to
+wrap the content of a @tt{table.cell}.
 
 The following are recognized as cell-@tech{style properties}:
 

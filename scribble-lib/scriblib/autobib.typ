@@ -1,4 +1,4 @@
-#let AutoBibliography(body) = body
+#let AutoBibliography = Stable
 #let Autobibentry(body) = body
 #let Autobibtarget(body) = body
 #let Autocolbibnumber(body) = body
