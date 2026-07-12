@@ -458,7 +458,15 @@
              [fp (traverse-content (part-to-collect d) fp)]
              [fp (traverse-flow (part-blocks d) fp)])
         (for/fold ([fp fp]) ([p (in-list (part-parts d))])
-          (traverse-part p fp))))
+          (cond
+            [(traverse-part? p)
+             (traverse-force fp p
+                             (traverse-part-traverse p)
+                             (lambda (ps fp)
+                               (for/fold ([fp fp]) ([p (in-list ps)])
+                                 (traverse-part p fp))))]
+            [else
+             (traverse-part p fp)]))))
 
     (define/public (traverse-paragraph p fp)
       (traverse-content (paragraph-content p) fp))
@@ -527,6 +535,32 @@
             (let ([fp (hash-set fp p v2)]) (if (procedure? v2) fp (again v2 fp))))
           fp))
     
+    ;; ----------------------------------------
+    ;; replace `traverse-part`s with `part`s
+
+    (define/public (traversed-parts ds fp)
+      (for/list ([d (in-list ds)])
+        (traversed-parts-part d fp)))
+
+    (define/public (traversed-parts-part d fp)
+      (define ps
+        (apply
+         append
+         (for/list ([p (in-list (part-parts d))])
+           (cond
+             [(traverse-part? p)
+              (or (hash-ref fp p #f)
+                  (error 'traverse-part-parts "no part computed for traverse-part: ~e" p))]
+             [else
+              (list p)]))))
+      (if (and (= (length ps) (length (part-parts d)))
+               (ormap eq? ps (part-parts d)))
+          d
+          (struct-copy part
+                       d
+                       [parts (for/list ([p (in-list ps)])
+                                (traversed-parts-part p fp))])))
+
     ;; ----------------------------------------
     ;; global-info collection
 
@@ -727,7 +761,7 @@
       (collect-put! ci
                     t
                     ;; See "INFO SHAPE" above.
-                    (vector (element-content i) (add-current-tag-prefix t))))
+                    (vector (element-content i) (add-current-tag-prefix t) #f)))
 
     (define/public (collect-index-element i ci)
       (collect-put! ci

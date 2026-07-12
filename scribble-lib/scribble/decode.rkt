@@ -34,6 +34,7 @@
       (part-collect-decl? v)
       (part-tag-decl? v)
       (part? v)
+      (traverse-part? v)
       (and (splice? v)
            (andmap pre-part? (splice-run v)))
       (and (list? v)
@@ -218,7 +219,8 @@
           (part-to-collect part)
           (append para (list (car l)) (part-flow part))
           (part-parts part)))]
-      [(part? (car l))
+      [(or (part? (car l))
+           (traverse-part? (car l)))
        (let ([para (decode-accum-para accum)]
              [part (decode-flow* (cdr l) keys colls tag-prefix tags vers style
                                  title index-desc part-depth)])
@@ -242,7 +244,8 @@
            (if (or (null? l)
                    (and (part-start? (car l))
                         ((part-start-depth (car l)) . <= . part-depth))
-                   (part? (car l)))
+                   (part? (car l))
+                   (traverse-part? (car l)))
              (let ([para (decode-accum-para accum)]
                    [s (decode-styled-part (reverse s-accum)
                                           (part-start-tag-prefix s)

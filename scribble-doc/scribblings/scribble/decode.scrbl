@@ -72,7 +72,7 @@ by functions like @racket[decode-flow].}
 
 Returns @racket[#t] if @racket[v] is a @deftech{pre-part} value: a
 string or other non-list @tech{content}, a @tech{block}, a
-@racket[part], a @racket[title-decl], a @racket[part-start], a
+@racket[part], a @racket[title-decl], a @racket[part-start], a @racket[traverse-part], a
 @racket[part-index-decl], a @racket[part-collect-decl], a
 @racket[part-tag-decl], @|void-const|, a list of @tech{pre-part} values, or a @racket[splice] containing
 a list of @tech{pre-part} values; otherwise returns @racket[#f].

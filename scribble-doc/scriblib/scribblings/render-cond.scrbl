@@ -15,7 +15,7 @@ output, use styles plus ``back end'' configurations for each target
 format (see @secref[#:doc scribble-doc "config"] in
 @other-manual[scribble-doc]).
 
-As a last resort, the @racket[cond-element] and @racket[cond-block]
+As a last resort, the @racket[cond-element], @racket[cond-block], and @racket[cond-part]
 forms support varying the document content depending on the target
 format. More precisely, they generate parts of a document where
 content is delayed until the @tech[#:doc scribble-doc]{traverse pass}
@@ -23,7 +23,7 @@ of document rendering. Format detection relies on the
 @racket['scribble:current-render-mode] registration that is accessible
 through a @racket[traverse-element] or @racket[traverse-block].
 
-The syntax of @racket[cond-element] and @racket[cond-block] is based
+The syntax of @racket[cond-element], @racket[cond-block], and @racket[cond-part] is based
 on SRFI-0.
 
 @defform*/subs[#:literals (and or not else)
@@ -60,4 +60,11 @@ Like @racket[cond-element], but generates a @racket[traverse-block]
 where the selected @racket[body] must produce a block according to
 @racket[block?].}
 
+@defform*[[(cond-part [feature-requirement body ...+])
+           (cond-part [feature-requirement body ...+] [else body ...+])]]{
 
+Like @racket[cond-element], but generates a @racket[traverse-part]
+where the selected @racket[body] must produce a list parts according to
+@racket[part?].
+
+@history[#:added "1.67"]}

@@ -3,7 +3,8 @@
          (for-syntax racket/base))
 
 (provide cond-element
-         cond-block)
+         cond-block
+         cond-part)
 
 (define-for-syntax (render-cond stx mk check-result no-matching-case)
   (syntax-case stx ()
@@ -42,11 +43,22 @@
                  ...
                  [else (no-matching-case)]))))))]))
 
+(define-syntax (cond-part stx)
+  (render-cond stx #'traverse-part #'check-part #'no-part-case))
+
 (define-syntax (cond-block stx)
   (render-cond stx #'traverse-block #'check-block #'no-block-case))
                            
 (define-syntax (cond-element stx)
   (render-cond stx #'traverse-element #'check-content #'no-element-case))
+
+(define (check-part v)
+  (unless (and (list? v) (andmap part? v))
+    (raise-mismatch-error
+     'cond-part
+     "clause result is not a list of parts: "
+     v))
+  v)
 
 (define (check-block v)
   (unless (block? v)
@@ -64,9 +76,14 @@
      v))
   v)
 
+(define (no-part-case)
+  (raise (make-exn:fail:contract
+          "cond-part: no clause matched"
+          (current-continuation-marks))))
+
 (define (no-block-case)
   (raise (make-exn:fail:contract
-          "cond-element: no clause matched"
+          "cond-block: no clause matched"
           (current-continuation-marks))))
 
 (define (no-element-case)

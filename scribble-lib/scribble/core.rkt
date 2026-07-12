@@ -245,6 +245,10 @@
                   hash?
                   . -> . (values part-number-item? hash?))]))
 
+;; Traverse part is not serializable, because it's
+;; replaced away after the traverse step
+(define-struct traverse-part (traverse))
+
 ;; ----------------------------------------
 
 (provide-structs
@@ -254,7 +258,7 @@
         [style style?]
         [to-collect list?]
         [blocks (listof block?)]
-        [parts (listof part?)])]
+        [parts (listof (or/c part? traverse-part?))])]
  [paragraph ([style style?]
              [content content?])]
  [table ([style style?]
@@ -366,6 +370,18 @@
 
 (provide (contract-out [traverse-block-block
                         (traverse-block? (or/c resolve-info? collect-info?) . -> . block?)]))
+
+;; ----------------------------------------
+
+(define part-traverse-procedure/c
+  (recursive-contract
+   ((symbol? any/c . -> . any/c)
+    (symbol? any/c . -> . any)
+    . -> . (or/c part-traverse-procedure/c
+                 (listof part?)))))
+
+(provide part-traverse-procedure/c)
+(provide (contract-out (struct traverse-part ([traverse part-traverse-procedure/c]))))
 
 ;; ----------------------------------------
 

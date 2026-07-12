@@ -383,6 +383,20 @@ A renderer for a specific format is relatively unlikely to override
 any of these methods. Each method accepts the information accumulated
 so far and returns augmented information as a result.}
 
+@defmethod[(traversed-parts [parts (listof part?)]
+                            [fp (and/c hash? immutable?)])
+           (listof part?)]
+@defmethod[(traversed-parts-part [part part?]
+                                 [fp (and/c hash? immutable?)])
+           part?]{
+
+The @method[render% traversed-parts] method replaces
+@racket[traverse-part]s in the sub-parts of @racket[parts]
+(transitively) with replacement @racket[part]s. The result list has
+the same item as @racket[parts] unmodified for each part that has no
+@racket[traverse-part]s.
+
+@history[#:added "1.67"]}
 
 @defmethod[(collect [parts (listof part?)]
                     [dests (listof path-string?)]

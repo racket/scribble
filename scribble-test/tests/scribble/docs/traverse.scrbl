@@ -39,3 +39,16 @@
   (lambda (get set)
     (set 'glossary "ready")
     (para "Here is the glossary.")))
+
+@(letrec ([make (lambda (get set)
+                    (define n (get 'parts 0))
+                    (set 'parts (add1 n))
+                    (if (= n 0)
+                        make
+                        (list
+                         (part (format "extra ~a" n) null (list "Part " (number->string n)) plain null
+                               (list (paragraph plain (list "Added part.")))
+                               null))))])
+   (list (traverse-part make)
+         (traverse-part make)
+         (traverse-part make)))

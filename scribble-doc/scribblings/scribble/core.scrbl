@@ -31,8 +31,9 @@ A document is processed in four passes:
        document order so that information from one part of a document
        can be communicated to other parts of the same document. The
        information is transmitted through a symbol-keyed mapping that
-       can be inspected and extended by @racket[traverse-element]s and
-       @racket[traverse-block]s in the document. The @tech{traverse
+       can be inspected and extended by @racket[traverse-element]s,
+       @racket[traverse-block]s, and @racket[traverse-part]s in the
+       document. The @tech{traverse
        pass} iterates the traversal until it obtains a fixed point
        (i.e., the mapping from one iteration is unchanged from the
        previous iteration).}
@@ -52,11 +53,12 @@ A document is processed in four passes:
 None of the passes mutate the document representation. Instead, the
  @tech{traverse pass}, @tech{collect pass}, and @tech{resolve pass}
  accumulate information in a side hash table, @racket[collect-info]
- table, and @racket[resolve-info] table. The @tech{collect pass} and
- @tech{resolve pass} are effectively specialized version of
- @tech{traverse pass} that work across separately built documents.
+ table, and @racket[resolve-info] table, except that
+ @racket[traverse-part]s are replaced just after the traverse pass
+ by rebuilding enclosing @racket[part] structures. The collect pass and
+ resolve pass are effectively specialized version of
+ traverse pass that work across separately built documents.
 
- 
 @; ------------------------------------------------------------------------
 
 @section[#:tag "parts"]{Parts, Flows, Blocks, and Paragraphs}
@@ -386,7 +388,7 @@ value that has been accumulated from enclosing parts.
                  [style style?]
                  [to-collect list?]
                  [blocks (listof block?)]
-                 [parts (listof part?)])]{
+                 [parts (listof (or/c part? traverse-part?))])]{
 
 The @racket[tag-prefix] field determines the optional @techlink{tag
 prefix} for the part and/or @techlink{part context} accumulation. When
@@ -611,7 +613,9 @@ passes (i.e., it doesn't directly contribute to the output).
 The @racket[blocks] field contains the part's initial flow (before
 sub-parts).
 
-The @racket[parts] field contains sub-parts.
+The @racket[parts] field contains sub-parts. A @racket[traverse-part]
+within @racket[parts] is converted to a replacement list of
+@racket[part]s just after the @tech{traverse pass}.
 
 @history[#:changed "1.25" @elem{Added @racket['no-index] support.}
          #:changed "1.26" @elem{Added @racket[link-render-style] support.}
@@ -621,7 +625,27 @@ The @racket[parts] field contains sub-parts.
          #:changed "1.57" @elem{Added @racket['no-header-controls] support.}
          #:changed "1.59" @elem{Added @racket['no-navigation],
                                 @racket['family-navigation], and
-                                @racket['show-language-family] support.}]}
+                                @racket['show-language-family] support.}
+         #:changed "1.67" @elem{Added @racket[traverse-part?] as a possible
+                                contract on an element in @racket[parts] list.}]}
+
+
+@defstruct[traverse-part ([traverse part-traverse-procedure/c])]{
+
+Produces a replacement list of parts (possibly empty) during the
+@tech{traverse pass}, eventually.
+
+The @racket[traverse] procedure is called with @racket[_get] and
+@racket[_set] procedures to get and set symbol-keyed information; the
+@racket[traverse] procedure should return either a list of
+@tech{parts} (which effectively takes the @racket[traverse-part]'s
+place) or a procedure like @racket[traverse] to be called in the next
+iteration of the @tech{traverse pass}.
+
+See @racket[traverse-block] for more information that applies to
+@racket[traverse-part], too.
+
+@history[#:added "1.67"]}
 
 
 @defstruct[paragraph ([style style?] [content content?])]{
@@ -1808,6 +1832,18 @@ Produces the block that replaces @racket[b].}
 
 Produces the content that replaces @racket[e].}
 
+
+@defthing[part-traverse-procedure/c contract?]{
+
+Defined as
+
+@racketblock[
+  (recursive-contract
+   ((symbol? any/c . -> . any/c)
+    (symbol? any/c . -> . any)
+    . -> . (or/c part-traverse-procedure/c
+                 (listof part?))))
+]}
 
 @defthing[block-traverse-procedure/c contract?]{
 

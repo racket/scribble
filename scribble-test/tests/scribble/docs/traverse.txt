@@ -9,3 +9,15 @@ The glossary is ready
 The glossary is not ready, yet
 
 Here is the glossary.
+
+1. Part 3
+
+Added part.
+
+2. Part 1
+
+Added part.
+
+3. Part 2
+
+Added part.
