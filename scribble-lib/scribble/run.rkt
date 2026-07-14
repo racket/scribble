@@ -187,18 +187,19 @@
                      (list->vector (reverse (doc-command-line-arguments)))])
        (define (mk-doc file)
          (define (go)
-           (let ([mp (if (current-lib-mode)
-                         `(lib ,file)
-                         `(file ,file))])
-             (define mp^
-               ;; Try `doc' submodule first, but do not loaded in `watch' mode.
-               (if (module-declared? `(submod ,mp ,doc-binding) (not (use-watcher-for-typst?)))
-                   `(submod ,mp ,doc-binding)
-                   mp))
-             (when (use-watcher-for-typst?)
-               ;; in `watch` mode, use `dynamic-rerequire' to load the module first.
-               (dynamic-rerequire mp^ #:verbosity 'reload))
-             (dynamic-require mp^ doc-binding)))
+           (define mp
+             (if (current-lib-mode)
+                 `(lib ,file)
+                 `(file ,file)))
+           (define mp^
+             ;; Try `doc' submodule first, but do not loaded in `watch' mode.
+             (if (module-declared? `(submod ,mp ,doc-binding) (not (use-watcher-for-typst?)))
+                 `(submod ,mp ,doc-binding)
+                 mp))
+           (when (use-watcher-for-typst?)
+             ;; in `watch` mode, use `dynamic-rerequire' to load the module first.
+             (dynamic-rerequire mp^ #:verbosity 'reload))
+           (dynamic-require mp^ doc-binding))
          (if maker
              (parameterize ([current-load/use-compiled maker])
                (go))
