@@ -698,6 +698,7 @@
                         [(mdash) "---"]
                         [(ndash) "--"]
                         [(ldquo rdquo) "\""]
+                        [(lsquo) "`"]
                         [(rsquo) "'"]
                         [(rarr) "->"]
                         [(lang) "<"]

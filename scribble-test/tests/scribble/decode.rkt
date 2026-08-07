@@ -43,6 +43,7 @@
 (check-true (content? (decode-content '("x"))))
 (check-true (content? (decode-elements '("x"))))
 (check-true (content? (decode-string "x")))
+(check-equal? (content->string (decode-string "`")) "`")
 
 (check-true (whitespace? " \n\t\r"))
 (check-true (not (whitespace? " \n\t\rx ")))
