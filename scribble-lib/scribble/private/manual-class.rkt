@@ -155,11 +155,11 @@
       null))
 
 (define (build-body decl body)
-  `(,@(map (lambda (i)
-             (cond [(constructor? i) ((constructor-def i))]
-                   [(meth? i) ((meth-def i))]
-                   [else i]))
-           body)
+  `(,@(for/list ([i (in-list body)])
+        (cond
+          [(constructor? i) ((constructor-def i))]
+          [(meth? i) ((meth-def i))]
+          [else i]))
     ,(make-delayed-block (lambda (r d ri) (make-inherited-table r d ri decl)))))
 
 (define (*include-class/title decl link?)
@@ -408,17 +408,13 @@
                         (datum->syntax n (syntax-e n) (list 'src 1 3 4 1)))
                        (list 'src 1 0 1 5))]
                      [(((kw ...) ...) ...)
-                      (map (lambda (ids)
-                             (map (lambda (arg)
-                                    (if (and (pair? (syntax-e arg))
-                                             (eq? (syntax-e #'mode) 'new))
-                                      (list (string->keyword
-                                             (symbol->string
-                                              (syntax-e
-                                               (car (syntax-e arg))))))
-                                      null))
-                                  (syntax->list ids)))
-                           (syntax->list #'((arg ...) ...)))])
+                      (for/list ([ids (in-list (syntax->list #'((arg ...) ...)))])
+                        (map (lambda (arg)
+                               (if (and (pair? (syntax-e arg)) (eq? (syntax-e #'mode) 'new))
+                                   (list (string->keyword
+                                          (symbol->string (syntax-e (car (syntax-e arg))))))
+                                   null))
+                             (syntax->list ids)))])
          #'(make-constructor (lambda ()
                                (defproc* #:mode mode #:within name
                                  [[(make [kw ... . arg] ...) result] ...]
