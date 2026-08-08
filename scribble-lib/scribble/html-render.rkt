@@ -1672,6 +1672,13 @@
               (let ([s (content-style e)])
                 (and (style? s)
                      (style->tag s)))]
+             [semantic-tag
+              (and (symbol? name)
+                   (case name
+                     [(emph) 'em]
+                     [(superscript) 'sup]
+                     [(subscript) 'sub]
+                     [else #f]))]
              [resources (for/list ([p (in-list properties)]
                                    #:when (install-resource? p))
                           (install-resource-path p))]
@@ -1720,7 +1727,8 @@
                    (not link?)
                    (not anchor?)
                    (not newline?)
-                   (not alt-tag))
+                   (not alt-tag)
+                   (not semantic-tag))
               content
               `(,@(if anchor?
                       (append-map (lambda (v)
@@ -1733,6 +1741,7 @@
                    [alt-tag alt-tag]
                    [link? 'a]
                    [newline? 'br]
+                   [semantic-tag semantic-tag]
                    [else 'span]) 
                  ,(append
                    (if link-resource
@@ -1754,8 +1763,8 @@
            [(url) '([class "url"])]
            [(no-break) '([class "nobreak"])]
            [(sf) '([class "ssansserif"])]
-           [(superscript) '([style "vertical-align: super; font-size: 80%"])]
-           [(subscript) '([style "vertical-align: sub; font-size: 80%"])]
+           [(superscript) '([style "vertical-align: super; font-size: 80%; line-height: inherit"])]
+           [(subscript) '([style "vertical-align: sub; font-size: 80%; line-height: inherit"])]
            [(smaller) '([class "Smaller"])]
            [(larger) '([class "Larger"])]
            [(hspace) '([class "hspace"])]
