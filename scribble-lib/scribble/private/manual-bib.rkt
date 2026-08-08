@@ -89,7 +89,7 @@
       (for/list ([c (in-list citations)])
         (define key (a-bib-entry-key c))
         (define val (a-bib-entry-val c))
-        (list (to-flow (make-target-element #f `("[" ,key "]") `(cite ,key)))
+        (list (to-flow (make-target-element #f (list "[" key "]") `(cite ,key)))
               flow-spacer
               (to-flow val))))))
    null))
