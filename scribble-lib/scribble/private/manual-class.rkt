@@ -48,14 +48,9 @@
 
 (define (id-info id)
   (define b (identifier-label-binding id))
-  (if b
-      (list (caddr b)
-            (list-ref b 3)
-            (list-ref b 4)
-            (list-ref b 5)
-            (list-ref b 6))
-      (error 'scribble "no class/interface/mixin information for identifier: ~e"
-             id)))
+  (unless b
+    (error 'scribble "no class/interface/mixin information for identifier: ~e" id))
+  (list (caddr b) (list-ref b 3) (list-ref b 4) (list-ref b 5) (list-ref b 6)))
 
 (define (make-inherited-table r d ri decl)
   (define start
