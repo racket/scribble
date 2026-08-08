@@ -23,7 +23,7 @@
          aux-elem
          code-inset)
 (provide (contract-out
-          [filebox (((or/c core:element? string?)) () #:rest (listof pre-flow?) . ->* . block?)]))
+          [filebox (-> (or/c core:element? string?) pre-flow? ... block?)]))
 
 (define styling-f/c
   (-> pre-content? ... element?))
@@ -57,11 +57,11 @@
 (provide (contract-out [PLaneT element?]
                        [hash-lang (-> element?)]
                        [etc element?]
-                       [inset-flow (() () #:rest (listof pre-content?) . ->* . nested-flow?)]
-                       [litchar (() () #:rest (listof string?) . ->* . element?)]
-                       [t (() () #:rest (listof pre-content?) . ->* . paragraph?)]
-                       [exec (() () #:rest (listof content?) . ->* . element?)]
-                       [commandline (() () #:rest (listof content?) . ->* . paragraph?)]
+                       [inset-flow (-> pre-content? ... nested-flow?)]
+                       [litchar (-> string? ... element?)]
+                       [t (-> pre-content? ... paragraph?)]
+                       [exec (-> content? ... element?)]
+                       [commandline (-> content? ... paragraph?)]
                        [menuitem (string? string? . -> . element?)]))
 
 (define PLaneT (make-element "planetName" '("PLaneT")))

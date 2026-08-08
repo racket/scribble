@@ -12,7 +12,7 @@
 (define-struct a-bib-entry (key val))
 
 (provide (contract-out
-          [cite ((string?) () #:rest (listof string?) . ->* . element?)]
+          [cite (-> string? string? ... element?)]
           [bib-entry
            ((#:key string? #:title (or/c #f pre-content?)) (#:is-book? boolean?
                                                             #:author (or/c #f pre-content?)
