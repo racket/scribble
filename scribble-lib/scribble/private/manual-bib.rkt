@@ -12,7 +12,7 @@
 (define-struct a-bib-entry (key val))
 
 (provide (contract-out
-          [cite ((string?) () #:rest (listof string?) . ->* . element?)]
+          [cite (-> string? string? ... element?)]
           [bib-entry
            ((#:key string? #:title (or/c #f pre-content?)) (#:is-book? boolean?
                                                             #:author (or/c #f pre-content?)
@@ -24,7 +24,7 @@
                                                            a-bib-entry?)]
           (rename a-bib-entry?
                   bib-entry?
-                  predicate/c)
+                  (-> any/c boolean?))
           [bibliography (() (#:tag string?) #:rest (listof a-bib-entry?) . ->* . part?)])) 
 
 (define (cite key . keys)
@@ -89,7 +89,7 @@
       (for/list ([c (in-list citations)])
         (define key (a-bib-entry-key c))
         (define val (a-bib-entry-val c))
-        (list (to-flow (make-target-element #f `("[" ,key "]") `(cite ,key)))
+        (list (to-flow (make-target-element #f (list "[" key "]") `(cite ,key)))
               flow-spacer
               (to-flow val))))))
    null))
