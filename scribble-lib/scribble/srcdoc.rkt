@@ -75,14 +75,13 @@
      (syntax-shift-phase-level s #f)))
   (with-syntax ([((req ...) ...)
                  (for/list ([rs (in-list (reverse requires))])
-                   (map (lambda (r)
-                          (syntax-case r ()
-                            [(op arg ...)
-                             (with-syntax ([(arg ...) (map shift-and-introduce
-                                                           (syntax->list #'(arg ...)))])
-                               #'(op arg ...))]
-                            [else (shift-and-introduce r)]))
-                        (syntax->list rs)))]
+                   (for/list ([r (in-list (syntax->list rs))])
+                     (syntax-case r ()
+                       [(op arg ...)
+                        (with-syntax ([(arg ...) (map shift-and-introduce
+                                                      (syntax->list #'(arg ...)))])
+                          #'(op arg ...))]
+                       [else (shift-and-introduce r)])))]
                 [(expr ...)
                  (map shift-and-introduce (reverse doc-exprs))]
                 [doc-body
@@ -128,11 +127,12 @@
                         (let ([t (syntax-local-value #'id (lambda () #f))])
                           (unless (provide/doc-transformer? t)
                             (raise-syntax-error #f "not bound as a provide/doc transformer" stx #'id))
-                          (let* ([i (make-syntax-introducer)]
-                                 [i2 (lambda (x) (syntax-local-introduce (i x)))])
-                            (let-values ([(p/c d req/d id) ((provide/doc-transformer-proc t)
-                                                            (i (syntax-local-introduce form)))])
-                              (list (i2 p/c) (i req/d) (i d) (i id)))))]
+                          (define i (make-syntax-introducer))
+                          (define (i2 x)
+                            (syntax-local-introduce (i x)))
+                          (let-values ([(p/c d req/d id) ((provide/doc-transformer-proc t)
+                                                          (i (syntax-local-introduce form)))])
+                            (list (i2 p/c) (i req/d) (i d) (i id))))]
                        [_ (raise-syntax-error #f "not a provide/doc sub-form" stx form)]))])
       (with-syntax ([(p/c ...)
                      (map (lambda (form f)
@@ -345,44 +345,52 @@
                             
                             (let ([build-mandatories/optionals
                                    (λ (names contracts extras)
-                                     (let ([names-length (length names)]
-                                           [contracts-length (length contracts)])
-                                       (let loop ([contracts contracts]
-                                                  [names names]
-                                                  [extras extras])
-                                         (cond
-                                           [(and (null? names) (null? contracts)) '()]
-                                           [(or (null? names) (null? contracts))
-                                            (raise-syntax-error #f
-                                                                (format "mismatched ~a argument list count and domain contract count (~a)"
-                                                                        (if extras "optional" "mandatory")
-                                                                        (if (null? names)
-                                                                            "ran out of names"
-                                                                            "ran out of contracts"))
-                                                                stx)]
-                                           [else
-                                            (let ([fst-name (car names)]
-                                                  [fst-ctc (car contracts)])
-                                              (if (keyword? (syntax-e fst-ctc))
-                                                  (begin
-                                                    (unless (pair? (cdr contracts))
-                                                      (raise-syntax-error #f
-                                                                          "keyword not followed by a contract"
-                                                                          stx))
-                                                    (cons (if extras
-                                                              (list fst-ctc fst-name (cadr contracts) (car extras))
-                                                              (list fst-ctc fst-name (cadr contracts)))
-                                                          (loop (cddr contracts)
-                                                                (cdr names)
-                                                                (if extras
-                                                                    (cdr extras)
-                                                                    extras))))
-                                                  (cons (if extras 
-                                                            (list fst-name fst-ctc (car extras))
-                                                            (list fst-name fst-ctc))
-                                                        (loop (cdr contracts) (cdr names) (if extras
-                                                                                              (cdr extras)
-                                                                                              extras)))))]))))])
+                                     (define names-length (length names))
+                                     (define contracts-length (length contracts))
+                                     (let loop ([contracts contracts]
+                                                [names names]
+                                                [extras extras])
+                                       (cond
+                                         [(and (null? names) (null? contracts)) '()]
+                                         [(or (null? names) (null? contracts))
+                                          (raise-syntax-error
+                                           #f
+                                           (format
+                                            "mismatched ~a argument list count and domain contract count (~a)"
+                                            (if extras "optional" "mandatory")
+                                            (if (null? names)
+                                                "ran out of names"
+                                                "ran out of contracts"))
+                                           stx)]
+                                         [else
+                                          (let ([fst-name (car names)]
+                                                [fst-ctc (car contracts)])
+                                            (if (keyword? (syntax-e fst-ctc))
+                                                (begin
+                                                  (unless (pair? (cdr contracts))
+                                                    (raise-syntax-error
+                                                     #f
+                                                     "keyword not followed by a contract"
+                                                     stx))
+                                                  (cons (if extras
+                                                            (list fst-ctc
+                                                                  fst-name
+                                                                  (cadr contracts)
+                                                                  (car extras))
+                                                            (list fst-ctc fst-name (cadr contracts)))
+                                                        (loop (cddr contracts)
+                                                              (cdr names)
+                                                              (if extras
+                                                                  (cdr extras)
+                                                                  extras))))
+                                                (cons (if extras
+                                                          (list fst-name fst-ctc (car extras))
+                                                          (list fst-name fst-ctc))
+                                                      (loop (cdr contracts)
+                                                            (cdr names)
+                                                            (if extras
+                                                                (cdr extras)
+                                                                extras)))))])))])
                             
                               #`([(id #,@(build-mandatories/optionals (syntax->list #'(mandatory-names ...))
                                                                       (syntax->list #'(mandatory ...))
@@ -404,19 +412,22 @@
                                 [((x y) ...)
                                  (andmap identifier? (syntax->list #'(x ... y ...)))]
                                 [((x y) ...)
-                                 (for-each
-                                  (λ (var) 
-                                    (unless (identifier? var)
-                                      (raise-syntax-error #f "expected an identifier in the optional names" stx var)))
-                                  (syntax->list #'(x ... y ...)))]
+                                 (for ([var (in-list (syntax->list #'(x ... y ...)))])
+                                   (unless (identifier? var)
+                                     (raise-syntax-error
+                                      #f
+                                      "expected an identifier in the optional names"
+                                      stx
+                                      var)))]
                                 [(a ...)
-                                 (for-each
-                                  (λ (a)
-                                    (syntax-case stx ()
-                                      [(x y) (void)]
-                                      [other
-                                       (raise-syntax-error #f "expected an sequence of two idenfiers" stx #'other)]))
-                                  (syntax->list #'(a ...)))]))]
+                                 (for ([a (in-list (syntax->list #'(a ...)))])
+                                   (syntax-case stx ()
+                                     [(x y) (void)]
+                                     [other
+                                      (raise-syntax-error #f
+                                                          "expected an sequence of two idenfiers"
+                                                          stx
+                                                          #'other)]))]))]
                            [x
                             (raise-syntax-error
                              #f
@@ -492,12 +503,9 @@
                               "expected an identifier or sequence of two identifiers"
                               stx
                               #'struct-name)])
-       (for ([f (in-list (syntax->list #'(field-name ...)))])
-         (unless (identifier? f)
-           (raise-syntax-error #f 
-                               "expected an identifier"
-                               stx
-                               f)))
+       (for ([f (in-list (syntax->list #'(field-name ...)))]
+             #:unless (identifier? f))
+         (raise-syntax-error #f "expected an identifier" stx f))
        (define omit-constructor? #f)
        (define-values (ds-args desc)
          (let loop ([ds-args '()]
