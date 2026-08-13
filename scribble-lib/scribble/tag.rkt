@@ -51,38 +51,41 @@
     (cond
       [(or (string? v) (bytes? v) (list? v))
        (define b (hash-ref interned v #f))
-       (if b
-           (or (weak-box-value b)
-               ;; just in case the value is GCed before we extract it:
-               (intern-taglet v))
-           (begin
-             (hash-set! interned v (make-weak-box v))
-             v))]
+       (cond
+         [b
+          (or (weak-box-value b)
+              ;; just in case the value is GCed before we extract it:
+              (intern-taglet v))]
+         [else
+          (hash-set! interned v (make-weak-box v))
+          v])]
       [else v])))
 
 (define (do-module-path-index->taglet mod)
   ;; Derive the name from the module path:
   (define p (collapse-module-path-index mod (lambda () (build-path (current-directory) "dummy"))))
-  (if (path? p)
-      ;; If we got a path back anyway, then it's best to use the resolved
-      ;; name; if the current directory has changed since we
-      ;; the path-index was resolved, then p might not be right. Also,
-      ;; the resolved path might be a symbol instead of a path.
-      (let ([rp (resolved-module-path-name (module-path-index-resolve mod))])
-        (if (path? rp)
-            (intern-taglet (path->collects-relative rp))
-            rp))
-      (let ([p (if (and (pair? p) (eq? (car p) 'planet))
-                   ;; Normalize planet verion number based on current
-                   ;; linking:
-                   (let-values ([(path pkg) (get-planet-module-path/pkg p #f #f)])
-                     (list* 'planet
-                            (cadr p)
-                            (list (car (caddr p)) (cadr (caddr p)) (pkg-maj pkg) (pkg-min pkg))
-                            (cdddr p)))
-                   ;; Otherwise the path is fully normalized:
-                   p)])
-        (intern-taglet p))))
+  (cond
+    [(path? p)
+     ;; If we got a path back anyway, then it's best to use the resolved
+     ;; name; if the current directory has changed since we
+     ;; the path-index was resolved, then p might not be right. Also,
+     ;; the resolved path might be a symbol instead of a path.
+     (define rp (resolved-module-path-name (module-path-index-resolve mod)))
+     (if (path? rp)
+         (intern-taglet (path->collects-relative rp))
+         rp)]
+    [else
+     (let ([p (if (and (pair? p) (eq? (car p) 'planet))
+                  ;; Normalize planet verion number based on current
+                  ;; linking:
+                  (let-values ([(path pkg) (get-planet-module-path/pkg p #f #f)])
+                    (list* 'planet
+                           (cadr p)
+                           (list (car (caddr p)) (cadr (caddr p)) (pkg-maj pkg) (pkg-min pkg))
+                           (cdddr p)))
+                  ;; Otherwise the path is fully normalized:
+                  p)])
+       (intern-taglet p))]))
 
 (define collapsed (make-weak-hasheq))
 (define (module-path-index->taglet mod)
