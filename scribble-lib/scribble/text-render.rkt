@@ -37,18 +37,14 @@
     (define/override (render-part d ht)
       (let ([number (collected-info-number (part-collected-info d ht))])
         (unless (part-style? d 'hidden)
-          (let ([s (format-number number '() #t)])
-            (unless (null? s)
-              (printf "~a~a" 
-                      (car s)
-                      (if (part-title-content d)
-                          " "
-                          "")))
-            (when (part-title-content d)
-              (render-content (part-title-content d) d ht))
-            (when (or (pair? number) (part-title-content d))
-              (newline)
-              (newline))))
+          (define s (format-number number '() #t))
+          (unless (null? s)
+            (printf "~a~a" (car s) (if (part-title-content d) " " "")))
+          (when (part-title-content d)
+            (render-content (part-title-content d) d ht))
+          (when (or (pair? number) (part-title-content d))
+            (newline)
+            (newline)))
         (render-flow (part-blocks d) d ht #f)
         (let loop ([pos 1]
                    [secs (part-parts d)]
@@ -78,26 +74,33 @@
           null
           (let* ([strs (map (lambda (flows styles)
                               (map (lambda (d style)
-                                     (if (eq? d 'cont)
-                                         d
-                                         (let ([o (open-output-string)])
-                                           (define padding
-                                             (or (findf cell-padding-property? (style-properties style))
-                                                 (cell-padding-property 0 0 0 0)))
-                                           (define (int n) (inexact->exact (floor n)))
-                                           (parameterize ([current-indent 0]
-                                                          [current-output-port o])
-                                             (render-block d part ht #f))
-                                           (define strs (regexp-split
-                                                         #rx"\n"
-                                                         (regexp-replace #rx"\n$" (get-output-string o) "")))
-                                           (append
-                                            (make-list (int (cell-padding-property-top padding)) "")
-                                            (for/list ([str (in-list strs)])
-                                              (string-append (make-string (int (cell-padding-property-left padding)) #\space)
-                                                             str
-                                                             (make-string (int (cell-padding-property-right padding)) #\space)))
-                                            (make-list (int (cell-padding-property-bottom padding)) "")))))
+                                     (cond
+                                       [(eq? d 'cont) d]
+                                       [else
+                                        (define o (open-output-string))
+                                        (define padding
+                                          (or (findf cell-padding-property? (style-properties style))
+                                              (cell-padding-property 0 0 0 0)))
+                                        (define (int n)
+                                          (inexact->exact (floor n)))
+                                        (parameterize ([current-indent 0]
+                                                       [current-output-port o])
+                                          (render-block d part ht #f))
+                                        (define strs
+                                          (regexp-split
+                                           #rx"\n"
+                                           (regexp-replace #rx"\n$" (get-output-string o) "")))
+                                        (append
+                                         (make-list (int (cell-padding-property-top padding)) "")
+                                         (for/list ([str (in-list strs)])
+                                           (string-append
+                                            (make-string (int (cell-padding-property-left padding))
+                                                         #\space)
+                                            str
+                                            (make-string (int (cell-padding-property-right padding))
+                                                         #\space)))
+                                         (make-list (int (cell-padding-property-bottom padding))
+                                                    ""))]))
                                    flows
                                    styles))
                             flowss

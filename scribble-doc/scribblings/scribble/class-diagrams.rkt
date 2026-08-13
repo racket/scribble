@@ -117,18 +117,19 @@
     (blank 0 (+ class-box-margin class-box-margin)))
   (cond
     [(and methods fields)
-     (let* ([top-spacer (mk-blank)]
-            [bottom-spacer (mk-blank)]
-            [main (vl-append name
-                             top-spacer
-                             (if (null? fields)
-                                 (blank 0 4)
-                                 (apply vl-append fields))
-                             bottom-spacer
-                             (if (null? methods)
-                                 (blank 0 4)
-                                 (apply vl-append methods)))])
-       (add-hline (add-hline (frame (inset main class-box-margin)) top-spacer) bottom-spacer))]
+     (define top-spacer (mk-blank))
+     (define bottom-spacer (mk-blank))
+     (define main
+       (vl-append name
+                  top-spacer
+                  (if (null? fields)
+                      (blank 0 4)
+                      (apply vl-append fields))
+                  bottom-spacer
+                  (if (null? methods)
+                      (blank 0 4)
+                      (apply vl-append methods))))
+     (add-hline (add-hline (frame (inset main class-box-margin)) top-spacer) bottom-spacer)]
     [fields
      (define top-spacer (mk-blank))
      (define main
@@ -350,36 +351,37 @@
                              [count 1]
                              #:connect-dots [connect-dots connect-dots]
                              #:dot-delta [dot-delta 0])
-  (let ([going-down? (let-values ([(_1 start-y) (find-cc main0 start-field)]
-                                  [(_2 finish-y) (find-cc main0 finish-name)])
-                       (< start-y finish-y))])
-    (define-values (main1 dot1)
-      (add-dot-delta (λ () (add-dot-left main0 start-class start-field))
-                     0
-                     (if going-down?
-                         dot-delta
-                         (- dot-delta))))
-    (define-values (main2 dot2)
-      (add-dot-delta (λ () (add-dot-left/space main1 start-class start-field count))
-                     (- dot-delta)
-                     (if going-down?
-                         dot-delta
-                         (- dot-delta))))
-    (define-values (main3 dot3)
-      (add-dot-delta (λ () (add-dot-left main2 finish-class finish-name))
-                     0
-                     (if going-down?
-                         (- dot-delta)
-                         dot-delta)))
-    (define-values (main4 dot4) (add-dot-delta (λ () (add-dot-junction main3 dot2 dot3)) 0 0))
-    (define-values (main5 dot5) (add-dot-left main4 finish-class finish-name))
-    (define-values (main6 dot6)
-      (add-dot-delta
-       (λ () (add-dot-left main5 finish-class finish-name))
-       -1 ;; just enough to get the arrowhead going the right direction; not enough to see the line
-       0))
+  (define going-down?
+    (let-values ([(_1 start-y) (find-cc main0 start-field)]
+                 [(_2 finish-y) (find-cc main0 finish-name)])
+      (< start-y finish-y)))
+  (define-values (main1 dot1)
+    (add-dot-delta (λ () (add-dot-left main0 start-class start-field))
+                   0
+                   (if going-down?
+                       dot-delta
+                       (- dot-delta))))
+  (define-values (main2 dot2)
+    (add-dot-delta (λ () (add-dot-left/space main1 start-class start-field count))
+                   (- dot-delta)
+                   (if going-down?
+                       dot-delta
+                       (- dot-delta))))
+  (define-values (main3 dot3)
+    (add-dot-delta (λ () (add-dot-left main2 finish-class finish-name))
+                   0
+                   (if going-down?
+                       (- dot-delta)
+                       dot-delta)))
+  (define-values (main4 dot4) (add-dot-delta (λ () (add-dot-junction main3 dot2 dot3)) 0 0))
+  (define-values (main5 dot5) (add-dot-left main4 finish-class finish-name))
+  (define-values (main6 dot6)
+    (add-dot-delta
+     (λ () (add-dot-left main5 finish-class finish-name))
+     -1 ;; just enough to get the arrowhead going the right direction; not enough to see the line
+     0))
 
-    (connect-dots #t (connect-dots #f main6 dot1 dot2 dot4 dot3) dot6 dot5)))
+  (connect-dots #t (connect-dots #f main6 dot1 dot2 dot4 dot3) dot6 dot5))
 
 (define (left-top-reference main0
                             start-class
