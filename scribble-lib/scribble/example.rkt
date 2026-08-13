@@ -15,8 +15,7 @@
 
          make-log-based-eval
          scribble-exn->string
-         scribble-eval-handler
-         make-log-based-eval)
+         scribble-eval-handler)
 
 (define example-title
   (make-paragraph (list "Example:")))
