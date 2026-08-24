@@ -40,7 +40,7 @@
 
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesClass{acmart}
-[2026/06/27 v2.19 Typesetting articles for the Association for Computing Machinery]
+[2026/08/16 v2.20 Typesetting articles for the Association for Computing Machinery]
 \def\@classname{acmart}
 \InputIfFileExists{acmart-preload-hook.tex}{%
   \ClassWarning{\@classname}{%
@@ -1542,6 +1542,10 @@
     \gdef\acmConference@shortname{#2}%
   \fi
   \global\@ACM@journal@bibstripfalse
+  \ifnum\ACM@format@nr=1\relax % acmsmall
+    \global\@ACM@journal@bibstrip@or@togfalse
+    \settopmatter{printfolios=false}%
+  \fi
   \ifx\@acmBooktitle\@empty\relax
     \acmBooktitle{Proceedings of \acmConference@name
       \ifx\acmConference@name\acmConference@shortname\else
@@ -1632,7 +1636,7 @@
   \def\position##1{\ignorespaces}%
   \def\institution##1{##1\ignorespaces}%
   \def\department{\@ifnextchar[{\@department}{\@department[]}}%
-  \def\@department[##1]##2{##2, \ignorespaces}%
+  \def\@department[##1]##2{, ##2 \ignorespaces}%
   \let\city\position
   \let\state\position
   \let\country\position
@@ -2722,7 +2726,7 @@
   \def\and{\par}\normalbaselines
   \global\setbox\author@bx=\vtop{\if@ACM@sigchiamode\else\centering\fi
     \@authorfont\@currentauthors\par\@affiliationfont
-    \@currentaffiliation}\egroup
+    \@currentaffiliation\par}\egroup
   \box\author@bx\hspace{\author@bx@sep}%
   \gdef\@currentauthors{}%
   \gdef\@currentaffiliation{}}
