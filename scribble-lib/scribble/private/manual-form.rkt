@@ -332,28 +332,27 @@
   (define target-maker (id-to-form-target-maker kw-id #t))
   (define str (syntax-property kw-id 'display-string))
   (define-values (content ref-content) (definition-site (syntax-e kw-id) kw-id #t str))
-  (if target-maker
-      (target-maker
-       content
-       (lambda (tag)
-         (make-toc-target2-element
-          #f
-          (if kw-id
-              (make-index-element
-               #f (if is-used? content null) tag
-               (list (datum-intern-literal (symbol->string (syntax-e kw-id))))
-               (list ref-content)
-               (with-exporting-libraries
-                   (lambda (libs)
-                     (make-exported-index-desc* (syntax-e kw-id)
-                                                libs
-                                                (hash 'kind kind)))))
-              content)
-          tag
-          ref-content)))
-      (if is-used?
-          content
-          null)))
+  (cond
+    [target-maker
+     (target-maker content
+                   (lambda (tag)
+                     (make-toc-target2-element
+                      #f
+                      (if kw-id
+                          (make-index-element
+                           #f
+                           (if is-used? content null)
+                           tag
+                           (list (datum-intern-literal (symbol->string (syntax-e kw-id))))
+                           (list ref-content)
+                           (with-exporting-libraries
+                            (lambda (libs)
+                              (make-exported-index-desc* (syntax-e kw-id) libs (hash 'kind kind)))))
+                          content)
+                      tag
+                      ref-content)))]
+    [is-used? content]
+    [else null]))
 
 (define (*defforms kind link? kw-id/s is-used?s forms form-procs subs sub-procs contract-procs content-thunk)
   (define kind* (or kind "syntax"))
