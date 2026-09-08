@@ -290,8 +290,7 @@
                    6)
                 . <= . (current-display-width))
                (cons
-                (cons (car (car libs-specs))
-                      (list pkg-spec))
+                (list (car (car libs-specs)) pkg-spec)
                 (cdr libs-specs))
                (append
                 libs-specs
