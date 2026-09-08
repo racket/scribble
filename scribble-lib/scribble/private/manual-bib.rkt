@@ -24,7 +24,7 @@
                                                            a-bib-entry?)]
           (rename a-bib-entry?
                   bib-entry?
-                  predicate/c)
+                  (-> any/c boolean?))
           [bibliography (() (#:tag string?) #:rest (listof a-bib-entry?) . ->* . part?)])) 
 
 (define (cite key . keys)
