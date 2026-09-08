@@ -15,14 +15,15 @@
 
 (define (select-suffix path suggested-suffixes accepted-suffixes)
   (or (for/or ([suggested (in-list suggested-suffixes)])
-        (and (member suggested accepted-suffixes)
-             (let ([p (bytes->path 
-                       (bytes-append (path->bytes (if (string? path)
-                                                      (string->path path)
-                                                      path))
-                                     (string->bytes/utf-8 suggested)))])
-               (and (file-exists? p)
-                    p))))
+        (cond
+          [(member suggested accepted-suffixes)
+           (define p
+             (bytes->path (bytes-append (path->bytes (if (string? path)
+                                                         (string->path path)
+                                                         path))
+                                        (string->bytes/utf-8 suggested))))
+           (and (file-exists? p) p)]
+          [else #f]))
       path))
 
 (define (extract-table-cell-styles t)
