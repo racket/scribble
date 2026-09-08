@@ -75,7 +75,7 @@
                         #:after-last
                         (let ([from-pkgs (resolve-get/tentative p ri '(exporting-packages #f))])
                           (if (and from-pkgs (pair? from-pkgs))
-                              (string-append " | Package: " (string-join (map ~a from-pkgs) ", "))
+                              (string-join (map ~a from-pkgs) ", " #:before-first " | Package: ")
                               ""))))
           e)
          e))
