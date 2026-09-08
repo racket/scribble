@@ -503,10 +503,11 @@
        (loop (cdr spec))]))
   (values
    (lambda (x)
-     (if (null? unused)
-         x
-         (let ([e `(make-element #f (list ,x ,@unused))])
-           (set! unused null)
-           e)))
+     (cond
+       [(null? unused) x]
+       [else
+        (define e `(make-element #f (list ,x ,@unused)))
+        (set! unused null)
+        e]))
    (for/list ([x (in-list xs)])
      (not (memq x unused)))))
