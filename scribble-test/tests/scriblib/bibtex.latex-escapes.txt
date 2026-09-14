@@ -4,4 +4,4 @@ Bibliography
    Yovine. Parametric prediction of heap memory requirements. In Proc.  
    Proceedings of the 7th international symposium on Memory management, 
    ISMM ’08, pp. 141–150. ACM, New York, NY, USA, 2008.                 
-   doi:10.1145/1375634.1375655                                          
+   doi:10.1145/1375634.1375655.                                         
