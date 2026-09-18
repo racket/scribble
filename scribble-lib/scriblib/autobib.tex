@@ -1,12 +1,45 @@
+\usepackage{needspace}
+\usepackage{calc}
 
-\newenvironment{AutoBibliography}{\begin{small}}{\end{small}}
-\newcommand{\Autobibentry}[1]{\hspace{0.05\linewidth}\parbox[t]{0.95\linewidth}{\parindent=-0.05\linewidth#1\vspace{1.0ex}}}
+\newenvironment{AutoBibliography}
+  {\begin{small}}
+  {\end{small}}
+
+% Minimum space required before starting a bibliography entry.
+% Evaluated where it is used, so \baselineskip is that of AutoBibliography
+% (i.e. \small).
+\newcommand{\AutobibNeedspace}{5\baselineskip}
+
+% Indentation of continuation lines and subsequent paragraphs.
+\newlength{\ABindent}
+\setlength{\ABindent}{0.05\linewidth}
+
+\newcommand{\AutobibParindent}{1.5em}
+
+\newcommand{\Autobibentry}[1]{%
+  \par
+  \Needspace{\AutobibNeedspace}%
+  \begingroup
+    \emergencystretch=2em
+    \tolerance=1000
+    \leftskip=\ABindent
+    \parindent=\AutobibParindent
+    \noindent
+    \hspace*{-\ABindent}%
+    #1%
+    \par
+  \endgroup
+  \addvspace{1.0ex}%
+}
+
 \newcommand{\Autobibtarget}[1]{\phantomsection#1}
 
-\usepackage{calc}
 \newlength{\ABcollength}
-\newcommand{\Autocolbibnumber}[1]{\parbox[t]{5ex}{\hfill#1~~\vspace{1.0ex}}}
-\newcommand{\Autocolbibentry}[1]{\setlength{\ABcollength}{\linewidth-5ex}\parbox[t]{\ABcollength}{#1\vspace{1.0ex}}}
+\newcommand{\Autocolbibnumber}[1]{%
+  \parbox[t]{5ex}{\hfill#1~~\vspace{1.0ex}}}
+\newcommand{\Autocolbibentry}[1]{%
+  \setlength{\ABcollength}{\linewidth-5ex}%
+  \parbox[t]{\ABcollength}{#1\vspace{1.0ex}}}
 
 \newcommand{\Autobibref}[1]{#1}
 
