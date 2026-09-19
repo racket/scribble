@@ -15,14 +15,15 @@
 
 (define (select-suffix path suggested-suffixes accepted-suffixes)
   (or (for/or ([suggested (in-list suggested-suffixes)])
-        (and (member suggested accepted-suffixes)
-             (let ([p (bytes->path 
-                       (bytes-append (path->bytes (if (string? path)
-                                                      (string->path path)
-                                                      path))
-                                     (string->bytes/utf-8 suggested)))])
-               (and (file-exists? p)
-                    p))))
+        (cond
+          [(member suggested accepted-suffixes)
+           (define p
+             (bytes->path (bytes-append (path->bytes (if (string? path)
+                                                         (string->path path)
+                                                         path))
+                                        (string->bytes/utf-8 suggested))))
+           (and (file-exists? p) p)]
+          [else #f]))
       path))
 
 (define (extract-table-cell-styles t)
@@ -45,13 +46,14 @@
       (let ([cols (ormap (lambda (v) (and (table-columns? v) v)) vars)])
         (and cols
              (let ([cols (table-columns-styles cols)])
-               (map (lambda (row)
-                      (unless (= (length cols) (length row))
-                        (error 'table
-                               "table-columns property list's length does not match a row length: ~e vs. ~e"
-                               cols (length row)))
-                      cols)
-                    (table-blockss t)))))
+               (for/list ([row (in-list (table-blockss t))])
+                 (unless (= (length cols) (length row))
+                   (error
+                    'table
+                    "table-columns property list's length does not match a row length: ~e vs. ~e"
+                    cols
+                    (length row)))
+                 cols))))
       (map (lambda (row) (map (lambda (c) plain) row)) (table-blockss t))))
 
 (define (empty-content? c) (null? c))
