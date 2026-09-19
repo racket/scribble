@@ -75,7 +75,7 @@
                    (port-count-lines! port)
                    (file-position port (+ (car offset+len) (or offset 0)))
                    (for/list ([i (in-range (cdr offset+len))])
-                     (read-line port)))))))
+                     (read-line port 'any)))))))
           (cond
             [(not (andmap string? lines)) #f]
             [(null? lines) #f]
@@ -87,7 +87,7 @@
 (define (fetch-blueboxes-method-tags sym #:blueboxes-cache [cache (make-blueboxes-cache #f)])
   (populate-cache! cache)
   (define ht (blueboxes-cache-method->tags cache))
-  (or (and ht (hash-ref ht sym (λ () '()))) '()))
+  (or (and ht (hash-ref ht sym '())) '()))
 
 (define (populate-cache! cache)
   (define cache-content (blueboxes-cache-info-or-paths cache))
@@ -100,13 +100,12 @@
 (define (compute-methods-table lst)
   (define meth-ht (make-hash))
   (for ([a-bluebox-info (in-list lst)])
-    (match a-bluebox-info
-      [(bluebox-info blueboxes.rktd offset tag-ht mod-time)
-       (when tag-ht
-         (for ([(tag val) (in-hash tag-ht)])
-           (when (method-tag? tag)
-             (define-values (class/intf meth) (get-class/interface-and-method tag))
-             (hash-set! meth-ht meth (cons tag (hash-ref meth-ht meth (λ () '())))))))]))
+    (match-define (bluebox-info blueboxes.rktd offset tag-ht mod-time) a-bluebox-info)
+    (when tag-ht
+      (for ([(tag val) (in-hash tag-ht)])
+        (when (method-tag? tag)
+          (define-values (class/intf meth) (get-class/interface-and-method tag))
+          (hash-set! meth-ht meth (cons tag (hash-ref meth-ht meth (λ () '()))))))))
   meth-ht)
 
 (define (build-blueboxes-cache blueboxes-dirs)
@@ -119,12 +118,11 @@
      a-bluebox-info)))
 
 (define (check-and-update-bluebox-info! a-bluebox-info)
-  (match a-bluebox-info
-    [(bluebox-info blueboxes.rktd offset tag-ht mod-time)
-     (when (or (not mod-time)
-               (and (file-exists? blueboxes.rktd)
-                    (not (mod-time . = . (file-or-directory-modify-seconds blueboxes.rktd)))))
-       (populate-bluebox-info! a-bluebox-info))]))
+  (match-define (bluebox-info blueboxes.rktd offset tag-ht mod-time) a-bluebox-info)
+  (when (or (not mod-time)
+            (and (file-exists? blueboxes.rktd)
+                 (not (mod-time . = . (file-or-directory-modify-seconds blueboxes.rktd)))))
+    (populate-bluebox-info! a-bluebox-info)))
 
 (define (populate-bluebox-info! a-bluebox-info)
   (define blueboxes.rktd (bluebox-info-blueboxes.rktd a-bluebox-info))
@@ -133,7 +131,7 @@
      (call-with-input-file blueboxes.rktd
        (λ (port)
          (port-count-lines! port)
-         (define first-line (read-line port))
+         (define first-line (read-line port 'any))
          (define pos (file-position port))
          (define desed 
            (with-handlers ([exn:fail? (λ (x)
