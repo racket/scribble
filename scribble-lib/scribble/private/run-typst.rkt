@@ -17,10 +17,6 @@
   pdf-file)
 
 (define (get-typst-binary)
-  (define ans
-    (or (find-executable-path "typst")
-        (and (eq? (system-type) 'windows)
-             (find-executable-path "typst.exe"))))
-  (unless ans
-    (error 'run-typst "could not find a `typst' executable"))
-  ans)
+  (or (or (find-executable-path "typst")
+          (and (eq? (system-type) 'windows) (find-executable-path "typst.exe")))
+      (error 'run-typst "could not find a `typst' executable")))
