@@ -540,11 +540,22 @@
 (define (given-names->initials str)
   (regexp-replace* #rx"(.)[^ ]*( |$)" str "\\1. "))
 
+;; return content for v, or false
+(define (contentify v)
+  (and v (if (content? v) v (format "~a" v))))
+;; return string for v, or false
+(define (stringify v)
+  (and v (cond [(string? v) v]
+               [(content? v) (content->string v)]
+               [else (format "~a" v)])))
+
 (module+ test
   (require rackunit)
   (check-equal? (given-names->initials "Matthew") "M. ")
   (check-equal? (given-names->initials "Matthew R.") "M. R. ")
-  (check-equal? (given-names->initials "Matthew Raymond") "M. R. "))
+  (check-equal? (given-names->initials "Matthew Raymond") "M. R. ")
+  (check-equal? (content->string (journal-location (bold "Journal of Things"))) "Journal of Things")
+  (check-equal? (content->string (author-name (italic "Ada") "Lovelace")) "Ada Lovelace"))
 
 (define (proceedings-location
          #:editor [editor_ #f]
@@ -562,7 +573,7 @@
     (concatenate-elements
      #:separator ", "
      (and editor_ (editor editor_))
-     @italic{@elem{Proc. @to-string[location]}}
+     @italic{@elem{Proc. @contentify[location]}}
      (series-volume-number-pages-element series volume number pages)))
    #:separator ". "
    (organization-publisher-address-element organization publisher address)))
@@ -573,7 +584,7 @@
          #:number [number #f]
          #:pages [pages #f])
   (concatenate-elements
-   @italic{@to-string[location]}
+   @italic{@contentify[location]}
    #:separator " "
    (series-volume-number-pages-element #f volume number pages)))
 
@@ -582,7 +593,7 @@
   (concatenate-elements
    (and url ((url-rendering) url))
    #:separator " "
-   (and accessed @elem{(accessed @to-string[accessed])})))
+   (and accessed @elem{(accessed @contentify[accessed])})))
 
 (define (string-capitalize str)
   (if (non-empty-string? str)
@@ -611,7 +622,7 @@
    (concatenate-elements
     #:separator ", "
     (edition-element edition)
-    (to-string* chapter)
+    (contentify chapter)
     (and editor_ (editor editor_))
     (series-volume-number-pages-element series volume number pages))
    #:separator ". "
@@ -621,12 +632,12 @@
          #:howpublished [howpublished #f]
          #:address [address #f])
   (concatenate-elements #:separator ". "
-    (to-string* howpublished)
-    (to-string* address)))
+    (contentify howpublished)
+    (contentify address)))
 
 (define (misc-location
          #:howpublished [howpublished #f])
-  (and howpublished (elem (to-string howpublished))))
+  (and howpublished (elem (contentify howpublished))))
 
 (define (manual-location
          #:organization [organization #f]
@@ -634,7 +645,7 @@
   (concatenate-elements
    (edition-element edition)
    #:separator ", "
-   (to-string* organization)))
+   (contentify organization)))
 
 (define (techrpt-location
          #:institution institution
@@ -642,7 +653,7 @@
          #:number [number #f]
          #:address [address #f])
   (concatenate-elements #:separator ", "
-    (to-string* institution) (to-string* type) (to-string* number) (to-string* address)))
+    (contentify institution) (contentify type) (contentify number) (contentify address)))
 
 (define (dissertation-location
          #:institution institution
@@ -650,10 +661,10 @@
          #:type [type #f]
          #:address [address #f])
   (concatenate-elements #:separator ", "
-    @elem{@to-string[degree] dissertation}
-    (to-string institution)
-    (to-string* type)
-    (to-string* address)))
+    @elem{@contentify[degree] dissertation}
+    (contentify institution)
+    (contentify type)
+    (contentify address)))
 
 (define (book-chapter-location
          location
@@ -667,7 +678,7 @@
          #:publisher [publisher #f]
          #:address [address #f])
   (concatenate-elements #:separator " "
-   @elem{In @italic{@elem{@to-string[location]}}}
+   @elem{In @italic{@elem{@contentify[location]}}}
    (book-location #:edition edition #:chapter chapter #:editor editor_
          #:series series #:volume volume #:number number #:pages pages
          #:publisher publisher #:address address)))
@@ -675,21 +686,28 @@
 ;; ----------------------------------------
 
 (define (author-name first last #:suffix [suffix #f])
+  (define first* (contentify first))
+  (define last* (contentify last))
+  (define suffix* (contentify suffix))
+
+  ;; Plain-text projections are needed for sorting.
+  (define first-string (stringify first))
+  (define last-string (stringify last))
+  (define suffix-string (stringify suffix))
   (make-author-element
    #f
-   (list
-    (format "~a ~a~a"
-            (if (abbreviate-given-names)
-                (given-names->initials first)
-                first)
-            last
-            (if suffix
-                (format " ~a" suffix)
-                "")))
-   (format "~a ~a~a" last first (if suffix
-                                    (format " ~a" suffix)
-                                    ""))
-   last))
+   (append
+    (list (if (abbreviate-given-names)
+              (given-names->initials first-string)
+              first*)
+          " "
+          last*)
+    (if suffix*
+        (list " " suffix*)
+        null))
+   (format "~a ~a~a" last-string first-string
+           (if suffix-string (format " ~a" suffix-string) ""))
+   last*))
 
 (define (org-author-name org)
   (make-author-element
@@ -749,25 +767,24 @@
      (author-element-names name)
      (author-element-cite name))))
 
-(define (to-string v) (format "~a" v))
-(define (to-string* v) (and v (to-string v)))
 (define (edition-element edition)
-  (and edition @elem{@(string-capitalize (to-string edition)) edition}))
+  (and edition
+       @elem{@(string-capitalize (stringify edition)) edition}))
 (define (pages-element pages)
-  (and pages @elem{pp. @(to-string (car pages))--@(to-string (cadr pages))}))
+  (and pages @elem{pp. @(contentify (car pages))--@(contentify (cadr pages))}))
 (define (series-volume-number-pages-element series volume number pages)
   (concatenate-elements
-   (to-string* series)
+   (contentify series)
    #:separator ", "
    (concatenate-elements
-    (to-string* volume)
-    (and number @elem{(@to-string[number])}))
+    (contentify volume)
+    (and number @elem{(@contentify[number])}))
    (pages-element pages)))
 (define (organization-publisher-address-element organization publisher address)
   (concatenate-elements
-   (to-string* organization)
+   (contentify organization)
    #:separator ". "
    (concatenate-elements
-    (to-string* publisher)
+    (contentify publisher)
     #:separator ", "
-    (to-string* address))))
+    (contentify address))))
