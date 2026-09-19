@@ -421,7 +421,7 @@
                             ".")
                      null)
                  (if (and (not doi) url) `(" " ,[(url-rendering) url]) null)
-                 (if doi `(" " ,[(doi-rendering) doi] ".") null)
+                 (if doi `(" " ,[(doi-rendering) doi] ,(if note "." null)) null)
                  (if note `(" " ,note) null))))
 
 (define-syntax (define-cite stx)
