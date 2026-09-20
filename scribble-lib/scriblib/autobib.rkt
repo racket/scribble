@@ -540,14 +540,14 @@
 (define (given-names->initials str)
   (regexp-replace* #rx"(.)[^ ]*( |$)" str "\\1. "))
 
-;; return content for v, or false
+;; return content for v, preserve false
 (define (contentify v)
-  (and v (if (content? v) v (format "~a" v))))
-;; return string for v, or false
+  (if (or (not v) (content? v) (string? v))
+      v
+      (format "~a" v)))
+;; return string for v, preserve false
 (define (stringify v)
-  (and v (cond [(string? v) v]
-               [(content? v) (content->string v)]
-               [else (format "~a" v)])))
+  (and v (content->string v)))
 
 (module+ test
   (require rackunit)
@@ -555,7 +555,45 @@
   (check-equal? (given-names->initials "Matthew R.") "M. R. ")
   (check-equal? (given-names->initials "Matthew Raymond") "M. R. ")
   (check-equal? (content->string (journal-location (bold "Journal of Things"))) "Journal of Things")
-  (check-equal? (content->string (author-name (italic "Ada") "Lovelace")) "Ada Lovelace"))
+  (check-equal? (content->string (author-name (italic "Ada") "Lovelace")) "Ada Lovelace")
+
+  (check-false (contentify #f))
+  (check-false (stringify #f))
+  (check-equal? (contentify 42) "42")
+  (check-equal? (stringify 42) "42")
+  (define emphasized (italic "foo"))
+  (check-eq? (contentify emphasized) emphasized)
+  (check-equal? (stringify emphasized) "foo")
+
+  (define no-note
+    (make-bib #:title "Title" #:doi "10.1234/foo"))
+  (define with-note
+    (make-bib #:title "Title"
+              #:doi "10.1234/foo"
+              #:note "A note"))
+  (check-equal?
+   (content->string
+    (bib->entry no-note author+date-style #f
+                default-render-date-bib 1))
+    "Title. doi:10.1234/foo")
+  (check-equal?
+   (content->string
+    (bib->entry with-note author+date-style #f
+                default-render-date-bib 1))
+   "Title. doi:10.1234/foo. A note")
+
+  (check-equal?
+   (content->string
+    (book-location
+     #:edition "second"
+     #:chapter 3
+     #:series "LNCS"
+     #:volume 42
+     #:number 7
+     #:pages '(10 20)
+     #:publisher "Springer"
+     #:address "Berlin"))
+   "Second edition, 3, LNCS, 42(7), pp. 10--20. Springer, Berlin"))
 
 (define (proceedings-location
          #:editor [editor_ #f]
