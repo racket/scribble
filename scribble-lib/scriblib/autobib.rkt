@@ -611,7 +611,7 @@
     (concatenate-elements
      #:separator ", "
      (and editor_ (editor editor_))
-     @italic{@elem{Proc. @contentify[location]}}
+     (and location @italic{@elem{Proc. @contentify[location]}})
      (series-volume-number-pages-element series volume number pages)))
    #:separator ". "
    (organization-publisher-address-element organization publisher address)))
@@ -622,7 +622,7 @@
          #:number [number #f]
          #:pages [pages #f])
   (concatenate-elements
-   @italic{@contentify[location]}
+   (and location @italic{@contentify[location]})
    #:separator " "
    (series-volume-number-pages-element #f volume number pages)))
 
@@ -716,7 +716,7 @@
          #:publisher [publisher #f]
          #:address [address #f])
   (concatenate-elements #:separator " "
-   @elem{In @italic{@elem{@contentify[location]}}}
+   (and location @elem{In @italic{@elem{@contentify[location]}}})
    (book-location #:edition edition #:chapter chapter #:editor editor_
          #:series series #:volume volume #:number number #:pages pages
          #:publisher publisher #:address address)))
@@ -734,15 +734,12 @@
   (define suffix-string (stringify suffix))
   (make-author-element
    #f
-   (append
-    (list (if (abbreviate-given-names)
+   (concatenate-elements #:separator " "
+    (if (abbreviate-given-names)
               (given-names->initials first-string)
               first*)
-          " "
-          last*)
-    (if suffix*
-        (list " " suffix*)
-        null))
+    last*
+    suffix*)
    (format "~a ~a~a" last-string first-string
            (if suffix-string (format " ~a" suffix-string) ""))
    last*))
