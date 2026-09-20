@@ -540,7 +540,7 @@
                         #:title (support-escapes (raw-attr "title"))
                         #:date (raw-attr "year") ;; TODO: optional month
                         #:location (proceedings-location
-                                      (raw-attr "booktitle")
+                                      (raw-attr* "booktitle")
                                       ;; optional:
                                       #:editor (parse-author (raw-attr "editor"))
                                       #:series (raw-attr "series")
@@ -680,7 +680,7 @@
                         #:date (raw-attr "year") ;; TODO: optional month
                         ;; optional:
                         #:location (proceedings-location
-                                      (raw-attr "booktitle")
+                                      (raw-attr* "booktitle")
                                       ;; optional:
                                       #:editor (parse-author (raw-attr "editor"))
                                       #:volume (raw-attr "volume") ;; volume OR number
