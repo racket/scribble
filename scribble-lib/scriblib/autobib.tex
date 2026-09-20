@@ -1,24 +1,28 @@
 \usepackage{needspace}
-\usepackage{calc}
 
 \newenvironment{AutoBibliography}
   {\begin{small}}
   {\end{small}}
 
-% Minimum space required before starting a bibliography entry.
-% Evaluated where it is used, so \baselineskip is that of AutoBibliography
-% (i.e. \small).
-\newcommand{\AutobibNeedspace}{5\baselineskip}
+% Minimum number of lines that must remain before starting an entry.
+\newcount\AutobibNeedlines
+\AutobibNeedlines=5
 
-% Indentation of continuation lines and subsequent paragraphs.
+% Hanging indentation of ordinary bibliography entries.
 \newlength{\ABindent}
 \setlength{\ABindent}{0.05\linewidth}
 
-\newcommand{\AutobibParindent}{1.5em}
+% Additional indentation of subsequent paragraph first lines.
+\newlength{\AutobibParindent}
+\setlength{\AutobibParindent}{1.5em}
+
+% Width reserved for the number in a numbered bibliography.
+\newlength{\AutobibNumberWidth}
+\setlength{\AutobibNumberWidth}{5ex}
 
 \newcommand{\Autobibentry}[1]{%
   \par
-  \Needspace{\AutobibNeedspace}%
+  \Needspace{\AutobibNeedlines\baselineskip}%
   \begingroup
     \emergencystretch=2em
     \tolerance=1000
@@ -33,16 +37,26 @@
 }
 
 \newcommand{\Autobibtarget}[1]{\phantomsection#1}
-
-\newlength{\ABcollength}
 \newcommand{\Autocolbibnumber}[1]{%
-  \parbox[t]{5ex}{\hfill#1~~\vspace{1.0ex}}}
+  \par
+  \Needspace{\AutobibNeedlines\baselineskip}%
+  \begingroup
+    \emergencystretch=2em
+    \tolerance=1000
+    \leftskip=\AutobibNumberWidth
+    \parindent=\AutobibParindent
+    \noindent
+    \hspace*{-\AutobibNumberWidth}%
+    \makebox[\AutobibNumberWidth][r]{#1~~}%
+    \ignorespaces
+}
 \newcommand{\Autocolbibentry}[1]{%
-  \setlength{\ABcollength}{\linewidth-5ex}%
-  \parbox[t]{\ABcollength}{#1\vspace{1.0ex}}}
-
+    #1%
+    \par
+  \endgroup
+  \addvspace{1.0ex}%
+}
 \newcommand{\Autobibref}[1]{#1}
-
 \providecommand{\AutobibLink}[1]{#1}
 
 \newcommand{\pseudodoi}[1]{#1}
