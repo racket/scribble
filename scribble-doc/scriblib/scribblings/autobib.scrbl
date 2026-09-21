@@ -213,7 +213,7 @@ Extends a bib value so that the rendered citation is suffixed with
                                [#:organization organization any/c #f]
                                [#:publisher publisher #f]
                                [#:address address #f])
-         element?]{
+         content?]{
 
 Combines elements to generate an element that is suitable for
 describing a paper's location within a conference or workshop
@@ -227,7 +227,7 @@ proceedings.
                            [#:volume volume any/c #f]
                            [#:number number any/c #f]
                            [#:pages pages (or (list/c any/c any/c) #f) #f])
-         element?]{
+         content?]{
 
 Combines elements to generate an element that is suitable for
 describing a paper's location within a journal.}
@@ -242,7 +242,7 @@ describing a paper's location within a journal.}
                         [#:pages pages any/c #f]
                         [#:publisher publisher any/c #f]
                         [#:address address any/c #f])
-         element?]{
+         content?]{
 Combines elements to generate an element that is suitable for
 describing a book's location.
 
@@ -254,7 +254,7 @@ describing a book's location.
 
 @defproc[(booklet-location [#:howpublished howpublished any/c #f]
                            [#:address address any/c #f])
-         element?]{
+         content?]{
 Combines elements to generate an element that is suitable for
 describing a booklet's location.
 
@@ -263,7 +263,7 @@ describing a booklet's location.
 
 
 @defproc[(misc-location [#:howpublished howpublished any/c #f])
-         element?]{
+         content?]{
 Combines elements to generate an element that is suitable for
 describing a bibtex misc entry's location.
 
@@ -273,7 +273,7 @@ describing a bibtex misc entry's location.
 
 @defproc[(manual-location [#:organization organization any/c #f]
                           [#:edition edition any/c #f])
-         element?]{
+         content?]{
 Combines elements to generate an element that is suitable for
 describing a manual's location.
 
@@ -285,7 +285,7 @@ describing a manual's location.
                            [#:type type any/c #f]
                            [#:number number any/c #f]
                            [#:address address any/c #f])
-         element?]{
+         content?]{
 
 Combines elements to generate an element that is suitable for
 describing a technical report's location.
@@ -297,7 +297,7 @@ describing a technical report's location.
                                 [#:degree degree any/c "PhD"]
                                 [#:type type any/c #f]
                                 [#:address address any/c #f])
-         element?]{
+         content?]{
 
 Combines elements to generate an element that is suitable for
 describing a dissertation.
@@ -308,7 +308,7 @@ describing a dissertation.
 
 @defproc[(webpage-location [url string? #f]
                            [#:accessed accessed any/c #f])
-         element?]{
+         content?]{
  Combines elements to generate an element that is suitable for
  describing a web page.
 
@@ -327,7 +327,7 @@ describing a dissertation.
                                 [#:pages pages any/c #f]
                                 [#:publisher publisher any/c #f]
                                 [#:address address any/c #f])
-         element?]{
+         content?]{
 
 Combines elements to generate an element that is suitable for
 describing a paper's location within a chapter or part of a book or collection of books.

@@ -20,37 +20,37 @@
          make-bib in-bib (rename-out [auto-bib? bib?])
          author-name org-author-name
          (contract-out
-          [authors (->* (content?) #:rest (listof content?) element?)]
+          [authors (->* (content?) #:rest (listof content?) content?)]
           [proceedings-location
            (->* [any/c] [#:pages (or/c (list/c any/c any/c) #f)
                          #:series any/c #:volume any/c #:number any/c
                          #:editor any/c #:address any/c #:publisher any/c #:organization any/c]
-                element?)]
+                content?)]
           [journal-location
-           (->* [any/c] [#:pages (or/c (list/c any/c any/c) #f) #:volume any/c #:number any/c] element?)]
+           (->* [any/c] [#:pages (or/c (list/c any/c any/c) #f) #:volume any/c #:number any/c] content?)]
           [book-location
            (->* []
                 [#:edition any/c #:chapter any/c #:editor any/c
                  #:series any/c #:volume any/c #:number any/c #:pages (or/c (list/c any/c any/c) #f)
-                 #:publisher any/c #:address any/c] (or/c element? #f))]
+                 #:publisher any/c #:address any/c] (or/c content? #f))]
           [booklet-location
-           (->* [] [#:howpublished any/c #:address any/c] (or/c element? #f))]
+           (->* [] [#:howpublished any/c #:address any/c] (or/c content? #f))]
           [misc-location
-           (->* [] [#:howpublished any/c] (or/c element? #f))]
+           (->* [] [#:howpublished any/c] (or/c content? #f))]
           [techrpt-location
-           (->* [#:institution any/c] [#:number any/c #:type any/c #:address any/c] element?)]
+           (->* [#:institution any/c] [#:number any/c #:type any/c #:address any/c] content?)]
           [dissertation-location
            (->* [#:institution any/c] [#:degree any/c #:type any/c #:address any/c]
-                element?)]
+                content?)]
           [book-chapter-location
            (->* [any/c]
                 [#:edition any/c #:editor any/c #:chapter any/c
                  #:series any/c #:volume any/c #:number any/c #:pages (or/c (list/c any/c any/c) #f)
-                 #:publisher any/c #:address any/c] element?)]
+                 #:publisher any/c #:address any/c] content?)]
           [webpage-location
-           (->* [] [string? #:accessed any/c] (or/c element? #f))]
+           (->* [] [string? #:accessed any/c] (or/c content? #f))]
           [manual-location
-           (->* [] [#:organization any/c #:edition any/c] (or/c element? #f))])
+           (->* [] [#:organization any/c #:edition any/c] (or/c content? #f))])
          other-authors
          editor
          abbreviate-given-names
@@ -547,7 +547,7 @@
       (format "~a" v)))
 ;; return string for v, preserve false
 (define (stringify v)
-  (and v (content->string v)))
+  (and v (content->string (contentify v))))
 
 (module+ test
   (require rackunit)
@@ -564,6 +564,18 @@
   (define emphasized (italic "foo"))
   (check-eq? (contentify emphasized) emphasized)
   (check-equal? (stringify emphasized) "foo")
+
+  (check-equal? (capitalize-content "second") "Second")
+  (check-equal? (capitalize-content '("" "second")) "Second")
+  (define emphasized-second (emph "second"))
+  (check-eq? (capitalize-content emphasized-second)
+             emphasized-second)
+  (check-equal?
+   (capitalize-content (list emphasized-second " edition"))
+   (list emphasized-second " edition"))
+  (check-equal?
+   (content->string (book-location #:edition "second"))
+   "Second edition")
 
   (define no-note
     (make-bib #:title "Title" #:doi "10.1234/foo"))
@@ -605,46 +617,60 @@
          #:organization [organization #f]
          #:publisher [publisher #f]
          #:address [address #f])
-  (concatenate-elements
-   (concatenate-elements
-    @elem{In }
-    (concatenate-elements
+  (concatenate-content
+   (concatenate-content
+    "In "
+    (concatenate-content
      #:separator ", "
      (and editor_ (editor editor_))
-     (and location @italic{@elem{Proc. @contentify[location]}})
-     (series-volume-number-pages-element series volume number pages)))
+     (and location @italic{Proc. @contentify[location]})
+     (series-volume-number-pages-content series volume number pages)))
    #:separator ". "
-   (organization-publisher-address-element organization publisher address)))
+   (organization-publisher-address-content organization publisher address)))
 
 (define (journal-location
          location
          #:volume [volume #f]
          #:number [number #f]
          #:pages [pages #f])
-  (concatenate-elements
+  (concatenate-content
    (and location @italic{@contentify[location]})
    #:separator " "
-   (series-volume-number-pages-element #f volume number pages)))
+   (series-volume-number-pages-content #f volume number pages)))
 
 ;; The URL is now redundant with the URL in make-bib, so we now (2025-12) make it optional
 (define (webpage-location (url #f) #:accessed [accessed #f])
-  (concatenate-elements
+  (concatenate-content
    (and url ((url-rendering) url))
    #:separator " "
-   (and accessed @elem{(accessed @contentify[accessed])})))
+   (and accessed @list{(accessed @contentify[accessed])})))
 
-(define (string-capitalize str)
-  (if (non-empty-string? str)
-      (let ([chars (string->list str)])
-        (list->string (cons (char-upcase (car chars)) (cdr chars))))
-      str))
+(define (capitalize-string s)
+  (string-append
+   (string (char-upcase (string-ref s 0)))
+   (substring s 1)))
 
-(define (concatenate-elements #:separator (separator "") . elements)
-  (let loop ((l (filter (lambda (x) x) elements))) ;; remove #f from the list
-     (match l
-       ['() #f]
-       [(list a) (elem a)]
-       [(cons a b) (elem a separator (loop (cdr l)))])))
+(define (capitalize-content content)
+  (match (flatten-content content)
+    [(? non-empty-string? s) (capitalize-string s)]
+    [(cons (? non-empty-string? s) r) (cons (capitalize-string s) r)]
+    [x x]))
+
+(define (flatten-content content)
+  (define a '())
+  (let loop ((c content))
+    (cond
+      [(pair? c)                                       (loop (car c)) (loop (cdr c))]
+      [(or (null? c) (not c) (void? c) (equal? c ""))  (void)]
+      [else                                            (set! a (cons (contentify c) a))]))
+  (match a
+    ['() #f]
+    [(list x) x]
+    [else (reverse a)]))
+
+(define (concatenate-content #:separator (separator #f) . content)
+  (define l (filter values (map flatten-content content)))
+  (and (pair? l) (flatten-content (if separator (add-between l separator) l))))
 
 (define (book-location
          #:edition [edition #f]
@@ -656,41 +682,41 @@
          #:pages [pages #f]
          #:publisher [publisher #f]
          #:address [address #f])
-  (concatenate-elements
-   (concatenate-elements
+  (concatenate-content
+   (concatenate-content
     #:separator ", "
-    (edition-element edition)
-    (contentify chapter)
+    (edition-content edition)
+    chapter
     (and editor_ (editor editor_))
-    (series-volume-number-pages-element series volume number pages))
+    (series-volume-number-pages-content series volume number pages))
    #:separator ". "
-   (organization-publisher-address-element #f publisher address)))
+   (organization-publisher-address-content #f publisher address)))
 
 (define (booklet-location
          #:howpublished [howpublished #f]
          #:address [address #f])
-  (concatenate-elements #:separator ". "
-    (contentify howpublished)
-    (contentify address)))
+  (concatenate-content #:separator ". "
+    howpublished
+    address))
 
 (define (misc-location
          #:howpublished [howpublished #f])
-  (and howpublished (elem (contentify howpublished))))
+  (and howpublished (contentify howpublished)))
 
 (define (manual-location
          #:organization [organization #f]
          #:edition [edition #f])
-  (concatenate-elements
-   (edition-element edition)
+  (concatenate-content
+   (edition-content edition)
    #:separator ", "
-   (contentify organization)))
+   organization))
 
 (define (techrpt-location
          #:institution institution
          #:type [type #f]
          #:number [number #f]
          #:address [address #f])
-  (concatenate-elements #:separator ", "
+  (concatenate-content #:separator ", "
     (contentify institution) (contentify type) (contentify number) (contentify address)))
 
 (define (dissertation-location
@@ -698,8 +724,8 @@
          #:degree [degree "PhD"]
          #:type [type #f]
          #:address [address #f])
-  (concatenate-elements #:separator ", "
-    @elem{@contentify[degree] dissertation}
+  (concatenate-content #:separator ", "
+    @list{@contentify[degree] dissertation}
     (contentify institution)
     (contentify type)
     (contentify address)))
@@ -715,8 +741,8 @@
          #:pages [pages #f]
          #:publisher [publisher #f]
          #:address [address #f])
-  (concatenate-elements #:separator " "
-   (and location @elem{In @italic{@elem{@contentify[location]}}})
+  (concatenate-content #:separator " "
+   (and location @list{In @italic{@contentify[location]}})
    (book-location #:edition edition #:chapter chapter #:editor editor_
          #:series series #:volume volume #:number number #:pages pages
          #:publisher publisher #:address address)))
@@ -729,12 +755,12 @@
   (define suffix* (contentify suffix))
 
   ;; Plain-text projections are needed for sorting.
-  (define first-string (stringify first))
-  (define last-string (stringify last))
-  (define suffix-string (stringify suffix))
+  (define first-string (stringify first*))
+  (define last-string (stringify last*))
+  (define suffix-string (stringify suffix*))
   (make-author-element
    #f
-   (concatenate-elements #:separator " "
+   (concatenate-content #:separator " "
     (if (abbreviate-given-names)
               (given-names->initials first-string)
               first*)
@@ -802,24 +828,24 @@
      (author-element-names name)
      (author-element-cite name))))
 
-(define (edition-element edition)
+(define (edition-content edition)
   (and edition
-       @elem{@(string-capitalize (stringify edition)) edition}))
-(define (pages-element pages)
+       @list{@(capitalize-content edition) edition}))
+(define (pages-content pages)
   (and pages @elem{pp. @(contentify (car pages))--@(contentify (cadr pages))}))
-(define (series-volume-number-pages-element series volume number pages)
-  (concatenate-elements
+(define (series-volume-number-pages-content series volume number pages)
+  (concatenate-content
    (contentify series)
    #:separator ", "
-   (concatenate-elements
+   (concatenate-content
     (contentify volume)
-    (and number @elem{(@contentify[number])}))
-   (pages-element pages)))
-(define (organization-publisher-address-element organization publisher address)
-  (concatenate-elements
+    (and number @list{(@contentify[number])}))
+   (pages-content pages)))
+(define (organization-publisher-address-content organization publisher address)
+  (concatenate-content
    (contentify organization)
    #:separator ". "
-   (concatenate-elements
+   (concatenate-content
     (contentify publisher)
     #:separator ", "
     (contentify address))))

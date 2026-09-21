@@ -48,8 +48,7 @@
     (λ () (webpage-location))))
 
 (define (mk-bookloc-elem/ed ed)
-  (define (wrap v) (element (style #f '()) (if (list? v) v (list v))))
-  (wrap (wrap (wrap (list ed " edition")))))
+  (list ed " edition"))
 
 (test-case "book-location-edition-capitalization"
   (check-equal? (book-location #:edition 'a)
