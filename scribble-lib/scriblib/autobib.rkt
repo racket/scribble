@@ -20,7 +20,7 @@
          make-bib in-bib (rename-out [auto-bib? bib?])
          author-name org-author-name
          (contract-out
-          [authors (->* (content?) #:rest (listof content?) content?)]
+          [authors (->* (content?) #:rest (listof content?) element?)]
           [proceedings-location
            (->* [any/c] [#:pages (or/c (list/c any/c any/c) #f)
                          #:series any/c #:volume any/c #:number any/c
@@ -542,7 +542,7 @@
 
 ;; return content for v, preserve false
 (define (contentify v)
-  (if (or (not v) (content? v) (string? v))
+  (if (or (not v) (content? v))
       v
       (format "~a" v)))
 ;; return string for v, preserve false
@@ -564,6 +564,19 @@
   (define emphasized (italic "foo"))
   (check-eq? (contentify emphasized) emphasized)
   (check-equal? (stringify emphasized) "foo")
+
+  (check-false (flatten-content '(#f "" () #f)))
+  (check-equal? (flatten-content '(("a") #f ("b" "c")))
+                '("a" "b" "c"))
+  (check-equal?
+   (concatenate-content #:separator ", "
+                        '("foo" "bar") #f "baz")
+   '("foo" "bar" ", " "baz"))
+
+  (check-equal? (flatten-content 'foo) "foo")
+  (check-equal? (flatten-content 42) "42")
+  (check-equal? (content->string (book-location #:edition 'second))
+                "Second edition")
 
   (check-equal? (capitalize-content "second") "Second")
   (check-equal? (capitalize-content '("" "second")) "Second")
@@ -717,7 +730,7 @@
          #:number [number #f]
          #:address [address #f])
   (concatenate-content #:separator ", "
-    (contentify institution) (contentify type) (contentify number) (contentify address)))
+    institution type number address))
 
 (define (dissertation-location
          #:institution institution
@@ -726,9 +739,9 @@
          #:address [address #f])
   (concatenate-content #:separator ", "
     @list{@contentify[degree] dissertation}
-    (contentify institution)
-    (contentify type)
-    (contentify address)))
+    institution
+    type
+    address))
 
 (define (book-chapter-location
          location
@@ -835,17 +848,17 @@
   (and pages @elem{pp. @(contentify (car pages))--@(contentify (cadr pages))}))
 (define (series-volume-number-pages-content series volume number pages)
   (concatenate-content
-   (contentify series)
+   series
    #:separator ", "
    (concatenate-content
-    (contentify volume)
+    volume
     (and number @list{(@contentify[number])}))
    (pages-content pages)))
 (define (organization-publisher-address-content organization publisher address)
   (concatenate-content
-   (contentify organization)
+   organization
    #:separator ". "
    (concatenate-content
-    (contentify publisher)
+    publisher
     #:separator ", "
-    (contentify address))))
+    address)))
