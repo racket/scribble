@@ -278,7 +278,7 @@
      (define/public (bibliography-prefix i)
        (make-element
         colbibnumber-style
-        (list "[" (number->string i) "] ")))
+        (list "[" (number->string i) "]" 'nbsp)))
      (define/public (bibliography-line i e)
        (list e))
      (super-new))))

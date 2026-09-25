@@ -1,30 +1,5 @@
-/*
-.AutoBibliography p {
-  padding-left: 1em;
-  text-indent: -1em;
-}
-
-.AutoBibliography td {
-  vertical-align: text-top;
-}
-
-/* Numbered bibliography entries * /
-.AutoBibliography p:has(.Autocolbibnumber) {
-  --number-width: 7ex;
-  padding-left: var(--number-width);
-  text-indent: calc(-1 * var(--number-width));
-}
-
-.AutoBibliography .Autocolbibnumber {
-  display: inline-block;
-  width: var(--number-width, 7ex);
-  text-indent: 0;
-  text-align: right;
-  white-space: nowrap;
-}
-*/
-
-
+/* Author/date bibliography entries.
+   Continuation lines are indented 1em relative to the first line. */
 .AutoBibliography .Autobibentry {
   padding-left: 1em;
 }
@@ -33,6 +8,8 @@
   text-indent: -1em;
 }
 
+/* Numbered bibliography entries.
+   The number box and hanging indent have the same width. */
 .AutoBibliography .Autocolbibentry {
   padding-left: 7ex;
 }
@@ -41,8 +18,29 @@
   text-indent: -7ex;
 }
 
-.AutoBibliography .Autocolbibentry > .SIntrapara:not(:first-child),
-.AutoBibliography .Autobibentry > .SIntrapara:not(:first-child) {
+.AutoBibliography .Autocolbibnumber {
+  display: inline-block;
+  box-sizing: border-box;
+  width: 7ex;
+  padding-right: 0.15em;
+  text-indent: 0;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* No extra vertical gap between paragraphs in the same entry:
+   first-line indentation already distinguishes them. */
+.AutoBibliography .Autobibentry > .SIntrapara,
+.AutoBibliography .Autocolbibentry > .SIntrapara {
+  margin: 0;
+}
+
+.AutoBibliography .Autobibentry > .SIntrapara:not(:first-child),
+.AutoBibliography .Autocolbibentry > .SIntrapara:not(:first-child) {
   text-indent: 1.5em;
-  margin-top: 0.5em;
+}
+
+/* More space between entries than between their paragraphs. */
+.AutoBibliography td {
+  padding-bottom: 0.5em;
 }

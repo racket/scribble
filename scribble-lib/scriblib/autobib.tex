@@ -28,6 +28,7 @@
     \tolerance=1000
     \leftskip=\ABindent
     \parindent=\AutobibParindent
+    \parskip=0pt
     \noindent
     \hspace*{-\ABindent}%
     \ignorespaces
@@ -45,6 +46,7 @@
     \tolerance=1000
     \leftskip=\AutobibNumberWidth
     \parindent=\AutobibParindent
+    \parskip=0pt
     \noindent
     \hspace*{-\AutobibNumberWidth}%
     \ignorespaces
@@ -55,10 +57,9 @@
 }
 
 \newcommand{\Autocolbibnumber}[1]{%
-  \makebox[\AutobibNumberWidth][r]{#1}%
+  \makebox[\AutobibNumberWidth][r]{#1\hspace{0.25em}}%
   \ignorespaces
 }
-
 \newcommand{\Autobibtarget}[1]{\phantomsection#1}
 \newcommand{\Autobibref}[1]{#1}
 \providecommand{\AutobibLink}[1]{#1}
