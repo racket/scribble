@@ -1,4 +1,4 @@
-
+/*
 .AutoBibliography p {
   padding-left: 1em;
   text-indent: -1em;
@@ -6,4 +6,43 @@
 
 .AutoBibliography td {
   vertical-align: text-top;
+}
+
+/* Numbered bibliography entries * /
+.AutoBibliography p:has(.Autocolbibnumber) {
+  --number-width: 7ex;
+  padding-left: var(--number-width);
+  text-indent: calc(-1 * var(--number-width));
+}
+
+.AutoBibliography .Autocolbibnumber {
+  display: inline-block;
+  width: var(--number-width, 7ex);
+  text-indent: 0;
+  text-align: right;
+  white-space: nowrap;
+}
+*/
+
+
+.AutoBibliography .Autobibentry {
+  padding-left: 1em;
+}
+
+.AutoBibliography .Autobibentry > .SIntrapara:first-child {
+  text-indent: -1em;
+}
+
+.AutoBibliography .Autocolbibentry {
+  padding-left: 7ex;
+}
+
+.AutoBibliography .Autocolbibentry > .SIntrapara:first-child {
+  text-indent: -7ex;
+}
+
+.AutoBibliography .Autocolbibentry > .SIntrapara:not(:first-child),
+.AutoBibliography .Autobibentry > .SIntrapara:not(:first-child) {
+  text-indent: 1.5em;
+  margin-top: 0.5em;
 }

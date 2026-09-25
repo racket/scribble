@@ -20,7 +20,7 @@
 \newlength{\AutobibNumberWidth}
 \setlength{\AutobibNumberWidth}{5ex}
 
-\newcommand{\Autobibentry}[1]{%
+\newenvironment{Autobibentry}{%
   \par
   \Needspace{\AutobibNeedlines\baselineskip}%
   \begingroup
@@ -30,14 +30,14 @@
     \parindent=\AutobibParindent
     \noindent
     \hspace*{-\ABindent}%
-    #1%
+    \ignorespaces
+}{%
     \par
   \endgroup
-  \addvspace{1.0ex}%
+  \addvspace{1ex}%
 }
 
-\newcommand{\Autobibtarget}[1]{\phantomsection#1}
-\newcommand{\Autocolbibnumber}[1]{%
+\newenvironment{Autocolbibentry}{%
   \par
   \Needspace{\AutobibNeedlines\baselineskip}%
   \begingroup
@@ -47,15 +47,19 @@
     \parindent=\AutobibParindent
     \noindent
     \hspace*{-\AutobibNumberWidth}%
-    \makebox[\AutobibNumberWidth][r]{#1~~}%
     \ignorespaces
-}
-\newcommand{\Autocolbibentry}[1]{%
-    #1%
+}{%
     \par
   \endgroup
-  \addvspace{1.0ex}%
+  \addvspace{1ex}%
 }
+
+\newcommand{\Autocolbibnumber}[1]{%
+  \makebox[\AutobibNumberWidth][r]{#1}%
+  \ignorespaces
+}
+
+\newcommand{\Autobibtarget}[1]{\phantomsection#1}
 \newcommand{\Autobibref}[1]{#1}
 \providecommand{\AutobibLink}[1]{#1}
 

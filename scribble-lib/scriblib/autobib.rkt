@@ -81,10 +81,14 @@
 (define bib-single-style (make-style "AutoBibliography" autobib-style-extras))
 (define bib-columns-style (make-style #f autobib-style-extras))
 
-(define bibentry-style (make-style "Autobibentry" autobib-style-extras))
+(define bibentry-style
+  (make-style "Autobibentry"
+              (cons (alt-tag "div") autobib-style-extras)))
+(define colbibentry-style
+  (make-style "Autocolbibentry"
+              (cons (alt-tag "div") autobib-style-extras)))
 (define bibentrytarget-style (make-style "Autobibtarget" autobib-style-extras))
 (define colbibnumber-style (make-style "Autocolbibnumber" autobib-style-extras))
-(define colbibentry-style (make-style "Autocolbibentry" autobib-style-extras))
 
 (define-struct auto-bib (author date title location url note is-book? doi key specific))
 (define-struct bib-group (ht))
@@ -246,6 +250,7 @@
     (define/public (render-citation date-cite i) date-cite)
     (define/public (render-author+dates author dates) (list* author " " dates))
     (define/public (bibliography-line i e) (list e))
+    (define/public (bibliography-prefix i) null)
     (super-new)))
 
 (define author+date-style (new author+date-style%))
@@ -260,7 +265,7 @@
 (define number-style
   (new
    (class object%
-     (define/public (bibliography-table-style) bib-columns-style)
+     (define/public (bibliography-table-style) bib-single-style)
      (define/public (entry-style) colbibentry-style)
      (define/public (disambiguate-date?) #f)
      (define/public (collapse-for-date?) #f)
@@ -270,10 +275,12 @@
      (define/public (get-item-sep) ", ")
      (define/public (render-citation date-cite i) (number->string i))
      (define/public (render-author+dates author dates) dates)
+     (define/public (bibliography-prefix i)
+       (make-element
+        colbibnumber-style
+        (list "[" (number->string i) "] ")))
      (define/public (bibliography-line i e)
-       (list (make-paragraph plain
-                             (make-element colbibnumber-style (list "[" (number->string i) "]")))
-             e))
+       (list e))
      (super-new))))
 
 (define (gen-bib tag group sec-title
@@ -310,11 +317,6 @@
   (define disambiguated
     (let ()
       (define (bib->para bib disambiguation i)
-        (define collect-target
-          (list (make-target-element
-                  #f
-                  (bib->entry bib style disambiguation render-date-bib i)
-                  `(autobib ,(auto-bib-key bib)))))
         ;; Communicate to scribble's resolve step.
         (define (collect ci)
           ;; store the author
@@ -336,11 +338,29 @@
           (collect-put! ci
                         `(autobib-disambiguation ,(auto-bib-key bib))
                         (or disambiguation 'unambiguous)))
+        (define entry
+          (bib->entry bib style disambiguation render-date-bib i))
+        (define blocks (compound-paragraph-blocks entry))
+        (define first (car blocks))
+        (define marked-first
+          (make-paragraph
+           (paragraph-style first)
+           (list
+            (send style bibliography-prefix i)
+            (make-collect-element
+             bibentrytarget-style
+             (list
+              (make-target-element
+               #f
+               (paragraph-content first)
+               `(autobib ,(auto-bib-key bib))))
+             collect))))
         (send style
               bibliography-line
               i
-              (make-paragraph plain
-                              (list (make-collect-element bibentrytarget-style collect-target collect)))))
+              (make-compound-paragraph
+               (compound-paragraph-style entry)
+               (cons marked-first (cdr blocks)))))
       ;; create the bibliography with disambiguations added.
       (define-values (last num-ambiguous rev-disambiguated*)
         (for/fold ([last #f] [num-ambiguous 0] [rev-disambiguated '()]) ([bib (in-list bibs)]
@@ -385,6 +405,7 @@
                null)
     table))
 
+;; Build a potentially multi-paragraph entry base on the note field.
 (define (bib->entry bib style disambiguation render-date-bib i)
   (define-values (author date title location url note is-book? doi)
     (values (auto-bib-author bib)
@@ -395,34 +416,62 @@
             (auto-bib-note bib)
             (auto-bib-is-book? bib)
             (auto-bib-doi bib)))
-  (make-element (send style entry-style)
-                (append
-                 (if author
-                     `(,author
-                       ,@(if (ends-in-punc? author)
-                             '(" ")
-                             '(". ")))
-                     null)
-                 ;; (if is-book? null '(ldquo))
-                 (if is-book?
-                     (list (italic title))
-                     (decode-content (list title)))
-                 (if (ends-in-punc? title)
-                     null
-                     '("."))
-                 ;; (if is-book? null '(rdquo))
-                 (if location
-                     `(" " ,@(decode-content (list location)) ,(if date "," "."))
-                     null)
-                 (if date `(" "
-                            ,@(if disambiguation
-                                  `(,@(decode-content (list (render-date-bib date))) ,disambiguation)
-                                  (decode-content (list (render-date-bib date))))
-                            ".")
-                     null)
-                 (if (and (not doi) url) `(" " ,[(url-rendering) url]) null)
-                 (if doi `(" " ,[(doi-rendering) doi] ,(if note "." null)) null)
-                 (if note `(" " ,note) null))))
+  (define header
+    (append
+     (if author
+         `(,author
+           ,@(if (ends-in-punc? author)
+                 '(" ")
+                 '(". ")))
+         null)
+     ;; (if is-book? null '(ldquo))
+     (if is-book?
+         (list (italic title))
+         (decode-content (list title)))
+     (if (ends-in-punc? title)
+         null
+         '("."))
+     ;; (if is-book? null '(rdquo))
+     (if location
+         `(" " ,@(decode-content (list location)) ,(if date "," "."))
+         null)
+     (if date `(" "
+                ,@(if disambiguation
+                      `(,@(decode-content (list (render-date-bib date))) ,disambiguation)
+                      (decode-content (list (render-date-bib date))))
+                ".")
+         null)
+     (if (and (not doi) url) `(" " ,[(url-rendering) url]) null)
+     (if doi `(" " ,[(doi-rendering) doi] ,(if note "." null)) null)))
+  (define note-blocks
+    (if note (note->flow note) null))
+  (define first-content
+    (append header
+            (if (pair? note-blocks)
+                (cons " " (paragraph-content (car note-blocks)))
+                null)))
+  (make-compound-paragraph
+   (send style entry-style)
+   (cons
+    (make-paragraph plain first-content)
+    (for/list ([p (in-list (if (pair? note-blocks)
+                               (cdr note-blocks)
+                               null))])
+              (make-paragraph
+               (make-style #f '(never-indents))
+               (paragraph-content p))))))
+
+(define (note->flow note)
+  (define (split-lines c)
+    (cond
+      [(string? c)
+       (add-between
+        (string-split c "\n" #:trim? #f #:repeat? #f)
+        "\n")]
+      [(list? c)
+       (append-map split-lines c)]
+      [else (list c)]))
+  (decode-flow (split-lines note)))
 
 (define-syntax (define-cite stx)
   (syntax-parse stx
@@ -618,7 +667,24 @@
      #:pages '(10 20)
      #:publisher "Springer"
      #:address "Berlin"))
-   "Second edition, 3, LNCS, 42(7), pp. 10--20. Springer, Berlin"))
+   "Second edition, 3, LNCS, 42(7), pp. 10--20. Springer, Berlin")
+
+  (define multi-note
+    (make-bib
+     #:title "Title"
+     #:note "First paragraph.\n\nSecond paragraph."))
+  (define entry
+    (bib->entry multi-note author+date-style #f
+                default-render-date-bib 1))
+  (check-true (compound-paragraph? entry))
+  (define paragraphs (compound-paragraph-blocks entry))
+  (check-equal? (length paragraphs) 2)
+  (check-equal?
+   (content->string (paragraph-content (first paragraphs)))
+   "Title. First paragraph.")
+  (check-equal?
+   (content->string (paragraph-content (second paragraphs)))
+   "Second paragraph."))
 
 (define (proceedings-location
          #:editor [editor_ #f]

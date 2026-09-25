@@ -6,6 +6,8 @@
          scribble/render
          (prefix-in text: scribble/text-render))
 
+(error-print-width 2000)
+
 (define-runtime-path example.bib "example.bib")
 
 (define-runtime-path normal-expected-path "bibtex.normal.txt")
