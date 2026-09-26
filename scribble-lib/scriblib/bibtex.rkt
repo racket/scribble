@@ -2,7 +2,11 @@
 (require racket/function
          racket/match
          racket/list
-         racket/string)
+         racket/string
+         scriblib/autobib
+         scribble/core
+         scribble/manual
+         "private/read-latex.rkt")
 
 ;; Spec but not official: https://www.openoffice.org/bibliographic/bibtex-defs.html
 ;; Informal spec: https://www.bibtex.com/g/bibtex-format/
@@ -35,7 +39,7 @@
     (read-while (negate pred) ip))
 
   (define (slurp-whitespace ip)
-    (read-while (λ (c) (and (char? c) (char-whitespace? c))) ip))
+    (read-while char-whitespace? ip))
 
   (define (read-entries ip)
     (slurp-whitespace ip)
@@ -131,17 +135,40 @@
                  (char=? c #\})))
       ip)))
 
+  (define (read-delimited-value ip terminator)
+    (define out (open-output-string))
+    (let loop ([depth 0])
+      (match (read-char ip)
+        [(? eof-object?)
+         (perror ip 'read-value "Unexpected EOF in delimited value")]
+        [#\\
+         (write-char #\\ out)
+         (define next (read-char ip))
+         (when (eof-object? next)
+           (perror ip 'read-value "Unexpected EOF after backslash"))
+         (write-char next out)
+         (loop depth)]
+        [#\{
+         (write-char #\{ out)
+         (loop (add1 depth))]
+        [#\}
+         (cond
+           [(positive? depth)
+            (write-char #\} out)
+            (loop (sub1 depth))]
+           [(eqv? terminator #\}) (get-output-string out)]
+           [else (perror ip 'read-value "Unexpected closing brace")])]
+        [#\"
+         (if (and (zero? depth) (eqv? terminator #\"))
+             (get-output-string out)
+             (begin (write-char #\" out) (loop depth)))]
+        [c
+         (write-char c out)
+         (loop depth)])))
+
   (define (read-braced-value ip)
     (read-char ip)
-    (let loop ()
-      (define first-part (read-until (λ (c) (or (char=? c #\{) (char=? c #\})))
-                                     ip))
-      (match (peek-char ip)
-        [#\{
-         (string-append first-part (read-braced-value ip) (loop))]
-        [#\}
-         (read-char ip)
-         first-part])))
+    (read-delimited-value ip #\}))
 
   (define (read-value ip)
     (slurp-whitespace ip)
@@ -161,15 +188,7 @@
        (read-braced-value ip)]
       [#\"
        (read-char ip)
-       (let loop ()
-         (define first-part (read-until (λ (c) (or (char=? c #\{) (char=? c #\")))
-                                        ip))
-         (match (peek-char ip)
-           [#\{
-            (string-append first-part (read-braced-value ip) (loop))]
-           [#\"
-            (read-char ip)
-            first-part]))]
+       (read-delimited-value ip #\")]
       [(? char-numeric?)
        (read-while char-numeric? ip)]
       [(? char-alphabetic?)
@@ -193,9 +212,6 @@
         (port-count-lines! (current-input-port))
         (bibtex-parse (current-input-port)))))
   bibdb)
-
-(require scriblib/autobib
-         scribble/manual)
 
 (define-syntax-rule
   (define-bibtex-cite bib-pth
@@ -224,50 +240,122 @@
     (define ~cite-id (make-citer bibtex-db autobib-cite))
     (define citet-id (make-citer bibtex-db autobib-citet))))
 
-;; Seems a little redundant to convert latex escapes into unicode only to
-;; convert them back into latex, but we need to sort authors so we can't
-;; leave them as literal-chars.
-(define (latex-to-unicode str)
-  ; This is probably defined somewhere...
-  ; NOTE: Incomplete. Please file PR if you need more.
-  (define converts
-    '(("\\'\\i" . "ı́")
-      ("\\\"u" . "ü")
-      ("\\\"o" . "ö")
-      ("\\\"i" . "ï")
-      ("\\'i" . "í")
-      ("\\i" . "ı")
-      ("\\'a" . "á")
-      ("\\'A" . "Á")
-      ("\\~a" . "ã")
-      ("\\`a" . "À")
-      ("\\~A" . "Ã")))
-  (for/fold ([str str])
-            ([p converts])
-    (string-replace str (car p) (cdr p))))
+(struct name-word (content) #:transparent)
+
+(define (name-tokens content)
+  (define tokens null)
+  (define word-parts null)
+  (define text (open-output-string))
+
+  (define (flush-text!)
+    (define s (get-output-string text))
+    (unless (string=? s "")
+      (set! word-parts (cons s word-parts)))
+    (set! text (open-output-string)))
+
+  (define (flush-word!)
+    (flush-text!)
+    (when (pair? word-parts)
+      (define parts (reverse word-parts))
+      (set! tokens
+            (cons (name-word (if (null? (cdr parts)) (car parts) parts))
+                  tokens))
+      (set! word-parts null)))
+
+  (define (delimiter! token)
+    (flush-word!)
+    (unless (and (eq? token 'space)
+                 (pair? tokens)
+                 (eq? (car tokens) 'space))
+      (set! tokens (cons token tokens))))
+
+  (for ([part (in-list (if (list? content) content (list content)))])
+    (cond
+      [(string? part)
+       (for ([c (in-string part)])
+         (cond [(char-whitespace? c) (delimiter! 'space)]
+               [(char=? c #\,) (delimiter! 'comma)]
+               [else (write-char c text)]))]
+      [else
+       (flush-text!)
+       (set! word-parts (cons part word-parts))]))
+  (flush-word!)
+  (reverse tokens))
+
+(define (trim-name-tokens tokens)
+  (define (space? token) (eq? token 'space))
+  (reverse (dropf (reverse (dropf tokens space?)) space?)))
+
+(define (split-name-tokens tokens delimiter?)
+  (let loop ([tokens tokens] [part null] [parts null])
+    (cond
+      [(null? tokens)
+       (reverse (cons (trim-name-tokens (reverse part)) parts))]
+      [(delimiter? (car tokens))
+       (loop (cdr tokens) null
+             (cons (trim-name-tokens (reverse part)) parts))]
+      [else (loop (cdr tokens) (cons (car tokens) part) parts)])))
+
+(define (and-word? token)
+  (and (name-word? token)
+       (string? (name-word-content token))
+       (string=? (name-word-content token) "and")))
+
+(define (split-authors tokens)
+  (let loop ([tokens tokens] [part null] [parts null])
+    (match tokens
+      ['() (reverse (cons (trim-name-tokens (reverse part)) parts))]
+      [(list* 'space (? and-word?) 'space rest)
+       (loop rest null (cons (trim-name-tokens (reverse part)) parts))]
+      [(cons first rest) (loop rest (cons first part) parts)])))
+
+(define (join-name-words words)
+  (match words
+    ['() ""]
+    [(list one) one]
+    [_ (if (andmap string? words)
+           (string-join words " ")
+           (add-between words " "))]))
+
+(define (lowercase-initial? word)
+  (define s (content->string word))
+  (for/first ([c (in-string s)] #:when (char-alphabetic? c))
+    (char-lower-case? c)))
+
+(define (parse-one-author tokens)
+  (define parts
+    (for/list ([part (in-list (split-name-tokens tokens
+                                              (λ (token) (eq? token 'comma))))])
+      (for/list ([token (in-list part)] #:when (name-word? token))
+        (name-word-content token))))
+  (match parts
+    [(list (list name)) (org-author-name name)]
+    [(list (list)) (error 'parse-author "empty BibTeX author")]
+    [(list words)
+     (define von-index
+       (for/first ([word (in-list (drop-right words 1))]
+                   [i (in-naturals)]
+                   #:when (lowercase-initial? word))
+         i))
+     (if von-index
+         (author-name (join-name-words (take words von-index))
+                      (join-name-words (drop words von-index)))
+         (author-name (join-name-words (drop-right words 1))
+                      (last words)))]
+    [(list last first)
+     (author-name (join-name-words first) (join-name-words last))]
+    [(list last suffix first)
+     (author-name (join-name-words first)
+                  (join-name-words last)
+                  #:suffix (join-name-words suffix))]
+    [_ (error 'parse-author "invalid BibTeX name ~e" parts)]))
 
 (define (parse-author as)
   (and as
-      (apply authors
-         (for/list ([a (in-list (regexp-split #px"\\s+and\\s+" as))])
-           (define (trim s)
-             (string-trim (regexp-replace #px"\\s+" s " ")))
-           (match (latex-to-unicode a)
-             [(pregexp #px"^(.*),(.*),(.*)$" (list _ two suffix one))
-              (author-name (trim one) (trim two) #:suffix (trim suffix))]
-             [(pregexp #px"^(.*),(.*)$" (list _ two one))
-              (author-name (string-trim one) (string-trim two))]
-             [(pregexp #px"^(.*?)\\s+(\\p{Ll}[^\\s]*(\\s+\\p{Ll}[^\\s]*)*)\\s+(.*)$" (list _ one von-like _ two))
-              (author-name (string-trim one)
-                           (string-append (string-trim von-like) " " (string-trim two)))]
-             [space-separated
-              (match (regexp-split #px"\\s+" space-separated)
-                [(list one) (org-author-name one)]
-                [(list one two) (author-name one two)]
-                [(list-rest first rest)
-                 (author-name (apply string-append (add-between (cons first (drop-right rest 1))
-                                                                " "))
-                              (last rest))])])))))
+       (apply authors
+              (for/list ([tokens (in-list
+                                  (split-authors (name-tokens (latex->content as))))])
+                (parse-one-author tokens)))))
 
 (module+ test
   (require rackunit)
@@ -454,10 +542,6 @@
     [_
      (error 'parse-pages "Invalid page format ~e" ps)]))
 
-(require scribble/core)
-(define (support-escapes s)
-  (elem #:style (make-style #f '(exact-chars)) s))
-
 (define (generate-bib db key)
   (match-define (bibdb raw bibs) db)
   (hash-ref! bibs (string-foldcase key)
@@ -469,6 +553,13 @@
                  (hash-ref the-raw a
                            (λ () (error 'bibtex "Key ~a is missing attribute ~a, has ~a"
                                         key a the-raw))))
+               (define (content-attr a [def #f])
+                 (latex->content (hash-ref the-raw a def)))
+               (define (content-attr* a)
+                 (latex->content
+                  (hash-ref the-raw a
+                            (λ () (error 'bibtex "Key ~a is missing attribute ~a, has ~a"
+                                         key a the-raw)))))
                (match (raw-attr 'type)
                  ;; TODO: eid replaces pages for online journals
                  ;; TODO: add isbn for books (inbooks, proceedings, inproceedings?)
@@ -480,16 +571,16 @@
                         #:type 'article
                         ;; required:
                         #:author (parse-author (raw-attr "author"))
-                        #:title (support-escapes (raw-attr "title"))
+                        #:title (content-attr "title")
                         #:date (raw-attr "year") ;; TODO: optional month
                         #:location (journal-location
-                                      (raw-attr* "journal")
+                                      (content-attr* "journal")
                                       ;; optional:
                                       #:pages (parse-pages (raw-attr "pages"))
-                                      #:number (raw-attr "number")
-                                      #:volume (raw-attr "volume"))
+                                      #:number (content-attr "number")
+                                      #:volume (content-attr "volume"))
                         ;; optional:
-                        #:note (raw-attr "note")
+                        #:note (content-attr "note")
                         ;; extra: (WHERE IS THAT SPECIFIED?)
                         #:url (raw-attr "url")
                         #:doi (raw-attr "doi"))]
@@ -499,19 +590,19 @@
                         #:is-book? #t
                         ;; required:
                         #:author (parse-author (raw-attr "author")) ;; author OR editor is required
-                        #:title (support-escapes (raw-attr "title"))
+                        #:title (content-attr "title")
                         #:date (raw-attr "year") ;; TODO: optional month
                         #:location (book-location
-                                      #:publisher (raw-attr "publisher")
+                                      #:publisher (content-attr "publisher")
                                       ;; optional:
                                       #:editor (parse-author (raw-attr "editor")) ;; see above
-                                      #:volume (raw-attr "volume") ;; volume OR number
-                                      #:number (raw-attr "number")
-                                      #:series (raw-attr "series")
-                                      #:address (raw-attr "address")
-                                      #:edition (raw-attr "edition"))
+                                      #:volume (content-attr "volume") ;; volume OR number
+                                      #:number (content-attr "number")
+                                      #:series (content-attr "series")
+                                      #:address (content-attr "address")
+                                      #:edition (content-attr "edition"))
                         ;; optional:
-                        #:note (raw-attr "note")
+                        #:note (content-attr "note")
                         ;; extra: (WHERE IS THAT SPECIFIED?)
                         #:url (raw-attr "url")
                         #:doi (raw-attr "doi"))]
@@ -520,14 +611,14 @@
                         #:type 'booklet
                         #:is-book? #t ;; TODO or #f??? or have make-bib accept a #:type ???
                         ;; required:
-                        #:title (support-escapes (raw-attr "title"))
+                        #:title (content-attr "title")
                         ;; optional:
                         #:author (parse-author (raw-attr "author")) ;; TODO: make it optional
                         #:date (raw-attr "year") ;; TODO: month
                         #:location (booklet-location
-                                      #:howpublished (raw-attr "howpublished")
-                                      #:address (raw-attr "address"))
-                        #:note (raw-attr "note")
+                                      #:howpublished (content-attr "howpublished")
+                                      #:address (content-attr "address"))
+                        #:note (content-attr "note")
                         ;; extra: (WHERE IS THAT SPECIFIED?)
                         #:url (raw-attr "url")
                         #:doi (raw-attr "doi"))]
@@ -537,21 +628,21 @@
                         #:type 'inproceedings
                         ;; required:
                         #:author (parse-author (raw-attr "author"))
-                        #:title (support-escapes (raw-attr "title"))
+                        #:title (content-attr "title")
                         #:date (raw-attr "year") ;; TODO: optional month
                         #:location (proceedings-location
-                                      (raw-attr* "booktitle")
+                                      (content-attr* "booktitle")
                                       ;; optional:
                                       #:editor (parse-author (raw-attr "editor"))
-                                      #:series (raw-attr "series")
-                                      #:volume (raw-attr "volume") ;; volume OR number
-                                      #:number (raw-attr "number")
+                                      #:series (content-attr "series")
+                                      #:volume (content-attr "volume") ;; volume OR number
+                                      #:number (content-attr "number")
                                       #:pages (parse-pages (raw-attr "pages"))
-                                      #:address (raw-attr "address")
-                                      #:organization (raw-attr "organization")
-                                      #:publisher (raw-attr "publisher"))
+                                      #:address (content-attr "address")
+                                      #:organization (content-attr "organization")
+                                      #:publisher (content-attr "publisher"))
                         ;; optional:
-                        #:note (raw-attr "note")
+                        #:note (content-attr "note")
                         ;; extra: (WHERE IS THAT SPECIFIED?)
                         #:url (raw-attr "url")
                         #:doi (raw-attr "doi"))]
@@ -561,21 +652,22 @@
                         #:is-book? #t ;; TODO or #f ???
                         ;; required:
                         #:author (parse-author (raw-attr "author")) ;; author OR editor is required
-                        #:title (support-escapes (raw-attr "title"))
+                        #:title (content-attr "title")
                         #:date (raw-attr "year") ;; TODO: optional month
                         #:location (book-chapter-location
+                                      (content-attr* "booktitle")
                                       #:editor (parse-author (raw-attr "editor")) ;; see above
-                                      #:chapter (raw-attr "chapter") ;; chapter OR pages is required
+                                      #:chapter (content-attr "chapter") ;; chapter OR pages is required
                                       #:pages (parse-pages (raw-attr "pages"))
-                                      #:publisher (raw-attr "publisher")
+                                      #:publisher (content-attr "publisher")
                                       ;; optional:
-                                      #:volume (raw-attr "volume") ;; volume OR number
-                                      #:number (raw-attr "number")
-                                      #:series (raw-attr "series")
-                                      #:address (raw-attr "address")
-                                      #:edition (raw-attr "edition"))
+                                      #:volume (content-attr "volume") ;; volume OR number
+                                      #:number (content-attr "number")
+                                      #:series (content-attr "series")
+                                      #:address (content-attr "address")
+                                      #:edition (content-attr "edition"))
                         ;; optional:
-                        #:note (raw-attr "note")
+                        #:note (content-attr "note")
                         ;; extra: (WHERE IS THAT SPECIFIED?)
                         #:url (raw-attr "url")
                         #:doi (raw-attr "doi"))]
@@ -587,22 +679,22 @@
                         #:type 'incollection
                         ;; required:
                         #:author (parse-author (raw-attr "author"))
-                        #:title (support-escapes (raw-attr "title"))
+                        #:title (content-attr "title")
                         #:date (raw-attr "year") ;; TODO: optional month
                         #:location (book-chapter-location
-                                      (raw-attr "booktitle")
-                                      #:publisher (raw-attr "publisher")
+                                      (content-attr* "booktitle")
+                                      #:publisher (content-attr "publisher")
                                       ;; optional:
                                       #:editor (parse-author (raw-attr "editor"))
-                                      #:volume (raw-attr "volume") ;; volume OR number
-                                      #:number (raw-attr "number")
-                                      #:series (raw-attr "series")
-                                      #:chapter (raw-attr "chapter")
+                                      #:volume (content-attr "volume") ;; volume OR number
+                                      #:number (content-attr "number")
+                                      #:series (content-attr "series")
+                                      #:chapter (content-attr "chapter")
                                       #:pages (parse-pages (raw-attr "pages"))
-                                      #:address (raw-attr "address")
-                                      #:edition (raw-attr "edition"))
+                                      #:address (content-attr "address")
+                                      #:edition (content-attr "edition"))
                         ;; optional:
-                        #:note (raw-attr "note")
+                        #:note (content-attr "note")
                         ;; extra: (WHERE IS THAT SPECIFIED?)
                         #:url (raw-attr "url")
                         #:doi (raw-attr "doi"))]
@@ -610,15 +702,15 @@
                   (make-bib
                         #:type 'manual
                         ;; required:
-                        #:title (support-escapes (raw-attr "title"))
+                        #:title (content-attr "title")
                         ;; optional:
                         #:author (parse-author (raw-attr "author"))
                         #:date (raw-attr "year") ;; TODO: optional month
                         #:location (manual-location
                                       ;; optional:
-                                      #:organization (raw-attr "organization")
-                                      #:edition (raw-attr "edition"))
-                        #:note (raw-attr "note")
+                                      #:organization (content-attr "organization")
+                                      #:edition (content-attr "edition"))
+                        #:note (content-attr "note")
                         ;; extra: (WHERE IS THAT SPECIFIED?)
                         #:url (raw-attr "url")
                         #:doi (raw-attr "doi"))]
@@ -627,16 +719,16 @@
                         #:type 'mastersthesis
                         ;; required:
                         #:author (parse-author (raw-attr "author"))
-                        #:title (support-escapes (raw-attr "title"))
+                        #:title (content-attr "title")
                         #:date (raw-attr "year") ;; TODO: optional month
                         #:location (dissertation-location
-                                      #:institution (raw-attr "school")
+                                      #:institution (content-attr "school")
                                       #:degree "Master’s"
                                       ;; optional:
-                                      #:type (raw-attr "type")
-                                      #:address (raw-attr "address"))
+                                      #:type (content-attr "type")
+                                      #:address (content-attr "address"))
                         ;; optional:
-                        #:note (raw-attr "note")
+                        #:note (content-attr "note")
                         ;; extra: (WHERE IS THAT SPECIFIED?)
                         #:url (raw-attr "url")
                         #:doi (raw-attr "doi"))]
@@ -645,12 +737,12 @@
                         #:type 'misc
                         ;; optional: (no required field)
                         #:author (parse-author (raw-attr "author"))
-                        #:title (support-escapes (raw-attr "title"))
+                        #:title (content-attr "title")
                         #:date (raw-attr "year") ;; TODO: month
                         #:location (misc-location
-                                      #:howpublished (raw-attr "howpublished"))
+                                      #:howpublished (content-attr "howpublished"))
                         ;; optional:
-                        #:note (raw-attr "note")
+                        #:note (content-attr "note")
                         ;; extra: (WHERE IS THAT SPECIFIED?)
                         #:url (raw-attr "url")
                         #:doi (raw-attr "doi"))]
@@ -659,16 +751,16 @@
                         #:type 'phdthesis
                         ;; required:
                         #:author (parse-author (raw-attr "author"))
-                        #:title (support-escapes (raw-attr "title"))
+                        #:title (content-attr "title")
                         #:date (raw-attr "year") ;; TODO: optional month
                         #:location (dissertation-location
-                                      #:institution (raw-attr "school")
+                                      #:institution (content-attr "school")
                                       #:degree "PhD"
                                       ;; optional:
-                                      #:type (raw-attr "type")
-                                      #:address (raw-attr "address"))
+                                      #:type (content-attr "type")
+                                      #:address (content-attr "address"))
                         ;; optional:
-                        #:note (raw-attr "note")
+                        #:note (content-attr "note")
                         ;; extra: (WHERE IS THAT SPECIFIED?)
                         #:url (raw-attr "url")
                         #:doi (raw-attr "doi"))]
@@ -676,20 +768,20 @@
                   (make-bib
                         #:type 'proceedings
                         ;; required:
-                        #:title (support-escapes (raw-attr "title"))
+                        #:title (content-attr "title")
                         #:date (raw-attr "year") ;; TODO: optional month
                         ;; optional:
                         #:location (proceedings-location
-                                      (raw-attr* "booktitle")
+                                      (content-attr* "booktitle")
                                       ;; optional:
                                       #:editor (parse-author (raw-attr "editor"))
-                                      #:volume (raw-attr "volume") ;; volume OR number
-                                      #:number (raw-attr "number")
-                                      #:series (raw-attr "series")
-                                      #:address (raw-attr "address")
-                                      #:organization (raw-attr "organization")
-                                      #:publisher (raw-attr "publisher"))
-                        #:note (raw-attr "note")
+                                      #:volume (content-attr "volume") ;; volume OR number
+                                      #:number (content-attr "number")
+                                      #:series (content-attr "series")
+                                      #:address (content-attr "address")
+                                      #:organization (content-attr "organization")
+                                      #:publisher (content-attr "publisher"))
+                        #:note (content-attr "note")
                         ;; extra: (WHERE IS THAT SPECIFIED?)
                         #:url (raw-attr "url")
                         #:doi (raw-attr "doi"))]
@@ -699,16 +791,16 @@
                         #:type 'techreport
                         ;; required:
                         #:author (parse-author (raw-attr "author"))
-                        #:title (support-escapes (raw-attr "title"))
+                        #:title (content-attr "title")
                         #:date (raw-attr "year") ;; TODO: optional month
                         #:location (techrpt-location
-                                      #:institution (raw-attr "institution")
+                                      #:institution (content-attr "institution")
                                       ;; optional:
-                                      #:type (raw-attr "type")
-                                      #:number (raw-attr "number")
-                                      #:address (raw-attr "address"))
+                                      #:type (content-attr "type")
+                                      #:number (content-attr "number")
+                                      #:address (content-attr "address"))
                         ;; optional:
-                        #:note (raw-attr "note")
+                        #:note (content-attr "note")
                         ;; extra: (WHERE IS THAT SPECIFIED?)
                         #:url (raw-attr "url")
                         #:doi (raw-attr "doi"))]
@@ -717,8 +809,8 @@
                         #:type 'unpublished
                         ;; required:
                         #:author (parse-author (raw-attr "author"))
-                        #:title (support-escapes (raw-attr "title"))
-                        #:note (raw-attr "note")
+                        #:title (content-attr "title")
+                        #:note (content-attr "note")
                         ;; optional:
                         #:date (raw-attr "year") ;; TODO: month
                         ;; extra: (WHERE IS THAT SPECIFIED?)
@@ -729,28 +821,146 @@
                   (make-bib
                         #:type 'webpage
                         ;; extra: (WHERE IS THAT SPECIFIED?)
-                        #:title (support-escapes (raw-attr "title"))
+                        #:title (content-attr "title")
                         #:url (raw-attr "url")
                         #:location (webpage-location
-                                     #:accessed (raw-attr "urldate")) ;; when visited
+                                     #:accessed (content-attr "urldate")) ;; when visited
                         #:author (parse-author (raw-attr "author"))
-                        #:note (raw-attr "note")
+                        #:note (content-attr "note")
                         #:date (raw-attr "year") ;; TODO: month ;; presumably when written
                         #:doi (raw-attr "doi"))]
                  ["webpage"
                   (make-bib
                         #:type 'webpage
                         ;; extra: (WHERE IS THAT SPECIFIED?)
-                        #:title (support-escapes (raw-attr "title"))
+                        #:title (content-attr "title")
                         #:url (raw-attr "url")
                         #:location (webpage-location
-                                     #:accessed (raw-attr "lastchecked"))
+                                     #:accessed (content-attr "lastchecked"))
                         #:author (parse-author (raw-attr "author"))
-                        #:note (raw-attr "note")
+                        #:note (content-attr "note")
                         #:date (raw-attr "year") ;; TODO: month ;; presumably when written
                         #:doi (raw-attr "doi"))]
                  [_
                   (make-bib #:title (format "~v" the-raw))]))))
+
+(module+ test
+  (require rackunit
+           racket/file
+           racket/path
+           scribble/render
+           (prefix-in html: scribble/html-render))
+  (define grouping-db
+    (bibtex-parse
+     (open-input-string
+      "@misc{x, author={Guy L. {Steele Jr.}}, title={The {ACM} Paper}}")))
+  (check-equal?
+   (hash-ref (hash-ref (bibdb-raw grouping-db) "x") "author")
+   "Guy L. {Steele Jr.}")
+  (check-equal?
+   (hash-ref (hash-ref (bibdb-raw grouping-db) "x") "title")
+   "The {ACM} Paper")
+  (check-equal? (content->string (parse-author "Guy L. {Steele Jr.}"))
+                "Guy L. Steele Jr.")
+  (check-equal? (content->string (parse-author "{Steele Jr.}, Guy L."))
+                "Guy L. Steele Jr.")
+  (check-equal? (content->string (parse-author "Steele, Jr., Guy L."))
+                "Guy L. Steele Jr.")
+  (check
+   print-as-equal-string?
+   (parse-author "Guy L. {Steele Jr.}")
+   (authors
+    (author-name "Guy L."
+                 (latex->content "{Steele Jr.}"))))
+  (check
+   print-as-equal-string?
+   (parse-author "Steele, Jr., Guy L.")
+   (authors
+    (author-name "Guy L." "Steele" #:suffix "Jr.")))
+  (check-equal?
+   (content->string
+    (parse-author "{Barnes and Noble, Inc.} and Guy L. {Steele Jr.}"))
+   "Barnes and Noble, Inc. and Guy L. Steele Jr.")
+  (check-true
+   (bibtex-group?
+    (name-word-content
+     (last (filter name-word?
+                   (name-tokens (latex->content "Guy L. {Steele Jr.}")))))))
+  (check-equal? (content->string (latex->content "\\emph{a \\texttt{b}}"))
+                "a b")
+  (define required-db
+    (bibtex-parse
+     (open-input-string
+      #<<BIB
+@article{journal-test,
+  author={Alice Example},
+  title={An Article},
+  journal={\emph{JournalSentinel}},
+  year={2026}
+}
+@inproceedings{conference-test,
+  author={Bob Example},
+  title={A Paper},
+  booktitle={\texttt{ConferenceSentinel}},
+  year={2026}
+}
+@proceedings{proceedings-test,
+  title={Collected Papers},
+  booktitle={\emph{ProceedingsSentinel}},
+  year={2026}
+}
+BIB
+      )))
+
+  (define-cite test-cite test-citet test-bibliography)
+
+  (void
+   (test-cite
+    (generate-bib required-db "journal-test")
+    (generate-bib required-db "conference-test")
+    (generate-bib required-db "proceedings-test")))
+
+  (define html-path
+    (make-temporary-file "bibtex-required~a.html"))
+
+  (render (list (test-bibliography))
+          (list html-path)
+          #:dest-dir (path-only html-path)
+          #:render-mixin html:render-mixin)
+
+  (define rendered (file->string html-path))
+
+  ;; Required fields must retain LaTeX formatting.
+  (check-true
+   (regexp-match? #px"<em[^>]*>JournalSentinel</em>"
+                  rendered))
+  (check-true
+   (regexp-match? #px"<span[^>]*class=\"stt\"[^>]*>ConferenceSentinel</span>"
+                  rendered))
+  (check-true
+   (regexp-match? #px"<em[^>]*>ProceedingsSentinel</em>"
+                  rendered))
+
+  (delete-file html-path)
+
+  ;; Required fields must still produce useful errors when absent.
+  (check-exn
+   #rx"missing attribute journal"
+   (λ ()
+     (generate-bib
+      (bibtex-parse
+       (open-input-string
+        "@article{x, title={X}, year={2026}}"))
+      "x")))
+
+  (check-exn
+   #rx"missing attribute booktitle"
+   (λ ()
+     (generate-bib
+      (bibtex-parse
+       (open-input-string
+        "@inproceedings{x, title={X}, year={2026}}"))
+      "x"))))
 
 (provide (struct-out bibdb)
          path->bibdb
