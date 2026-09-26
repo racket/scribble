@@ -193,21 +193,18 @@ The @tt{\AutobibEntrySetup} command, empty by default,
 allows additional LaTeX settings to be applied locally
 to each bibliography entry.
 
-To require four lines before each entry and relax line
-breaking for long annotations, configure these settings
-after @tt{autobib.tex} has been loaded, e.g. using @racket[tex-addition].
+To require four lines before each entry and relax line breaking
+for long annotations, configure these settings using @tt{\AtBeginDocument}
+from e.g. a @racket[tex-addition] that you add to your document's style:
 
-@racket[
+@racketblock[
 (tex-addition
   (bytes-append
-    #"\\AtBeginDocument{%"
-    #"\\AutobibNeedlines=4\\relax"
-    #"\\renewcommand{\\AutobibEntrySetup}{%"
-    #"\\emergencystretch=2em"
-    #"\\tolerance=1000%"
-    #"}%\n"))]
-}
-
+    #"\\AtBeginDocument{%
+        \\AutobibNeedlines=4\\relax
+        \\renewcommand{\\AutobibEntrySetup}{%
+          \\emergencystretch=2em
+          \\tolerance=1000}%\n"))]}
 
 @defproc[(bib? [v any/c]) boolean?]{
 
