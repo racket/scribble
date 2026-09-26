@@ -48,10 +48,11 @@
 
 \newenvironment{Autocolbibentry}{%
   \par
-  \Needspace{\AutobibNeedlines\baselineskip}%
+  \ifnum\AutobibNeedlines>0
+    \Needspace{\AutobibNeedlines\baselineskip}%
+  \fi
   \begingroup
-    \emergencystretch=2em
-    \tolerance=1000
+    \AutobibEntrySetup
     \leftskip=\AutobibNumberWidth
     \parindent=\AutobibParindent
     \parskip=0pt

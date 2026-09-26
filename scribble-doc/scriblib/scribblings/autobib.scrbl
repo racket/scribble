@@ -175,6 +175,36 @@ separates each number from its entry with a non-breaking space.
 The @racket[author+date-square-bracket-style] definition is the same
 as @racket[author+date-style], except that references to citations
 are enclosed in @litchar["[]"] instead of @litchar["()"].
+
+In LaTeX output, Scribble tries to keep short bibliography
+entries together, reserving at least five lines before starting
+an entry. This approximates the previous behavior, which
+prevented page breaks within individual entries altogether.
+Longer entries may now span pages.
+
+The @tt{\AutobibNeedlines} counter controls the minimum
+number of lines, defaulting to 5. Set it to 0 to disable
+this constraint. The optional @tt{needspace} package is
+required for the constraint to take effect.
+
+The @tt{\AutobibEntrySetup} command, empty by default,
+allows additional LaTeX settings to be applied locally
+to each bibliography entry.
+
+To require four lines before each entry and relax line
+breaking for long annotations, configure these settings
+after @tt{autobib.tex} has been loaded:
+
+@codeblock|{
+\AutobibNeedlines=4
+\renewcommand{\AutobibEntrySetup}{%
+  \emergencystretch=2em
+  \tolerance=1000}
+}|
+
+The minimum-lines requirement uses the optional
+@tt{needspace} LaTeX package and is ignored if that
+package is unavailable.
 }
 
 
