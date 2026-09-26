@@ -8,44 +8,19 @@
          scribble/latex-properties
          (for-syntax racket/base))
 
-(provide/contract
- [abstract 
-  (->* () () #:rest (listof pre-content?)
-       block?)]
- [subtitle
-  (->* () () #:rest (listof pre-content?)
-       content?)]
- [authorinfo
-  (-> pre-content? pre-content? pre-content?
-      block?)]
- [conferenceinfo
-  (-> pre-content? pre-content?
-      block?)]
- [copyrightyear
-  (->* () () #:rest (listof pre-content?)
-       block?)]
- [copyrightdata
-  (->* () () #:rest (listof pre-content?)
-       block?)]
- [exclusive-license
-  (->* () ()
-       block?)]
- [doi
-  (->* () () #:rest (listof pre-content?)
-       block?)]
- [to-appear
-  (->* () () #:rest pre-content?
-       block?)]
- [category
-  (->* (pre-content? pre-content? pre-content?)
-       ((or/c #f pre-content?))
-       content?)]
- [terms
-  (->* () () #:rest (listof pre-content?)
-       content?)]
- [keywords
-  (->* () () #:rest (listof pre-content?)
-       content?)])
+(provide (contract-out
+          [abstract (->* () () #:rest (listof pre-content?) block?)]
+          [subtitle (->* () () #:rest (listof pre-content?) content?)]
+          [authorinfo (-> pre-content? pre-content? pre-content? block?)]
+          [conferenceinfo (-> pre-content? pre-content? block?)]
+          [copyrightyear (->* () () #:rest (listof pre-content?) block?)]
+          [copyrightdata (->* () () #:rest (listof pre-content?) block?)]
+          [exclusive-license (->* () () block?)]
+          [doi (->* () () #:rest (listof pre-content?) block?)]
+          [to-appear (->* () () #:rest pre-content? block?)]
+          [category (->* (pre-content? pre-content? pre-content?) ((or/c #f pre-content?)) content?)]
+          [terms (->* () () #:rest (listof pre-content?) content?)]
+          [keywords (->* () () #:rest (listof pre-content?) content?)]))
 
 (provide preprint 10pt nocopyright onecolumn noqcourier notimes
          include-abstract)
