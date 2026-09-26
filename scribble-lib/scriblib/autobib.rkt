@@ -694,7 +694,7 @@
      #:pages '(10 20)
      #:publisher "Springer"
      #:address "Berlin"))
-   "Second edition, 3, LNCS, 42(7), pp. 10--20. Springer, Berlin")
+   "Second edition, chapter 3, LNCS, 42(7), pp. 10--20. Springer, Berlin")
 
   (define multi-note
     (make-bib
@@ -781,6 +781,15 @@
   (define l (filter values (map flatten-content content)))
   (and (pair? l) (flatten-content (if separator (add-between l separator) l))))
 
+(define (chapter-content chapter)
+  (cond
+    [(number? chapter)
+     (list "chapter " (number->string chapter))]
+    [(and (string? chapter)
+          (regexp-match? #px"^[0-9]+$" chapter))
+     (list "chapter " chapter)]
+    [else chapter]))
+
 (define (book-location
          #:edition [edition #f]
          #:chapter [chapter #f]
@@ -795,7 +804,7 @@
    (concatenate-content
     #:separator ", "
     (edition-content edition)
-    chapter
+    (chapter-content chapter)
     (and editor_ (editor editor_))
     (series-volume-number-pages-content series volume number pages))
    #:separator ". "

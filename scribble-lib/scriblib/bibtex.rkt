@@ -583,6 +583,9 @@
                                         key a the-raw))))
                (define (scalar-attr a [def #f])
                  (ungroup-scalar (raw-attr a def)))
+               (define (url-attr a [def #f])
+                 (define raw (raw-attr a def))
+                 (and raw (unescape-url (ungroup-scalar raw))))
                (define (author-attr a)
                  (parse-author (raw-attr a)))
                (define (pages-attr a)
@@ -616,8 +619,8 @@
                         ;; optional:
                         #:note (content-attr "note")
                         ;; extra: (WHERE IS THAT SPECIFIED?)
-                        #:url (scalar-attr "url")
-                        #:doi (scalar-attr "doi"))]
+                        #:url (url-attr "url")
+                        #:doi (url-attr "doi"))]
                  ["book" ;; A book with an explicit publisher.
                   (make-bib
                         #:type 'book
@@ -638,8 +641,8 @@
                         ;; optional:
                         #:note (content-attr "note")
                         ;; extra: (WHERE IS THAT SPECIFIED?)
-                        #:url (scalar-attr "url")
-                        #:doi (scalar-attr "doi"))]
+                        #:url (url-attr "url")
+                        #:doi (url-attr "doi"))]
                  ["booklet" ;; A work that is printed and bound, but without a named publisher or sponsoring institution.
                   (make-bib
                         #:type 'booklet
@@ -654,8 +657,8 @@
                                       #:address (content-attr "address"))
                         #:note (content-attr "note")
                         ;; extra: (WHERE IS THAT SPECIFIED?)
-                        #:url (scalar-attr "url")
-                        #:doi (scalar-attr "doi"))]
+                        #:url (url-attr "url")
+                        #:doi (url-attr "doi"))]
                  [(or "conference" ;; The same as INPROCEEDINGS, included for Scribe compatibility.
                       "inproceedings") ;; An article in a conference proceedings.
                   (make-bib
@@ -678,8 +681,8 @@
                         ;; optional:
                         #:note (content-attr "note")
                         ;; extra: (WHERE IS THAT SPECIFIED?)
-                        #:url (scalar-attr "url")
-                        #:doi (scalar-attr "doi"))]
+                        #:url (url-attr "url")
+                        #:doi (url-attr "doi"))]
                  ["inbook" ;; A part of a book, which may be a chapter (or section or whatever) and/or a range of pages.
                   (make-bib
                         #:type 'inbook
@@ -702,8 +705,8 @@
                         ;; optional:
                         #:note (content-attr "note")
                         ;; extra: (WHERE IS THAT SPECIFIED?)
-                        #:url (scalar-attr "url")
-                        #:doi (scalar-attr "doi"))]
+                        #:url (url-attr "url")
+                        #:doi (url-attr "doi"))]
                  ["incollection" ;; A part of a book having its own title.
                   ;; TODO: figure out why https://www.openoffice.org/bibliographic/bibtex-defs.html
                   ;; talks about a "type" kind of label, what it does, who uses it for what...
@@ -729,8 +732,8 @@
                         ;; optional:
                         #:note (content-attr "note")
                         ;; extra: (WHERE IS THAT SPECIFIED?)
-                        #:url (scalar-attr "url")
-                        #:doi (scalar-attr "doi"))]
+                        #:url (url-attr "url")
+                        #:doi (url-attr "doi"))]
                  ["manual" ;; Technical documentation
                   (make-bib
                         #:type 'manual
@@ -745,8 +748,8 @@
                                       #:edition (content-attr "edition"))
                         #:note (content-attr "note")
                         ;; extra: (WHERE IS THAT SPECIFIED?)
-                        #:url (scalar-attr "url")
-                        #:doi (scalar-attr "doi"))]
+                        #:url (url-attr "url")
+                        #:doi (url-attr "doi"))]
                  ["mastersthesis" ;; A Master's thesis.
                   (make-bib
                         #:type 'mastersthesis
@@ -763,8 +766,8 @@
                         ;; optional:
                         #:note (content-attr "note")
                         ;; extra: (WHERE IS THAT SPECIFIED?)
-                        #:url (scalar-attr "url")
-                        #:doi (scalar-attr "doi"))]
+                        #:url (url-attr "url")
+                        #:doi (url-attr "doi"))]
                  ["misc" ;; Use this type when nothing else fits.
                   (make-bib
                         #:type 'misc
@@ -777,8 +780,8 @@
                         ;; optional:
                         #:note (content-attr "note")
                         ;; extra: (WHERE IS THAT SPECIFIED?)
-                        #:url (scalar-attr "url")
-                        #:doi (scalar-attr "doi"))]
+                        #:url (url-attr "url")
+                        #:doi (url-attr "doi"))]
                  ["phdthesis" ;; A PhD thesis.
                   (make-bib
                         #:type 'phdthesis
@@ -795,8 +798,8 @@
                         ;; optional:
                         #:note (content-attr "note")
                         ;; extra: (WHERE IS THAT SPECIFIED?)
-                        #:url (scalar-attr "url")
-                        #:doi (scalar-attr "doi"))]
+                        #:url (url-attr "url")
+                        #:doi (url-attr "doi"))]
                  ["proceedings" ;; The proceedings of a conference.
                   (make-bib
                         #:type 'proceedings
@@ -816,8 +819,8 @@
                                       #:publisher (content-attr "publisher"))
                         #:note (content-attr "note")
                         ;; extra: (WHERE IS THAT SPECIFIED?)
-                        #:url (scalar-attr "url")
-                        #:doi (scalar-attr "doi"))]
+                        #:url (url-attr "url")
+                        #:doi (url-attr "doi"))]
                  ["techreport" ;; A report published by a school or other institution, usually numbered within a series.
                  ;; Required fields: author, title, institution, year. Optional fields: type, number, address, month, note.
                   (make-bib
@@ -835,8 +838,8 @@
                         ;; optional:
                         #:note (content-attr "note")
                         ;; extra: (WHERE IS THAT SPECIFIED?)
-                        #:url (scalar-attr "url")
-                        #:doi (scalar-attr "doi"))]
+                        #:url (url-attr "url")
+                        #:doi (url-attr "doi"))]
                  ["unpublished" ;; A document having an author and title, but not formally published.
                   (make-bib
                         #:type 'unpublished
@@ -847,33 +850,33 @@
                         ;; optional:
                         #:date (scalar-attr "year") ;; TODO: month
                         ;; extra: (WHERE IS THAT SPECIFIED?)
-                        #:url (scalar-attr "url")
-                        #:doi (scalar-attr "doi"))]
+                        #:url (url-attr "url")
+                        #:doi (url-attr "doi"))]
                  ;; SEEN IN THE WILD, BUT WHERE ARE THESE SPECIFIED???
                  ["online"
                   (make-bib
                         #:type 'webpage
                         ;; extra: (WHERE IS THAT SPECIFIED?)
                         #:title (content-attr "title")
-                        #:url (scalar-attr "url")
+                        #:url (url-attr "url")
                         #:location (webpage-location
                                      #:accessed (content-attr "urldate")) ;; when visited
                         #:author (author-attr "author")
                         #:note (content-attr "note")
                         #:date (scalar-attr "year") ;; TODO: month ;; presumably when written
-                        #:doi (scalar-attr "doi"))]
+                        #:doi (url-attr "doi"))]
                  ["webpage"
                   (make-bib
                         #:type 'webpage
                         ;; extra: (WHERE IS THAT SPECIFIED?)
                         #:title (content-attr "title")
-                        #:url (scalar-attr "url")
+                        #:url (url-attr "url")
                         #:location (webpage-location
                                      #:accessed (content-attr "lastchecked"))
                         #:author (author-attr "author")
                         #:note (content-attr "note")
                         #:date (scalar-attr "year") ;; TODO: month ;; presumably when written
-                        #:doi (scalar-attr "doi"))]
+                        #:doi (url-attr "doi"))]
                  [_
                   (make-bib #:title (format "~v" the-raw))]))))
 
@@ -1065,18 +1068,18 @@ BIB
                                   format-html))
   (delete-file format-html-path)
 
-(check-equal? (ungroup-scalar "{2000}") "2000")
-(check-equal? (ungroup-scalar "{{2000}}") "2000")
-(check-equal? (ungroup-scalar "{a}{b}") "{a}{b}")
-(check-equal? (ungroup-scalar "\\{2000\\}") "\\{2000\\}")
-(check-equal? (ungroup-scalar "https://example.org/a_{b}")
-              "https://example.org/a_{b}")
-(check-false (ungroup-scalar #f))
+  (check-equal? (ungroup-scalar "{2000}") "2000")
+  (check-equal? (ungroup-scalar "{{2000}}") "2000")
+  (check-equal? (ungroup-scalar "{a}{b}") "{a}{b}")
+  (check-equal? (ungroup-scalar "\\{2000\\}") "\\{2000\\}")
+  (check-equal? (ungroup-scalar "https://example.org/a_{b}")
+                "https://example.org/a_{b}")
+  (check-false (ungroup-scalar #f))
 
-(define scalars-db
-  (bibtex-parse
-   (open-input-string
-    #<<BIB
+  (define scalars-db
+    (bibtex-parse
+     (open-input-string
+      #<<BIB
 @article{scalar-doi,
   author={Alice Example},
   title={Grouped scalar fields},
@@ -1091,8 +1094,16 @@ BIB
   year={{2001}},
   url={{https://example.org/a_b}}
 }
+@misc{escaped-url,
+  title={Escaped URL},
+  url={{https://example.org/escaped\_a\_b}}
+}
+@misc{escaped-doi,
+  title={Escaped DOI},
+  doi={{10.1000/escaped\_a\_b}}
+}
 BIB
-    )))
+     )))
 
   ;; Raw bibdb still retains the inner braces from each braced field.
   (define raw-scalars (hash-ref (bibdb-raw scalars-db) "scalar-doi"))
@@ -1107,13 +1118,17 @@ BIB
                 '("12" "34"))
   (check-not-exn (lambda () (generate-bib scalars-db "scalar-doi")))
   (check-not-exn (lambda () (generate-bib scalars-db "scalar-url")))
+  (check-not-exn (lambda () (generate-bib scalars-db "escaped-url")))
+  (check-not-exn (lambda () (generate-bib scalars-db "escaped-doi")))
 
   ;; Verify the URL itself and the DOI-generated link independently:
   ;; Autobib intentionally suppresses the separate URL if a DOI is supplied.
   (define-cite scalars-cite scalars-citet scalars-bibliography)
   (void
    (scalars-cite (generate-bib scalars-db "scalar-doi")
-                 (generate-bib scalars-db "scalar-url")))
+                 (generate-bib scalars-db "scalar-url")
+                 (generate-bib scalars-db "escaped-url")
+                 (generate-bib scalars-db "escaped-doi")))
   (define scalars-html-path (make-temporary-file "bibtex-scalars~a.html"))
   (render (list (scalars-bibliography))
           (list scalars-html-path)
@@ -1126,7 +1141,33 @@ BIB
                                      "https://doi.org/10.1000/example"))
   (check-not-false (string-contains? scalars-html
                                      "https://example.org/a_b"))
+  ;; Test link targets, not just displayed text.
+  (check-not-false
+   (regexp-match?
+    #rx"href=\"https://example\\.org/escaped_a_b\""
+    scalars-html))
+  (check-not-false
+   (regexp-match?
+    #rx"href=\"https://doi\\.org/10\\.1000/escaped_a_b\""
+    scalars-html))
   (delete-file scalars-html-path)
+
+  (define scalars-tex-path
+    (make-temporary-file "bibtex-scalars~a.tex"))
+  (render (list (scalars-bibliography))
+          (list scalars-tex-path)
+          #:dest-dir (path-only scalars-tex-path)
+          #:render-mixin latex:render-mixin)
+  (define scalars-tex (file->string scalars-tex-path))
+  (check-not-false
+   (string-contains?
+    scalars-tex
+    "\\href{https://example.org/escaped_a_b}{"))
+  (check-not-false
+   (string-contains?
+    scalars-tex
+    "\\href{https://doi.org/10.1000/escaped_a_b}{"))
+  (delete-file scalars-tex-path)
 
   (define math-db
     (bibtex-parse

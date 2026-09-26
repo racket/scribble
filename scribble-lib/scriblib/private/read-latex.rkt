@@ -14,7 +14,27 @@
          scribble/core
          scribble/base)
 
-(provide latex->content bibtex-group?)
+(provide latex->content bibtex-group? unescape-url)
+
+(define url-escaped-chars
+  '(#\% #\& #\# #\_ #\~ #\{ #\} #\\))
+
+(define (unescape-url s)
+  (define out (open-output-string))
+  (let loop ([i 0])
+    (when (< i (string-length s))
+      (define c (string-ref s i))
+      (cond
+        [(and (char=? c #\\)
+              (< (add1 i) (string-length s))
+              (memv (string-ref s (add1 i))
+                    url-escaped-chars))
+         (write-char (string-ref s (add1 i)) out)
+         (loop (+ i 2))]
+        [else
+         (write-char c out)
+         (loop (add1 i))])))
+  (get-output-string out))
 
 (define bibtex-group-style (make-style "BibtexGroup" '(bibtex-group)))
 (define raw-tex-style (make-style #f '(exact-chars)))
@@ -57,14 +77,14 @@
                        (if (and (char? c) (char-alphabetic? c))
                            (cons (read-char ip) (loop))
                            null))))
-  
+
      (define (read-control-whitespace)
        (list->string (let spaces ()
                        (define c (peek-char ip))
                        (if (and (char? c) (char-whitespace? c))
                            (cons (read-char ip) (spaces))
                            null))))
-  
+
      (define (read-url-argument)
        ;; The opening brace is still at the input port.
        (read-char ip)
@@ -76,8 +96,7 @@
             (define next (read-char ip))
             (when (eof-object? next)
               (error 'latex->content "trailing backslash in URL in ~e" source))
-            (unless (memv next '(#\% #\& #\# #\_ #\~ #\{ #\} #\\))
-              (write-char #\\ out))
+            (write-char #\\ out)
             (write-char next out)
             (loop depth)]
            [#\{
@@ -85,20 +104,20 @@
             (loop (add1 depth))]
            [#\}
             (if (= depth 1)
-                (get-output-string out)
+                (unescape-url (get-output-string out))
                 (begin
                   (write-char #\} out)
                   (loop (sub1 depth))))]
            [c
             (write-char c out)
             (loop depth)])))
-  
+
      (define (normalize pieces)
        (match pieces
          ['() ""]
          [(list one) one]
          [_ pieces]))
-  
+
      ;; For unknown commands, retain immediately attached braced
      ;; arguments literally, including nested braces and escapes.
      (define (read-raw-arguments)
@@ -130,7 +149,7 @@
                   (copy)]))
              (arguments))))
        (get-output-string out))
-  
+
      (define (read-math)
        ;; The opening $ was already consumed by read-group.
        (define display? (eqv? (peek-char ip) #\$))
@@ -159,30 +178,32 @@
            [c
             (write-char c out)
             (loop)])))
-  
+
      (define (math-element raw)
        (make-element (if (string-prefix? raw "$$") bibtex-display-math-style bibtex-inline-math-style)
                      (list raw)))
-  
+
      (define (read-group in-group?)
        (define pieces null)
        (define out (open-output-string))
-  
+
        (define (flush!)
          (define s (get-output-string out))
          (unless (string=? s "")
            (set! pieces (cons s pieces)))
          (set! out (open-output-string)))
-  
+
        (define (emit! value)
          (flush!)
          (set! pieces (cons value pieces)))
-  
+
        (define (finish)
          (flush!)
          (reverse pieces))
-  
-       (define (read-accent-argument)
+
+       (define (read-accent-argument [control-word? #f])
+         (when control-word?
+           (read-control-whitespace))
          (match (peek-char ip)
            [#\{
             (read-char ip)
@@ -190,22 +211,25 @@
            [#\\
             (read-char ip)
             (define name (read-word))
+            (unless (string=? name "")
+              (read-control-whitespace))
             (cond
               [(string=? name "i") "ı"]
               [(string=? name "j") "ȷ"]
               [else name])]
            [(? char? c) (string (read-char ip))]
            [_ (error 'latex->content "missing accent argument in ~e" source)]))
-  
-       (define (emit-accent! accent)
-         (define argument (read-accent-argument))
+
+
+       (define (emit-accent! accent [control-word? #f])
+         (define argument (read-accent-argument control-word?))
          (when (string=? argument "")
            (error 'latex->content "empty accent argument in ~e" source))
          (emit! (let ([first-char (substring argument 0 1)])
                   (string-normalize-nfc (string-append (if (string=? first-char "ı") "i" first-char)
                                                        (hash-ref accents accent)
                                                        (substring argument 1))))))
-  
+
        (let loop ()
          (match (read-char ip)
            [(? eof-object?)
@@ -252,7 +276,7 @@
                       (emit! (url (read-url-argument)))
                       (emit! (make-element raw-tex-style (list (string-append "\\url" whitespace)))))]
                  [(and (= (string-length word) 1) (hash-has-key? accents (string-ref word 0)))
-                  (emit-accent! (string-ref word 0))]
+                  (emit-accent! (string-ref word 0) #t)]
                  [(hash-has-key? letter-commands word)
                   (read-control-whitespace)
                   (display (hash-ref letter-commands word) out)]
@@ -279,7 +303,7 @@
            [c
             (write-char c out)
             (loop)])))
-  
+
      (normalize (read-group #f))]
     [else #f]))
 
@@ -313,7 +337,7 @@
    "Víctor and Víctor")
   (check-equal?
    (content->string (latex->content "\\i \\j"))
-   "ı ȷ")
+   "ıȷ")
   (check-equal?
    (content->string
     (latex->content "\\textit{A \\textbf{B}} \\textsc{C} \\emph{D}"))
@@ -340,4 +364,18 @@
    "BibtexDisplayMath")
   (check-equal?
    (content->string (latex->content "Price \\$5; $\\lambda$"))
-   "Price $5; $\\lambda$"))
+   "Price $5; $\\lambda$")
+
+  (check-equal?
+   (content->string
+    (latex->content "Fran\\c cois; Mart\\'\\i n; \\o ren"))
+   "François; Martín; øren")
+  (check-equal?
+   (content->string (latex->content "\\c {c}"))
+   "ç")
+  (check-equal?
+   (unescape-url "https://example.org/a\\_b\\%20c?x=1\\&y=2")
+   "https://example.org/a_b%20c?x=1&y=2")
+  (check-equal?
+   (unescape-url "https://example.org/\\unknown")
+   "https://example.org/\\unknown"))

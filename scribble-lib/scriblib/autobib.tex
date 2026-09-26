@@ -12,6 +12,9 @@
 \newcount\AutobibNeedlines
 \AutobibNeedlines=5
 
+% Optional per-entry LaTeX layout adjustments.
+\newcommand{\AutobibEntrySetup}{}
+
 % Hanging indentation of ordinary bibliography entries.
 \newlength{\ABindent}
 \setlength{\ABindent}{0.05\linewidth}
@@ -26,10 +29,11 @@
 
 \newenvironment{Autobibentry}{%
   \par
-  \Needspace{\AutobibNeedlines\baselineskip}%
+  \ifnum\AutobibNeedlines>0
+    \Needspace{\AutobibNeedlines\baselineskip}%
+  \fi
   \begingroup
-    \emergencystretch=2em
-    \tolerance=1000
+    \AutobibEntrySetup
     \leftskip=\ABindent
     \parindent=\AutobibParindent
     \parskip=0pt

@@ -34,6 +34,13 @@ mathematical expressions.
 
 Blank lines in @litchar{note} fields separate paragraphs.
 
+The @litchar{url} and @litchar{doi} fields are interpreted
+as scalar strings rather than general LaTeX content.
+Enclosing brace groups are removed and conventional
+LaTeX escapes for special URL characters, such as
+@litchar{\_}, @litchar{\%} and @litchar{\&}, are unescaped.
+Other LaTeX commands are not interpreted in these fields.
+
 We support all the required and optional fields documented in the LaTeX book,
 with the following known limitations so far:
 @itemize[
@@ -65,7 +72,8 @@ We do support the @litchar["@string"] feature defined in
   and support @litchar{note}, @litchar{url}, @litchar{doi} on all entry types.}]
 @history[#:changed "1.68"
   @elem{Added structured LaTeX content parsing, improved
-        author-name handling and support for multi-paragraph notes.}]
+        author-name handling, URL and DOI unescaping,
+        and support for multi-paragraph notes.}]
 
 @defform[(define-bibtex-cite bib-pth ~cite-id citet-id generate-bibliography-id
            option ...)]{
