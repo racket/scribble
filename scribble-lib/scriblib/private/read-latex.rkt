@@ -103,11 +103,11 @@
             (write-char #\{ out)
             (loop (add1 depth))]
            [#\}
-            (if (= depth 1)
-                (unescape-url (get-output-string out))
-                (begin
-                  (write-char #\} out)
-                  (loop (sub1 depth))))]
+            (cond
+              [(= depth 1) (unescape-url (get-output-string out))]
+              [else
+               (write-char #\} out)
+               (loop (sub1 depth))])]
            [c
             (write-char c out)
             (loop depth)])))
