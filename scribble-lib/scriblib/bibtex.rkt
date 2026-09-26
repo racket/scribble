@@ -1126,7 +1126,47 @@ BIB
                                      "https://doi.org/10.1000/example"))
   (check-not-false (string-contains? scalars-html
                                      "https://example.org/a_b"))
-  (delete-file scalars-html-path))
+  (delete-file scalars-html-path)
+
+  (define math-db
+    (bibtex-parse
+     (open-input-string
+      (string-append
+       "@misc{math-compat,\n"
+       "  author={Alice Example},\n"
+       "  title={The $\\lambda$-calculus and $$x^2$$},\n"
+       "  note={Price: \\$5},\n"
+       "  year={2026}\n"
+       "}\n"))))
+  (define-cite math-cite math-citet math-bibliography)
+  (void (math-cite (generate-bib math-db "math-compat")))
+
+  (define math-html-path
+    (make-temporary-file "bibtex-math~a.html"))
+  (render (list (math-bibliography))
+          (list math-html-path)
+          #:dest-dir (path-only math-html-path)
+          #:render-mixin html:render-mixin)
+  (define math-html (file->string math-html-path))
+  (check-not-false (string-contains? math-html "BibtexInlineMath"))
+  (check-not-false (string-contains? math-html "BibtexDisplayMath"))
+  (check-not-false (string-contains? math-html "$\\lambda$"))
+  (check-not-false (string-contains? math-html "$$x^2$$"))
+  (check-not-false (string-contains? math-html "Price: $5"))
+  (delete-file math-html-path)
+
+  (define math-tex-path
+    (make-temporary-file "bibtex-math~a.tex"))
+  (render (list (math-bibliography))
+          (list math-tex-path)
+          #:dest-dir (path-only math-tex-path)
+          #:render-mixin latex:render-mixin)
+  (define math-tex (file->string math-tex-path))
+  (check-not-false
+   (string-contains? math-tex "\\BibtexInlineMath{$\\lambda$}"))
+  (check-not-false
+   (string-contains? math-tex "\\BibtexDisplayMath{$$x^2$$}"))
+  (delete-file math-tex-path))
 
 (provide (struct-out bibdb)
          path->bibdb

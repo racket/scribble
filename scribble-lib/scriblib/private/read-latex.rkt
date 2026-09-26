@@ -19,6 +19,10 @@
 (define bibtex-group-style (make-style "BibtexGroup" '(bibtex-group)))
 (define raw-tex-style (make-style #f '(exact-chars)))
 (define bibtex-smallcaps-style (make-style "BibtexSmallCaps" null))
+(define bibtex-inline-math-style
+  (make-style "BibtexInlineMath" '(exact-chars)))
+(define bibtex-display-math-style
+  (make-style "BibtexDisplayMath" '(exact-chars)))
 
 (define (bibtex-group? value)
   (and (element? value)
@@ -151,9 +155,15 @@
                         (get-output-string out)))]
                  [c (write-char c out) (loop)])))
 
-         (define (read-group in-group?)
-           (define pieces null)
-           (define out (open-output-string))
+           (define (math-element raw)
+             (make-element (if (string-prefix? raw "$$")
+                               bibtex-display-math-style
+                               bibtex-inline-math-style)
+                           (list raw)))
+
+           (define (read-group in-group?)
+             (define pieces null)
+             (define out (open-output-string))
 
            (define (flush!)
              (define s (get-output-string out))
@@ -207,7 +217,7 @@
                   (error 'latex->content "unexpected closing brace in ~e" source))
                 (finish)]
                [#\$
-                (emit! (make-element raw-tex-style (list (read-math))))
+                (emit! (math-element (read-math)))
                 (loop)]
                [#\~
                 (emit! 'nbsp)
@@ -319,4 +329,14 @@
     (latex->content "\\url{https://example.org/a\\_b\\%20c}"))
    "https://example.org/a_b%20c")
   (check-exn #rx"unclosed URL"
-             (lambda () (latex->content "\\url{https://example.org"))))
+             (lambda () (latex->content "\\url{https://example.org")))
+
+  (check-equal?
+   (style-name (element-style (latex->content "$\\lambda$")))
+   "BibtexInlineMath")
+  (check-equal?
+   (style-name (element-style (latex->content "$$x^2$$")))
+   "BibtexDisplayMath")
+  (check-equal?
+   (content->string (latex->content "Price \\$5; $\\lambda$"))
+   "Price $5; $\\lambda$"))

@@ -8,3 +8,5 @@
 #let pseudodoi(body) = body
 #let BibtexGroup(body) = body
 #let BibtexSmallCaps(body) = smallcaps(body)
+#let BibtexInlineMath(body) = body
+#let BibtexDisplayMath(body) = body

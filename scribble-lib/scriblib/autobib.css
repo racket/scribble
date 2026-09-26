@@ -48,3 +48,12 @@
 .BibtexSmallCaps {
   font-variant: small-caps;
 }
+.BibtexInlineMath,
+.BibtexDisplayMath {
+  font-family: monospace;
+  white-space: pre-wrap;
+}
+.BibtexDisplayMath {
+  display: block;
+  text-align: center;
+}
