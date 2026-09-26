@@ -124,30 +124,30 @@
        (define out (open-output-string))
        (let arguments ()
          (when (eqv? (peek-char ip) #\{)
-           (let ([depth 0])
-             (let copy ()
-               (match (read-char ip)
-                 [(? eof-object?) (error 'latex->content "unclosed argument in ~e" source)]
-                 [#\\
-                  (write-char #\\ out)
-                  (define next (read-char ip))
-                  (when (eof-object? next)
-                    (error 'latex->content "trailing backslash in ~e" source))
-                  (write-char next out)
-                  (copy)]
-                 [#\{
-                  (set! depth (add1 depth))
-                  (write-char #\{ out)
-                  (copy)]
-                 [#\}
-                  (set! depth (sub1 depth))
-                  (write-char #\} out)
-                  (unless (zero? depth)
-                    (copy))]
-                 [c
-                  (write-char c out)
-                  (copy)]))
-             (arguments))))
+           (define depth 0)
+           (let copy ()
+             (match (read-char ip)
+               [(? eof-object?) (error 'latex->content "unclosed argument in ~e" source)]
+               [#\\
+                (write-char #\\ out)
+                (define next (read-char ip))
+                (when (eof-object? next)
+                  (error 'latex->content "trailing backslash in ~e" source))
+                (write-char next out)
+                (copy)]
+               [#\{
+                (set! depth (add1 depth))
+                (write-char #\{ out)
+                (copy)]
+               [#\}
+                (set! depth (sub1 depth))
+                (write-char #\} out)
+                (unless (zero? depth)
+                  (copy))]
+               [c
+                (write-char c out)
+                (copy)]))
+           (arguments)))
        (get-output-string out))
 
      (define (read-math)
