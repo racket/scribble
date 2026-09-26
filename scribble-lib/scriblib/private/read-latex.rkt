@@ -169,12 +169,12 @@
             (loop)]
            [#\$
             (write-char #\$ out)
-            (if (and display? (not (eqv? (peek-char ip) #\$)))
-                (loop)
-                (begin
-                  (when display?
-                    (write-char (read-char ip) out))
-                  (get-output-string out)))]
+            (cond
+              [(and display? (not (eqv? (peek-char ip) #\$))) (loop)]
+              [else
+               (when display?
+                 (write-char (read-char ip) out))
+               (get-output-string out)])]
            [c
             (write-char c out)
             (loop)])))
