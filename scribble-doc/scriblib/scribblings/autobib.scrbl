@@ -204,7 +204,7 @@ from e.g. a @racket[tex-addition] that you add to your document's style:
     #"  \\AutobibNeedlines=4\\relax\n"
     #"  \\renewcommand{\\AutobibEntrySetup}{%\n"
     #"    \\emergencystretch=2em\n"
-    #"    \\tolerance=1000}}%\n"))]
+    #"    \\tolerance=1000}}%\n"))]}
 
 @defproc[(bib? [v any/c]) boolean?]{
 
