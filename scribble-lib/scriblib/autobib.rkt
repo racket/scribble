@@ -454,7 +454,7 @@
        `(" " ,[(doi-rendering) doi]
          ,@(if (pair? note-blocks) '(".") null)))
       (url
-       `(" " ,[(url-rendering) url]))
+       `(" " ,[(url-rendering) url])) ;; do NOT include a . immediately after URL, it's confusing
       (else
        null))))
   (define first-content
@@ -677,7 +677,7 @@
    (entry-first-text (make-bib #:title "Title"
                                #:url "https://example.org"
                                #:note "A note"))
-   "Title. https://example.org. A note")
+   "Title. https://example.org A note")
   (check-false (journal-location #f))
   (check-false (techrpt-location #:institution #f))
   (check-false (proceedings-location #f))

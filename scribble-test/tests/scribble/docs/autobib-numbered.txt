@@ -14,7 +14,7 @@ B&B [1, 4].
 
 Bibliography
 
-[1]A. One. There, 2012.   
-[2]A. Two. Here, 2012.    
-[3]A. Three. Where?, 2013.
-[4]B. Uno. Ici, 2012.     
+[1] A. One. There, 2012.   
+[2] A. Two. Here, 2012.    
+[3] A. Three. Where?, 2013.
+[4] B. Uno. Ici, 2012.     
