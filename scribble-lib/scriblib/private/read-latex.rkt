@@ -258,18 +258,21 @@
                (cond
                  [(member word '("emph" "texttt" "textit" "textbf" "textsc"))
                   (define whitespace (read-control-whitespace))
-                  (if (eqv? (peek-char ip) #\{)
-                      (let ([body (begin
-                                    (read-char ip)
-                                    (read-group #t))])
-                        (emit! (cond
-                                 [(string=? word "emph") (apply emph body)]
-                                 [(string=? word "texttt") (apply tt body)]
-                                 [(string=? word "textit") (apply italic body)]
-                                 [(string=? word "textbf") (apply bold body)]
-                                 [else (make-element bibtex-smallcaps-style body)])))
-                      (emit! (make-element raw-tex-style
-                                           (list (string-append "\\" word whitespace)))))]
+                  (cond
+                    [(eqv? (peek-char ip) #\{)
+                     (define body
+                       (begin
+                         (read-char ip)
+                         (read-group #t)))
+                     (emit! (cond
+                              [(string=? word "emph") (apply emph body)]
+                              [(string=? word "texttt") (apply tt body)]
+                              [(string=? word "textit") (apply italic body)]
+                              [(string=? word "textbf") (apply bold body)]
+                              [else (make-element bibtex-smallcaps-style body)]))]
+                    [else
+                     (emit! (make-element raw-tex-style
+                                          (list (string-append "\\" word whitespace))))])]
                  [(string=? word "url")
                   (define whitespace (read-control-whitespace))
                   (if (eqv? (peek-char ip) #\{)
