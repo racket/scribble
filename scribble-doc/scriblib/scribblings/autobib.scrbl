@@ -50,6 +50,15 @@ includes a citation to section 8 of the Racket reference.
 
 @history[#:changed "1.61"
   @elem{Added fields and location types for better bibtex support.}]
+@history[#:changed "1.68"
+  @elem{Improved bibliography layout, added support for
+        multi-paragraph notes and extended support for
+        structured content in bibliography fields.
+        Location helpers now return Scribble content,
+        potentially @racket[#f], rather than always an element.
+        Existing clients must not assume that
+        @racket[element-content] applies to their results.}]
+
 
 @defform/subs[(define-cite ~cite-id citet-id generate-bibliography-id
                            option ...)
@@ -158,11 +167,44 @@ optionally given @racket[render-date-expr] functions.
 
 Styles for use with @racket[define-cite].
 
+With @racket[number-style], bibliography entries use hanging
+indentation in HTML and LaTeX output, with citation numbers
+aligned in a separate label column. Text output instead
+separates each number from its entry with a non-breaking space.
+
 The @racket[author+date-square-bracket-style] definition is the same
 as @racket[author+date-style], except that references to citations
 are enclosed in @litchar["[]"] instead of @litchar["()"].
-}
 
+In LaTeX output, Scribble tries to keep short bibliography
+entries together, reserving at least five lines before starting
+an entry. This approximates the previous behavior, which
+prevented page breaks within individual entries altogether.
+Longer entries may now span pages.
+
+The @tt{\AutobibNeedlines} counter controls the minimum number of lines,
+defaulting to 5. Set it to 0 to disable this constraint.
+The optional @tt{needspace} package is required
+for the constraint to take effect;
+this behavior is disabled if the package is unavailable,
+as if the counter were 0.
+
+The @tt{\AutobibEntrySetup} command, empty by default,
+allows additional LaTeX settings to be applied locally
+to each bibliography entry.
+
+To require four lines before each entry and relax line breaking
+for long annotations, configure these settings using @tt{\AtBeginDocument}
+from e.g. a @racket[tex-addition] that you add to your document's style:
+
+@racketblock[
+(tex-addition
+  (bytes-append
+    #"\\AtBeginDocument{%\n"
+    #"  \\AutobibNeedlines=4\\relax\n"
+    #"  \\renewcommand{\\AutobibEntrySetup}{%\n"
+    #"    \\emergencystretch=2em\n"
+    #"    \\tolerance=1000}}%\n"))]}
 
 @defproc[(bib? [v any/c]) boolean?]{
 
@@ -186,6 +228,16 @@ content, except that @racket[#f] means that the information is not
 supplied. Functions like @racket[proceedings-location],
 @racket[author-name], and @racket[authors] help produce elements in a
 standard format.
+
+The @racket[#:note] argument may contain multiple paragraphs,
+separated by blank lines. The first paragraph follows the
+bibliographic information; subsequent paragraphs remain within
+the same bibliography entry.
+
+When both @racket[#:doi] and @racket[#:url] are supplied,
+the DOI takes precedence.
+A period is inserted after a DOI when followed by a non-empty note.
+No period is appended directly to a URL.
 
 Dates are internally represented as @racket[date] values, so a @racket[date]
 may be given, or a number or string that represent the year.
@@ -213,24 +265,32 @@ Extends a bib value so that the rendered citation is suffixed with
                                [#:organization organization any/c #f]
                                [#:publisher publisher #f]
                                [#:address address #f])
-         element?]{
+         (or/c content? #f)]{
 
-Combines elements to generate an element that is suitable for
+Combines the supplied information to produce content suitable for
 describing a paper's location within a conference or workshop
 proceedings.
 
- @history[#:changed "1.61"
-   @elem{Added fields for bibtex support: editor number organization publisher address.}]
+@history[#:changed "1.61"
+  @elem{Added fields for bibtex support: editor number organization publisher address.}]
+@history[#:changed "1.68"
+  @elem{Now returns Scribble content, potentially
+        @racket[#f], rather than necessarily an element.}]
 }
 
 @defproc[(journal-location [title any/c]
                            [#:volume volume any/c #f]
                            [#:number number any/c #f]
                            [#:pages pages (or (list/c any/c any/c) #f) #f])
-         element?]{
+         (or/c content? #f)]{
 
-Combines elements to generate an element that is suitable for
-describing a paper's location within a journal.}
+Combines the supplied information to produce content suitable for
+describing a paper's location within a journal.
+
+@history[#:changed "1.68"
+  @elem{Now returns Scribble content, potentially
+        @racket[#f], rather than necessarily an element.}]
+}
 
 
 @defproc[(book-location [#:edition edition any/c #f]
@@ -242,42 +302,57 @@ describing a paper's location within a journal.}
                         [#:pages pages any/c #f]
                         [#:publisher publisher any/c #f]
                         [#:address address any/c #f])
-         element?]{
-Combines elements to generate an element that is suitable for
+         (or/c content? #f)]{
+Combines the supplied information to produce content suitable for
 describing a book's location.
+
+A numeric @racket[chapter], supplied as a number or a string
+of decimal digits, is prefixed with ``chapter''.
+Other chapter content is used unchanged.
 
 @history[#:changed "1.61"
   @elem{Added fields for bibtex support: editor chapter series volume number pages address.
         Made all arguments optional.}]
+@history[#:changed "1.68"
+  @elem{Now returns Scribble content, potentially
+        @racket[#f], rather than necessarily an element.}]
 }
 
 
 @defproc[(booklet-location [#:howpublished howpublished any/c #f]
                            [#:address address any/c #f])
-         element?]{
-Combines elements to generate an element that is suitable for
+         (or/c content? #f)]{
+Combines the supplied information to produce content suitable for
 describing a booklet's location.
 
 @history[#:added "1.61"]
+@history[#:changed "1.68"
+  @elem{Now returns Scribble content, potentially
+        @racket[#f], rather than necessarily an element.}]
 }
 
 
 @defproc[(misc-location [#:howpublished howpublished any/c #f])
-         element?]{
-Combines elements to generate an element that is suitable for
+         (or/c content? #f)]{
+Combines the supplied information to produce content suitable for
 describing a bibtex misc entry's location.
-
 @history[#:added "1.61"]
+@history[#:changed "1.68"
+  @elem{Now returns Scribble content, potentially
+        @racket[#f], rather than necessarily an element.}]
 }
 
 
 @defproc[(manual-location [#:organization organization any/c #f]
                           [#:edition edition any/c #f])
-         element?]{
-Combines elements to generate an element that is suitable for
+         (or/c content? #f)]{
+Combines the supplied information to produce content suitable for
 describing a manual's location.
 
 @history[#:added "1.61"]
+@history[#:changed "1.68"
+  @elem{Now returns Scribble content, potentially
+        @racket[#f], rather than necessarily an element.}]
 }
 
 
@@ -285,35 +360,41 @@ describing a manual's location.
                            [#:type type any/c #f]
                            [#:number number any/c #f]
                            [#:address address any/c #f])
-         element?]{
-
-Combines elements to generate an element that is suitable for
+         (or/c content? #f)]{
+Combines the supplied information to produce content suitable for
 describing a technical report's location.
 
 @history[#:changed "1.61" @elem{Added fields for bibtex support: type address.}]
+@history[#:changed "1.68"
+  @elem{Now returns Scribble content, potentially
+        @racket[#f], rather than necessarily an element.}]
 }
 
 @defproc[(dissertation-location [#:institution institution any/c]
                                 [#:degree degree any/c "PhD"]
                                 [#:type type any/c #f]
                                 [#:address address any/c #f])
-         element?]{
-
-Combines elements to generate an element that is suitable for
+         content?]{
+Combines the supplied information to produce content suitable for
 describing a dissertation.
 
 @history[#:changed "1.61"
   @elem{Added fields for bibtex support: type address.}]
+@history[#:changed "1.68"
+  @elem{Now returns Scribble content, rather than necessarily an element.}]
 }
 
 @defproc[(webpage-location [url string? #f]
                            [#:accessed accessed any/c #f])
-         element?]{
- Combines elements to generate an element that is suitable for
- describing a web page.
+         (or/c content? #f)]{
+Combines the supplied information to produce content suitable for
+describing a web page.
 
- @history[#:changed "1.61"
-   @elem{Made field url optional now that any autobib entry may have a url.}]
+@history[#:changed "1.61"
+  @elem{Made field url optional now that any autobib entry may have a url.}]
+@history[#:changed "1.68"
+  @elem{Now returns Scribble content, potentially
+        @racket[#f], rather than necessarily an element.}]
 }
 
 
@@ -327,13 +408,17 @@ describing a dissertation.
                                 [#:pages pages any/c #f]
                                 [#:publisher publisher any/c #f]
                                 [#:address address any/c #f])
-         element?]{
-
-Combines elements to generate an element that is suitable for
+         (or/c content? #f)]{
+Combines the supplied information to produce content suitable for
 describing a paper's location within a chapter or part of a book or collection of books.
+
+The @racket[chapter] argument is formatted as by @racket[book-location].
 
 @history[#:changed "1.61"
   @elem{Added fields for bibtex support: editor chapter number address.}]
+@history[#:changed "1.68"
+  @elem{Now returns Scribble content, potentially
+        @racket[#f], rather than necessarily an element.}]
 }
 
 

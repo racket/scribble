@@ -2,6 +2,8 @@
 
 (require rackunit scriblib/autobib scribble/base scribble/core)
 
+(error-print-width 2000)
+
 (test-case "define-cite"
   ;; Check that `define-cite` binds the expected identifiers
 
@@ -48,8 +50,7 @@
     (λ () (webpage-location))))
 
 (define (mk-bookloc-elem/ed ed)
-  (define (wrap v) (element (style #f '()) (if (list? v) v (list v))))
-  (wrap (wrap (wrap (list ed " edition")))))
+  (list ed " edition"))
 
 (test-case "book-location-edition-capitalization"
   (check-equal? (book-location #:edition 'a)
@@ -108,3 +109,22 @@
                                 (other-authors))))))
       (gen-bib))))
 
+(test-case "number-style bibliography is single-column"
+  (let ()
+    (define-cite cite citet gen-bib #:style number-style)
+
+    (define b
+      (make-bib #:author "Alice Alpha"
+                #:title "First Paper"
+                #:date "2020"))
+
+    ;; Make the entry reachable by the bibliography generator.
+    (cite b)
+
+    (define bib (gen-bib #:sec-title #f))
+
+    (check-pred table? bib)
+
+    ;; Every bibliography row should now contain exactly one cell.
+    (for ([row (in-list (table-blockss bib))])
+      (check-equal? (length row) 1))))
