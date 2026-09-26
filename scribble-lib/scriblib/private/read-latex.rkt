@@ -201,9 +201,8 @@
          (flush!)
          (reverse pieces))
 
-       (define (read-accent-argument [control-word? #f])
-         (when control-word?
-           (read-control-whitespace))
+       (define (read-accent-argument)
+         (read-control-whitespace)
          (match (peek-char ip)
            [#\{
             (read-char ip)
@@ -221,8 +220,8 @@
            [_ (error 'latex->content "missing accent argument in ~e" source)]))
 
 
-       (define (emit-accent! accent [control-word? #f])
-         (define argument (read-accent-argument control-word?))
+       (define (emit-accent! accent)
+         (define argument (read-accent-argument))
          (when (string=? argument "")
            (error 'latex->content "empty accent argument in ~e" source))
          (emit! (let ([first-char (substring argument 0 1)])
@@ -277,7 +276,7 @@
                       (emit! (url (read-url-argument)))
                       (emit! (make-element raw-tex-style (list (string-append "\\url" whitespace)))))]
                  [(and (= (string-length word) 1) (hash-has-key? accents (string-ref word 0)))
-                  (emit-accent! (string-ref word 0) #t)]
+                  (emit-accent! (string-ref word 0))]
                  [(hash-has-key? letter-commands word)
                   (read-control-whitespace)
                   (display (hash-ref letter-commands word) out)]
@@ -339,6 +338,12 @@
   (check-equal?
    (content->string (latex->content "\\i \\j"))
    "ıȷ")
+  (check-equal?
+   (content->string
+    (latex->content
+     "Ren\\' e; Fran\\c cois; Mart\\'\\i n; \\o ren"))
+   "René; François; Martín; øren")
+
   (check-equal?
    (content->string
     (latex->content "\\textit{A \\textbf{B}} \\textsc{C} \\emph{D}"))

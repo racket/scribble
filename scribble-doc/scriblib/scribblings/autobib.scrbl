@@ -193,14 +193,17 @@ to each bibliography entry.
 
 To require four lines before each entry and relax line
 breaking for long annotations, configure these settings
-after @tt{autobib.tex} has been loaded:
+after @tt{autobib.tex} has been loaded, e.g. using @racket[tex-addition].
 
-@codeblock|{
-\AutobibNeedlines=4
-\renewcommand{\AutobibEntrySetup}{%
-  \emergencystretch=2em
-  \tolerance=1000}
-}|
+@racket[
+(tex-addition
+  (bytes-append
+    #"\\AtBeginDocument{%"
+    #"\\AutobibNeedlines=4\\relax"
+    #"\\renewcommand{\\AutobibEntrySetup}{%"
+    #"\\emergencystretch=2em"
+    #"\\tolerance=1000%"
+    #"}%\n"))]
 
 The minimum-lines requirement uses the optional
 @tt{needspace} LaTeX package and is ignored if that
@@ -267,7 +270,7 @@ Extends a bib value so that the rendered citation is suffixed with
                                [#:organization organization any/c #f]
                                [#:publisher publisher #f]
                                [#:address address #f])
-         content?]{
+         (or/c content? #f)]{
 
 Combines the supplied information to produce content suitable for
 describing a paper's location within a conference or workshop
@@ -284,7 +287,7 @@ proceedings.
                            [#:volume volume any/c #f]
                            [#:number number any/c #f]
                            [#:pages pages (or (list/c any/c any/c) #f) #f])
-         content?]{
+         (or/c content? #f)]{
 
 Combines the supplied information to produce content suitable for
 describing a paper's location within a journal.
@@ -304,7 +307,7 @@ describing a paper's location within a journal.
                         [#:pages pages any/c #f]
                         [#:publisher publisher any/c #f]
                         [#:address address any/c #f])
-         content?]{
+         (or/c content? #f)]{
 Combines the supplied information to produce content suitable for
 describing a book's location.
 
@@ -323,7 +326,7 @@ Other chapter content is used unchanged.
 
 @defproc[(booklet-location [#:howpublished howpublished any/c #f]
                            [#:address address any/c #f])
-         content?]{
+         (or/c content? #f)]{
 Combines the supplied information to produce content suitable for
 describing a booklet's location.
 
@@ -335,10 +338,9 @@ describing a booklet's location.
 
 
 @defproc[(misc-location [#:howpublished howpublished any/c #f])
-         content?]{
+         (or/c content? #f)]{
 Combines the supplied information to produce content suitable for
 describing a bibtex misc entry's location.
-
 @history[#:added "1.61"]
 @history[#:changed "1.68"
   @elem{Now returns Scribble content, potentially
@@ -348,7 +350,7 @@ describing a bibtex misc entry's location.
 
 @defproc[(manual-location [#:organization organization any/c #f]
                           [#:edition edition any/c #f])
-         content?]{
+         (or/c content? #f)]{
 Combines the supplied information to produce content suitable for
 describing a manual's location.
 
@@ -363,7 +365,7 @@ describing a manual's location.
                            [#:type type any/c #f]
                            [#:number number any/c #f]
                            [#:address address any/c #f])
-         content?]{
+         (or/c content? #f)]{
 Combines the supplied information to produce content suitable for
 describing a technical report's location.
 
@@ -389,14 +391,15 @@ describing a dissertation.
 
 @defproc[(webpage-location [url string? #f]
                            [#:accessed accessed any/c #f])
-         content?]{
+         (or/c content? #f)]{
 Combines the supplied information to produce content suitable for
 describing a web page.
 
 @history[#:changed "1.61"
   @elem{Made field url optional now that any autobib entry may have a url.}]
 @history[#:changed "1.68"
-  @elem{Now returns content, not necessarily element.}]
+  @elem{Now returns Scribble content, potentially
+        @racket[#f], rather than necessarily an element.}]
 }
 
 
@@ -410,7 +413,7 @@ describing a web page.
                                 [#:pages pages any/c #f]
                                 [#:publisher publisher any/c #f]
                                 [#:address address any/c #f])
-         content?]{
+         (or/c content? #f)]{
 Combines the supplied information to produce content suitable for
 describing a paper's location within a chapter or part of a book or collection of books.
 
@@ -419,7 +422,8 @@ The @racket[chapter] argument is formatted as by @racket[book-location].
 @history[#:changed "1.61"
   @elem{Added fields for bibtex support: editor chapter number address.}]
 @history[#:changed "1.68"
-  @elem{Now returns content, not necessarily element.}]
+  @elem{Now returns Scribble content, potentially
+        @racket[#f], rather than necessarily an element.}]
 }
 
 

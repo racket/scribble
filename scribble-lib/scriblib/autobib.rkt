@@ -695,6 +695,13 @@
      #:publisher "Springer"
      #:address "Berlin"))
    "Second edition, chapter 3, LNCS, 42(7), pp. 10--20. Springer, Berlin")
+  (check-equal?
+   (content->string (book-location #:chapter 3))
+   "Chapter 3")
+  (check-equal?
+   (content->string
+    (book-location #:edition "second" #:chapter 3))
+   "Second edition, chapter 3")
 
   (define multi-note
     (make-bib
@@ -804,7 +811,9 @@
    (concatenate-content
     #:separator ", "
     (edition-content edition)
-    (chapter-content chapter)
+    (if edition
+      (chapter-content chapter)
+      (capitalize-content (chapter-content chapter)))
     (and editor_ (editor editor_))
     (series-volume-number-pages-content series volume number pages))
    #:separator ". "
