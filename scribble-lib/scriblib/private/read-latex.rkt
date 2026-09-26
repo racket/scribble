@@ -48,239 +48,234 @@
         "th" "þ" "TH" "Þ"))
 
 (define (latex->content source)
-  (and source
-       (let ([ip (open-input-string source)])
-         (define (read-word)
-           (list->string
-            (let loop ()
-              (define c (peek-char ip))
-              (if (and (char? c) (char-alphabetic? c))
-                  (cons (read-char ip) (loop))
-                  null))))
-
-         (define (read-control-whitespace)
-           (list->string
-            (let spaces ()
-              (define c (peek-char ip))
-              (if (and (char? c) (char-whitespace? c))
-                  (cons (read-char ip) (spaces))
-                  null))))
-
-         (define (read-url-argument)
-           ;; The opening brace is still at the input port.
-           (read-char ip)
-           (define out (open-output-string))
-           (let loop ([depth 1])
-             (match (read-char ip)
-               [(? eof-object?)
-                (error 'latex->content "unclosed URL in ~e" source)]
-               [#\\
-                (define next (read-char ip))
-                (when (eof-object? next)
-                  (error 'latex->content "trailing backslash in URL in ~e" source))
-                (unless (memv next '(#\% #\& #\# #\_ #\~ #\{ #\} #\\))
-                  (write-char #\\ out))
-                (write-char next out)
-                (loop depth)]
-               [#\{
-                (write-char #\{ out)
-                (loop (add1 depth))]
-               [#\}
-                (if (= depth 1)
-                    (get-output-string out)
-                    (begin
-                      (write-char #\} out)
-                      (loop (sub1 depth))))]
-               [c (write-char c out) (loop depth)])))
-
-         (define (normalize pieces)
-           (match pieces
-             ['() ""]
-             [(list one) one]
-             [_ pieces]))
-
-         ;; For unknown commands, retain immediately attached braced
-         ;; arguments literally, including nested braces and escapes.
-         (define (read-raw-arguments)
-           (define out (open-output-string))
-           (let arguments ()
-             (when (eqv? (peek-char ip) #\{)
-               (let ([depth 0])
-                 (let copy ()
-                 (match (read-char ip)
-                   [(? eof-object?)
-                    (error 'latex->content "unclosed argument in ~e" source)]
-                   [#\\
-                    (write-char #\\ out)
-                    (define next (read-char ip))
-                    (when (eof-object? next)
-                      (error 'latex->content "trailing backslash in ~e" source))
-                    (write-char next out)
-                    (copy)]
-                   [#\{
-                    (set! depth (add1 depth))
-                    (write-char #\{ out)
-                    (copy)]
-                   [#\}
-                    (set! depth (sub1 depth))
-                    (write-char #\} out)
-                    (unless (zero? depth) (copy))]
-                   [c (write-char c out) (copy)]))
-                 (arguments))))
-           (get-output-string out))
-
-           (define (read-math)
-             ;; The opening $ was already consumed by read-group.
-             (define display? (eqv? (peek-char ip) #\$))
-             (when display? (read-char ip))
-             (define out (open-output-string))
-             (display (if display? "$$" "$") out)
-             (let loop ()
+  (cond
+    [source
+     (define ip (open-input-string source))
+     (define (read-word)
+       (list->string (let loop ()
+                       (define c (peek-char ip))
+                       (if (and (char? c) (char-alphabetic? c))
+                           (cons (read-char ip) (loop))
+                           null))))
+  
+     (define (read-control-whitespace)
+       (list->string (let spaces ()
+                       (define c (peek-char ip))
+                       (if (and (char? c) (char-whitespace? c))
+                           (cons (read-char ip) (spaces))
+                           null))))
+  
+     (define (read-url-argument)
+       ;; The opening brace is still at the input port.
+       (read-char ip)
+       (define out (open-output-string))
+       (let loop ([depth 1])
+         (match (read-char ip)
+           [(? eof-object?) (error 'latex->content "unclosed URL in ~e" source)]
+           [#\\
+            (define next (read-char ip))
+            (when (eof-object? next)
+              (error 'latex->content "trailing backslash in URL in ~e" source))
+            (unless (memv next '(#\% #\& #\# #\_ #\~ #\{ #\} #\\))
+              (write-char #\\ out))
+            (write-char next out)
+            (loop depth)]
+           [#\{
+            (write-char #\{ out)
+            (loop (add1 depth))]
+           [#\}
+            (if (= depth 1)
+                (get-output-string out)
+                (begin
+                  (write-char #\} out)
+                  (loop (sub1 depth))))]
+           [c
+            (write-char c out)
+            (loop depth)])))
+  
+     (define (normalize pieces)
+       (match pieces
+         ['() ""]
+         [(list one) one]
+         [_ pieces]))
+  
+     ;; For unknown commands, retain immediately attached braced
+     ;; arguments literally, including nested braces and escapes.
+     (define (read-raw-arguments)
+       (define out (open-output-string))
+       (let arguments ()
+         (when (eqv? (peek-char ip) #\{)
+           (let ([depth 0])
+             (let copy ()
                (match (read-char ip)
-                 [(? eof-object?)
-                  (error 'latex->content "unclosed math in ~e" source)]
+                 [(? eof-object?) (error 'latex->content "unclosed argument in ~e" source)]
                  [#\\
                   (write-char #\\ out)
                   (define next (read-char ip))
                   (when (eof-object? next)
-                    (error 'latex->content "trailing backslash in math in ~e" source))
+                    (error 'latex->content "trailing backslash in ~e" source))
                   (write-char next out)
-                  (loop)]
-                 [#\$
-                  (write-char #\$ out)
-                  (if (and display? (not (eqv? (peek-char ip) #\$)))
-                      (loop)
-                      (begin
-                        (when display? (write-char (read-char ip) out))
-                        (get-output-string out)))]
-                 [c (write-char c out) (loop)])))
-
-           (define (math-element raw)
-             (make-element (if (string-prefix? raw "$$")
-                               bibtex-display-math-style
-                               bibtex-inline-math-style)
-                           (list raw)))
-
-           (define (read-group in-group?)
-             (define pieces null)
-             (define out (open-output-string))
-
-           (define (flush!)
-             (define s (get-output-string out))
-             (unless (string=? s "")
-               (set! pieces (cons s pieces)))
-             (set! out (open-output-string)))
-
-           (define (emit! value)
-             (flush!)
-             (set! pieces (cons value pieces)))
-
-           (define (finish)
-             (flush!)
-             (reverse pieces))
-
-           (define (read-accent-argument)
-             (match (peek-char ip)
-               [#\{
-                (read-char ip)
-                (content->string (read-group #t))]
-               [#\\
-                (read-char ip)
-                (define name (read-word))
-                (cond [(string=? name "i") "ı"]
-                      [(string=? name "j") "ȷ"]
-                      [else name])]
-               [(? char? c) (string (read-char ip))]
-               [_ (error 'latex->content "missing accent argument in ~e" source)]))
-
-           (define (emit-accent! accent)
-             (define argument (read-accent-argument))
-             (when (string=? argument "")
-               (error 'latex->content "empty accent argument in ~e" source))
-             (emit! (let ([first-char (substring argument 0 1)])
-                      (string-normalize-nfc
-                       (string-append (if (string=? first-char "ı") "i" first-char)
-                                      (hash-ref accents accent)
-                                      (substring argument 1))))))
-
-           (let loop ()
-             (match (read-char ip)
-               [(? eof-object?)
-                (when in-group?
-                  (error 'latex->content "unclosed brace in ~e" source))
-                (finish)]
-               [#\{
-                (emit! (make-element bibtex-group-style (read-group #t)))
-                (loop)]
-               [#\}
-                (unless in-group?
-                  (error 'latex->content "unexpected closing brace in ~e" source))
-                (finish)]
-               [#\$
-                (emit! (math-element (read-math)))
-                (loop)]
-               [#\~
-                (emit! 'nbsp)
-                (loop)]
-               [#\\
-                (define next (peek-char ip))
-                (cond
-                  [(eof-object? next)
-                   (error 'latex->content "trailing backslash in ~e" source)]
-                  [(char-alphabetic? next)
-                   (define word (read-word))
-                   (cond
-                     [(member word '("emph" "texttt" "textit" "textbf" "textsc"))
-                      (define whitespace (read-control-whitespace))
-                      (if (eqv? (peek-char ip) #\{)
-                          (let ([body (begin
-                                        (read-char ip)
-                                        (read-group #t))])
-                            (emit! (cond
-                                    [(string=? word "emph") (apply emph body)]
-                                    [(string=? word "texttt") (apply tt body)]
-                                    [(string=? word "textit") (apply italic body)]
-                                    [(string=? word "textbf") (apply bold body)]
-                                    [else (make-element bibtex-smallcaps-style body)])))
-                          (emit! (make-element raw-tex-style
-                                               (list (string-append "\\" word whitespace)))))]
-                     [(string=? word "url")
-                      (define whitespace (read-control-whitespace))
-                      (if (eqv? (peek-char ip) #\{)
-                          (emit! (url (read-url-argument)))
-                          (emit! (make-element raw-tex-style
-                                               (list (string-append "\\url" whitespace)))))]
-                     [(and (= (string-length word) 1)
-                           (hash-has-key? accents (string-ref word 0)))
-                      (emit-accent! (string-ref word 0))]
-                     [(hash-has-key? letter-commands word)
-                      (display (hash-ref letter-commands word) out)]
-                     [(string=? word "i") (display "ı" out)]
-                     [(string=? word "j") (display "ȷ" out)]
-                     [else
-                      (emit! (make-element
-                              raw-tex-style
-                              (list (string-append "\\" word
-                                                   (read-raw-arguments)))))])
-                   (loop)]
-                  [else
-                   (define symbol (read-char ip))
-                   (cond
-                     [(hash-has-key? accents symbol)
-                      (emit-accent! symbol)]
-                     [(memv symbol '(#\{ #\} #\% #\& #\$ #\# #\_))
-                      (write-char symbol out)]
-                     [(char=? symbol #\space)
-                      (write-char #\space out)]
-                     [else
-                      ;; Unknown control symbol, including \\, remains
-                      ;; literal in LaTeX rather than silently vanishing.
+                  (copy)]
+                 [#\{
+                  (set! depth (add1 depth))
+                  (write-char #\{ out)
+                  (copy)]
+                 [#\}
+                  (set! depth (sub1 depth))
+                  (write-char #\} out)
+                  (unless (zero? depth)
+                    (copy))]
+                 [c
+                  (write-char c out)
+                  (copy)]))
+             (arguments))))
+       (get-output-string out))
+  
+     (define (read-math)
+       ;; The opening $ was already consumed by read-group.
+       (define display? (eqv? (peek-char ip) #\$))
+       (when display?
+         (read-char ip))
+       (define out (open-output-string))
+       (display (if display? "$$" "$") out)
+       (let loop ()
+         (match (read-char ip)
+           [(? eof-object?) (error 'latex->content "unclosed math in ~e" source)]
+           [#\\
+            (write-char #\\ out)
+            (define next (read-char ip))
+            (when (eof-object? next)
+              (error 'latex->content "trailing backslash in math in ~e" source))
+            (write-char next out)
+            (loop)]
+           [#\$
+            (write-char #\$ out)
+            (if (and display? (not (eqv? (peek-char ip) #\$)))
+                (loop)
+                (begin
+                  (when display?
+                    (write-char (read-char ip) out))
+                  (get-output-string out)))]
+           [c
+            (write-char c out)
+            (loop)])))
+  
+     (define (math-element raw)
+       (make-element (if (string-prefix? raw "$$") bibtex-display-math-style bibtex-inline-math-style)
+                     (list raw)))
+  
+     (define (read-group in-group?)
+       (define pieces null)
+       (define out (open-output-string))
+  
+       (define (flush!)
+         (define s (get-output-string out))
+         (unless (string=? s "")
+           (set! pieces (cons s pieces)))
+         (set! out (open-output-string)))
+  
+       (define (emit! value)
+         (flush!)
+         (set! pieces (cons value pieces)))
+  
+       (define (finish)
+         (flush!)
+         (reverse pieces))
+  
+       (define (read-accent-argument)
+         (match (peek-char ip)
+           [#\{
+            (read-char ip)
+            (content->string (read-group #t))]
+           [#\\
+            (read-char ip)
+            (define name (read-word))
+            (cond
+              [(string=? name "i") "ı"]
+              [(string=? name "j") "ȷ"]
+              [else name])]
+           [(? char? c) (string (read-char ip))]
+           [_ (error 'latex->content "missing accent argument in ~e" source)]))
+  
+       (define (emit-accent! accent)
+         (define argument (read-accent-argument))
+         (when (string=? argument "")
+           (error 'latex->content "empty accent argument in ~e" source))
+         (emit! (let ([first-char (substring argument 0 1)])
+                  (string-normalize-nfc (string-append (if (string=? first-char "ı") "i" first-char)
+                                                       (hash-ref accents accent)
+                                                       (substring argument 1))))))
+  
+       (let loop ()
+         (match (read-char ip)
+           [(? eof-object?)
+            (when in-group?
+              (error 'latex->content "unclosed brace in ~e" source))
+            (finish)]
+           [#\{
+            (emit! (make-element bibtex-group-style (read-group #t)))
+            (loop)]
+           [#\}
+            (unless in-group?
+              (error 'latex->content "unexpected closing brace in ~e" source))
+            (finish)]
+           [#\$
+            (emit! (math-element (read-math)))
+            (loop)]
+           [#\~
+            (emit! 'nbsp)
+            (loop)]
+           [#\\
+            (define next (peek-char ip))
+            (cond
+              [(eof-object? next) (error 'latex->content "trailing backslash in ~e" source)]
+              [(char-alphabetic? next)
+               (define word (read-word))
+               (cond
+                 [(member word '("emph" "texttt" "textit" "textbf" "textsc"))
+                  (define whitespace (read-control-whitespace))
+                  (if (eqv? (peek-char ip) #\{)
+                      (let ([body (begin
+                                    (read-char ip)
+                                    (read-group #t))])
+                        (emit! (cond
+                                 [(string=? word "emph") (apply emph body)]
+                                 [(string=? word "texttt") (apply tt body)]
+                                 [(string=? word "textit") (apply italic body)]
+                                 [(string=? word "textbf") (apply bold body)]
+                                 [else (make-element bibtex-smallcaps-style body)])))
                       (emit! (make-element raw-tex-style
-                                           (list (string #\\ symbol))))])
-                   (loop)])]
-               [c (write-char c out) (loop)])))
-
-         (normalize (read-group #f)))))
+                                           (list (string-append "\\" word whitespace)))))]
+                 [(string=? word "url")
+                  (define whitespace (read-control-whitespace))
+                  (if (eqv? (peek-char ip) #\{)
+                      (emit! (url (read-url-argument)))
+                      (emit! (make-element raw-tex-style (list (string-append "\\url" whitespace)))))]
+                 [(and (= (string-length word) 1) (hash-has-key? accents (string-ref word 0)))
+                  (emit-accent! (string-ref word 0))]
+                 [(hash-has-key? letter-commands word) (display (hash-ref letter-commands word) out)]
+                 [(string=? word "i") (display "ı" out)]
+                 [(string=? word "j") (display "ȷ" out)]
+                 [else
+                  (emit! (make-element raw-tex-style
+                                       (list (string-append "\\" word (read-raw-arguments)))))])
+               (loop)]
+              [else
+               (define symbol (read-char ip))
+               (cond
+                 [(hash-has-key? accents symbol) (emit-accent! symbol)]
+                 [(memv symbol '(#\{ #\} #\% #\& #\$ #\# #\_)) (write-char symbol out)]
+                 [(char=? symbol #\space) (write-char #\space out)]
+                 ;; Unknown control symbol, including \\, remains
+                 ;; literal in LaTeX rather than silently vanishing.
+                 [else (emit! (make-element raw-tex-style (list (string #\\ symbol))))])
+               (loop)])]
+           [c
+            (write-char c out)
+            (loop)])))
+  
+     (normalize (read-group #f))]
+    [else #f]))
 
 (module+ test
   (require rackunit)
