@@ -182,10 +182,12 @@ an entry. This approximates the previous behavior, which
 prevented page breaks within individual entries altogether.
 Longer entries may now span pages.
 
-The @tt{\AutobibNeedlines} counter controls the minimum
-number of lines, defaulting to 5. Set it to 0 to disable
-this constraint. The optional @tt{needspace} package is
-required for the constraint to take effect.
+The @tt{\AutobibNeedlines} counter controls the minimum number of lines,
+defaulting to 5. Set it to 0 to disable this constraint.
+The optional @tt{needspace} package is required
+for the constraint to take effect;
+this behavior is disabled if the package is unavailable,
+as if the counter were 0.
 
 The @tt{\AutobibEntrySetup} command, empty by default,
 allows additional LaTeX settings to be applied locally
@@ -204,10 +206,6 @@ after @tt{autobib.tex} has been loaded, e.g. using @racket[tex-addition].
     #"\\emergencystretch=2em"
     #"\\tolerance=1000%"
     #"}%\n"))]
-
-The minimum-lines requirement uses the optional
-@tt{needspace} LaTeX package and is ignored if that
-package is unavailable.
 }
 
 
