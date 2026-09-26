@@ -50,6 +50,10 @@ includes a citation to section 8 of the Racket reference.
 
 @history[#:changed "1.61"
   @elem{Added fields and location types for better bibtex support.}]
+@history[#:changed "1.68"
+  @elem{Improved bibliography layout, added support for
+        multi-paragraph notes and extended support for
+        structured content in bibliography fields.}]
 
 @defform/subs[(define-cite ~cite-id citet-id generate-bibliography-id
                            option ...)
@@ -158,6 +162,11 @@ optionally given @racket[render-date-expr] functions.
 
 Styles for use with @racket[define-cite].
 
+With @racket[number-style], bibliography entries use hanging
+indentation in HTML and LaTeX output, with citation numbers
+aligned in a separate label column. Text output instead
+separates each number from its entry with a non-breaking space.
+
 The @racket[author+date-square-bracket-style] definition is the same
 as @racket[author+date-style], except that references to citations
 are enclosed in @litchar["[]"] instead of @litchar["()"].
@@ -186,6 +195,16 @@ content, except that @racket[#f] means that the information is not
 supplied. Functions like @racket[proceedings-location],
 @racket[author-name], and @racket[authors] help produce elements in a
 standard format.
+
+The @racket[#:note] argument may contain multiple paragraphs,
+separated by blank lines. The first paragraph follows the
+bibliographic information; subsequent paragraphs remain within
+the same bibliography entry.
+
+When both @racket[#:doi] and @racket[#:url] are supplied,
+the DOI takes precedence.
+A period is inserted after a DOI when followed by a non-empty note.
+No period is appended directly to a URL.
 
 Dates are internally represented as @racket[date] values, so a @racket[date]
 may be given, or a number or string that represent the year.

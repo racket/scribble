@@ -19,17 +19,24 @@ We support the 14 BibTeX entry types documented
 @litchar{manual}, @litchar{mastersthesis}, @litchar{misc}, @litchar{phdthesis},
 @litchar{proceedings}, @litchar{techreport}, and @litchar{unpublished}.
 
+Human-readable BibTeX fields are converted from a subset of
+LaTeX syntax into Scribble content. This includes grouping
+braces, common accent and special-letter commands,
+@tt{\emph}, @tt{\texttt}, @tt{\textit}, @tt{\textbf},
+@tt{\textsc} and @tt{\url}.
+
+Grouping braces are preserved internally where relevant
+to BibTeX name parsing. Unknown LaTeX commands and their
+attached arguments are retained rather than discarded.
+Inline and display mathematics are preserved in LaTeX
+syntax; other backends do not translate them into native
+mathematical expressions.
+
+Blank lines in @litchar{note} fields separate paragraphs.
+
 We support all the required and optional fields documented in the LaTeX book,
 with the following known limitations so far:
 @itemize[
-  @item{We enclose the string parsed from field @litchar{title} in
-         @racket["(elem #:style (make-style #f '(exact-chars)) title)"],
-         which will directly include its text in the output.
-         This will presumably do the Right Thing™ when using the LaTeX backend,
-         but the wrong thing in the HTML backend.}
-  @item{Other fields are just parsed as strings,
-         and may appear as source code rather than as formatted code
-         in both the LaTeX and HTML backends.}
   @item{We fail to process @litchar{month}.}
   @item{We only support @litchar{pages} fields that have decimal numbers
         separated by one or more dashes.}
@@ -56,6 +63,9 @@ We do support the @litchar["@string"] feature defined in
   @elem{Support all standard entry types plus @litchar{online} and @litchar{webpage},
   all fields but @litchar{month} (or @litchar{type} for @litchar{incollection}),
   and support @litchar{note}, @litchar{url}, @litchar{doi} on all entry types.}]
+@history[#:changed "1.68"
+  @elem{Added structured LaTeX content parsing, improved
+        author-name handling and support for multi-paragraph notes.}]
 
 @defform[(define-bibtex-cite bib-pth ~cite-id citet-id generate-bibliography-id
            option ...)]{
