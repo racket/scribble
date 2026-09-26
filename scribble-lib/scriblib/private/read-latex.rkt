@@ -260,10 +260,8 @@
                   (define whitespace (read-control-whitespace))
                   (cond
                     [(eqv? (peek-char ip) #\{)
-                     (define body
-                       (begin
-                         (read-char ip)
-                         (read-group #t)))
+                     (read-char ip)
+                     (define body (read-group #t))
                      (emit! (cond
                               [(string=? word "emph") (apply emph body)]
                               [(string=? word "texttt") (apply tt body)]
