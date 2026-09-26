@@ -193,7 +193,7 @@
        (read-while char-numeric? ip)]
       [(? char-alphabetic?)
        (define string-tag (read-until (λ (c) (or (char-whitespace? c)
-                                                 (char=? c #\,)))
+                                                 (memv c '(#\, #\} #\#))))
                                       ip))
        (hash-ref STRING-DB string-tag
                  (λ () string-tag))]
@@ -356,182 +356,6 @@
               (for/list ([tokens (in-list
                                   (split-authors (name-tokens (latex->content as))))])
                 (parse-one-author tokens)))))
-
-(module+ test
-  (require rackunit)
-
-  ;; use this as a predicate to hack around lack of
-  ;; ability to use equal? on author element structs;
-  ;; unfortunately, it ony compares the composed strings
-  (define (print-as-equal-string? a b)
-    (equal? (format "~s" a)
-            (format "~s" b)))
-
-  (check
-   print-as-equal-string?
-   (parse-author "James Earl Jones")
-   (authors
-    (author-name "James Earl" "Jones")))
-
-  (check
-   print-as-equal-string?
-   (parse-author "Tim Robbins and Morgan Freeman")
-   (authors (author-name "Tim" "Robbins")
-            (author-name "Morgan" "Freeman")))
-
-  (check
-   print-as-equal-string?
-   (parse-author "Edward L. Deci and Robert J. Vallerand and Luc G. Pelletier and Richard M. Ryan")
-   (authors (author-name "Edward L." "Deci")
-            (author-name "Robert J." "Vallerand")
-            (author-name "Luc G." "Pelletier")
-            (author-name "Richard M." "Ryan")))
-
-  (check
-   print-as-equal-string?
-   (parse-author "Lst, Fst")
-   (authors
-    (author-name "Fst" "Lst")))
-
-  (check
-   print-as-equal-string?
-   (parse-author "Lst,Fst")
-   (authors
-    (author-name "Fst" "Lst")))
-
-  (check
-   print-as-equal-string?
-   (parse-author "James, Earl Jones")
-   (authors
-    (author-name "Earl Jones" "James")))
-
-  (check
-   print-as-equal-string?
-   (parse-author "James,Earl Jones")
-   (authors
-    (author-name "Earl Jones" "James")))
-
-  (check
-   print-as-equal-string?
-   (parse-author "LstA LstB, Fst")
-   (authors
-    (author-name "Fst" "LstA LstB")))
-
-  (check
-   print-as-equal-string?
-   (parse-author "LstA LstB,Fst")
-   (authors
-    (author-name "Fst" "LstA LstB")))
-
-  (check
-   print-as-equal-string?
-   (parse-author "LstA LstB, FstA FstB")
-   (authors
-    (author-name "FstA FstB" "LstA LstB")))
-
-  (check
-   print-as-equal-string?
-   (parse-author "LstA LstB,FstA FstB")
-   (authors
-    (author-name "FstA FstB" "LstA LstB")))
-
-  (check
-   print-as-equal-string?
-   (parse-author "James, Jr, Earl Jones")
-   (authors
-    (author-name "Earl Jones" "James" #:suffix "Jr")))
-
-  (check
-   print-as-equal-string?
-   (parse-author "James,Jr, Earl Jones")
-   (authors
-    (author-name "Earl Jones" "James" #:suffix "Jr")))
-
-  (check
-   print-as-equal-string?
-   (parse-author "James, Jr,Earl Jones")
-   (authors
-    (author-name "Earl Jones" "James" #:suffix "Jr")))
-
-  (check
-   print-as-equal-string?
-   (parse-author "James,Jr,Earl Jones")
-   (authors
-    (author-name "Earl Jones" "James" #:suffix "Jr")))
-
-  (check
-   print-as-equal-string?
-   (parse-author "James, III, Earl Jones")
-   (authors
-    (author-name "Earl Jones" "James" #:suffix "III")))
-
-  (check
-   print-as-equal-string?
-   (parse-author "James,III, Earl Jones")
-   (authors
-    (author-name "Earl Jones" "James" #:suffix "III")))
-
-  (check
-   print-as-equal-string?
-   (parse-author "James, III,Earl Jones")
-   (authors
-    (author-name "Earl Jones" "James" #:suffix "III")))
-
-  (check
-   print-as-equal-string?
-   (parse-author "James,III,Earl Jones")
-   (authors
-    (author-name "Earl Jones" "James" #:suffix "III")))
-
-  (check
-   print-as-equal-string?
-   (parse-author "James Jack von Earl Jones")
-   (authors
-    (author-name "James Jack" "von Earl Jones")))
-
-  (check
-   print-as-equal-string?
-   (parse-author "James Jack de la Earl Jones")
-   (authors
-    (author-name "James Jack" "de la Earl Jones")))
-
-  (check
-   print-as-equal-string?
-   (parse-author "James Jack van der Earl Jones")
-   (authors
-    (author-name "James Jack" "van der Earl Jones")))
-
-  (check
-   print-as-equal-string?
-   (parse-author "James Jack von de la Earl Jones")
-   (authors
-    (author-name "James Jack" "von de la Earl Jones")))
-
-  (check
-   print-as-equal-string?
-   (parse-author "James Jack di Earl Jones")
-   (authors
-    (author-name "James Jack" "di Earl Jones")))
-
-  (check
-   print-as-equal-string?
-   (parse-author "First fOn bER Last")
-   (authors
-    (author-name "First" "fOn bER Last")))
-
-  (check
-   print-as-equal-string?
-   (parse-author "Deci, Edward L. and Robert J. Vallerand and Pelletier, Luc G. and Ryan, Jr, Richard M.")
-   (authors (author-name "Edward L." "Deci")
-            (author-name "Robert J." "Vallerand")
-            (author-name "Luc G." "Pelletier")
-            (author-name "Richard M." "Ryan" #:suffix "Jr")))
-
-  (check
-   print-as-equal-string?
-   (parse-author "Foo anderson") ;; Should not be parsed as the two authors "Foo" & "erson"
-   (authors
-    (author-name "Foo" "anderson"))))
 
 (define (parse-pages ps)
   (match ps
@@ -887,6 +711,180 @@
            scribble/render
            (prefix-in html: scribble/html-render)
            (prefix-in latex: scribble/latex-render))
+
+  ;; use this as a predicate to hack around lack of
+  ;; ability to use equal? on author element structs;
+  ;; unfortunately, it ony compares the composed strings
+  (define (print-as-equal-string? a b)
+    (equal? (format "~s" a)
+            (format "~s" b)))
+
+  (check
+   print-as-equal-string?
+   (parse-author "James Earl Jones")
+   (authors
+    (author-name "James Earl" "Jones")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "Tim Robbins and Morgan Freeman")
+   (authors (author-name "Tim" "Robbins")
+            (author-name "Morgan" "Freeman")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "Edward L. Deci and Robert J. Vallerand and Luc G. Pelletier and Richard M. Ryan")
+   (authors (author-name "Edward L." "Deci")
+            (author-name "Robert J." "Vallerand")
+            (author-name "Luc G." "Pelletier")
+            (author-name "Richard M." "Ryan")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "Lst, Fst")
+   (authors
+    (author-name "Fst" "Lst")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "Lst,Fst")
+   (authors
+    (author-name "Fst" "Lst")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "James, Earl Jones")
+   (authors
+    (author-name "Earl Jones" "James")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "James,Earl Jones")
+   (authors
+    (author-name "Earl Jones" "James")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "LstA LstB, Fst")
+   (authors
+    (author-name "Fst" "LstA LstB")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "LstA LstB,Fst")
+   (authors
+    (author-name "Fst" "LstA LstB")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "LstA LstB, FstA FstB")
+   (authors
+    (author-name "FstA FstB" "LstA LstB")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "LstA LstB,FstA FstB")
+   (authors
+    (author-name "FstA FstB" "LstA LstB")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "James, Jr, Earl Jones")
+   (authors
+    (author-name "Earl Jones" "James" #:suffix "Jr")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "James,Jr, Earl Jones")
+   (authors
+    (author-name "Earl Jones" "James" #:suffix "Jr")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "James, Jr,Earl Jones")
+   (authors
+    (author-name "Earl Jones" "James" #:suffix "Jr")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "James,Jr,Earl Jones")
+   (authors
+    (author-name "Earl Jones" "James" #:suffix "Jr")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "James, III, Earl Jones")
+   (authors
+    (author-name "Earl Jones" "James" #:suffix "III")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "James,III, Earl Jones")
+   (authors
+    (author-name "Earl Jones" "James" #:suffix "III")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "James, III,Earl Jones")
+   (authors
+    (author-name "Earl Jones" "James" #:suffix "III")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "James,III,Earl Jones")
+   (authors
+    (author-name "Earl Jones" "James" #:suffix "III")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "James Jack von Earl Jones")
+   (authors
+    (author-name "James Jack" "von Earl Jones")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "James Jack de la Earl Jones")
+   (authors
+    (author-name "James Jack" "de la Earl Jones")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "James Jack van der Earl Jones")
+   (authors
+    (author-name "James Jack" "van der Earl Jones")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "James Jack von de la Earl Jones")
+   (authors
+    (author-name "James Jack" "von de la Earl Jones")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "James Jack di Earl Jones")
+   (authors
+    (author-name "James Jack" "di Earl Jones")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "First fOn bER Last")
+   (authors
+    (author-name "First" "fOn bER Last")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "Deci, Edward L. and Robert J. Vallerand and Pelletier, Luc G. and Ryan, Jr, Richard M.")
+   (authors (author-name "Edward L." "Deci")
+            (author-name "Robert J." "Vallerand")
+            (author-name "Luc G." "Pelletier")
+            (author-name "Richard M." "Ryan" #:suffix "Jr")))
+
+  (check
+   print-as-equal-string?
+   (parse-author "Foo anderson") ;; Should not be parsed as the two authors "Foo" & "erson"
+   (authors
+    (author-name "Foo" "anderson")))
+
   (define grouping-db
     (bibtex-parse
      (open-input-string
@@ -1168,6 +1166,26 @@ BIB
     scalars-tex
     "\\href{https://doi.org/10.1000/escaped_a_b}{"))
   (delete-file scalars-tex-path)
+
+  ;; Unbraced string references must not consume their delimiters.
+  (define string-reference-db
+    (bibtex-parse
+     (open-input-string
+      (string-append
+       "@string{base={Ada}}\n"
+       "@string{alias=base}\n"
+       "@misc{direct,title=base}\n"
+       "@misc{indirect,title=alias}\n"
+       "@misc{concat,title=base#\" Lovelace\"}\n"
+       "@misc{comma,title=base,year=2026}\n"))))
+  (define (raw-title key)
+    (hash-ref
+     (hash-ref (bibdb-raw string-reference-db) key)
+     "title"))
+  (check-equal? (raw-title "direct") "Ada")
+  (check-equal? (raw-title "indirect") "Ada")
+  (check-equal? (raw-title "concat") "Ada Lovelace")
+  (check-equal? (raw-title "comma") "Ada")
 
   (define math-db
     (bibtex-parse
