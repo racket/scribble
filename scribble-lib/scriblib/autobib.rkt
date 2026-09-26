@@ -25,9 +25,10 @@
            (->* [any/c] [#:pages (or/c (list/c any/c any/c) #f)
                          #:series any/c #:volume any/c #:number any/c
                          #:editor any/c #:address any/c #:publisher any/c #:organization any/c]
-                content?)]
+                (or/c content? #f))]
           [journal-location
-           (->* [any/c] [#:pages (or/c (list/c any/c any/c) #f) #:volume any/c #:number any/c] content?)]
+           (->* [any/c] [#:pages (or/c (list/c any/c any/c) #f) #:volume any/c #:number any/c]
+                (or/c content? #f))]
           [book-location
            (->* []
                 [#:edition any/c #:chapter any/c #:editor any/c
@@ -38,7 +39,8 @@
           [misc-location
            (->* [] [#:howpublished any/c] (or/c content? #f))]
           [techrpt-location
-           (->* [#:institution any/c] [#:number any/c #:type any/c #:address any/c] content?)]
+           (->* [#:institution any/c] [#:number any/c #:type any/c #:address any/c]
+                (or/c content? #f))]
           [dissertation-location
            (->* [#:institution any/c] [#:degree any/c #:type any/c #:address any/c]
                 content?)]
@@ -46,7 +48,8 @@
            (->* [any/c]
                 [#:edition any/c #:editor any/c #:chapter any/c
                  #:series any/c #:volume any/c #:number any/c #:pages (or/c (list/c any/c any/c) #f)
-                 #:publisher any/c #:address any/c] content?)]
+                 #:publisher any/c #:address any/c]
+                (or/c content? #f))]
           [webpage-location
            (->* [] [string? #:accessed any/c] (or/c content? #f))]
           [manual-location
@@ -416,6 +419,11 @@
             (auto-bib-note bib)
             (auto-bib-is-book? bib)
             (auto-bib-doi bib)))
+  (define note-blocks
+    (if (and note
+             (not (string=? "" (string-trim (content->string note)))))
+      (note->flow note)
+      null))
   (define header
     (append
      (if author
@@ -441,10 +449,14 @@
                       (decode-content (list (render-date-bib date))))
                 ".")
          null)
-     (if (and (not doi) url) `(" " ,[(url-rendering) url]) null)
-     (if doi `(" " ,[(doi-rendering) doi] ,(if note "." null)) null)))
-  (define note-blocks
-    (if note (note->flow note) null))
+     (cond
+      (doi
+       `(" " ,[(doi-rendering) doi]
+         ,@(if (pair? note-blocks) '(".") null)))
+      (url
+       `(" " ,[(url-rendering) url]))
+      (else
+       null))))
   (define first-content
     (append header
             (if (pair? note-blocks)
@@ -645,17 +657,33 @@
     (make-bib #:title "Title"
               #:doi "10.1234/foo"
               #:note "A note"))
+  (define (entry-first-text bib)
+    (content->string
+     (paragraph-content
+      (car (compound-paragraph-blocks
+            (bib->entry bib author+date-style #f
+                        default-render-date-bib 1))))))
+  (check-equal? (entry-first-text no-note)
+                "Title. doi:10.1234/foo")
+  (check-equal? (entry-first-text with-note)
+                "Title. doi:10.1234/foo. A note")
   (check-equal?
-   (content->string
-    (bib->entry no-note author+date-style #f
-                default-render-date-bib 1))
-    "Title. doi:10.1234/foo")
+   (entry-first-text (make-bib #:title "Title" #:doi "10.1/x" #:note ""))
+   "Title. doi:10.1/x")
   (check-equal?
-   (content->string
-    (bib->entry with-note author+date-style #f
-                default-render-date-bib 1))
-   "Title. doi:10.1234/foo. A note")
-
+   (entry-first-text (make-bib #:title "Title" #:doi "10.1/x" #:note " \n "))
+   "Title. doi:10.1/x")
+  (check-equal?
+   (entry-first-text (make-bib #:title "Title"
+                               #:url "https://example.org"
+                               #:note "A note"))
+   "Title. https://example.org. A note")
+  (check-false (journal-location #f))
+  (check-false (techrpt-location #:institution #f))
+  (check-false (proceedings-location #f))
+  (check-false (book-chapter-location #f))
+  (check-equal? (content->string (proceedings-location #f #:publisher "ACM"))
+                "ACM")
   (check-equal?
    (content->string
     (book-location
@@ -696,14 +724,17 @@
          #:organization [organization #f]
          #:publisher [publisher #f]
          #:address [address #f])
-  (concatenate-content
-   (concatenate-content
-    "In "
+  (define details
     (concatenate-content
      #:separator ", "
      (and editor_ (editor editor_))
      (and location @italic{Proc. @contentify[location]})
      (series-volume-number-pages-content series volume number pages)))
+  (concatenate-content
+   (and details
+        (if location
+            (concatenate-content "In " details)
+            details))
    #:separator ". "
    (organization-publisher-address-content organization publisher address)))
 

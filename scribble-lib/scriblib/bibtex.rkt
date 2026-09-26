@@ -542,6 +542,34 @@
     [_
      (error 'parse-pages "Invalid page format ~e" ps)]))
 
+(define (ungroup-scalar value)
+  ;; Remove only balanced brace groups enclosing the *entire* value.
+  ;; Respect backslash-escaped braces and retain embedded brace groups.
+  (define (outer-group? s)
+    (define n (string-length s))
+    (and (>= n 2)
+         (char=? (string-ref s 0) #\{)
+         (let loop ([i 0] [depth 0])
+           (cond
+             [(= i n) #f]
+             [(char=? (string-ref s i) #\\)
+              (and (< (add1 i) n)
+                   (loop (+ i 2) depth))]
+             [(char=? (string-ref s i) #\{)
+              (loop (add1 i) (add1 depth))]
+             [(char=? (string-ref s i) #\})
+              (and (positive? depth)
+                   (if (= depth 1)
+                       (= i (sub1 n))
+                       (loop (add1 i) (sub1 depth))))]
+             [else (loop (add1 i) depth)]))))
+  (if (string? value)
+      (let loop ([s value])
+        (if (outer-group? s)
+            (loop (substring s 1 (sub1 (string-length s))))
+            s))
+      value))
+
 (define (generate-bib db key)
   (match-define (bibdb raw bibs) db)
   (hash-ref! bibs (string-foldcase key)
@@ -553,6 +581,12 @@
                  (hash-ref the-raw a
                            (λ () (error 'bibtex "Key ~a is missing attribute ~a, has ~a"
                                         key a the-raw))))
+               (define (scalar-attr a [def #f])
+                 (ungroup-scalar (raw-attr a def)))
+               (define (author-attr a)
+                 (parse-author (raw-attr a)))
+               (define (pages-attr a)
+                 (parse-pages (scalar-attr a)))
                (define (content-attr a [def #f])
                  (latex->content (hash-ref the-raw a def)))
                (define (content-attr* a)
@@ -570,32 +604,32 @@
                   (make-bib
                         #:type 'article
                         ;; required:
-                        #:author (parse-author (raw-attr "author"))
+                        #:author (author-attr "author")
                         #:title (content-attr "title")
-                        #:date (raw-attr "year") ;; TODO: optional month
+                        #:date (scalar-attr "year") ;; TODO: optional month
                         #:location (journal-location
                                       (content-attr* "journal")
                                       ;; optional:
-                                      #:pages (parse-pages (raw-attr "pages"))
+                                      #:pages (pages-attr "pages")
                                       #:number (content-attr "number")
                                       #:volume (content-attr "volume"))
                         ;; optional:
                         #:note (content-attr "note")
                         ;; extra: (WHERE IS THAT SPECIFIED?)
-                        #:url (raw-attr "url")
-                        #:doi (raw-attr "doi"))]
+                        #:url (scalar-attr "url")
+                        #:doi (scalar-attr "doi"))]
                  ["book" ;; A book with an explicit publisher.
                   (make-bib
                         #:type 'book
                         #:is-book? #t
                         ;; required:
-                        #:author (parse-author (raw-attr "author")) ;; author OR editor is required
+                        #:author (author-attr "author") ;; author OR editor is required
                         #:title (content-attr "title")
-                        #:date (raw-attr "year") ;; TODO: optional month
+                        #:date (scalar-attr "year") ;; TODO: optional month
                         #:location (book-location
                                       #:publisher (content-attr "publisher")
                                       ;; optional:
-                                      #:editor (parse-author (raw-attr "editor")) ;; see above
+                                      #:editor (author-attr "editor") ;; see above
                                       #:volume (content-attr "volume") ;; volume OR number
                                       #:number (content-attr "number")
                                       #:series (content-attr "series")
@@ -604,8 +638,8 @@
                         ;; optional:
                         #:note (content-attr "note")
                         ;; extra: (WHERE IS THAT SPECIFIED?)
-                        #:url (raw-attr "url")
-                        #:doi (raw-attr "doi"))]
+                        #:url (scalar-attr "url")
+                        #:doi (scalar-attr "doi"))]
                  ["booklet" ;; A work that is printed and bound, but without a named publisher or sponsoring institution.
                   (make-bib
                         #:type 'booklet
@@ -613,52 +647,51 @@
                         ;; required:
                         #:title (content-attr "title")
                         ;; optional:
-                        #:author (parse-author (raw-attr "author")) ;; TODO: make it optional
-                        #:date (raw-attr "year") ;; TODO: month
+                        #:author (author-attr "author") ;; TODO: make it optional
+                        #:date (scalar-attr "year") ;; TODO: month
                         #:location (booklet-location
                                       #:howpublished (content-attr "howpublished")
                                       #:address (content-attr "address"))
                         #:note (content-attr "note")
                         ;; extra: (WHERE IS THAT SPECIFIED?)
-                        #:url (raw-attr "url")
-                        #:doi (raw-attr "doi"))]
+                        #:url (scalar-attr "url")
+                        #:doi (scalar-attr "doi"))]
                  [(or "conference" ;; The same as INPROCEEDINGS, included for Scribe compatibility.
                       "inproceedings") ;; An article in a conference proceedings.
                   (make-bib
                         #:type 'inproceedings
                         ;; required:
-                        #:author (parse-author (raw-attr "author"))
+                        #:author (author-attr "author")
                         #:title (content-attr "title")
-                        #:date (raw-attr "year") ;; TODO: optional month
+                        #:date (scalar-attr "year") ;; TODO: optional month
                         #:location (proceedings-location
                                       (content-attr* "booktitle")
                                       ;; optional:
-                                      #:editor (parse-author (raw-attr "editor"))
+                                      #:editor (author-attr "editor")
                                       #:series (content-attr "series")
                                       #:volume (content-attr "volume") ;; volume OR number
                                       #:number (content-attr "number")
-                                      #:pages (parse-pages (raw-attr "pages"))
+                                      #:pages (pages-attr "pages")
                                       #:address (content-attr "address")
                                       #:organization (content-attr "organization")
                                       #:publisher (content-attr "publisher"))
                         ;; optional:
                         #:note (content-attr "note")
                         ;; extra: (WHERE IS THAT SPECIFIED?)
-                        #:url (raw-attr "url")
-                        #:doi (raw-attr "doi"))]
+                        #:url (scalar-attr "url")
+                        #:doi (scalar-attr "doi"))]
                  ["inbook" ;; A part of a book, which may be a chapter (or section or whatever) and/or a range of pages.
                   (make-bib
                         #:type 'inbook
                         #:is-book? #t ;; TODO or #f ???
                         ;; required:
-                        #:author (parse-author (raw-attr "author")) ;; author OR editor is required
+                        #:author (author-attr "author") ;; author OR editor is required
                         #:title (content-attr "title")
-                        #:date (raw-attr "year") ;; TODO: optional month
-                        #:location (book-chapter-location
-                                      (content-attr* "booktitle")
-                                      #:editor (parse-author (raw-attr "editor")) ;; see above
+                        #:date (scalar-attr "year") ;; TODO: optional month
+                        #:location (book-location
+                                      #:editor (author-attr "editor") ;; see above
                                       #:chapter (content-attr "chapter") ;; chapter OR pages is required
-                                      #:pages (parse-pages (raw-attr "pages"))
+                                      #:pages (pages-attr "pages")
                                       #:publisher (content-attr "publisher")
                                       ;; optional:
                                       #:volume (content-attr "volume") ;; volume OR number
@@ -669,8 +702,8 @@
                         ;; optional:
                         #:note (content-attr "note")
                         ;; extra: (WHERE IS THAT SPECIFIED?)
-                        #:url (raw-attr "url")
-                        #:doi (raw-attr "doi"))]
+                        #:url (scalar-attr "url")
+                        #:doi (scalar-attr "doi"))]
                  ["incollection" ;; A part of a book having its own title.
                   ;; TODO: figure out why https://www.openoffice.org/bibliographic/bibtex-defs.html
                   ;; talks about a "type" kind of label, what it does, who uses it for what...
@@ -678,49 +711,49 @@
                   (make-bib
                         #:type 'incollection
                         ;; required:
-                        #:author (parse-author (raw-attr "author"))
+                        #:author (author-attr "author")
                         #:title (content-attr "title")
-                        #:date (raw-attr "year") ;; TODO: optional month
+                        #:date (scalar-attr "year") ;; TODO: optional month
                         #:location (book-chapter-location
                                       (content-attr* "booktitle")
                                       #:publisher (content-attr "publisher")
                                       ;; optional:
-                                      #:editor (parse-author (raw-attr "editor"))
+                                      #:editor (author-attr "editor")
                                       #:volume (content-attr "volume") ;; volume OR number
                                       #:number (content-attr "number")
                                       #:series (content-attr "series")
                                       #:chapter (content-attr "chapter")
-                                      #:pages (parse-pages (raw-attr "pages"))
+                                      #:pages (pages-attr "pages")
                                       #:address (content-attr "address")
                                       #:edition (content-attr "edition"))
                         ;; optional:
                         #:note (content-attr "note")
                         ;; extra: (WHERE IS THAT SPECIFIED?)
-                        #:url (raw-attr "url")
-                        #:doi (raw-attr "doi"))]
+                        #:url (scalar-attr "url")
+                        #:doi (scalar-attr "doi"))]
                  ["manual" ;; Technical documentation
                   (make-bib
                         #:type 'manual
                         ;; required:
                         #:title (content-attr "title")
                         ;; optional:
-                        #:author (parse-author (raw-attr "author"))
-                        #:date (raw-attr "year") ;; TODO: optional month
+                        #:author (author-attr "author")
+                        #:date (scalar-attr "year") ;; TODO: optional month
                         #:location (manual-location
                                       ;; optional:
                                       #:organization (content-attr "organization")
                                       #:edition (content-attr "edition"))
                         #:note (content-attr "note")
                         ;; extra: (WHERE IS THAT SPECIFIED?)
-                        #:url (raw-attr "url")
-                        #:doi (raw-attr "doi"))]
+                        #:url (scalar-attr "url")
+                        #:doi (scalar-attr "doi"))]
                  ["mastersthesis" ;; A Master's thesis.
                   (make-bib
                         #:type 'mastersthesis
                         ;; required:
-                        #:author (parse-author (raw-attr "author"))
+                        #:author (author-attr "author")
                         #:title (content-attr "title")
-                        #:date (raw-attr "year") ;; TODO: optional month
+                        #:date (scalar-attr "year") ;; TODO: optional month
                         #:location (dissertation-location
                                       #:institution (content-attr "school")
                                       #:degree "Master’s"
@@ -730,29 +763,29 @@
                         ;; optional:
                         #:note (content-attr "note")
                         ;; extra: (WHERE IS THAT SPECIFIED?)
-                        #:url (raw-attr "url")
-                        #:doi (raw-attr "doi"))]
+                        #:url (scalar-attr "url")
+                        #:doi (scalar-attr "doi"))]
                  ["misc" ;; Use this type when nothing else fits.
                   (make-bib
                         #:type 'misc
                         ;; optional: (no required field)
-                        #:author (parse-author (raw-attr "author"))
+                        #:author (author-attr "author")
                         #:title (content-attr "title")
-                        #:date (raw-attr "year") ;; TODO: month
+                        #:date (scalar-attr "year") ;; TODO: month
                         #:location (misc-location
                                       #:howpublished (content-attr "howpublished"))
                         ;; optional:
                         #:note (content-attr "note")
                         ;; extra: (WHERE IS THAT SPECIFIED?)
-                        #:url (raw-attr "url")
-                        #:doi (raw-attr "doi"))]
+                        #:url (scalar-attr "url")
+                        #:doi (scalar-attr "doi"))]
                  ["phdthesis" ;; A PhD thesis.
                   (make-bib
                         #:type 'phdthesis
                         ;; required:
-                        #:author (parse-author (raw-attr "author"))
+                        #:author (author-attr "author")
                         #:title (content-attr "title")
-                        #:date (raw-attr "year") ;; TODO: optional month
+                        #:date (scalar-attr "year") ;; TODO: optional month
                         #:location (dissertation-location
                                       #:institution (content-attr "school")
                                       #:degree "PhD"
@@ -762,19 +795,19 @@
                         ;; optional:
                         #:note (content-attr "note")
                         ;; extra: (WHERE IS THAT SPECIFIED?)
-                        #:url (raw-attr "url")
-                        #:doi (raw-attr "doi"))]
+                        #:url (scalar-attr "url")
+                        #:doi (scalar-attr "doi"))]
                  ["proceedings" ;; The proceedings of a conference.
                   (make-bib
                         #:type 'proceedings
                         ;; required:
                         #:title (content-attr "title")
-                        #:date (raw-attr "year") ;; TODO: optional month
+                        #:date (scalar-attr "year") ;; TODO: optional month
                         ;; optional:
                         #:location (proceedings-location
-                                      (content-attr* "booktitle")
+                                      #f
                                       ;; optional:
-                                      #:editor (parse-author (raw-attr "editor"))
+                                      #:editor (author-attr "editor")
                                       #:volume (content-attr "volume") ;; volume OR number
                                       #:number (content-attr "number")
                                       #:series (content-attr "series")
@@ -783,16 +816,16 @@
                                       #:publisher (content-attr "publisher"))
                         #:note (content-attr "note")
                         ;; extra: (WHERE IS THAT SPECIFIED?)
-                        #:url (raw-attr "url")
-                        #:doi (raw-attr "doi"))]
+                        #:url (scalar-attr "url")
+                        #:doi (scalar-attr "doi"))]
                  ["techreport" ;; A report published by a school or other institution, usually numbered within a series.
                  ;; Required fields: author, title, institution, year. Optional fields: type, number, address, month, note.
                   (make-bib
                         #:type 'techreport
                         ;; required:
-                        #:author (parse-author (raw-attr "author"))
+                        #:author (author-attr "author")
                         #:title (content-attr "title")
-                        #:date (raw-attr "year") ;; TODO: optional month
+                        #:date (scalar-attr "year") ;; TODO: optional month
                         #:location (techrpt-location
                                       #:institution (content-attr "institution")
                                       ;; optional:
@@ -802,45 +835,45 @@
                         ;; optional:
                         #:note (content-attr "note")
                         ;; extra: (WHERE IS THAT SPECIFIED?)
-                        #:url (raw-attr "url")
-                        #:doi (raw-attr "doi"))]
+                        #:url (scalar-attr "url")
+                        #:doi (scalar-attr "doi"))]
                  ["unpublished" ;; A document having an author and title, but not formally published.
                   (make-bib
                         #:type 'unpublished
                         ;; required:
-                        #:author (parse-author (raw-attr "author"))
+                        #:author (author-attr "author")
                         #:title (content-attr "title")
                         #:note (content-attr "note")
                         ;; optional:
-                        #:date (raw-attr "year") ;; TODO: month
+                        #:date (scalar-attr "year") ;; TODO: month
                         ;; extra: (WHERE IS THAT SPECIFIED?)
-                        #:url (raw-attr "url")
-                        #:doi (raw-attr "doi"))]
+                        #:url (scalar-attr "url")
+                        #:doi (scalar-attr "doi"))]
                  ;; SEEN IN THE WILD, BUT WHERE ARE THESE SPECIFIED???
                  ["online"
                   (make-bib
                         #:type 'webpage
                         ;; extra: (WHERE IS THAT SPECIFIED?)
                         #:title (content-attr "title")
-                        #:url (raw-attr "url")
+                        #:url (scalar-attr "url")
                         #:location (webpage-location
                                      #:accessed (content-attr "urldate")) ;; when visited
-                        #:author (parse-author (raw-attr "author"))
+                        #:author (author-attr "author")
                         #:note (content-attr "note")
-                        #:date (raw-attr "year") ;; TODO: month ;; presumably when written
-                        #:doi (raw-attr "doi"))]
+                        #:date (scalar-attr "year") ;; TODO: month ;; presumably when written
+                        #:doi (scalar-attr "doi"))]
                  ["webpage"
                   (make-bib
                         #:type 'webpage
                         ;; extra: (WHERE IS THAT SPECIFIED?)
                         #:title (content-attr "title")
-                        #:url (raw-attr "url")
+                        #:url (scalar-attr "url")
                         #:location (webpage-location
                                      #:accessed (content-attr "lastchecked"))
-                        #:author (parse-author (raw-attr "author"))
+                        #:author (author-attr "author")
                         #:note (content-attr "note")
-                        #:date (raw-attr "year") ;; TODO: month ;; presumably when written
-                        #:doi (raw-attr "doi"))]
+                        #:date (scalar-attr "year") ;; TODO: month ;; presumably when written
+                        #:doi (scalar-attr "doi"))]
                  [_
                   (make-bib #:title (format "~v" the-raw))]))))
 
@@ -849,7 +882,8 @@
            racket/file
            racket/path
            scribble/render
-           (prefix-in html: scribble/html-render))
+           (prefix-in html: scribble/html-render)
+           (prefix-in latex: scribble/latex-render))
   (define grouping-db
     (bibtex-parse
      (open-input-string
@@ -904,9 +938,11 @@
   booktitle={\texttt{ConferenceSentinel}},
   year={2026}
 }
-@proceedings{proceedings-test,
-  title={Collected Papers},
-  booktitle={\emph{ProceedingsSentinel}},
+@incollection{collection-test,
+  author={Carol Example},
+  title={A Chapter},
+  booktitle={\emph{CollectionSentinel}},
+  publisher={Example Press},
   year={2026}
 }
 BIB
@@ -918,7 +954,7 @@ BIB
    (test-cite
     (generate-bib required-db "journal-test")
     (generate-bib required-db "conference-test")
-    (generate-bib required-db "proceedings-test")))
+    (generate-bib required-db "collection-test")))
 
   (define html-path
     (make-temporary-file "bibtex-required~a.html"))
@@ -938,10 +974,32 @@ BIB
    (regexp-match? #px"<span[^>]*class=\"stt\"[^>]*>ConferenceSentinel</span>"
                   rendered))
   (check-true
-   (regexp-match? #px"<em[^>]*>ProceedingsSentinel</em>"
+   (regexp-match? #px"<em[^>]*>CollectionSentinel</em>"
                   rendered))
 
   (delete-file html-path)
+
+  (define compat-db
+    (bibtex-parse
+     (open-input-string
+      (string-append
+       "@misc{compat-test,\n"
+       "  author={S{\\o}ren Kierkegaard},\n"
+       "  title={The $\\lambda$-calculus and {\\em old-style} emphasis},\n"
+       "  note={J.~of Things}\n"
+       "}\n"))))
+  (define-cite compat-cite compat-citet compat-bibliography)
+  (void (compat-cite (generate-bib compat-db "compat-test")))
+  (define tex-path (make-temporary-file "bibtex-compat~a.tex"))
+  (render (list (compat-bibliography))
+          (list tex-path)
+          #:dest-dir (path-only tex-path)
+          #:render-mixin latex:render-mixin)
+  (define compat-tex (file->string tex-path))
+  (check-not-false (string-contains? compat-tex "$\\lambda$"))
+  (check-not-false (string-contains? compat-tex "\\BibtexGroup{\\em "))
+  (check-not-false (string-contains? compat-tex "J.~of Things"))
+  (delete-file tex-path)
 
   ;; Required fields must still produce useful errors when absent.
   (check-exn
@@ -960,7 +1018,115 @@ BIB
       (bibtex-parse
        (open-input-string
         "@inproceedings{x, title={X}, year={2026}}"))
-      "x"))))
+      "x")))
+
+  (define standard-types-db
+    (bibtex-parse
+     (open-input-string
+      "@inbook{chapter-test, author={Alice Example}, title={Whole Book}, chapter={3}, publisher={ACM}, year={2026}}\n@proceedings{volume-test, title={Conference Papers}, year={2026}, publisher={ACM}}")))
+  (check-not-exn (lambda () (generate-bib standard-types-db "chapter-test")))
+  (check-not-exn (lambda () (generate-bib standard-types-db "volume-test")))
+
+  (check-equal?
+   (content->string (parse-author "Fran\\c{c}ois Rideau and V\\'{\\i}ctor Braberman and Erd\\H{o}s, Paul"))
+   "François Rideau, Víctor Braberman, and Paul Erdős")
+
+  (define formatting-db
+    (bibtex-parse
+     (open-input-string
+      (string-append
+       "@misc{format-test,\n"
+       "  author={Alice Example},\n"
+       "  title={A \\textit{fine} \\textbf{bold} \\textsc{test}},\n"
+       "  note={See \\url{https://example.org/~alice/a_b?x=1&y=2}},\n"
+       "  year={2026}\n"
+       "}\n"))))
+  (define-cite format-cite format-citet format-bibliography)
+  (void (format-cite (generate-bib formatting-db "format-test")))
+
+  (define format-tex-path (make-temporary-file "bibtex-format~a.tex"))
+  (render (list (format-bibliography))
+          (list format-tex-path)
+          #:dest-dir (path-only format-tex-path)
+          #:render-mixin latex:render-mixin)
+  (define format-tex (file->string format-tex-path))
+  (check-not-false (string-contains? format-tex "\\BibtexSmallCaps{test}"))
+  (check-not-false (string-contains? format-tex "https://example.org/"))
+  (delete-file format-tex-path)
+
+  (define format-html-path (make-temporary-file "bibtex-format~a.html"))
+  (render (list (format-bibliography))
+          (list format-html-path)
+          #:dest-dir (path-only format-html-path)
+          #:render-mixin html:render-mixin)
+  (define format-html (file->string format-html-path))
+  (check-not-false (string-contains? format-html "BibtexSmallCaps"))
+  (check-not-false (regexp-match? #rx"href=\"https://example\\.org/"
+                                  format-html))
+  (delete-file format-html-path)
+
+(check-equal? (ungroup-scalar "{2000}") "2000")
+(check-equal? (ungroup-scalar "{{2000}}") "2000")
+(check-equal? (ungroup-scalar "{a}{b}") "{a}{b}")
+(check-equal? (ungroup-scalar "\\{2000\\}") "\\{2000\\}")
+(check-equal? (ungroup-scalar "https://example.org/a_{b}")
+              "https://example.org/a_{b}")
+(check-false (ungroup-scalar #f))
+
+(define scalars-db
+  (bibtex-parse
+   (open-input-string
+    #<<BIB
+@article{scalar-doi,
+  author={Alice Example},
+  title={Grouped scalar fields},
+  journal={Journal},
+  year={{2000}},
+  pages={{12--34}},
+  doi={{10.1000/example}},
+  url={{https://example.org/a_b}}
+}
+@misc{scalar-url,
+  title={URL only},
+  year={{2001}},
+  url={{https://example.org/a_b}}
+}
+BIB
+    )))
+
+  ;; Raw bibdb still retains the inner braces from each braced field.
+  (define raw-scalars (hash-ref (bibdb-raw scalars-db) "scalar-doi"))
+  (check-equal? (hash-ref raw-scalars "year") "{2000}")
+  (check-equal? (hash-ref raw-scalars "pages") "{12--34}")
+  (check-equal? (hash-ref raw-scalars "doi") "{10.1000/example}")
+  (check-equal? (hash-ref raw-scalars "url")
+                "{https://example.org/a_b}")
+
+  ;; The consumer gets proper scalar values, including a valid date and pages.
+  (check-equal? (parse-pages (ungroup-scalar (hash-ref raw-scalars "pages")))
+                '("12" "34"))
+  (check-not-exn (lambda () (generate-bib scalars-db "scalar-doi")))
+  (check-not-exn (lambda () (generate-bib scalars-db "scalar-url")))
+
+  ;; Verify the URL itself and the DOI-generated link independently:
+  ;; Autobib intentionally suppresses the separate URL if a DOI is supplied.
+  (define-cite scalars-cite scalars-citet scalars-bibliography)
+  (void
+   (scalars-cite (generate-bib scalars-db "scalar-doi")
+                 (generate-bib scalars-db "scalar-url")))
+  (define scalars-html-path (make-temporary-file "bibtex-scalars~a.html"))
+  (render (list (scalars-bibliography))
+          (list scalars-html-path)
+          #:dest-dir (path-only scalars-html-path)
+          #:render-mixin html:render-mixin)
+  (define scalars-html (file->string scalars-html-path))
+  (check-not-false (string-contains? scalars-html "2000"))
+  (check-false (string-contains? scalars-html "{2000}"))
+  (check-not-false (string-contains? scalars-html
+                                     "https://doi.org/10.1000/example"))
+  (check-not-false (string-contains? scalars-html
+                                     "https://example.org/a_b"))
+  (delete-file scalars-html-path))
 
 (provide (struct-out bibdb)
          path->bibdb

@@ -44,3 +44,7 @@
 .AutoBibliography td {
   padding-bottom: 0.5em;
 }
+
+.BibtexSmallCaps {
+  font-variant: small-caps;
+}
