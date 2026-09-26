@@ -253,9 +253,15 @@
                       (emit! (make-element raw-tex-style (list (string-append "\\url" whitespace)))))]
                  [(and (= (string-length word) 1) (hash-has-key? accents (string-ref word 0)))
                   (emit-accent! (string-ref word 0))]
-                 [(hash-has-key? letter-commands word) (display (hash-ref letter-commands word) out)]
-                 [(string=? word "i") (display "ı" out)]
-                 [(string=? word "j") (display "ȷ" out)]
+                 [(hash-has-key? letter-commands word)
+                  (read-control-whitespace)
+                  (display (hash-ref letter-commands word) out)]
+                 [(string=? word "i")
+                  (read-control-whitespace)
+                  (display "ı" out)]
+                 [(string=? word "j")
+                  (read-control-whitespace)
+                  (display "ȷ" out)]
                  [else
                   (emit! (make-element raw-tex-style
                                        (list (string-append "\\" word (read-raw-arguments)))))])

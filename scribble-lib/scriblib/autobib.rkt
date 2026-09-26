@@ -82,7 +82,6 @@
      (make-typ-addition (abs "autobib.typ")))))
 
 (define bib-single-style (make-style "AutoBibliography" autobib-style-extras))
-(define bib-columns-style (make-style #f autobib-style-extras))
 
 (define bibentry-style
   (make-style "Autobibentry"
@@ -344,10 +343,10 @@
         (define entry
           (bib->entry bib style disambiguation render-date-bib i))
         (define blocks (compound-paragraph-blocks entry))
-        (define first (car blocks))
+        (define first-block (car blocks))
         (define marked-first
           (make-paragraph
-           (paragraph-style first)
+           (paragraph-style first-block)
            (list
             (send style bibliography-prefix i)
             (make-collect-element
@@ -355,7 +354,7 @@
              (list
               (make-target-element
                #f
-               (paragraph-content first)
+               (paragraph-content first-block)
                `(autobib ,(auto-bib-key bib))))
              collect))))
         (send style

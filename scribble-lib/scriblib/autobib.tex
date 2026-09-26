@@ -1,4 +1,8 @@
-\usepackage{needspace}
+\IfFileExists{needspace.sty}{%
+  \usepackage{needspace}%
+}{%
+  \providecommand{\Needspace}[1]{}%
+}
 
 \newenvironment{AutoBibliography}
   {\begin{small}}

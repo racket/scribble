@@ -53,7 +53,11 @@ includes a citation to section 8 of the Racket reference.
 @history[#:changed "1.68"
   @elem{Improved bibliography layout, added support for
         multi-paragraph notes and extended support for
-        structured content in bibliography fields.}]
+        structured content in bibliography fields.
+        Location helpers now return Scribble content or
+        @racket[#f], rather than always returning an element.
+        Existing clients must not assume that
+        @racket[element-content] applies to their results.}]
 
 @defform/subs[(define-cite ~cite-id citet-id generate-bibliography-id
                            option ...)
@@ -238,8 +242,10 @@ Combines elements to generate an element that is suitable for
 describing a paper's location within a conference or workshop
 proceedings.
 
- @history[#:changed "1.61"
-   @elem{Added fields for bibtex support: editor number organization publisher address.}]
+@history[#:changed "1.61"
+  @elem{Added fields for bibtex support: editor number organization publisher address.}]
+@history[#:changed "1.68"
+  @elem{Now returns content, not necessarily element.}]
 }
 
 @defproc[(journal-location [title any/c]
@@ -249,7 +255,11 @@ proceedings.
          content?]{
 
 Combines elements to generate an element that is suitable for
-describing a paper's location within a journal.}
+describing a paper's location within a journal.
+
+@history[#:changed "1.68"
+  @elem{Now returns content, not necessarily element.}]
+}
 
 
 @defproc[(book-location [#:edition edition any/c #f]
@@ -268,6 +278,8 @@ describing a book's location.
 @history[#:changed "1.61"
   @elem{Added fields for bibtex support: editor chapter series volume number pages address.
         Made all arguments optional.}]
+@history[#:changed "1.68"
+  @elem{Now returns content, not necessarily element.}]
 }
 
 
@@ -278,6 +290,8 @@ Combines elements to generate an element that is suitable for
 describing a booklet's location.
 
 @history[#:added "1.61"]
+@history[#:changed "1.68"
+  @elem{Now returns content, not necessarily element.}]
 }
 
 
@@ -287,6 +301,8 @@ Combines elements to generate an element that is suitable for
 describing a bibtex misc entry's location.
 
 @history[#:added "1.61"]
+@history[#:changed "1.68"
+  @elem{Now returns content, not necessarily element.}]
 }
 
 
@@ -297,6 +313,8 @@ Combines elements to generate an element that is suitable for
 describing a manual's location.
 
 @history[#:added "1.61"]
+@history[#:changed "1.68"
+   @elem{Now returns content, not necessarily element.}]
 }
 
 
@@ -310,6 +328,8 @@ Combines elements to generate an element that is suitable for
 describing a technical report's location.
 
 @history[#:changed "1.61" @elem{Added fields for bibtex support: type address.}]
+@history[#:changed "1.68"
+  @elem{Now returns content, not necessarily element.}]
 }
 
 @defproc[(dissertation-location [#:institution institution any/c]
@@ -323,6 +343,8 @@ describing a dissertation.
 
 @history[#:changed "1.61"
   @elem{Added fields for bibtex support: type address.}]
+@history[#:changed "1.68"
+  @elem{Now returns content, not necessarily element.}]
 }
 
 @defproc[(webpage-location [url string? #f]
@@ -331,8 +353,10 @@ describing a dissertation.
  Combines elements to generate an element that is suitable for
  describing a web page.
 
- @history[#:changed "1.61"
-   @elem{Made field url optional now that any autobib entry may have a url.}]
+@history[#:changed "1.61"
+  @elem{Made field url optional now that any autobib entry may have a url.}]
+@history[#:changed "1.68"
+  @elem{Now returns content, not necessarily element.}]
 }
 
 
@@ -353,6 +377,8 @@ describing a paper's location within a chapter or part of a book or collection o
 
 @history[#:changed "1.61"
   @elem{Added fields for bibtex support: editor chapter number address.}]
+@history[#:changed "1.68"
+  @elem{Now returns content, not necessarily element.}]
 }
 
 
