@@ -259,8 +259,10 @@
                   (define whitespace (read-control-whitespace))
                   (cond
                     [(eqv? (peek-char ip) #\{)
-                     (read-char ip)
-                     (define body (read-group #t))
+                     (define body
+                       (begin
+                         (read-char ip)
+                         (read-group #t)))
                      (emit! (cond
                               [(string=? word "emph") (apply emph body)]
                               [(string=? word "texttt") (apply tt body)]
@@ -269,6 +271,7 @@
                               [else (make-element bibtex-smallcaps-style body)]))]
                     [else
                      (emit! (make-element raw-tex-style
+                                          (list (string-append "\\" word whitespace))))])]
                                           (list (string-append "\\" word whitespace))))])]
                  [(string=? word "url")
                   (define whitespace (read-control-whitespace))
