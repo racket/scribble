@@ -41,14 +41,6 @@
   (check-not-exn
     (λ () (book-location))))
 
-(test-case "webpage-location"
-  (check-not-exn
-    (λ () (webpage-location "https://www.racket-lang.org")))
-  (check-not-exn
-    (λ () (webpage-location "https://www.racket-lang.org" #:accessed "January 2024")))
-  (check-not-exn
-    (λ () (webpage-location))))
-
 (define (mk-bookloc-elem/ed ed)
   (list ed " edition"))
 

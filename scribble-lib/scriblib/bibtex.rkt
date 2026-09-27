@@ -683,8 +683,7 @@
                         ;; extra: (WHERE IS THAT SPECIFIED?)
                         #:title (content-attr "title")
                         #:url (url-attr "url")
-                        #:location (webpage-location
-                                     #:accessed (content-attr "urldate")) ;; when visited
+                        #:accessed (content-attr "urldate") ;; when visited
                         #:author (author-attr "author")
                         #:note (content-attr "note")
                         #:date (scalar-attr "year") ;; TODO: month ;; presumably when written
@@ -695,8 +694,7 @@
                         ;; extra: (WHERE IS THAT SPECIFIED?)
                         #:title (content-attr "title")
                         #:url (url-attr "url")
-                        #:location (webpage-location
-                                     #:accessed (content-attr "lastchecked"))
+                        #:accessed (content-attr "lastchecked")
                         #:author (author-attr "author")
                         #:note (content-attr "note")
                         #:date (scalar-attr "year") ;; TODO: month ;; presumably when written

@@ -50,8 +50,6 @@
                  #:series any/c #:volume any/c #:number any/c #:pages (or/c (list/c any/c any/c) #f)
                  #:publisher any/c #:address any/c]
                 (or/c content? #f))]
-          [webpage-location
-           (->* [] [string? #:accessed any/c] (or/c content? #f))]
           [manual-location
            (->* [] [#:organization any/c #:edition any/c] (or/c content? #f))])
          other-authors
@@ -92,7 +90,7 @@
 (define bibentrytarget-style (make-style "Autobibtarget" autobib-style-extras))
 (define colbibnumber-style (make-style "Autocolbibnumber" autobib-style-extras))
 
-(define-struct auto-bib (author date title location url note is-book? doi key specific))
+(define-struct auto-bib (author date title location url accessed note is-book? doi key specific))
 (define-struct bib-group (ht))
 
 (define-struct (author-element element) (names cite)) ;; NB: names should always be a string
@@ -409,12 +407,13 @@
 
 ;; Build a potentially multi-paragraph entry base on the note field.
 (define (bib->entry bib style disambiguation render-date-bib i)
-  (define-values (author date title location url note is-book? doi)
+  (define-values (author date title location url accessed note is-book? doi)
     (values (auto-bib-author bib)
             (auto-bib-date bib)
             (auto-bib-title bib)
             (auto-bib-location bib)
             (auto-bib-url bib)
+            (auto-bib-accessed bib)
             (auto-bib-note bib)
             (auto-bib-is-book? bib)
             (auto-bib-doi bib)))
@@ -453,7 +452,12 @@
        `(" " ,[(doi-rendering) doi]
          ,@(if (pair? note-blocks) '(".") null)))
       (url
-       `(" " ,[(url-rendering) url])) ;; do NOT include a . immediately after URL, it's confusing
+       ;; do NOT include a . immediately after a naked URL (no accessed date), it's confusing
+       `(" " ,[(url-rendering) url]
+         ,@(if accessed
+               `(" (accessed " ,@(decode-content (list (contentify accessed))) ")"
+                 ,@(if (pair? note-blocks) '(".") null))
+               null)))
       (else
        null))))
   (define first-content
@@ -542,6 +546,7 @@
                   #:location [location #f]
                   #:date [date #f]
                   #:url [url #f]
+                  #:accessed [accessed #f]
                   #:doi [doi #f]
                   #:note [note #f])
   ;; TODO what to do with type??
@@ -550,7 +555,7 @@
           [(author-element? author) author]
           [else (parse-author author)]))
   (define parsed-date (understand-date date))
-  (make-auto-bib author* parsed-date title location url note is-book? doi
+  (make-auto-bib author* parsed-date title location url accessed note is-book? doi
                  (content->string
                   (make-element #f
                                 (append
@@ -559,6 +564,7 @@
                                  (if location (decode-content (list location)) null)
                                  (if date (decode-content (list (default-render-date-bib parsed-date))) null)
                                  (if (and (not doi) url) (list [(url-rendering) url]) null)
+                                 (if (and (not doi) url accessed) (decode-content (list (contentify accessed))) null)
                                  (if doi (list [(doi-rendering) doi]) null)
                                  (if note (list note) null))))
                  ""))
@@ -570,6 +576,7 @@
    (auto-bib-title bib)
    (auto-bib-location bib)
    (auto-bib-url bib)
+   (auto-bib-accessed bib)
    (auto-bib-note bib)
    (auto-bib-is-book? bib)
    (auto-bib-doi bib)
@@ -677,6 +684,24 @@
                                #:url "https://example.org"
                                #:note "A note"))
    "Title. https://example.org A note")
+  (check-equal?
+   (entry-first-text (make-bib #:title "Title"
+                               #:url "https://example.org"
+                               #:accessed "January 2024"))
+   "Title. https://example.org (accessed January 2024)")
+  (check-equal?
+   (entry-first-text (make-bib #:title "Title"
+                               #:url "https://example.org"
+                               #:accessed "January 2024"
+                               #:note "A note"))
+   "Title. https://example.org (accessed January 2024). A note")
+  (check-equal?
+   (entry-first-text (make-bib #:title "Title"
+                               #:doi "10.1234/foo"
+                               #:url "https://example.org"
+                               #:accessed "January 2024"
+                               #:note "A note"))
+   "Title. doi:10.1234/foo. A note")
   (check-false (journal-location #f))
   (check-false (techrpt-location #:institution #f))
   (check-false (proceedings-location #f))
@@ -753,13 +778,6 @@
    (and location @italic{@contentify[location]})
    #:separator " "
    (series-volume-number-pages-content #f volume number pages)))
-
-;; The URL is now redundant with the URL in make-bib, so we now (2025-12) make it optional
-(define (webpage-location (url #f) #:accessed [accessed #f])
-  (concatenate-content
-   (and url ((url-rendering) url))
-   #:separator " "
-   (and accessed @list{(accessed @contentify[accessed])})))
 
 (define (capitalize-string s)
   (string-append

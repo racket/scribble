@@ -218,6 +218,7 @@ Returns @racket[#t] if @racket[v] is a value produced by
                    [#:location location any/c #f]
                    [#:date date (or/c #f date? exact-nonnegative-integer? string?) #f]
                    [#:url url (or/c #f string?) #f]
+                   [#:accessed accessed any/c #f]
                    [#:doi doi (or/c #f string?) #f]
                    [#:note note any/c #f])
          bib?]{
@@ -239,6 +240,13 @@ the DOI takes precedence.
 A period is inserted after a DOI when followed by a non-empty note.
 No period is appended directly to a URL.
 
+@racket[#:accessed] gives the date a @racket[#:url] (in CSL terms, the
+date it was accessed), and is only used when @racket[#:url] is displayed,
+i.e. when no @racket[#:doi] is supplied. It is rendered right after the
+URL, separated from it by a space, as @tt{(accessed ...)}. A period is
+inserted after it when followed by a non-empty note; a naked URL (no
+@racket[#:accessed]) never gets that period.
+
 Dates are internally represented as @racket[date] values, so a @racket[date]
 may be given, or a number or string that represent the year.
 
@@ -249,7 +257,13 @@ name, the last non-empty sequence of alphabetic characters or
 @litchar["-"] after a space is treated as the author name, and the
 rest is treated as the first name.
 
-@history[#:changed "1.49" @elem{Added @racket[#:doi].}]}
+@history[#:changed "1.49" @elem{Added @racket[#:doi].}]
+@history[#:changed "1.68"
+  @elem{Added @racket[#:accessed], which replaces the accessed-date
+        support formerly provided by the now-removed @tt{webpage-location}
+        function: the accessed date is now attached directly to the
+        bib entry instead of being embedded in its @racket[#:location],
+        so it renders next to the URL rather than before the date.}]}
 
 @defproc[(in-bib [orig bib?] [where string?]) bib?]{
 
@@ -382,19 +396,6 @@ describing a dissertation.
   @elem{Added fields for bibtex support: type address.}]
 @history[#:changed "1.68"
   @elem{Now returns Scribble content, rather than necessarily an element.}]
-}
-
-@defproc[(webpage-location [url string? #f]
-                           [#:accessed accessed any/c #f])
-         (or/c content? #f)]{
-Combines the supplied information to produce content suitable for
-describing a web page.
-
-@history[#:changed "1.61"
-  @elem{Made field url optional now that any autobib entry may have a url.}]
-@history[#:changed "1.68"
-  @elem{Now returns Scribble content, potentially
-        @racket[#f], rather than necessarily an element.}]
 }
 
 
