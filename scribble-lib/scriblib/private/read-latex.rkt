@@ -272,7 +272,6 @@
                     [else
                      (emit! (make-element raw-tex-style
                                           (list (string-append "\\" word whitespace))))])]
-                                          (list (string-append "\\" word whitespace))))])]
                  [(string=? word "url")
                   (define whitespace (read-control-whitespace))
                   (if (eqv? (peek-char ip) #\{)
