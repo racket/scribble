@@ -625,10 +625,29 @@
   (and v (content->string (contentify v))))
 
 ;; wrap non-#f content as an element, for backward compatibility with
-;; the *-location functions' historical result type; preserve #f.
+;; the *-location functions' historical result type. Flattens c first, so
+;; content that's merely empty (e.g. "") normalizes to #f like an omitted
+;; argument does, rather than becoming a visibly-empty but non-#f element.
 ;; Only call this on results that aren't already elements.
 (define (elemify c)
-  (and c (elem c)))
+  (define fc (flatten-content c))
+  (and fc (elem fc)))
+
+;; Flattens c and returns the (non-#f) flattened content; raises an error
+;; if c flattens to #f, i.e. is empty or otherwise trivial content -- as
+;; opposed to c simply being #f, which flatten-content also treats as
+;; trivial, but which callers use throughout this file to mean "omitted"
+;; rather than "supplied but empty." Distinguishing the two matters: an
+;; omitted, optional argument should quietly contribute nothing, but an
+;; argument that's explicitly supplied yet trivial (e.g. #:editor "") is
+;; almost always a caller mistake, and silently swallowing it just produces
+;; a bogus fragment (e.g. a stray "(Ed.)" credit with no name) instead of
+;; either the intended content or a clear error.
+;; what, if given, names the argument/field/function that was expected to
+;; be non-trivial, for a more specific error message.
+(define (ensure-nontrivial-content c [what "content"])
+  (or (flatten-content c)
+      (raise-argument-error 'autobib (format "non-trivial (non-empty) ~a" what) c)))
 
 (module+ test
   (require rackunit)
@@ -725,14 +744,29 @@
    "Title. doi:10.1234/foo. A note")
   ;; journal-location, techrpt-location, and book-chapter-location are contracted to
   ;; always return an element when given #f for their required argument (i.e.
-  ;; supplying no real information) -- but that's only enforced at the contract-out
-  ;; boundary, which this same-module test submodule bypasses; see
-  ;; scribble-test/tests/scriblib/autobib.rkt for the check-exn versions of this.
-  ;; proceedings-location may legitimately be called with nothing at all
-  ;; (bibtex.rkt does exactly this for a bare "proceedings" entry).
+  ;; supplying no real information), via ensure-nontrivial-content; see
+  ;; scribble-test/tests/scriblib/autobib.rkt for the check-exn versions of this
+  ;; going through the exported, contracted bindings instead.
+  ;; proceedings-location, book-location, booklet-location, misc-location, and
+  ;; manual-location may gracefully return #f when every argument is #f or
+  ;; empty content -- but only for plain (undecorated) fields: an explicitly
+  ;; empty value for a decorated one (edition, editor, location) is a caller
+  ;; mistake and raises via ensure-nontrivial-content instead, since silently
+  ;; swallowing it would otherwise leave orphaned decoration (e.g. a stray
+  ;; "(Ed.)" credit with no name) in the output.
   (check-false (proceedings-location #f))
+  (check-exn exn:fail:contract? (λ () (proceedings-location "")))
   (check-equal? (content->string (proceedings-location #f #:publisher "ACM"))
                 "ACM")
+  (check-false (book-location))
+  (check-exn exn:fail:contract? (λ () (book-location #:edition "")))
+  (check-false (booklet-location))
+  (check-false (booklet-location #:howpublished "" #:address ""))
+  (check-false (misc-location))
+  (check-false (misc-location #:howpublished ""))
+  (check-false (manual-location))
+  (check-false (manual-location #:organization ""))
+  (check-exn exn:fail:contract? (λ () (manual-location #:edition "")))
   (check-equal?
    (content->string
     (book-location
@@ -780,16 +814,18 @@
          #:organization [organization #f]
          #:publisher [publisher #f]
          #:address [address #f])
+  (define location-content*
+    (and location (italic (ensure-nontrivial-content location "proceedings-location's location argument"))))
   (define details
     (concatenate-content
      #:separator ", "
      (and editor_ (editor editor_))
-     (and location @italic{Proc. @contentify[location]})
+     (and location-content* @list{Proc. @location-content*})
      (series-volume-number-pages-content series volume number pages)))
   (elemify
    (concatenate-content
     (and details
-         (if location
+         (if location-content*
              (concatenate-content "In " details)
              details))
     #:separator ". "
@@ -802,7 +838,7 @@
          #:pages [pages #f])
   (elemify
    (concatenate-content
-    (and location @italic{@contentify[location]})
+    @italic[(ensure-nontrivial-content location "journal-location's title argument")]
     #:separator " "
     (series-volume-number-pages-content #f volume number pages))))
 
@@ -852,14 +888,16 @@
          #:pages [pages #f]
          #:publisher [publisher #f]
          #:address [address #f])
+  (define edition-content* (edition-content edition))
+  (define chapter-content* (chapter-content chapter))
   (elemify
    (concatenate-content
     (concatenate-content
      #:separator ", "
-     (edition-content edition)
-     (if edition
-       (chapter-content chapter)
-       (capitalize-content (chapter-content chapter)))
+     edition-content*
+     (if edition-content*
+       chapter-content*
+       (capitalize-content chapter-content*))
      (and editor_ (editor editor_))
      (series-volume-number-pages-content series volume number pages))
     #:separator ". "
@@ -893,7 +931,8 @@
          #:address [address #f])
   (elemify
    (concatenate-content #:separator ", "
-     institution type number address)))
+     (ensure-nontrivial-content institution "techrpt-location's institution argument")
+     type number address)))
 
 (define (dissertation-location
          #:institution institution
@@ -902,8 +941,8 @@
          #:address [address #f])
   (elemify
    (concatenate-content #:separator ", "
-     @list{@contentify[degree] dissertation}
-     institution
+     @list{@(ensure-nontrivial-content degree "degree argument") dissertation}
+     (ensure-nontrivial-content institution "dissertation-location's institution argument")
      type
      address)))
 
@@ -920,7 +959,7 @@
          #:address [address #f])
   (elemify
    (concatenate-content #:separator " "
-    (and location @list{In @italic{@contentify[location]}})
+    @list{In @italic[(ensure-nontrivial-content location "book-chapter-location's location argument")]}
     (book-location #:edition edition #:chapter chapter #:editor editor_
           #:series series #:volume volume #:number number #:pages pages
           #:publisher publisher #:address address))))
@@ -1001,23 +1040,23 @@
   (let ([name (parse-author name)])
     (make-author-element
      #f
-     (append (element-content name)
-             '(" (Ed.)"))
+     (list (ensure-nontrivial-content (element-content name) "editor name")
+           " (Ed.)")
      (author-element-names name)
      (author-element-cite name))))
 
 (define (edition-content edition)
   (and edition
-       @list{@(capitalize-content edition) edition}))
+       @list{@(ensure-nontrivial-content (capitalize-content edition) "edition argument") edition}))
 (define (pages-content pages)
-  (and pages @elem{pp. @(contentify (car pages))--@(contentify (cadr pages))}))
+  (and pages @elem{pp. @(ensure-nontrivial-content (car pages) "pages start")--@(ensure-nontrivial-content (cadr pages) "pages end")}))
 (define (series-volume-number-pages-content series volume number pages)
   (concatenate-content
    series
    #:separator ", "
    (concatenate-content
     volume
-    (and number @list{(@contentify[number])}))
+    (and number @list{(@(ensure-nontrivial-content number "number argument"))}))
    (pages-content pages)))
 (define (organization-publisher-address-content organization publisher address)
   (concatenate-content

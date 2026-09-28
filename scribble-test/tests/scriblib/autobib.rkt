@@ -32,9 +32,9 @@
     (λ () (journal-location 'JFP)))
   (check-exn exn:fail:contract?
     (λ () (journal-location "Journal of Chromatography" #:pages 30)))
-  ;; title is a genuinely required argument, so journal-location is contracted
-  ;; to always return an element: passing #f (i.e. no real information)
-  ;; violates that contract instead of quietly producing #f.
+  ;; title is a genuinely required argument: passing #f (i.e. no real
+  ;; information) raises via ensure-nontrivial-content instead of quietly
+  ;; producing #f.
   (check-exn exn:fail:contract?
     (λ () (journal-location #f))))
 

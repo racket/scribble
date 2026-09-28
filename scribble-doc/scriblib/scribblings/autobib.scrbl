@@ -271,10 +271,23 @@ into a single @racket[element?]. @racket[proceedings-location],
 @racket[book-location], @racket[booklet-location], @racket[misc-location],
 and @racket[manual-location] may legitimately be called by
 @racketmodname[scriblib/bibtex] with no useful information at all (e.g.
-a BibTeX entry that supplies none of the corresponding optional fields),
-so those may return @racket[#f] in that case. The rest each have at
-least one genuinely required argument, so they always have something to
-report and never return @racket[#f].
+a BibTeX entry that supplies none of the corresponding optional fields):
+each returns @racket[#f] when every one of its arguments is either
+omitted (@racket[#f]) or supplied as empty content. The rest each have
+at least one genuinely required argument, so they always have something
+to report and never return @racket[#f].
+
+For a handful of fields across these functions -- an edition, an editor,
+a location, a page range, a series number -- @racket[#f] alone isn't
+enough to tell ``omitted'' from ``supplied but empty,'' because the
+field gets wrapped in surrounding text (e.g. an editor's name becomes
+``NAME (Ed.)''; an edition becomes ``EDITION edition''). Omitting the
+field (@racket[#f], the default) still quietly contributes nothing, but
+explicitly supplying empty or otherwise trivial content for one of
+these particular fields (e.g. @racket[""]) raises a contract violation
+instead of silently producing an orphaned fragment like ``(Ed.)'' with
+no name attached. Each function's entry below says which of its fields
+this applies to.
 
 @defproc[(proceedings-location [#:editor editor_ any/c #f]
                                [location any/c]
@@ -289,15 +302,16 @@ report and never return @racket[#f].
 
 Combines the supplied information to produce content suitable for
 describing a paper's location within a conference or workshop
-proceedings.
+proceedings. Returns @racket[#f] when every argument is omitted or
+empty, except that explicitly-supplied-but-trivial content raises for
+@racket[location], @racket[#:editor], @racket[#:number], and
+@racket[#:pages] specifically, since each of those is wrapped in
+surrounding text (see above).
 
 @history[#:changed "1.61"
   @elem{Added fields for bibtex support: editor number organization publisher address.}]
 @history[#:changed "1.68"
-  @elem{May now return @racket[#f] when there is nothing to report
-        (previously always a non-@racket[#f] @racket[element?]), since
-        @racketmodname[scriblib/bibtex] may call this with no
-        information at all for a bare @litchar{proceedings} entry.}]
+  @elem{Added @racket[#f] as a possible result.}]
 }
 
 @defproc[(journal-location [title any/c]
@@ -322,7 +336,10 @@ describing a paper's location within a journal.
                         [#:address address any/c #f])
          (or/c element? #f)]{
 Combines the supplied information to produce content suitable for
-describing a book's location.
+describing a book's location. Returns @racket[#f] when every argument
+is omitted or empty, except that explicitly-supplied-but-trivial
+content raises for @racket[#:edition], @racket[#:editor],
+@racket[#:number], and @racket[#:pages] specifically (see above).
 
 A numeric @racket[chapter], supplied as a number or a string
 of decimal digits, is prefixed with ``chapter''.
@@ -338,7 +355,9 @@ Other chapter content is used unchanged.
                            [#:address address any/c #f])
          (or/c element? #f)]{
 Combines the supplied information to produce content suitable for
-describing a booklet's location.
+describing a booklet's location. Neither argument is wrapped in
+surrounding text, so returns @racket[#f] when both are omitted or
+empty, with no exceptions.
 
 @history[#:added "1.61"]
 }
@@ -347,7 +366,9 @@ describing a booklet's location.
 @defproc[(misc-location [#:howpublished howpublished any/c #f])
          (or/c element? #f)]{
 Combines the supplied information to produce content suitable for
-describing a bibtex misc entry's location.
+describing a bibtex misc entry's location. Its one argument isn't
+wrapped in surrounding text, so returns @racket[#f] when it's omitted
+or empty, with no exception.
 @history[#:added "1.61"]
 }
 
@@ -356,7 +377,10 @@ describing a bibtex misc entry's location.
                           [#:edition edition any/c #f])
          (or/c element? #f)]{
 Combines the supplied information to produce content suitable for
-describing a manual's location.
+describing a manual's location. Returns @racket[#f] when both
+arguments are omitted or empty, except that explicitly-supplied-but-
+trivial content raises for @racket[#:edition] specifically (see
+above).
 
 @history[#:added "1.61"]
 }
@@ -439,7 +463,15 @@ one created by @racket[other-authors] renders as ``et al.''}
 
 Takes an author-name element and create one that represents the editor
 of a collection. If a @racket[name] is a string, it is parsed in the
-same way as by @racket[make-bib].}
+same way as by @racket[make-bib].
+
+Raises a contract violation if @racket[name] is empty or otherwise
+trivial content (e.g. @racket[""]), rather than silently producing a
+name-less ``(Ed.)'' credit.
+
+@history[#:changed "1.68"
+  @elem{Raises on empty or trivial content instead of silently
+        producing a bogus, name-less credit.}]}
 
 @defparam[abbreviate-given-names abbreviate? any/c]{
   Shortens given names in calls to @racket[author] and @racket[make-bib]
