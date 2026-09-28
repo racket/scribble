@@ -21,37 +21,42 @@
          author-name org-author-name
          (contract-out
           [authors (->* (content?) #:rest (listof content?) element?)]
+          ;; proceedings-location, book-location, booklet-location, misc-location, and
+          ;; manual-location may legitimately be called by bibtex.rkt with no useful
+          ;; content at all (e.g. an entry missing every optional bibtex field), so they
+          ;; keep returning #f in that case. The others all have a genuinely required
+          ;; argument and so always have something to say: they always return an element.
           [proceedings-location
            (->* [any/c] [#:pages (or/c (list/c any/c any/c) #f)
                          #:series any/c #:volume any/c #:number any/c
                          #:editor any/c #:address any/c #:publisher any/c #:organization any/c]
-                (or/c content? #f))]
+                (or/c element? #f))]
           [journal-location
            (->* [any/c] [#:pages (or/c (list/c any/c any/c) #f) #:volume any/c #:number any/c]
-                (or/c content? #f))]
+                element?)]
           [book-location
            (->* []
                 [#:edition any/c #:chapter any/c #:editor any/c
                  #:series any/c #:volume any/c #:number any/c #:pages (or/c (list/c any/c any/c) #f)
-                 #:publisher any/c #:address any/c] (or/c content? #f))]
+                 #:publisher any/c #:address any/c] (or/c element? #f))]
           [booklet-location
-           (->* [] [#:howpublished any/c #:address any/c] (or/c content? #f))]
+           (->* [] [#:howpublished any/c #:address any/c] (or/c element? #f))]
           [misc-location
-           (->* [] [#:howpublished any/c] (or/c content? #f))]
+           (->* [] [#:howpublished any/c] (or/c element? #f))]
           [techrpt-location
            (->* [#:institution any/c] [#:number any/c #:type any/c #:address any/c]
-                (or/c content? #f))]
+                element?)]
           [dissertation-location
            (->* [#:institution any/c] [#:degree any/c #:type any/c #:address any/c]
-                content?)]
+                element?)]
           [book-chapter-location
            (->* [any/c]
                 [#:edition any/c #:editor any/c #:chapter any/c
                  #:series any/c #:volume any/c #:number any/c #:pages (or/c (list/c any/c any/c) #f)
                  #:publisher any/c #:address any/c]
-                (or/c content? #f))]
+                element?)]
           [manual-location
-           (->* [] [#:organization any/c #:edition any/c] (or/c content? #f))])
+           (->* [] [#:organization any/c #:edition any/c] (or/c element? #f))])
          other-authors
          editor
          abbreviate-given-names
@@ -616,6 +621,12 @@
 (define (stringify v)
   (and v (content->string (contentify v))))
 
+;; wrap non-#f content as an element, for backward compatibility with
+;; the *-location functions' historical result type; preserve #f.
+;; Only call this on results that aren't already elements.
+(define (elemify c)
+  (and c (elem c)))
+
 (module+ test
   (require rackunit)
   (check-equal? (given-names->initials "Matthew") "M. ")
@@ -702,10 +713,16 @@
                                #:accessed "January 2024"
                                #:note "A note"))
    "Title. doi:10.1234/foo. A note")
-  (check-false (journal-location #f))
-  (check-false (techrpt-location #:institution #f))
+  ;; journal-location, techrpt-location, and book-chapter-location always have a
+  ;; genuinely required argument, so they're contracted to always return an element;
+  ;; passing #f for that argument (i.e. supplying no real information) now violates
+  ;; that contract instead of quietly producing #f.
+  (check-exn exn:fail:contract? (λ () (journal-location #f)))
+  (check-exn exn:fail:contract? (λ () (techrpt-location #:institution #f)))
+  (check-exn exn:fail:contract? (λ () (book-chapter-location #f)))
+  ;; proceedings-location may legitimately be called with nothing at all
+  ;; (bibtex.rkt does exactly this for a bare "proceedings" entry).
   (check-false (proceedings-location #f))
-  (check-false (book-chapter-location #f))
   (check-equal? (content->string (proceedings-location #f #:publisher "ACM"))
                 "ACM")
   (check-equal?
@@ -761,23 +778,25 @@
      (and editor_ (editor editor_))
      (and location @italic{Proc. @contentify[location]})
      (series-volume-number-pages-content series volume number pages)))
-  (concatenate-content
-   (and details
-        (if location
-            (concatenate-content "In " details)
-            details))
-   #:separator ". "
-   (organization-publisher-address-content organization publisher address)))
+  (elemify
+   (concatenate-content
+    (and details
+         (if location
+             (concatenate-content "In " details)
+             details))
+    #:separator ". "
+    (organization-publisher-address-content organization publisher address))))
 
 (define (journal-location
          location
          #:volume [volume #f]
          #:number [number #f]
          #:pages [pages #f])
-  (concatenate-content
-   (and location @italic{@contentify[location]})
-   #:separator " "
-   (series-volume-number-pages-content #f volume number pages)))
+  (elemify
+   (concatenate-content
+    (and location @italic{@contentify[location]})
+    #:separator " "
+    (series-volume-number-pages-content #f volume number pages))))
 
 (define (capitalize-string s)
   (string-append
@@ -825,55 +844,60 @@
          #:pages [pages #f]
          #:publisher [publisher #f]
          #:address [address #f])
-  (concatenate-content
+  (elemify
    (concatenate-content
-    #:separator ", "
-    (edition-content edition)
-    (if edition
-      (chapter-content chapter)
-      (capitalize-content (chapter-content chapter)))
-    (and editor_ (editor editor_))
-    (series-volume-number-pages-content series volume number pages))
-   #:separator ". "
-   (organization-publisher-address-content #f publisher address)))
+    (concatenate-content
+     #:separator ", "
+     (edition-content edition)
+     (if edition
+       (chapter-content chapter)
+       (capitalize-content (chapter-content chapter)))
+     (and editor_ (editor editor_))
+     (series-volume-number-pages-content series volume number pages))
+    #:separator ". "
+    (organization-publisher-address-content #f publisher address))))
 
 (define (booklet-location
          #:howpublished [howpublished #f]
          #:address [address #f])
-  (concatenate-content #:separator ". "
-    howpublished
-    address))
+  (elemify
+   (concatenate-content #:separator ". "
+     howpublished
+     address)))
 
 (define (misc-location
          #:howpublished [howpublished #f])
-  (and howpublished (contentify howpublished)))
+  (elemify (and howpublished (contentify howpublished))))
 
 (define (manual-location
          #:organization [organization #f]
          #:edition [edition #f])
-  (concatenate-content
-   (edition-content edition)
-   #:separator ", "
-   organization))
+  (elemify
+   (concatenate-content
+    (edition-content edition)
+    #:separator ", "
+    organization)))
 
 (define (techrpt-location
          #:institution institution
          #:type [type #f]
          #:number [number #f]
          #:address [address #f])
-  (concatenate-content #:separator ", "
-    institution type number address))
+  (elemify
+   (concatenate-content #:separator ", "
+     institution type number address)))
 
 (define (dissertation-location
          #:institution institution
          #:degree [degree "PhD"]
          #:type [type #f]
          #:address [address #f])
-  (concatenate-content #:separator ", "
-    @list{@contentify[degree] dissertation}
-    institution
-    type
-    address))
+  (elemify
+   (concatenate-content #:separator ", "
+     @list{@contentify[degree] dissertation}
+     institution
+     type
+     address)))
 
 (define (book-chapter-location
          location
@@ -886,11 +910,12 @@
          #:pages [pages #f]
          #:publisher [publisher #f]
          #:address [address #f])
-  (concatenate-content #:separator " "
-   (and location @list{In @italic{@contentify[location]}})
-   (book-location #:edition edition #:chapter chapter #:editor editor_
-         #:series series #:volume volume #:number number #:pages pages
-         #:publisher publisher #:address address)))
+  (elemify
+   (concatenate-content #:separator " "
+    (and location @list{In @italic{@contentify[location]}})
+    (book-location #:edition edition #:chapter chapter #:editor editor_
+          #:series series #:volume volume #:number number #:pages pages
+          #:publisher publisher #:address address))))
 
 ;; ----------------------------------------
 

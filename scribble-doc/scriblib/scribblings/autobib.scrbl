@@ -53,11 +53,7 @@ includes a citation to section 8 of the Racket reference.
 @history[#:changed "1.68"
   @elem{Improved bibliography layout, added support for
         multi-paragraph notes and extended support for
-        structured content in bibliography fields.
-        Location helpers now return Scribble content,
-        potentially @racket[#f], rather than always an element.
-        Existing clients must not assume that
-        @racket[element-content] applies to their results.}]
+        structured content in bibliography fields.}]
 
 
 @defform/subs[(define-cite ~cite-id citet-id generate-bibliography-id
@@ -270,6 +266,16 @@ rest is treated as the first name.
 Extends a bib value so that the rendered citation is suffixed with
 @racket[where], which might be a page or chapter number.}
 
+Each of the following @tt{*-location} functions combines its arguments
+into a single @racket[element?]. @racket[proceedings-location],
+@racket[book-location], @racket[booklet-location], @racket[misc-location],
+and @racket[manual-location] may legitimately be called by
+@racketmodname[scriblib/bibtex] with no useful information at all (e.g.
+a BibTeX entry that supplies none of the corresponding optional fields),
+so those may return @racket[#f] in that case. The rest each have at
+least one genuinely required argument, so they always have something to
+report and never return @racket[#f].
+
 @defproc[(proceedings-location [#:editor editor_ any/c #f]
                                [location any/c]
                                [#:series series any/c #f]
@@ -279,7 +285,7 @@ Extends a bib value so that the rendered citation is suffixed with
                                [#:organization organization any/c #f]
                                [#:publisher publisher #f]
                                [#:address address #f])
-         (or/c content? #f)]{
+         (or/c element? #f)]{
 
 Combines the supplied information to produce content suitable for
 describing a paper's location within a conference or workshop
@@ -288,22 +294,20 @@ proceedings.
 @history[#:changed "1.61"
   @elem{Added fields for bibtex support: editor number organization publisher address.}]
 @history[#:changed "1.68"
-  @elem{Now returns Scribble content, potentially
-        @racket[#f], rather than necessarily an element.}]
+  @elem{May now return @racket[#f] when there is nothing to report
+        (previously always a non-@racket[#f] @racket[element?]), since
+        @racketmodname[scriblib/bibtex] may call this with no
+        information at all for a bare @litchar{proceedings} entry.}]
 }
 
 @defproc[(journal-location [title any/c]
                            [#:volume volume any/c #f]
                            [#:number number any/c #f]
                            [#:pages pages (or (list/c any/c any/c) #f) #f])
-         (or/c content? #f)]{
+         element?]{
 
 Combines the supplied information to produce content suitable for
 describing a paper's location within a journal.
-
-@history[#:changed "1.68"
-  @elem{Now returns Scribble content, potentially
-        @racket[#f], rather than necessarily an element.}]
 }
 
 
@@ -316,7 +320,7 @@ describing a paper's location within a journal.
                         [#:pages pages any/c #f]
                         [#:publisher publisher any/c #f]
                         [#:address address any/c #f])
-         (or/c content? #f)]{
+         (or/c element? #f)]{
 Combines the supplied information to produce content suitable for
 describing a book's location.
 
@@ -327,46 +331,34 @@ Other chapter content is used unchanged.
 @history[#:changed "1.61"
   @elem{Added fields for bibtex support: editor chapter series volume number pages address.
         Made all arguments optional.}]
-@history[#:changed "1.68"
-  @elem{Now returns Scribble content, potentially
-        @racket[#f], rather than necessarily an element.}]
 }
 
 
 @defproc[(booklet-location [#:howpublished howpublished any/c #f]
                            [#:address address any/c #f])
-         (or/c content? #f)]{
+         (or/c element? #f)]{
 Combines the supplied information to produce content suitable for
 describing a booklet's location.
 
 @history[#:added "1.61"]
-@history[#:changed "1.68"
-  @elem{Now returns Scribble content, potentially
-        @racket[#f], rather than necessarily an element.}]
 }
 
 
 @defproc[(misc-location [#:howpublished howpublished any/c #f])
-         (or/c content? #f)]{
+         (or/c element? #f)]{
 Combines the supplied information to produce content suitable for
 describing a bibtex misc entry's location.
 @history[#:added "1.61"]
-@history[#:changed "1.68"
-  @elem{Now returns Scribble content, potentially
-        @racket[#f], rather than necessarily an element.}]
 }
 
 
 @defproc[(manual-location [#:organization organization any/c #f]
                           [#:edition edition any/c #f])
-         (or/c content? #f)]{
+         (or/c element? #f)]{
 Combines the supplied information to produce content suitable for
 describing a manual's location.
 
 @history[#:added "1.61"]
-@history[#:changed "1.68"
-  @elem{Now returns Scribble content, potentially
-        @racket[#f], rather than necessarily an element.}]
 }
 
 
@@ -374,28 +366,23 @@ describing a manual's location.
                            [#:type type any/c #f]
                            [#:number number any/c #f]
                            [#:address address any/c #f])
-         (or/c content? #f)]{
+         element?]{
 Combines the supplied information to produce content suitable for
 describing a technical report's location.
 
 @history[#:changed "1.61" @elem{Added fields for bibtex support: type address.}]
-@history[#:changed "1.68"
-  @elem{Now returns Scribble content, potentially
-        @racket[#f], rather than necessarily an element.}]
 }
 
 @defproc[(dissertation-location [#:institution institution any/c]
                                 [#:degree degree any/c "PhD"]
                                 [#:type type any/c #f]
                                 [#:address address any/c #f])
-         content?]{
+         element?]{
 Combines the supplied information to produce content suitable for
 describing a dissertation.
 
 @history[#:changed "1.61"
   @elem{Added fields for bibtex support: type address.}]
-@history[#:changed "1.68"
-  @elem{Now returns Scribble content, rather than necessarily an element.}]
 }
 
 
@@ -409,7 +396,7 @@ describing a dissertation.
                                 [#:pages pages any/c #f]
                                 [#:publisher publisher any/c #f]
                                 [#:address address any/c #f])
-         (or/c content? #f)]{
+         element?]{
 Combines the supplied information to produce content suitable for
 describing a paper's location within a chapter or part of a book or collection of books.
 
@@ -417,9 +404,6 @@ The @racket[chapter] argument is formatted as by @racket[book-location].
 
 @history[#:changed "1.61"
   @elem{Added fields for bibtex support: editor chapter number address.}]
-@history[#:changed "1.68"
-  @elem{Now returns Scribble content, potentially
-        @racket[#f], rather than necessarily an element.}]
 }
 
 

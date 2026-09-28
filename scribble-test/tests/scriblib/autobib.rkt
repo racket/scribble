@@ -42,7 +42,7 @@
     (λ () (book-location))))
 
 (define (mk-bookloc-elem/ed ed)
-  (list ed " edition"))
+  (elem ed " edition"))
 
 (test-case "book-location-edition-capitalization"
   (check-equal? (book-location #:edition 'a)
