@@ -8,7 +8,12 @@
          scribble/manual
          "private/read-latex.rkt")
 
-;; Spec but not official: https://www.openoffice.org/bibliographic/bibtex-defs.html
+;; The Spec we are following is Oren Patashnik, BIBTEXing (1988), §3.1: https://mirrors.mit.edu/CTAN/biblio/bibtex/base/btxdoc.pdf
+;; Same in HTML: https://www.openoffice.org/bibliographic/btxdoc.html
+;; Source in LaTeX: https://mirrors.mit.edu/CTAN/biblio/bibtex/base/btxdoc.tex
+;; Spec excerpt in HTML: https://www.openoffice.org/bibliographic/bibtex-defs.html
+;; More: https://ctan.org/tex-archive/biblio/bibtex/base
+;; Examples: https://mirrors.mit.edu/CTAN/biblio/bibtex/base/xampl.bib
 ;; Informal spec: https://www.bibtex.com/g/bibtex-format/
 ;; More incomplete spec: https://www.bibtex.org/Format/ https://www.bibtex.org/SpecialSymbols/
 ;; Examples for test suite: https://www.bibtex.com/e/entry-types/
@@ -407,11 +412,25 @@
                                         key a the-raw))))
                (define (scalar-attr a [def #f])
                  (ungroup-scalar (raw-attr a def)))
+               (define (scalar-attr* a)
+                 (ungroup-scalar (raw-attr* a)))
                (define (url-attr a [def #f])
                  (define raw (raw-attr a def))
                  (and raw (unescape-url (ungroup-scalar raw))))
+               (define (url-attr* a)
+                 (unescape-url (ungroup-scalar (raw-attr* a))))
+               ;; #f (not a parse of #f!) when the attribute is absent, like
+               ;; content-attr/url-attr/scalar-attr. This matters wherever an
+               ;; author-ish field is legitimately optional -- e.g. "editor"
+               ;; wherever it's not required, or "author" on book/inbook where
+               ;; "editor" may stand in for it (see require-one-of below):
+               ;; parse-author on #f doesn't error, it silently produces a
+               ;; bogus one-word "#f" author/editor credit in the output.
                (define (author-attr a)
-                 (parse-author (raw-attr a)))
+                 (define raw (raw-attr a))
+                 (and raw (parse-author raw)))
+               (define (author-attr* a)
+                 (parse-author (raw-attr* a)))
                (define (pages-attr a)
                  (parse-pages (scalar-attr a)))
                (define (content-attr a [def #f])
@@ -421,6 +440,13 @@
                   (hash-ref the-raw a
                             (λ () (error 'bibtex "Key ~a is missing attribute ~a, has ~a"
                                          key a the-raw)))))
+               ;; Per the LaTeX book's disjunctive requirements (e.g. author-or-editor,
+               ;; chapter-and/or-pages), raise unless at least one of the given
+               ;; attributes is present.
+               (define (require-one-of . as)
+                 (unless (ormap (λ (a) (hash-has-key? the-raw a)) as)
+                   (error 'bibtex "Key ~a is missing at least one of attributes ~a, has ~a"
+                          key as the-raw)))
                (match (raw-attr 'type)
                  ;; TODO: eid replaces pages for online journals
                  ;; TODO: add isbn for books (inbooks, proceedings, inproceedings?)
@@ -431,9 +457,9 @@
                   (make-bib
                         #:type 'article
                         ;; required:
-                        #:author (author-attr "author")
-                        #:title (content-attr "title")
-                        #:date (scalar-attr "year") ;; TODO: optional month
+                        #:author (author-attr* "author")
+                        #:title (content-attr* "title")
+                        #:date (scalar-attr* "year") ;; TODO: optional month
                         #:location (journal-location
                                       (content-attr* "journal")
                                       ;; optional:
@@ -446,15 +472,16 @@
                         #:url (url-attr "url")
                         #:doi (url-attr "doi"))]
                  ["book" ;; A book with an explicit publisher.
+                  (require-one-of "author" "editor")
                   (make-bib
                         #:type 'book
                         #:is-book? #t
                         ;; required:
-                        #:author (author-attr "author") ;; author OR editor is required
-                        #:title (content-attr "title")
-                        #:date (scalar-attr "year") ;; TODO: optional month
+                        #:author (author-attr "author") ;; author OR editor is required, checked above
+                        #:title (content-attr* "title")
+                        #:date (scalar-attr* "year") ;; TODO: optional month
                         #:location (book-location
-                                      #:publisher (content-attr "publisher")
+                                      #:publisher (content-attr* "publisher")
                                       ;; optional:
                                       #:editor (author-attr "editor") ;; see above
                                       #:volume (content-attr "volume") ;; volume OR number
@@ -472,7 +499,7 @@
                         #:type 'booklet
                         #:is-book? #t ;; TODO or #f??? or have make-bib accept a #:type ???
                         ;; required:
-                        #:title (content-attr "title")
+                        #:title (content-attr* "title")
                         ;; optional:
                         #:author (author-attr "author") ;; TODO: make it optional
                         #:date (scalar-attr "year") ;; TODO: month
@@ -488,9 +515,9 @@
                   (make-bib
                         #:type 'inproceedings
                         ;; required:
-                        #:author (author-attr "author")
-                        #:title (content-attr "title")
-                        #:date (scalar-attr "year") ;; TODO: optional month
+                        #:author (author-attr* "author")
+                        #:title (content-attr* "title")
+                        #:date (scalar-attr* "year") ;; TODO: optional month
                         #:location (proceedings-location
                                       (content-attr* "booktitle")
                                       ;; optional:
@@ -508,18 +535,20 @@
                         #:url (url-attr "url")
                         #:doi (url-attr "doi"))]
                  ["inbook" ;; A part of a book, which may be a chapter (or section or whatever) and/or a range of pages.
+                  (require-one-of "author" "editor")
+                  (require-one-of "chapter" "pages")
                   (make-bib
                         #:type 'inbook
                         #:is-book? #t ;; TODO or #f ???
                         ;; required:
-                        #:author (author-attr "author") ;; author OR editor is required
-                        #:title (content-attr "title")
-                        #:date (scalar-attr "year") ;; TODO: optional month
+                        #:author (author-attr "author") ;; author OR editor is required, checked above
+                        #:title (content-attr* "title")
+                        #:date (scalar-attr* "year") ;; TODO: optional month
                         #:location (book-location
                                       #:editor (author-attr "editor") ;; see above
-                                      #:chapter (content-attr "chapter") ;; chapter OR pages is required
+                                      #:chapter (content-attr "chapter") ;; chapter OR pages is required, checked above
                                       #:pages (pages-attr "pages")
-                                      #:publisher (content-attr "publisher")
+                                      #:publisher (content-attr* "publisher")
                                       ;; optional:
                                       #:volume (content-attr "volume") ;; volume OR number
                                       #:number (content-attr "number")
@@ -538,12 +567,12 @@
                   (make-bib
                         #:type 'incollection
                         ;; required:
-                        #:author (author-attr "author")
-                        #:title (content-attr "title")
-                        #:date (scalar-attr "year") ;; TODO: optional month
+                        #:author (author-attr* "author")
+                        #:title (content-attr* "title")
+                        #:date (scalar-attr* "year") ;; TODO: optional month
                         #:location (book-chapter-location
                                       (content-attr* "booktitle")
-                                      #:publisher (content-attr "publisher")
+                                      #:publisher (content-attr* "publisher")
                                       ;; optional:
                                       #:editor (author-attr "editor")
                                       #:volume (content-attr "volume") ;; volume OR number
@@ -562,7 +591,7 @@
                   (make-bib
                         #:type 'manual
                         ;; required:
-                        #:title (content-attr "title")
+                        #:title (content-attr* "title")
                         ;; optional:
                         #:author (author-attr "author")
                         #:date (scalar-attr "year") ;; TODO: optional month
@@ -578,11 +607,11 @@
                   (make-bib
                         #:type 'mastersthesis
                         ;; required:
-                        #:author (author-attr "author")
-                        #:title (content-attr "title")
-                        #:date (scalar-attr "year") ;; TODO: optional month
+                        #:author (author-attr* "author")
+                        #:title (content-attr* "title")
+                        #:date (scalar-attr* "year") ;; TODO: optional month
                         #:location (dissertation-location
-                                      #:institution (content-attr "school")
+                                      #:institution (content-attr* "school")
                                       #:degree "Master’s"
                                       ;; optional:
                                       #:type (content-attr "type")
@@ -595,13 +624,12 @@
                  ["misc" ;; Use this type when nothing else fits.
                   (make-bib
                         #:type 'misc
-                        ;; optional: (no required field)
+                        ;; optional: all (no required field)
                         #:author (author-attr "author")
                         #:title (content-attr "title")
                         #:date (scalar-attr "year") ;; TODO: month
                         #:location (misc-location
                                       #:howpublished (content-attr "howpublished"))
-                        ;; optional:
                         #:note (content-attr "note")
                         ;; extra: (WHERE IS THAT SPECIFIED?)
                         #:url (url-attr "url")
@@ -610,11 +638,11 @@
                   (make-bib
                         #:type 'phdthesis
                         ;; required:
-                        #:author (author-attr "author")
-                        #:title (content-attr "title")
-                        #:date (scalar-attr "year") ;; TODO: optional month
+                        #:author (author-attr* "author")
+                        #:title (content-attr* "title")
+                        #:date (scalar-attr* "year") ;; TODO: optional month
                         #:location (dissertation-location
-                                      #:institution (content-attr "school")
+                                      #:institution (content-attr* "school")
                                       #:degree "PhD"
                                       ;; optional:
                                       #:type (content-attr "type")
@@ -628,8 +656,8 @@
                   (make-bib
                         #:type 'proceedings
                         ;; required:
-                        #:title (content-attr "title")
-                        #:date (scalar-attr "year") ;; TODO: optional month
+                        #:title (content-attr* "title")
+                        #:date (scalar-attr* "year") ;; TODO: optional month
                         ;; optional:
                         #:location (proceedings-location
                                       #f
@@ -650,11 +678,11 @@
                   (make-bib
                         #:type 'techreport
                         ;; required:
-                        #:author (author-attr "author")
-                        #:title (content-attr "title")
-                        #:date (scalar-attr "year") ;; TODO: optional month
+                        #:author (author-attr* "author")
+                        #:title (content-attr* "title")
+                        #:date (scalar-attr* "year") ;; TODO: optional month
                         #:location (techrpt-location
-                                      #:institution (content-attr "institution")
+                                      #:institution (content-attr* "institution")
                                       ;; optional:
                                       #:type (content-attr "type")
                                       #:number (content-attr "number")
@@ -668,9 +696,9 @@
                   (make-bib
                         #:type 'unpublished
                         ;; required:
-                        #:author (author-attr "author")
-                        #:title (content-attr "title")
-                        #:note (content-attr "note")
+                        #:author (author-attr* "author")
+                        #:title (content-attr* "title")
+                        #:note (content-attr* "note")
                         ;; optional:
                         #:date (scalar-attr "year") ;; TODO: month
                         ;; extra: (WHERE IS THAT SPECIFIED?)
@@ -678,22 +706,28 @@
                         #:doi (url-attr "doi"))]
                  ;; SEEN IN THE WILD, BUT WHERE ARE THESE SPECIFIED???
                  ["online"
+                  ;; Not a standard BIBTEXing entry type, so nothing here is
+                  ;; "required" by any spec; but a webpage citation without a
+                  ;; URL or a title to show for it isn't a citation at all.
                   (make-bib
                         #:type 'webpage
-                        ;; extra: (WHERE IS THAT SPECIFIED?)
-                        #:title (content-attr "title")
-                        #:url (url-attr "url")
+                        ;; required, by our own choice (see above):
+                        #:title (content-attr* "title")
+                        #:url (url-attr* "url")
+                        ;; optional:
                         #:accessed (content-attr "urldate") ;; when visited
                         #:author (author-attr "author")
                         #:note (content-attr "note")
                         #:date (scalar-attr "year") ;; TODO: month ;; presumably when written
                         #:doi (url-attr "doi"))]
                  ["webpage"
+                  ;; Not a standard BIBTEXing entry type; see "online" above.
                   (make-bib
                         #:type 'webpage
-                        ;; extra: (WHERE IS THAT SPECIFIED?)
-                        #:title (content-attr "title")
-                        #:url (url-attr "url")
+                        ;; required, by our own choice (see "online" above):
+                        #:title (content-attr* "title")
+                        #:url (url-attr* "url")
+                        ;; optional:
                         #:accessed (content-attr "lastchecked")
                         #:author (author-attr "author")
                         #:note (content-attr "note")
@@ -1001,13 +1035,15 @@ BIB
   (delete-file tex-path)
 
   ;; Required fields must still produce useful errors when absent.
+  ;; Each fixture below supplies every other required field, so the
+  ;; error is unambiguously about the one field under test.
   (check-exn
    #rx"missing attribute journal"
    (λ ()
      (generate-bib
       (bibtex-parse
        (open-input-string
-        "@article{x, title={X}, year={2026}}"))
+        "@article{x, author={A}, title={X}, year={2026}}"))
       "x")))
 
   (check-exn
@@ -1016,8 +1052,129 @@ BIB
      (generate-bib
       (bibtex-parse
        (open-input-string
-        "@inproceedings{x, title={X}, year={2026}}"))
+        "@inproceedings{x, author={A}, title={X}, year={2026}}"))
       "x")))
+
+  ;; Missing author, title, or year is now caught too.
+  (check-exn
+   #rx"missing attribute author"
+   (λ ()
+     (generate-bib
+      (bibtex-parse
+       (open-input-string
+        "@article{x, title={X}, journal={J}, year={2026}}"))
+      "x")))
+  (check-exn
+   #rx"missing attribute title"
+   (λ ()
+     (generate-bib
+      (bibtex-parse
+       (open-input-string
+        "@article{x, author={A}, journal={J}, year={2026}}"))
+      "x")))
+  (check-exn
+   #rx"missing attribute year"
+   (λ ()
+     (generate-bib
+      (bibtex-parse
+       (open-input-string
+        "@article{x, author={A}, title={X}, journal={J}}"))
+      "x")))
+
+  ;; book/inbook accept either author or editor, but need at least one.
+  (check-exn
+   #rx"missing at least one of attributes \\(author editor\\)"
+   (λ ()
+     (generate-bib
+      (bibtex-parse
+       (open-input-string
+        "@book{x, title={X}, publisher={P}, year={2026}}"))
+      "x")))
+  ;; An editor-only book must not render a bogus "#f" as its author: that
+  ;; was the actual failure mode of calling author-attr on a missing field
+  ;; (it doesn't error, it silently stringifies #f into a fake author name).
+  (define editor-only-db
+    (bibtex-parse
+     (open-input-string
+      "@book{editor-only, editor={Eve Editor}, title={Edited Book}, publisher={P}, year={2026}}")))
+  (define-cite editor-only-cite editor-only-citet editor-only-bibliography)
+  (void (editor-only-cite (generate-bib editor-only-db "editor-only")))
+  (define editor-only-html-path (make-temporary-file "bibtex-editor-only~a.html"))
+  (render (list (editor-only-bibliography))
+          (list editor-only-html-path)
+          #:dest-dir (path-only editor-only-html-path)
+          #:render-mixin html:render-mixin)
+  (define editor-only-html (file->string editor-only-html-path))
+  (check-false (string-contains? editor-only-html "#f"))
+  (check-not-false (string-contains? editor-only-html "Eve Editor"))
+  (delete-file editor-only-html-path)
+
+  ;; inbook additionally needs chapter and/or pages.
+  (check-exn
+   #rx"missing at least one of attributes \\(chapter pages\\)"
+   (λ ()
+     (generate-bib
+      (bibtex-parse
+       (open-input-string
+        "@inbook{x, author={A}, title={X}, publisher={P}, year={2026}}"))
+      "x")))
+  (check-not-exn
+   (λ ()
+     (generate-bib
+      (bibtex-parse
+       (open-input-string
+        "@inbook{x, author={A}, title={X}, publisher={P}, year={2026}, pages={1--2}}"))
+      "x")))
+
+  ;; unpublished requires author, title, and note, but no year.
+  (check-not-exn
+   (λ ()
+     (generate-bib
+      (bibtex-parse
+       (open-input-string
+        "@unpublished{x, author={A}, title={X}, note={N}}"))
+      "x")))
+  (check-exn
+   #rx"missing attribute note"
+   (λ ()
+     (generate-bib
+      (bibtex-parse
+       (open-input-string
+        "@unpublished{x, author={A}, title={X}}"))
+      "x")))
+
+  ;; booklet and manual only require title.
+  (check-not-exn
+   (λ () (generate-bib (bibtex-parse (open-input-string "@booklet{x, title={X}}")) "x")))
+  (check-not-exn
+   (λ () (generate-bib (bibtex-parse (open-input-string "@manual{x, title={X}}")) "x")))
+
+  ;; proceedings requires title and year, but no author.
+  (check-not-exn
+   (λ () (generate-bib (bibtex-parse (open-input-string "@proceedings{x, title={X}, year={2026}}")) "x")))
+
+  ;; misc requires nothing at all.
+  (check-not-exn
+   (λ () (generate-bib (bibtex-parse (open-input-string "@misc{x}")) "x")))
+
+  ;; online/webpage aren't standard BIBTEXing types, but we still require
+  ;; title and url (just not author) as our own policy.
+  (check-not-exn
+   (λ () (generate-bib (bibtex-parse (open-input-string "@online{x, title={X}, url={https://example.org}}")) "x")))
+  (check-exn
+   #rx"missing attribute url"
+   (λ () (generate-bib (bibtex-parse (open-input-string "@online{x, title={X}}")) "x")))
+  (check-exn
+   #rx"missing attribute title"
+   (λ () (generate-bib (bibtex-parse (open-input-string "@online{x, url={https://example.org}}")) "x")))
+  (check-not-exn
+   (λ () (generate-bib (bibtex-parse (open-input-string "@webpage{x, title={X}, url={https://example.org}}")) "x")))
+  (check-exn
+   #rx"missing attribute url"
+   (λ () (generate-bib (bibtex-parse (open-input-string "@webpage{x, title={X}}")) "x")))
+  (check-exn
+   #rx"missing attribute title"
+   (λ () (generate-bib (bibtex-parse (open-input-string "@webpage{x, url={https://example.org}}")) "x")))
 
   (define standard-types-db
     (bibtex-parse

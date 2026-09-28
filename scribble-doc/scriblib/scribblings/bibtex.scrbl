@@ -11,9 +11,12 @@
 
 This library supports parsing BibTeX @litchar{.bib} files.
 
-We support the 14 BibTeX entry types documented
-@hyperlink["https://www.openoffice.org/bibliographic/bibtex-defs.html"]{in the LaTeX book}
-(1986) Appendix B.2:
+We support the 14 standard BibTeX entry types documented in Oren
+Patashnik's
+@hyperlink["https://ctan.org/pkg/bibtex"]{@italic{BIBTEXing}}
+(February 8, 1988), §3.1 "Entry Types" — the definitive reference for
+classic BibTeX, which updates Appendix B.2 of Leslie Lamport's
+@italic{LaTeX: A Document Preparation System} (1986):
 @litchar{article}, @litchar{book}, @litchar{booklet}, @litchar{conference},
 @litchar{inbook}, @litchar{incollection}, @litchar{inproceedings},
 @litchar{manual}, @litchar{mastersthesis}, @litchar{misc}, @litchar{phdthesis},
@@ -41,8 +44,8 @@ LaTeX escapes for special URL characters, such as
 @litchar{\_}, @litchar{\%} and @litchar{\&}, are unescaped.
 Other LaTeX commands are not interpreted in these fields.
 
-We support all the required and optional fields documented in the LaTeX book,
-with the following known limitations so far:
+We support all the required and optional fields documented in
+@italic{BIBTEXing}, with the following known limitations so far:
 @itemize[
   @item{We fail to process @litchar{month}.}
   @item{We only support @litchar{pages} fields that have decimal numbers
@@ -52,14 +55,64 @@ with the following known limitations so far:
         @litchar{isbn}, @litchar{issn}, nor any other non-standard field
         except those described below.}]
 
-In addition to the old standard entries, we support the often seen
+For each standard entry type, the fields that
+@hyperlink["https://ctan.org/pkg/bibtex"]{@italic{BIBTEXing}} §3.1 marks
+required are enforced at parse time: a missing one raises an error,
+rather than being silently treated as absent the way every other field
+is. This is:
+@itemize[
+  @item{@litchar{article}: @litchar{author}, @litchar{title},
+        @litchar{journal}, @litchar{year}.}
+  @item{@litchar{book}: @litchar{author} or @litchar{editor},
+        @litchar{title}, @litchar{publisher}, @litchar{year}.}
+  @item{@litchar{booklet}: @litchar{title}.}
+  @item{@litchar{conference}: same as @litchar{inproceedings}.}
+  @item{@litchar{inbook}: @litchar{author} or @litchar{editor},
+        @litchar{title}, @litchar{chapter} and/or @litchar{pages},
+        @litchar{publisher}, @litchar{year}.}
+  @item{@litchar{incollection}: @litchar{author}, @litchar{title},
+        @litchar{booktitle}, @litchar{publisher}, @litchar{year}.}
+  @item{@litchar{inproceedings}: @litchar{author}, @litchar{title},
+        @litchar{booktitle}, @litchar{year}.}
+  @item{@litchar{manual}: @litchar{title}.}
+  @item{@litchar{mastersthesis}: @litchar{author}, @litchar{title},
+        @litchar{school}, @litchar{year}.}
+  @item{@litchar{misc}: none.}
+  @item{@litchar{phdthesis}: @litchar{author}, @litchar{title},
+        @litchar{school}, @litchar{year}.}
+  @item{@litchar{proceedings}: @litchar{title}, @litchar{year}.}
+  @item{@litchar{techreport}: @litchar{author}, @litchar{title},
+        @litchar{institution}, @litchar{year}.}
+  @item{@litchar{unpublished}: @litchar{author}, @litchar{title},
+        @litchar{note} (no @litchar{year}).}]
+An @litchar{author}-or-@litchar{editor} or
+@litchar{chapter}-and/or-@litchar{pages} requirement above is enforced
+as: an error unless at least one of the two fields is present.
+
+Note that this is stricter than classic BibTeX itself: per
+@italic{BIBTEXing}, "required" is a property of the standard
+bibliography styles, not a constraint on the @tt{.bib} file format
+itself — a real BibTeX run only warns about a missing required field
+and still processes the entry, however poorly formatted the result.
+We chose to make it a hard error here instead, on the theory that a
+citation silently missing its journal or its year is worse than one
+that fails to build at all.
+
+In addition to the 14 standard entries, we support the often seen
 @litchar{online} and @litchar{webpage} entry types,
 for which we support the fields @litchar{url}, @litchar{title}, @litchar{author}.
 Additionally @litchar{online} has field @litchar{urldate} for the day the site was visited,
 whereas @litchar{webpage} instead has field @litchar{lastchecked}.
+Neither is among @italic{BIBTEXing}'s standard entry types, so there is
+no spec to draw a required-fields list from; but by our own choice,
+@litchar{title} and @litchar{url} are required for both (a webpage
+citation with neither isn't a citation), while @litchar{author} stays
+optional, since most web pages don't have a clean byline.
 
-Also, for every entry type, we support the extra optional fields
-@litchar{note}, @litchar{url}, @litchar{doi}.
+Also, for every entry type, we support the extra fields
+@litchar{note}, @litchar{url}, @litchar{doi} — all optional, except that
+@litchar{url} is required (see above) for @litchar{online} and
+@litchar{webpage}, the two entry types it's actually about.
 But mind that the @litchar{doi} field currently overrides the @litchar{url}
 in @racketmodname[scriblib/autobib].
 
@@ -73,7 +126,17 @@ We do support the @litchar["@string"] feature defined in
 @history[#:changed "1.68"
   @elem{Added structured LaTeX content parsing, improved
         author-name handling, URL and DOI unescaping,
-        and support for multi-paragraph notes.}]
+        and support for multi-paragraph notes. Started enforcing,
+        as hard parse-time errors, the fields
+        @italic{BIBTEXing} marks required for each standard entry
+        type (see above), including its author-or-editor and
+        chapter-and/or-pages disjunctions; also require
+        @litchar{title} and @litchar{url} on @litchar{online} and
+        @litchar{webpage} entries, by our own choice rather than any
+        spec. Fixed a latent bug where an @litchar{editor}-only
+        @litchar{book} or @litchar{inbook} entry (valid, since author
+        is not required when editor is given) would silently render
+        a bogus @tt{"#f"} in place of the missing author's name.}]
 
 @defform[(define-bibtex-cite bib-pth ~cite-id citet-id generate-bibliography-id
            option ...)]{
