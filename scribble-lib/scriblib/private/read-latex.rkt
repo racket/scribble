@@ -261,8 +261,6 @@
                     [(eqv? (peek-char ip) #\{)
                      (read-char ip)
                      (define body (read-group #t))
-                     (emit! (cond
-                              [(string=? word "emph") (apply emph body)]
                               [(string=? word "texttt") (apply tt body)]
                               [(string=? word "textit") (apply italic body)]
                               [(string=? word "textbf") (apply bold body)]
