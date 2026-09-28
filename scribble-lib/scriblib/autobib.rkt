@@ -436,12 +436,15 @@
                  '(". ")))
          null)
      ;; (if is-book? null '(ldquo))
-     (if is-book?
-         (list (italic title))
-         (decode-content (list title)))
-     (if (ends-in-punc? title)
-         null
-         '("."))
+     (if title
+         (append
+          (if is-book?
+              (list (italic title))
+              (decode-content (list title)))
+          (if (ends-in-punc? title)
+              null
+              '(".")))
+         null)
      ;; (if is-book? null '(rdquo))
      (if location
          `(" " ,@(decode-content (list location)) ,(if date "," "."))
@@ -565,7 +568,7 @@
                   (make-element #f
                                 (append
                                  (if author* (list author*) null)
-                                 (list title)
+                                 (if title (list title) null)
                                  (if location (decode-content (list location)) null)
                                  (if date (decode-content (list (default-render-date-bib parsed-date))) null)
                                  (if (and (not doi) url) (list [(url-rendering) url]) null)
@@ -682,6 +685,13 @@
                         default-render-date-bib 1))))))
   (check-equal? (entry-first-text no-note)
                 "Title. doi:10.1234/foo")
+  ;; #:title is a mandatory keyword, but its value may still be #f -- e.g. a
+  ;; bibtex misc entry has no required fields at all. make-bib must be able
+  ;; to construct such a bib, and bib->entry must be able to render it,
+  ;; without a title.
+  (check-not-exn (λ () (make-bib #:title #f #:doi "10.1234/foo")))
+  (check-equal? (entry-first-text (make-bib #:title #f #:doi "10.1234/foo"))
+                " doi:10.1234/foo")
   (check-equal? (entry-first-text with-note)
                 "Title. doi:10.1234/foo. A note")
   (check-equal?
