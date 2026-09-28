@@ -1155,7 +1155,7 @@ BIB
 
   ;; misc requires nothing at all.
   (check-not-exn
-   (λ () (generate-bib (bibtex-parse (open-input-string "@misc{x}")) "x")))
+   (λ () (generate-bib (bibtex-parse (open-input-string "@misc{x,}")) "x")))
 
   ;; online/webpage aren't standard BIBTEXing types, but we still require
   ;; title and url (just not author) as our own policy.

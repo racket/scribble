@@ -31,7 +31,12 @@
   (check-not-exn
     (λ () (journal-location 'JFP)))
   (check-exn exn:fail:contract?
-    (λ () (journal-location "Journal of Chromatography" #:pages 30))))
+    (λ () (journal-location "Journal of Chromatography" #:pages 30)))
+  ;; title is a genuinely required argument, so journal-location is contracted
+  ;; to always return an element: passing #f (i.e. no real information)
+  ;; violates that contract instead of quietly producing #f.
+  (check-exn exn:fail:contract?
+    (λ () (journal-location #f))))
 
 (test-case "book-location"
   (check-not-exn
@@ -62,7 +67,21 @@
   (check-not-exn
     (λ () (techrpt-location #:institution "MIT" #:number 'AIM-353)))
   (check-not-exn
-    (λ () (techrpt-location #:institution 'UCB))))
+    (λ () (techrpt-location #:institution 'UCB)))
+  ;; institution is a genuinely required argument, so techrpt-location is
+  ;; contracted to always return an element: passing #f violates that
+  ;; contract instead of quietly producing #f.
+  (check-exn exn:fail:contract?
+    (λ () (techrpt-location #:institution #f))))
+
+(test-case "book-chapter-location"
+  (check-not-exn
+    (λ () (book-chapter-location "Handbook of X" #:publisher "Springer")))
+  ;; title (the leading location argument) is a genuinely required argument,
+  ;; so book-chapter-location is contracted to always return an element:
+  ;; passing #f violates that contract instead of quietly producing #f.
+  (check-exn exn:fail:contract?
+    (λ () (book-chapter-location #f))))
 
 (test-case "dissertation-location"
   (check-not-exn

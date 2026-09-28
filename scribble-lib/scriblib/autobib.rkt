@@ -713,13 +713,11 @@
                                #:accessed "January 2024"
                                #:note "A note"))
    "Title. doi:10.1234/foo. A note")
-  ;; journal-location, techrpt-location, and book-chapter-location always have a
-  ;; genuinely required argument, so they're contracted to always return an element;
-  ;; passing #f for that argument (i.e. supplying no real information) now violates
-  ;; that contract instead of quietly producing #f.
-  (check-exn exn:fail:contract? (λ () (journal-location #f)))
-  (check-exn exn:fail:contract? (λ () (techrpt-location #:institution #f)))
-  (check-exn exn:fail:contract? (λ () (book-chapter-location #f)))
+  ;; journal-location, techrpt-location, and book-chapter-location are contracted to
+  ;; always return an element when given #f for their required argument (i.e.
+  ;; supplying no real information) -- but that's only enforced at the contract-out
+  ;; boundary, which this same-module test submodule bypasses; see
+  ;; scribble-test/tests/scriblib/autobib.rkt for the check-exn versions of this.
   ;; proceedings-location may legitimately be called with nothing at all
   ;; (bibtex.rkt does exactly this for a bare "proceedings" entry).
   (check-false (proceedings-location #f))
