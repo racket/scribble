@@ -1114,7 +1114,16 @@ property}:
        Instead, the word ``section'' is shown followed by a
        hyperlinked section number. The word ``section'' starts in
        uppercase if the element's style includes a @racket['uppercase]
-       property.}
+       property.
+
+       In @racket['number-and-title] mode, both are shown together,
+       hyperlinked as a unit: the section number (if the section has
+       one), the symbol ``§'', and the section title in quotes --- e.g.,
+       ``§3.2 “Some Section”''. A section with no number (e.g., an
+       @racket['unnumbered] part) instead shows just its quoted title,
+       with no ``§'' or number. This mode is currently HTML-specific;
+       other output formats fall back to their @racket['default] mode
+       instead.}
 
  @item{For Latex/PDF output, the generated reference's format can
        depend on the document style in addition the @racket[_mode].
@@ -1172,7 +1181,8 @@ properties for all @racket[element]s:
 ]
 
 @history[#:changed "1.26" @elem{Added @racket[link-render-style] support.}
-         #:changed "1.65" @elem{Added @racket[link-query-addition] support.}]}
+         #:changed "1.65" @elem{Added @racket[link-query-addition] support.}
+         #:changed "1.68" @elem{Added the @racket['number-and-title] mode.}]}
 
 
 @defstruct[(index-element element) ([tag tag?]
@@ -1640,7 +1650,7 @@ subsection numbers. See also @racket[collected-info].
 @history[#:added "1.1"]}
 
 
-@defstruct[link-render-style ([mode (or/c 'default 'number)])]{
+@defstruct[link-render-style ([mode (or/c 'default 'number 'number-and-title)])]{
 
 Used as a @tech{style property} for a @racket[part] or a specific
 @racket[link-element] to control the way that a hyperlink is rendered
@@ -1655,7 +1665,13 @@ hyperlinked. The @racket['default] style is more flexible, allowing a
 more appropriate choice for the rendering context, such as using the
 target section's name for a hyperlink in HTML.
 
-@history[#:added "1.26"]}
+The @racket['number-and-title] mode shows both the number and the
+title together, currently only for HTML output (other formats fall
+back to @racket['default]); see @racket[link-element] for the exact
+rendering.
+
+@history[#:added "1.26"
+         #:changed "1.68" @elem{Added the @racket['number-and-title] mode.}]}
 
 
 @defparam[current-link-render-style style link-render-style?]{

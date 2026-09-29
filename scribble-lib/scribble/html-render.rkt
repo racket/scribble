@@ -1470,6 +1470,11 @@
                                  (not (or (not n)
                                           (string=? "" (apply string-append (format-number n '("")))))))
                                (eq? 'number (link-render-style-at-element e))
+                               (empty-content? (element-content e)))]
+                         [(number-and-title-link?)
+                          (and dest
+                               (not ext-id)
+                               (eq? 'number-and-title (link-render-style-at-element e))
                                (empty-content? (element-content e)))])
              (define (extract-query)
                (let ([s (element-style e)])
@@ -1554,6 +1559,10 @@
                     ,@(if (empty-content? (element-content e))
                           (cond
                             [number-link? (format-number (dest-number dest) '(""))]
+                            [number-and-title-link?
+                             (define num (format-number (dest-number dest) '(" ")))
+                             `(,@(if (null? num) '() `("§" ,@num))
+                               "“" ,@(render-content (strip-aux (dest-title dest)) part ri) "”")]
                             [else
                              (render-content (strip-aux (dest-title dest)) part ri)])
                           (render-content (element-content e) part ri))))
