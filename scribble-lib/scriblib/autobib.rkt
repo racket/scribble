@@ -624,8 +624,8 @@
 (define (stringify v)
   (and v (content->string (contentify v))))
 
-;; wrap non-#f content as an element, for backward compatibility with
-;; the *-location functions' historical result type. Flattens c first, so
+;; wrap non-#f content as an element, since the *-location functions are
+;; documented to return element?, not generic content. Flattens c first, so
 ;; content that's merely empty (e.g. "") normalizes to #f like an omitted
 ;; argument does, rather than becoming a visibly-empty but non-#f element.
 ;; Only call this on results that aren't already elements.
@@ -742,11 +742,10 @@
                                #:accessed "January 2024"
                                #:note "A note"))
    "Title. doi:10.1234/foo. A note")
-  ;; journal-location, techrpt-location, and book-chapter-location are contracted to
-  ;; always return an element when given #f for their required argument (i.e.
-  ;; supplying no real information), via ensure-nontrivial-content; see
-  ;; scribble-test/tests/scriblib/autobib.rkt for the check-exn versions of this
-  ;; going through the exported, contracted bindings instead.
+  ;; journal-location, techrpt-location, and book-chapter-location always
+  ;; return an element: each has a genuinely required argument, and
+  ;; ensure-nontrivial-content raises rather than letting a trivial value
+  ;; (i.e. no real information) through silently.
   ;; proceedings-location, book-location, booklet-location, misc-location, and
   ;; manual-location may gracefully return #f when every argument is #f or
   ;; empty content -- but only for plain (undecorated) fields: an explicitly

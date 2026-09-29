@@ -341,10 +341,19 @@
     ;; Renders a part-label secref/figure-ref element completely on its own,
     ;; for the 'short and 'number-and-title link-render-style modes: "§N.M"
     ;; or "§N.M "Title"" (falling back to just the quoted title when the
-    ;; section is unnumbered), the whole thing hyperlinked as one unit via
-    ;; the ordinary \hyperref macro. This bypasses the \SecRef*/\ChapRef*
-    ;; macro family entirely, so it doesn't depend on which .tex style is
-    ;; loaded, unlike 'default and 'number (see render-content below).
+    ;; section is unnumbered). Bypasses the \SecRef*/\ChapRef* macro family
+    ;; entirely, so it doesn't depend on which .tex style is loaded, unlike
+    ;; 'default and 'number (see render-content below).
+    ;;
+    ;; Builds ordinary content -- "§", the number, the curly-quoted title --
+    ;; and wraps it in a fresh link-element sharing e's tag but with
+    ;; non-empty content. Rendering that recursively through render-content
+    ;; routes it through the ordinary (non-part-label) content path below,
+    ;; which already resolves hyperref? and wraps linked content in
+    ;; \hyperref[...]{...}; so this needs no hyperref/brace bookkeeping of
+    ;; its own, and "§"/curly quotes get the same character-escaping
+    ;; (convert-to-latex) as any other text.
+    ;;
     ;; dest/ext?/formatted-number are whatever render-content already
     ;; computed for this element, passed in rather than recomputed.
     ;; Returns #t if it rendered something, in which case the caller should
@@ -355,23 +364,18 @@
       (define mode (link-render-style-at-element e))
       (define ok? (and dest (not ext?) (not (show-link-page-numbers))))
       (define has-number? (and ok? formatted-number (pair? formatted-number)))
-      (cond
-        [(and ok? (eq? mode 'number-and-title))
-         (printf "\\hyperref[t:~a]{" (t-encode (vector-ref dest 1)))
-         (when has-number?
-           (printf "{\\S}")
-           (render-content formatted-number part ri)
-           (printf " "))
-         (printf "{``}")
-         (render-content (strip-aux (vector-ref dest 0)) part ri)
-         (printf "{''}}")
-         #t]
-        [(and ok? (eq? mode 'short) has-number?)
-         (printf "\\hyperref[t:~a]{{\\S}" (t-encode (vector-ref dest 1)))
-         (render-content formatted-number part ri)
-         (printf "}")
-         #t]
-        [else #f]))
+      (define content
+        (cond
+          [(and ok? (eq? mode 'number-and-title))
+           (append (if has-number? (list "§" formatted-number " ") null)
+                   (list "“" (strip-aux (vector-ref dest 0)) "”"))]
+          [(and ok? (eq? mode 'short) has-number?)
+           (list "§" formatted-number)]
+          [else #f]))
+      (and content
+           (begin
+             (render-content (make-link-element #f content (link-element-tag e)) part ri)
+             #t)))
 
     (define/override (render-content e part ri)
       (let ([part-label? (and (link-element? e)

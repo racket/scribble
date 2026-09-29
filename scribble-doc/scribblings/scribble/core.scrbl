@@ -1116,17 +1116,24 @@ property}:
        uppercase if the element's style includes a @racket['uppercase]
        property.
 
-       In @racket['number-and-title] mode, both are shown together,
-       hyperlinked as a unit: the section number (if the section has
-       one), the symbol ``§'', and the section title in quotes --- e.g.,
-       ``§3.2 “Some Section”''. A section with no number (e.g., an
-       @racket['unnumbered] part) instead shows just its quoted title,
-       with no ``§'' or number. This mode is currently HTML-specific;
-       other output formats fall back to their @racket['default] mode
-       instead.}
+       In @racket['short] mode, only the section number is shown, as
+       ``§3.2'', the whole thing (symbol and number together)
+       hyperlinked as a unit --- no word, no title.
+
+       In @racket['number-and-title] mode, both the number and the
+       title are shown together, hyperlinked as a unit: the section
+       number (if the section has one), the symbol ``§'', and the
+       section title in quotes --- e.g., ``§3.2 “Some Section”''.
+
+       For both @racket['short] and @racket['number-and-title], a
+       section with no number (e.g., an @racket['unnumbered] part)
+       falls back instead: @racket['number-and-title] shows just the
+       quoted title, with no ``§'' or number; @racket['short] falls
+       back to whatever @racket['default] would show.}
 
  @item{For Latex/PDF output, the generated reference's format can
-       depend on the document style in addition the @racket[_mode].
+       depend on the document style in addition the @racket[_mode],
+       for the @racket['default] and @racket['number] modes.
        For the @racket['default] mode and a default document style, a
        section number is shown by the word ``section'' followed by the
        section number, and the word ``section'' and the section number
@@ -1139,10 +1146,17 @@ property}:
        only the number is hyperlinked, not the word ``section'' or
        the ``§'' symbol.
 
-       A new document style can customize Latex/PDF output (see
-       @secref["config"]) by redefining the @ltx{SecRefLocal}, @|etc|,
-       macros (see @secref["builtin-latex"]). The @ltx{SecRef},
-       @|etc|, variants are used in @racket['number] mode.}
+       A new document style can customize this part of Latex/PDF
+       output (see @secref["config"]) by redefining the
+       @ltx{SecRefLocal}, @|etc|, macros (see
+       @secref["builtin-latex"]). The @ltx{SecRef}, @|etc|, variants
+       are used in @racket['number] mode.
+
+       The @racket['short] and @racket['number-and-title] modes
+       render the same way as they do for HTML (described above),
+       @emph{regardless} of the document style: they bypass the
+       @ltx{SecRefLocal} macro family entirely, so a document style
+       cannot customize their appearance by redefining those macros.}
 
 ]
 
@@ -1182,7 +1196,8 @@ properties for all @racket[element]s:
 
 @history[#:changed "1.26" @elem{Added @racket[link-render-style] support.}
          #:changed "1.65" @elem{Added @racket[link-query-addition] support.}
-         #:changed "1.68" @elem{Added the @racket['number-and-title] mode.}]}
+         #:changed "1.69" @elem{Added the @racket['short] and
+           @racket['number-and-title] modes.}]}
 
 
 @defstruct[(index-element element) ([tag tag?]
@@ -1665,13 +1680,16 @@ hyperlinked. The @racket['default] style is more flexible, allowing a
 more appropriate choice for the rendering context, such as using the
 target section's name for a hyperlink in HTML.
 
-The @racket['number-and-title] mode shows both the number and the
-title together, currently only for HTML output (other formats fall
-back to @racket['default]); see @racket[link-element] for the exact
-rendering.
+The @racket['short] mode shows just the number, as ``§3.2''; the
+@racket['number-and-title] mode shows the number and the title
+together, as ``§3.2 “Some Section”''. Both bypass the document style's
+own customization of @racket['default]/@racket['number] rendering; see
+@racket[link-element] for the exact rendering, including how each
+falls back when a section has no number.
 
 @history[#:added "1.26"
-         #:changed "1.68" @elem{Added the @racket['number-and-title] mode.}]}
+         #:changed "1.69" @elem{Added the @racket['short] and
+           @racket['number-and-title] modes.}]}
 
 
 @defparam[current-link-render-style style link-render-style?]{

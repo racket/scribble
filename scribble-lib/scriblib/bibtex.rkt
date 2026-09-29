@@ -1034,7 +1034,7 @@ BIB
   (check-not-false (string-contains? compat-tex "J.~of Things"))
   (delete-file tex-path)
 
-  ;; Required fields must still produce useful errors when absent.
+  ;; Required fields produce a clear error when absent.
   ;; Each fixture below supplies every other required field, so the
   ;; error is unambiguously about the one field under test.
   (check-exn
@@ -1055,7 +1055,7 @@ BIB
         "@inproceedings{x, author={A}, title={X}, year={2026}}"))
       "x")))
 
-  ;; Missing author, title, or year is now caught too.
+  ;; Author, title, and year are each independently required.
   (check-exn
    #rx"missing attribute author"
    (λ ()
@@ -1157,8 +1157,8 @@ BIB
   (check-not-exn
    (λ () (generate-bib (bibtex-parse (open-input-string "@misc{x,}")) "x")))
 
-  ;; online/webpage aren't standard BIBTEXing types, but we still require
-  ;; title and url (just not author) as our own policy.
+  ;; online/webpage aren't standard BIBTEXing types, but title and url
+  ;; (just not author) are required here as our own policy.
   (check-not-exn
    (λ () (generate-bib (bibtex-parse (open-input-string "@online{x, title={X}, url={https://example.org}}")) "x")))
   (check-exn
