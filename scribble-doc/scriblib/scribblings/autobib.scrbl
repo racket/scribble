@@ -49,8 +49,8 @@ function can be used. For example, the following snippet:
 includes a citation to section 8 of the Racket reference.
 
 @history[#:changed "1.61"
-  @elem{Added fields and location types for better bibtex support.}]
-@history[#:changed "1.68"
+  @elem{Added fields and location types for better bibtex support.}
+         #:changed "1.68"
   @elem{Improved bibliography layout, added support for
         multi-paragraph notes and extended support for
         structured content in bibliography fields.}]
@@ -253,8 +253,8 @@ name, the last non-empty sequence of alphabetic characters or
 @litchar["-"] after a space is treated as the author name, and the
 rest is treated as the first name.
 
-@history[#:changed "1.49" @elem{Added @racket[#:doi].}]
-@history[#:changed "1.68"
+@history[#:changed "1.49" @elem{Added @racket[#:doi].}
+         #:changed "1.68"
   @elem{Added @racket[#:accessed], which replaces the accessed-date
         support formerly provided by the now-removed @tt{webpage-location}
         function: the accessed date is now attached directly to the
@@ -309,8 +309,8 @@ empty, except that explicitly-supplied-but-trivial content raises for
 surrounding text (see above).
 
 @history[#:changed "1.61"
-  @elem{Added fields for bibtex support: editor number organization publisher address.}]
-@history[#:changed "1.68"
+  @elem{Added fields for bibtex support: editor number organization publisher address.}
+         #:changed "1.68"
   @elem{Added @racket[#f] as a possible result.}]
 }
 
@@ -347,7 +347,8 @@ Other chapter content is used unchanged.
 
 @history[#:changed "1.61"
   @elem{Added fields for bibtex support: editor chapter series volume number pages address.
-        Made all arguments optional.}]
+        Made all arguments optional.}
+         #:changed "1.68" @elem{Added @racket[#f] as a possible result.}]
 }
 
 
@@ -359,7 +360,8 @@ describing a booklet's location. Neither argument is wrapped in
 surrounding text, so returns @racket[#f] when both are omitted or
 empty, with no exceptions.
 
-@history[#:added "1.61"]
+@history[#:added "1.61"
+         #:changed "1.68" @elem{Added @racket[#f] as a possible result.}]
 }
 
 
@@ -369,7 +371,8 @@ Combines the supplied information to produce content suitable for
 describing a bibtex misc entry's location. Its one argument isn't
 wrapped in surrounding text, so returns @racket[#f] when it's omitted
 or empty, with no exception.
-@history[#:added "1.61"]
+@history[#:added "1.61"
+         #:changed "1.68" @elem{Added @racket[#f] as a possible result.}]
 }
 
 
@@ -382,7 +385,8 @@ arguments are omitted or empty, except that explicitly-supplied-but-
 trivial content raises for @racket[#:edition] specifically (see
 above).
 
-@history[#:added "1.61"]
+@history[#:added "1.61"
+         #:changed "1.68" @elem{Added @racket[#f] as a possible result.}]
 }
 
 
