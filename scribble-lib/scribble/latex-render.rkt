@@ -338,6 +338,41 @@
           (printf "\\noindent ")))
       (super render-intrapara-block p part ri first? last? starting-item?))
 
+    ;; Renders a part-label secref/figure-ref element completely on its own,
+    ;; for the 'short and 'number-and-title link-render-style modes: "§N.M"
+    ;; or "§N.M "Title"" (falling back to just the quoted title when the
+    ;; section is unnumbered), the whole thing hyperlinked as one unit via
+    ;; the ordinary \hyperref macro. This bypasses the \SecRef*/\ChapRef*
+    ;; macro family entirely, so it doesn't depend on which .tex style is
+    ;; loaded, unlike 'default and 'number (see render-content below).
+    ;; dest/ext?/formatted-number are whatever render-content already
+    ;; computed for this element, passed in rather than recomputed.
+    ;; Returns #t if it rendered something, in which case the caller should
+    ;; do nothing else for this element; #f if this element doesn't qualify
+    ;; for self-contained rendering (caller should fall back to the usual
+    ;; part-label rendering).
+    (define/private (render-self-contained-secref e part ri dest ext? formatted-number)
+      (define mode (link-render-style-at-element e))
+      (define ok? (and dest (not ext?) (not (show-link-page-numbers))))
+      (define has-number? (and ok? formatted-number (pair? formatted-number)))
+      (cond
+        [(and ok? (eq? mode 'number-and-title))
+         (printf "\\hyperref[t:~a]{" (t-encode (vector-ref dest 1)))
+         (when has-number?
+           (printf "{\\S}")
+           (render-content formatted-number part ri)
+           (printf " "))
+         (printf "{``}")
+         (render-content (strip-aux (vector-ref dest 0)) part ri)
+         (printf "{''}}")
+         #t]
+        [(and ok? (eq? mode 'short) has-number?)
+         (printf "\\hyperref[t:~a]{{\\S}" (t-encode (vector-ref dest 1)))
+         (render-content formatted-number part ri)
+         (printf "}")
+         #t]
+        [else #f]))
+
     (define/override (render-content e part ri)
       (let ([part-label? (and (link-element? e)
                               (pair? (link-element-tag e))
@@ -348,271 +383,274 @@
           (when (target-element? e)
             (printf "\\label{t:~a}"
                     (t-encode (add-current-tag-prefix (tag-key (target-element-tag e) ri)))))
-          (when part-label?
-            (define-values (dest ext?) (resolve-get/ext? part ri (link-element-tag e)))
-            (let* ([number (and dest (vector-ref dest 2))]
-                   [formatted-number (and dest
-                                          (list? number)
-                                          (format-number number null))]
-                   [lbl? (and dest 
-                              (not ext?)
-                              (not (show-link-page-numbers)))]
-                   [link-number? (and lbl?
-                                      (eq? 'number (link-render-style-at-element e)))])
-              (printf "\\~aRef~a~a~a{"
-                      (case (and dest (number-depth number))
-                        [(0) "Book"]
-                        [(1) (if (string? (car number)) "Part" "Chap")]
-                        [else "Sec"])
-                      (if (and lbl? (not link-number?))
-                          "Local"
-                          "")
-                      (if (let ([s (element-style e)])
-                            (and (style? s) (memq 'uppercase (style-properties s))))
-                          "UC"
-                          "")
-                      (if (null? formatted-number)
-                          "UN"
-                          ""))
-              (when (and lbl? (not link-number?))
-                (printf "t:~a}{" (t-encode (vector-ref dest 1))))
-              (unless (null? formatted-number)
-                (when link-number? (printf "\\SectionNumberLink{t:~a}{" (t-encode (vector-ref dest 1))))
-                (render-content
-                 (if dest
-                     (if (list? number)
-                         formatted-number
-                         (begin (eprintf "Internal tag error: ~s -> ~s\n"
-                                         (link-element-tag e)
-                                         dest)
-                                '("!!!")))
-                     (list "???"))
-                 part ri)
-                (when link-number? (printf "}"))
-                (printf "}{"))))
-          (let* ([es (cond
-                      [(element? e) (element-style e)]
-                      [(multiarg-element? e) (multiarg-element-style e)]
-                      [else #f])]
-                 [style-name (if (style? es)
-                                 (style-name es)
-                                 es)]
-                 [style (and (style? es) es)]
-                 [hyperref? (and (not part-label?)
-                                 (link-element? e)
-                                 (not (disable-hyperref))
-                                 (let-values ([(dest ext?) (resolve-get/ext? part ri (link-element-tag e))])
-                                   (and (not ext?) dest)))]
-                 [check-render
-                  (lambda ()
-                    (when (render-element? e)
-                      ((render-element-render e) this part ri)))]
-                 [core-render (lambda (e tt?)
-                                (cond
-                                 [(and (image-element? e)
-                                       (not (disable-images)))
-                                  (check-render)
-                                  (let ([fn (install-file
-                                             (select-suffix 
-                                              (collects-relative->path
-                                               (image-element-path e))
-                                              (image-element-suffixes e) 
-                                              '(".pdf" ".ps" ".png")))])
-                                    (printf "\\includegraphics[scale=~a]{~a}"
-                                            (image-element-scale e) fn))]
-                                 [(and (convertible? e)
-                                       (not (disable-images))
-                                       (let ([ftag (lambda (v suffix [scale 1]) (and v (list v suffix scale)))]
-                                             [xxlist (lambda (v) (and v (list v #f #f #f #f #f #f #f #f)))]
-                                             [xlist (lambda (v) (and v (append v (list 0 0 0 0))))])
-                                         (for/or ([req (in-list image-reqs)])
-                                           (case req
-                                             [(eps-bytes)
-                                              (or (ftag (convert e 'eps-bytes+bounds8) ".ps")
-                                                  (ftag (xlist (convert e 'eps-bytes+bounds)) ".ps")
-                                                  (ftag (xxlist (convert e 'eps-bytes)) ".ps"))]
-                                             [(pdf-bytes)
-                                              (or (ftag (convert e 'pdf-bytes+bounds8) ".pdf")
-                                                  (ftag (xlist (convert e 'pdf-bytes+bounds)) ".pdf")
-                                                  (ftag (xxlist (convert e 'pdf-bytes)) ".pdf"))]
-                                             [(png@2x-bytes)
-                                              (or (ftag (convert e 'png@2x-bytes+bounds8) ".png" 0.5)
-                                                  (ftag (xxlist (convert e 'png@2x-bytes)) ".png" 0.5))]
-                                             [(png-bytes)
-                                              (or (ftag (convert e 'png-bytes+bounds8) ".png")
-                                                  (ftag (xxlist (convert e 'png-bytes)) ".png"))]))))
-                                  => (lambda (bstr+info+suffix)
-                                       (check-render)
-                                       (let* ([bstr (list-ref (list-ref bstr+info+suffix 0) 0)]
-                                              [suffix (list-ref bstr+info+suffix 1)]
-                                              [scale (list-ref bstr+info+suffix 2)]
-                                              [height (list-ref (list-ref bstr+info+suffix 0) 2)]
-                                              [pad-left (or (list-ref (list-ref bstr+info+suffix 0) 5) 0)]
-                                              [pad-top (or (list-ref (list-ref bstr+info+suffix 0) 6) 0)]
-                                              [pad-right (or (list-ref (list-ref bstr+info+suffix 0) 7) 0)]
-                                              [pad-bottom (or (list-ref (list-ref bstr+info+suffix 0) 8) 0)]
-                                              [descent (and height
-                                                            (- (+ (list-ref (list-ref bstr+info+suffix 0) 3)
-                                                                  (- (ceiling height) height))
-                                                               pad-bottom))]
-                                              [width (let ([w (list-ref (list-ref bstr+info+suffix 0) 1)])
-                                                       (and w (- w pad-left pad-right)))]
-                                              [fn (install-file (format "pict~a" suffix) bstr)])
-                                         (if descent
-                                             (printf "\\raisebox{-~abp}{\\makebox[~abp][l]{\\includegraphics[~atrim=~a ~a ~a ~a]{~a}}}" 
-                                                     descent
-                                                     width
-                                                     (if (= scale 1) "" (format "scale=~a," scale))
-                                                     (/ pad-left scale) (/ pad-bottom scale) (/ pad-right scale) (/ pad-top scale)
-                                                     fn)
-                                             (printf "\\includegraphics{~a}" fn))))]
-                                 [else
-                                  (parameterize ([rendering-tt (or tt? (rendering-tt))])
-                                    (super render-content e part ri))]))]
-                 [wrap (lambda (e s tt?)
-                         (when s (printf "\\~a{" s))
-                         (core-render e tt?)
-                         (when s (printf "}")))])
-            (define (finish tt?)
-              (cond
-               [(symbol? style-name)
-                (case style-name
-                  [(emph) (wrap e "emph" tt?)]
-                  [(italic) (wrap e "textit" tt?)]
-                  [(bold) (wrap e "textbf" tt?)]
-                  [(tt) (wrap e "Scribtexttt" #t)]
-                  [(url) (wrap e "Snolinkurl" 'url)]
-                  [(no-break) (wrap e "mbox" tt?)]
-                  [(sf) (wrap e "textsf" #f)]
-                  [(roman) (wrap e "textrm" #f)]
-                  [(subscript) (wrap e "textsub" #f)]
-                  [(superscript) (wrap e "textsuper" #f)]
-                  [(smaller) (wrap e "Smaller" #f)]
-                  [(larger) (wrap e "Larger" #f)]
-                  [(hspace)
-                   (check-render)
-                   (let ([s (content->string e)])
-                     (case (string-length s)
-                       [(0) (void)]
-                       [else
-                        (printf "\\mbox{\\hphantom{\\Scribtexttt{~a}}}"
-                                (regexp-replace* #rx"." s "x"))]))]
-                  [(newline) 
-                   (check-render)
-                   (unless (suppress-newline-content)
-                     (printf "\\hspace*{\\fill}\\\\"))]
-                  [else (error 'latex-render
-                               "unrecognized style symbol: ~s" style)])]
-               [(string? style-name)
-                (let* ([v (if style (style-properties style) null)]
-                       [tt? (cond
-                             [(memq 'tt-chars v) #t]
-                             [(memq 'exact-chars v) 'exact]
-                             [else tt?])])
-                  (cond
-                   [(multiarg-element? e)
-                    (check-render)
-                    (printf "\\~a" style-name)
-                    (define maybe-optional-args
-                      (findf command-optional? (if style (style-properties style) '())))
-                    (when maybe-optional-args
-                      (for ([i (in-list (command-optional-arguments maybe-optional-args))])
-                        (printf "[~a]" i)))
-                    (if (null? (multiarg-element-contents e))
-                        (printf "{}")
-                        (for ([i (in-list (multiarg-element-contents e))])
-                          (printf "{")
-                          (parameterize ([rendering-tt (or tt? (rendering-tt))])
-                            (render-content i part ri))
-                          (printf "}")))]
-                   [else
-                    (define maybe-optional
-                      (findf command-optional? (if style (style-properties style) '())))
-                    (if maybe-optional
-                        (wrap e
-                              (string-join #:before-first (format "~a[" style-name)
-                                           #:after-last "]"
-                                           (command-optional-arguments maybe-optional)
-                                           "][")
-                              tt?)
-                        (wrap e style-name tt?))]))]
-               [(and (not style-name)
-                     style
-                     (memq 'exact-chars (style-properties style)))
-                (wrap e style-name 'exact)]
-               [else
-                (core-render e tt?)]))
-            (when hyperref?
-              (printf "\\hyperref[t:~a]{"
-                      (t-encode (vector-ref hyperref? 1))))
-            (let loop ([l (if style (style-properties style) null)] [tt? #f])
-              (if (null? l)
-                  (if hyperref?
-                      (parameterize ([disable-hyperref #t])
-                        (finish tt?))
-                      (finish tt?))
-                  (let ([v (car l)])
+          (define-values (dest ext?)
+            (if part-label?
+                (resolve-get/ext? part ri (link-element-tag e))
+                (values #f #f)))
+          (define number (and dest (vector-ref dest 2)))
+          (define formatted-number (and dest (list? number) (format-number number null)))
+          (unless (and part-label?
+                       (render-self-contained-secref e part ri dest ext? formatted-number))
+            (when part-label?
+              (let* ([lbl? (and dest
+                                 (not ext?)
+                                 (not (show-link-page-numbers)))]
+                     [link-number? (and lbl?
+                                        (eq? 'number (link-render-style-at-element e)))])
+                (printf "\\~aRef~a~a~a{"
+                        (case (and dest (number-depth number))
+                          [(0) "Book"]
+                          [(1) (if (string? (car number)) "Part" "Chap")]
+                          [else "Sec"])
+                        (if (and lbl? (not link-number?))
+                            "Local"
+                            "")
+                        (if (let ([s (element-style e)])
+                              (and (style? s) (memq 'uppercase (style-properties s))))
+                            "UC"
+                            "")
+                        (if (null? formatted-number)
+                            "UN"
+                            ""))
+                (when (and lbl? (not link-number?))
+                  (printf "t:~a}{" (t-encode (vector-ref dest 1))))
+                (unless (null? formatted-number)
+                  (when link-number? (printf "\\SectionNumberLink{t:~a}{" (t-encode (vector-ref dest 1))))
+                  (render-content
+                   (if dest
+                       (if (list? number)
+                           formatted-number
+                           (begin (eprintf "Internal tag error: ~s -> ~s\n"
+                                           (link-element-tag e)
+                                           dest)
+                                  '("!!!")))
+                       (list "???"))
+                   part ri)
+                  (when link-number? (printf "}"))
+                  (printf "}{"))))
+            (let* ([es (cond
+                        [(element? e) (element-style e)]
+                        [(multiarg-element? e) (multiarg-element-style e)]
+                        [else #f])]
+                   [style-name (if (style? es)
+                                   (style-name es)
+                                   es)]
+                   [style (and (style? es) es)]
+                   [hyperref? (and (not part-label?)
+                                   (link-element? e)
+                                   (not (disable-hyperref))
+                                   (let-values ([(dest ext?) (resolve-get/ext? part ri (link-element-tag e))])
+                                     (and (not ext?) dest)))]
+                   [check-render
+                    (lambda ()
+                      (when (render-element? e)
+                        ((render-element-render e) this part ri)))]
+                   [core-render (lambda (e tt?)
+                                  (cond
+                                   [(and (image-element? e)
+                                         (not (disable-images)))
+                                    (check-render)
+                                    (let ([fn (install-file
+                                               (select-suffix
+                                                (collects-relative->path
+                                                 (image-element-path e))
+                                                (image-element-suffixes e)
+                                                '(".pdf" ".ps" ".png")))])
+                                      (printf "\\includegraphics[scale=~a]{~a}"
+                                              (image-element-scale e) fn))]
+                                   [(and (convertible? e)
+                                         (not (disable-images))
+                                         (let ([ftag (lambda (v suffix [scale 1]) (and v (list v suffix scale)))]
+                                               [xxlist (lambda (v) (and v (list v #f #f #f #f #f #f #f #f)))]
+                                               [xlist (lambda (v) (and v (append v (list 0 0 0 0))))])
+                                           (for/or ([req (in-list image-reqs)])
+                                             (case req
+                                               [(eps-bytes)
+                                                (or (ftag (convert e 'eps-bytes+bounds8) ".ps")
+                                                    (ftag (xlist (convert e 'eps-bytes+bounds)) ".ps")
+                                                    (ftag (xxlist (convert e 'eps-bytes)) ".ps"))]
+                                               [(pdf-bytes)
+                                                (or (ftag (convert e 'pdf-bytes+bounds8) ".pdf")
+                                                    (ftag (xlist (convert e 'pdf-bytes+bounds)) ".pdf")
+                                                    (ftag (xxlist (convert e 'pdf-bytes)) ".pdf"))]
+                                               [(png@2x-bytes)
+                                                (or (ftag (convert e 'png@2x-bytes+bounds8) ".png" 0.5)
+                                                    (ftag (xxlist (convert e 'png@2x-bytes)) ".png" 0.5))]
+                                               [(png-bytes)
+                                                (or (ftag (convert e 'png-bytes+bounds8) ".png")
+                                                    (ftag (xxlist (convert e 'png-bytes)) ".png"))]))))
+                                    => (lambda (bstr+info+suffix)
+                                         (check-render)
+                                         (let* ([bstr (list-ref (list-ref bstr+info+suffix 0) 0)]
+                                                [suffix (list-ref bstr+info+suffix 1)]
+                                                [scale (list-ref bstr+info+suffix 2)]
+                                                [height (list-ref (list-ref bstr+info+suffix 0) 2)]
+                                                [pad-left (or (list-ref (list-ref bstr+info+suffix 0) 5) 0)]
+                                                [pad-top (or (list-ref (list-ref bstr+info+suffix 0) 6) 0)]
+                                                [pad-right (or (list-ref (list-ref bstr+info+suffix 0) 7) 0)]
+                                                [pad-bottom (or (list-ref (list-ref bstr+info+suffix 0) 8) 0)]
+                                                [descent (and height
+                                                              (- (+ (list-ref (list-ref bstr+info+suffix 0) 3)
+                                                                    (- (ceiling height) height))
+                                                                 pad-bottom))]
+                                                [width (let ([w (list-ref (list-ref bstr+info+suffix 0) 1)])
+                                                         (and w (- w pad-left pad-right)))]
+                                                [fn (install-file (format "pict~a" suffix) bstr)])
+                                           (if descent
+                                               (printf "\\raisebox{-~abp}{\\makebox[~abp][l]{\\includegraphics[~atrim=~a ~a ~a ~a]{~a}}}"
+                                                       descent
+                                                       width
+                                                       (if (= scale 1) "" (format "scale=~a," scale))
+                                                       (/ pad-left scale) (/ pad-bottom scale) (/ pad-right scale) (/ pad-top scale)
+                                                       fn)
+                                               (printf "\\includegraphics{~a}" fn))))]
+                                   [else
+                                    (parameterize ([rendering-tt (or tt? (rendering-tt))])
+                                      (super render-content e part ri))]))]
+                   [wrap (lambda (e s tt?)
+                           (when s (printf "\\~a{" s))
+                           (core-render e tt?)
+                           (when s (printf "}")))])
+              (define (finish tt?)
+                (cond
+                 [(symbol? style-name)
+                  (case style-name
+                    [(emph) (wrap e "emph" tt?)]
+                    [(italic) (wrap e "textit" tt?)]
+                    [(bold) (wrap e "textbf" tt?)]
+                    [(tt) (wrap e "Scribtexttt" #t)]
+                    [(url) (wrap e "Snolinkurl" 'url)]
+                    [(no-break) (wrap e "mbox" tt?)]
+                    [(sf) (wrap e "textsf" #f)]
+                    [(roman) (wrap e "textrm" #f)]
+                    [(subscript) (wrap e "textsub" #f)]
+                    [(superscript) (wrap e "textsuper" #f)]
+                    [(smaller) (wrap e "Smaller" #f)]
+                    [(larger) (wrap e "Larger" #f)]
+                    [(hspace)
+                     (check-render)
+                     (let ([s (content->string e)])
+                       (case (string-length s)
+                         [(0) (void)]
+                         [else
+                          (printf "\\mbox{\\hphantom{\\Scribtexttt{~a}}}"
+                                  (regexp-replace* #rx"." s "x"))]))]
+                    [(newline)
+                     (check-render)
+                     (unless (suppress-newline-content)
+                       (printf "\\hspace*{\\fill}\\\\"))]
+                    [else (error 'latex-render
+                                 "unrecognized style symbol: ~s" style)])]
+                 [(string? style-name)
+                  (let* ([v (if style (style-properties style) null)]
+                         [tt? (cond
+                               [(memq 'tt-chars v) #t]
+                               [(memq 'exact-chars v) 'exact]
+                               [else tt?])])
                     (cond
-                     [(target-url? v)
-                      (define target (let* ([s (let ([p (target-url-addr v)])
-                                                 (if (path? p)
-                                                     (path->string p)
-                                                     p))]
-                                            [s (regexp-replace* #rx"\\\\" s "%5c")]
-                                            [s (regexp-replace* #rx"{" s "%7b")]
-                                            [s (regexp-replace* #rx"}" s "%7d")]
-                                            [s (regexp-replace* #rx"%" s "\\\\%")])
-                                       s))
+                     [(multiarg-element? e)
+                      (check-render)
+                      (printf "\\~a" style-name)
+                      (define maybe-optional-args
+                        (findf command-optional? (if style (style-properties style) '())))
+                      (when maybe-optional-args
+                        (for ([i (in-list (command-optional-arguments maybe-optional-args))])
+                          (printf "[~a]" i)))
+                      (if (null? (multiarg-element-contents e))
+                          (printf "{}")
+                          (for ([i (in-list (multiarg-element-contents e))])
+                            (printf "{")
+                            (parameterize ([rendering-tt (or tt? (rendering-tt))])
+                              (render-content i part ri))
+                            (printf "}")))]
+                     [else
+                      (define maybe-optional
+                        (findf command-optional? (if style (style-properties style) '())))
+                      (if maybe-optional
+                          (wrap e
+                                (string-join #:before-first (format "~a[" style-name)
+                                             #:after-last "]"
+                                             (command-optional-arguments maybe-optional)
+                                             "][")
+                                tt?)
+                          (wrap e style-name tt?))]))]
+                 [(and (not style-name)
+                       style
+                       (memq 'exact-chars (style-properties style)))
+                  (wrap e style-name 'exact)]
+                 [else
+                  (core-render e tt?)]))
+              (when hyperref?
+                (printf "\\hyperref[t:~a]{"
+                        (t-encode (vector-ref hyperref? 1))))
+              (let loop ([l (if style (style-properties style) null)] [tt? #f])
+                (if (null? l)
+                    (if hyperref?
+                        (parameterize ([disable-hyperref #t])
+                          (finish tt?))
+                        (finish tt?))
+                    (let ([v (car l)])
                       (cond
-                        [(equal? target "#") (printf "{")]
-                        [(regexp-match? #rx"^[^#]*#[^#]*$" target)
-                         ;; work around a problem with `\href' as an
-                         ;; argument to other macros, such as `\marginpar':
-                         (let ([l (string-split target "#")])
-                           (printf "\\Shref{~a}{~a}{" (car l) (cadr l)))]
-                        [else
-                         ;; normal:
-                         (printf "\\href{~a}{" target)])
-                      (loop (cdr l) #t)
-                      (printf "}")]
-                     [(color-property? v)
-                      (printf "\\intext~acolor{~a}{"
-                              (if (string? (color-property-color v)) "" "rgb")
-                              (color->string (color-property-color v)))
-                      (loop (cdr l) tt?)
-                      (printf "}")]
-                     [(background-color-property? v)
-                      (printf "\\in~acolorbox{~a}{"
-                              (if (string? (background-color-property-color v)) "" "rgb")
-                              (color->string (background-color-property-color v)))
-                      (loop (cdr l) tt?)
-                      (printf "}")]
-                     [(command-extras? (car l))
-                      (loop (cdr l) tt?)
-                      (for ([l (in-list (command-extras-arguments (car l)))])
-                        (printf "{~a}" l))]
-                     [else (loop (cdr l) tt?)]))))
-            (when hyperref?
-              (printf "}"))))
-        (when part-label?
-          (printf "}"))
-        (when (and (link-element? e)
-                   (show-link-page-numbers)
-                   (not (done-link-page-numbers)))
-          (define (make-ref e)
-            (string-append
-             "t:"
-             (t-encode 
-              (let ([v (resolve-get part ri (link-element-tag e))])
-                (and v (vector-ref v 1))))))
-          (cond
-            [(multiple-page-references) ; for index
-             => (lambda (l)
-                  (printf ", \\Smanypageref{~a}" ; using cleveref
-                          (string-join (map make-ref l) ",")))]
-            [else
-             (printf ", \\pageref{~a}" (make-ref e))]))
-        null))
+                       [(target-url? v)
+                        (define target (let* ([s (let ([p (target-url-addr v)])
+                                                   (if (path? p)
+                                                       (path->string p)
+                                                       p))]
+                                              [s (regexp-replace* #rx"\\\\" s "%5c")]
+                                              [s (regexp-replace* #rx"{" s "%7b")]
+                                              [s (regexp-replace* #rx"}" s "%7d")]
+                                              [s (regexp-replace* #rx"%" s "\\\\%")])
+                                         s))
+                        (cond
+                          [(equal? target "#") (printf "{")]
+                          [(regexp-match? #rx"^[^#]*#[^#]*$" target)
+                           ;; work around a problem with `\href' as an
+                           ;; argument to other macros, such as `\marginpar':
+                           (let ([l (string-split target "#")])
+                             (printf "\\Shref{~a}{~a}{" (car l) (cadr l)))]
+                          [else
+                           ;; normal:
+                           (printf "\\href{~a}{" target)])
+                        (loop (cdr l) #t)
+                        (printf "}")]
+                       [(color-property? v)
+                        (printf "\\intext~acolor{~a}{"
+                                (if (string? (color-property-color v)) "" "rgb")
+                                (color->string (color-property-color v)))
+                        (loop (cdr l) tt?)
+                        (printf "}")]
+                       [(background-color-property? v)
+                        (printf "\\in~acolorbox{~a}{"
+                                (if (string? (background-color-property-color v)) "" "rgb")
+                                (color->string (background-color-property-color v)))
+                        (loop (cdr l) tt?)
+                        (printf "}")]
+                       [(command-extras? (car l))
+                        (loop (cdr l) tt?)
+                        (for ([l (in-list (command-extras-arguments (car l)))])
+                          (printf "{~a}" l))]
+                       [else (loop (cdr l) tt?)]))))
+              (when hyperref?
+                (printf "}")))
+            (when part-label?
+              (printf "}"))
+            (when (and (link-element? e)
+                       (show-link-page-numbers)
+                       (not (done-link-page-numbers)))
+              (define (make-ref e)
+                (string-append
+                 "t:"
+                 (t-encode
+                  (let ([v (resolve-get part ri (link-element-tag e))])
+                    (and v (vector-ref v 1))))))
+              (cond
+                [(multiple-page-references) ; for index
+                 => (lambda (l)
+                      (printf ", \\Smanypageref{~a}" ; using cleveref
+                              (string-join (map make-ref l) ",")))]
+                [else
+                 (printf ", \\pageref{~a}" (make-ref e))])))
+          null)))
 
     (define/private (t-encode s)
       (string-append*

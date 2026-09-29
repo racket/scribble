@@ -1461,15 +1461,24 @@
                                    external-tag-path)
                               (values #f #f)
                               (resolve-get/ext-id part ri (link-element-tag e)))]
+                         [(has-number?)
+                          ;; If the section number is empty, don't generate an
+                          ;; empty link:
+                          (and dest
+                               (let ([n (dest-number dest)])
+                                 (not (or (not n)
+                                          (string=? "" (apply string-append (format-number n '(""))))))))]
                          [(number-link?)
                           (and dest
                                (not ext-id)
-                               (let ([n (dest-number dest)])
-                                 ;; If the section number is empty, don't generate an
-                                 ;; empty link:
-                                 (not (or (not n)
-                                          (string=? "" (apply string-append (format-number n '("")))))))
+                               has-number?
                                (eq? 'number (link-render-style-at-element e))
+                               (empty-content? (element-content e)))]
+                         [(short-link?)
+                          (and dest
+                               (not ext-id)
+                               has-number?
+                               (eq? 'short (link-render-style-at-element e))
                                (empty-content? (element-content e)))]
                          [(number-and-title-link?)
                           (and dest
@@ -1559,6 +1568,7 @@
                     ,@(if (empty-content? (element-content e))
                           (cond
                             [number-link? (format-number (dest-number dest) '(""))]
+                            [short-link? `("§" ,@(format-number (dest-number dest) '("")))]
                             [number-and-title-link?
                              (define num (format-number (dest-number dest) '(" ")))
                              `(,@(if (null? num) '() `("§" ,@num))
