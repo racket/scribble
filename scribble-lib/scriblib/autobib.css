@@ -1,9 +1,59 @@
-
-.AutoBibliography p {
+/* Author/date bibliography entries.
+   Continuation lines are indented 1em relative to the first line. */
+.AutoBibliography .Autobibentry {
   padding-left: 1em;
+}
+
+.AutoBibliography .Autobibentry > .SIntrapara:first-child {
   text-indent: -1em;
 }
 
+/* Numbered bibliography entries.
+   The number box and hanging indent have the same width. */
+.AutoBibliography .Autocolbibentry {
+  padding-left: 7ex;
+}
+
+.AutoBibliography .Autocolbibentry > .SIntrapara:first-child {
+  text-indent: -7ex;
+}
+
+.AutoBibliography .Autocolbibnumber {
+  display: inline-block;
+  box-sizing: border-box;
+  width: 7ex;
+  padding-right: 0.15em;
+  text-indent: 0;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* No extra vertical gap between paragraphs in the same entry:
+   first-line indentation already distinguishes them. */
+.AutoBibliography .Autobibentry > .SIntrapara,
+.AutoBibliography .Autocolbibentry > .SIntrapara {
+  margin: 0;
+}
+
+.AutoBibliography .Autobibentry > .SIntrapara:not(:first-child),
+.AutoBibliography .Autocolbibentry > .SIntrapara:not(:first-child) {
+  text-indent: 1.5em;
+}
+
+/* More space between entries than between their paragraphs. */
 .AutoBibliography td {
-  vertical-align: text-top;
+  padding-bottom: 0.5em;
+}
+
+.BibtexSmallCaps {
+  font-variant: small-caps;
+}
+.BibtexInlineMath,
+.BibtexDisplayMath {
+  font-family: monospace;
+  white-space: pre-wrap;
+}
+.BibtexDisplayMath {
+  display: block;
+  text-align: center;
 }

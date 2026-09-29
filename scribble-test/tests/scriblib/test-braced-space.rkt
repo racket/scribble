@@ -14,8 +14,8 @@
   (define test2 (hash-ref raw "test-braced2"))
   (define test3 (hash-ref raw "test-braced3"))
 
-  (check-equal? (hash-ref test1 "title") "Advances in ACM Technology")
-  (check-equal? (hash-ref test1 "journal") "Proceedings of the IEEE Conference")
-  (check-equal? (hash-ref test2 "title") "The ACM Framework")
-  (check-equal? (hash-ref test3 "title") "Testing SIGPLAN Methods")
-  (check-equal? (hash-ref test3 "booktitle") "International ACM Conference"))
+  (check-equal? (hash-ref test1 "title") "Advances in {ACM} Technology")
+  (check-equal? (hash-ref test1 "journal") "Proceedings of the {IEEE} Conference")
+  (check-equal? (hash-ref test2 "title") "The {ACM} Framework")
+  (check-equal? (hash-ref test3 "title") "Testing {SIGPLAN} Methods")
+  (check-equal? (hash-ref test3 "booktitle") "International {ACM} Conference"))

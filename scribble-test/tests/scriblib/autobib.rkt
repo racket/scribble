@@ -2,6 +2,8 @@
 
 (require rackunit scriblib/autobib scribble/base scribble/core)
 
+(error-print-width 2000)
+
 (test-case "define-cite"
   ;; Check that `define-cite` binds the expected identifiers
 
@@ -29,7 +31,12 @@
   (check-not-exn
     (λ () (journal-location 'JFP)))
   (check-exn exn:fail:contract?
-    (λ () (journal-location "Journal of Chromatography" #:pages 30))))
+    (λ () (journal-location "Journal of Chromatography" #:pages 30)))
+  ;; title is a genuinely required argument: passing #f (i.e. no real
+  ;; information) raises via ensure-nontrivial-content instead of quietly
+  ;; producing #f.
+  (check-exn exn:fail:contract?
+    (λ () (journal-location #f))))
 
 (test-case "book-location"
   (check-not-exn
@@ -39,17 +46,8 @@
   (check-not-exn
     (λ () (book-location))))
 
-(test-case "webpage-location"
-  (check-not-exn
-    (λ () (webpage-location "https://www.racket-lang.org")))
-  (check-not-exn
-    (λ () (webpage-location "https://www.racket-lang.org" #:accessed "January 2024")))
-  (check-not-exn
-    (λ () (webpage-location))))
-
 (define (mk-bookloc-elem/ed ed)
-  (define (wrap v) (element (style #f '()) (if (list? v) v (list v))))
-  (wrap (wrap (wrap (list ed " edition")))))
+  (elem ed " edition"))
 
 (test-case "book-location-edition-capitalization"
   (check-equal? (book-location #:edition 'a)
@@ -69,7 +67,21 @@
   (check-not-exn
     (λ () (techrpt-location #:institution "MIT" #:number 'AIM-353)))
   (check-not-exn
-    (λ () (techrpt-location #:institution 'UCB))))
+    (λ () (techrpt-location #:institution 'UCB)))
+  ;; institution is a genuinely required argument, so techrpt-location is
+  ;; contracted to always return an element: passing #f violates that
+  ;; contract instead of quietly producing #f.
+  (check-exn exn:fail:contract?
+    (λ () (techrpt-location #:institution #f))))
+
+(test-case "book-chapter-location"
+  (check-not-exn
+    (λ () (book-chapter-location "Handbook of X" #:publisher "Springer")))
+  ;; title (the leading location argument) is a genuinely required argument,
+  ;; so book-chapter-location is contracted to always return an element:
+  ;; passing #f violates that contract instead of quietly producing #f.
+  (check-exn exn:fail:contract?
+    (λ () (book-chapter-location #f))))
 
 (test-case "dissertation-location"
   (check-not-exn
@@ -108,3 +120,22 @@
                                 (other-authors))))))
       (gen-bib))))
 
+(test-case "number-style bibliography is single-column"
+  (let ()
+    (define-cite cite citet gen-bib #:style number-style)
+
+    (define b
+      (make-bib #:author "Alice Alpha"
+                #:title "First Paper"
+                #:date "2020"))
+
+    ;; Make the entry reachable by the bibliography generator.
+    (cite b)
+
+    (define bib (gen-bib #:sec-title #f))
+
+    (check-pred table? bib)
+
+    ;; Every bibliography row should now contain exactly one cell.
+    (for ([row (in-list (table-blockss bib))])
+      (check-equal? (length row) 1))))

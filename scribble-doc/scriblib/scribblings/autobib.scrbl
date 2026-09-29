@@ -50,6 +50,11 @@ includes a citation to section 8 of the Racket reference.
 
 @history[#:changed "1.61"
   @elem{Added fields and location types for better bibtex support.}]
+@history[#:changed "1.68"
+  @elem{Improved bibliography layout, added support for
+        multi-paragraph notes and extended support for
+        structured content in bibliography fields.}]
+
 
 @defform/subs[(define-cite ~cite-id citet-id generate-bibliography-id
                            option ...)
@@ -158,11 +163,44 @@ optionally given @racket[render-date-expr] functions.
 
 Styles for use with @racket[define-cite].
 
+With @racket[number-style], bibliography entries use hanging
+indentation in HTML and LaTeX output, with citation numbers
+aligned in a separate label column. Text output instead
+separates each number from its entry with a non-breaking space.
+
 The @racket[author+date-square-bracket-style] definition is the same
 as @racket[author+date-style], except that references to citations
 are enclosed in @litchar["[]"] instead of @litchar["()"].
-}
 
+In LaTeX output, Scribble tries to keep short bibliography
+entries together, reserving at least five lines before starting
+an entry. This approximates the previous behavior, which
+prevented page breaks within individual entries altogether.
+Longer entries may now span pages.
+
+The @tt{\AutobibNeedlines} counter controls the minimum number of lines,
+defaulting to 5. Set it to 0 to disable this constraint.
+The optional @tt{needspace} package is required
+for the constraint to take effect;
+this behavior is disabled if the package is unavailable,
+as if the counter were 0.
+
+The @tt{\AutobibEntrySetup} command, empty by default,
+allows additional LaTeX settings to be applied locally
+to each bibliography entry.
+
+To require four lines before each entry and relax line breaking
+for long annotations, configure these settings using @tt{\AtBeginDocument}
+from e.g. a @racket[tex-addition] that you add to your document's style:
+
+@racketblock[
+(tex-addition
+  (bytes-append
+    #"\\AtBeginDocument{%\n"
+    #"  \\AutobibNeedlines=4\\relax\n"
+    #"  \\renewcommand{\\AutobibEntrySetup}{%\n"
+    #"    \\emergencystretch=2em\n"
+    #"    \\tolerance=1000}}%\n"))]}
 
 @defproc[(bib? [v any/c]) boolean?]{
 
@@ -176,6 +214,7 @@ Returns @racket[#t] if @racket[v] is a value produced by
                    [#:location location any/c #f]
                    [#:date date (or/c #f date? exact-nonnegative-integer? string?) #f]
                    [#:url url (or/c #f string?) #f]
+                   [#:accessed accessed any/c #f]
                    [#:doi doi (or/c #f string?) #f]
                    [#:note note any/c #f])
          bib?]{
@@ -187,6 +226,23 @@ supplied. Functions like @racket[proceedings-location],
 @racket[author-name], and @racket[authors] help produce elements in a
 standard format.
 
+The @racket[#:note] argument may contain multiple paragraphs,
+separated by blank lines. The first paragraph follows the
+bibliographic information; subsequent paragraphs remain within
+the same bibliography entry.
+
+When both @racket[#:doi] and @racket[#:url] are supplied,
+the DOI takes precedence.
+A period is inserted after a DOI when followed by a non-empty note.
+No period is appended directly to a URL.
+
+@racket[#:accessed] gives the date a @racket[#:url] (in CSL terms, the
+date it was accessed), and is only used when @racket[#:url] is displayed,
+i.e. when no @racket[#:doi] is supplied. It is rendered right after the
+URL, separated from it by a space, as @tt{(accessed ...)}. A period is
+inserted after it when followed by a non-empty note; a naked URL (no
+@racket[#:accessed]) never gets that period.
+
 Dates are internally represented as @racket[date] values, so a @racket[date]
 may be given, or a number or string that represent the year.
 
@@ -197,12 +253,41 @@ name, the last non-empty sequence of alphabetic characters or
 @litchar["-"] after a space is treated as the author name, and the
 rest is treated as the first name.
 
-@history[#:changed "1.49" @elem{Added @racket[#:doi].}]}
+@history[#:changed "1.49" @elem{Added @racket[#:doi].}]
+@history[#:changed "1.68"
+  @elem{Added @racket[#:accessed], which replaces the accessed-date
+        support formerly provided by the now-removed @tt{webpage-location}
+        function: the accessed date is now attached directly to the
+        bib entry instead of being embedded in its @racket[#:location],
+        so it renders next to the URL rather than before the date.}]}
 
 @defproc[(in-bib [orig bib?] [where string?]) bib?]{
 
 Extends a bib value so that the rendered citation is suffixed with
 @racket[where], which might be a page or chapter number.}
+
+Each of the following @tt{*-location} functions combines its arguments
+into a single @racket[element?]. @racket[proceedings-location],
+@racket[book-location], @racket[booklet-location], @racket[misc-location],
+and @racket[manual-location] may legitimately be called by
+@racketmodname[scriblib/bibtex] with no useful information at all (e.g.
+a BibTeX entry that supplies none of the corresponding optional fields):
+each returns @racket[#f] when every one of its arguments is either
+omitted (@racket[#f]) or supplied as empty content. The rest each have
+at least one genuinely required argument, so they always have something
+to report and never return @racket[#f].
+
+For a handful of fields across these functions -- an edition, an editor,
+a location, a page range, a series number -- @racket[#f] alone isn't
+enough to tell ``omitted'' from ``supplied but empty,'' because the
+field gets wrapped in surrounding text (e.g. an editor's name becomes
+``NAME (Ed.)''; an edition becomes ``EDITION edition''). Omitting the
+field (@racket[#f], the default) still quietly contributes nothing, but
+explicitly supplying empty or otherwise trivial content for one of
+these particular fields (e.g. @racket[""]) raises a contract violation
+instead of silently producing an orphaned fragment like ``(Ed.)'' with
+no name attached. Each function's entry below says which of its fields
+this applies to.
 
 @defproc[(proceedings-location [#:editor editor_ any/c #f]
                                [location any/c]
@@ -213,14 +298,20 @@ Extends a bib value so that the rendered citation is suffixed with
                                [#:organization organization any/c #f]
                                [#:publisher publisher #f]
                                [#:address address #f])
-         element?]{
+         (or/c element? #f)]{
 
-Combines elements to generate an element that is suitable for
+Combines the supplied information to produce content suitable for
 describing a paper's location within a conference or workshop
-proceedings.
+proceedings. Returns @racket[#f] when every argument is omitted or
+empty, except that explicitly-supplied-but-trivial content raises for
+@racket[location], @racket[#:editor], @racket[#:number], and
+@racket[#:pages] specifically, since each of those is wrapped in
+surrounding text (see above).
 
- @history[#:changed "1.61"
-   @elem{Added fields for bibtex support: editor number organization publisher address.}]
+@history[#:changed "1.61"
+  @elem{Added fields for bibtex support: editor number organization publisher address.}]
+@history[#:changed "1.68"
+  @elem{Added @racket[#f] as a possible result.}]
 }
 
 @defproc[(journal-location [title any/c]
@@ -229,8 +320,9 @@ proceedings.
                            [#:pages pages (or (list/c any/c any/c) #f) #f])
          element?]{
 
-Combines elements to generate an element that is suitable for
-describing a paper's location within a journal.}
+Combines the supplied information to produce content suitable for
+describing a paper's location within a journal.
+}
 
 
 @defproc[(book-location [#:edition edition any/c #f]
@@ -242,9 +334,16 @@ describing a paper's location within a journal.}
                         [#:pages pages any/c #f]
                         [#:publisher publisher any/c #f]
                         [#:address address any/c #f])
-         element?]{
-Combines elements to generate an element that is suitable for
-describing a book's location.
+         (or/c element? #f)]{
+Combines the supplied information to produce content suitable for
+describing a book's location. Returns @racket[#f] when every argument
+is omitted or empty, except that explicitly-supplied-but-trivial
+content raises for @racket[#:edition], @racket[#:editor],
+@racket[#:number], and @racket[#:pages] specifically (see above).
+
+A numeric @racket[chapter], supplied as a number or a string
+of decimal digits, is prefixed with ``chapter''.
+Other chapter content is used unchanged.
 
 @history[#:changed "1.61"
   @elem{Added fields for bibtex support: editor chapter series volume number pages address.
@@ -254,28 +353,34 @@ describing a book's location.
 
 @defproc[(booklet-location [#:howpublished howpublished any/c #f]
                            [#:address address any/c #f])
-         element?]{
-Combines elements to generate an element that is suitable for
-describing a booklet's location.
+         (or/c element? #f)]{
+Combines the supplied information to produce content suitable for
+describing a booklet's location. Neither argument is wrapped in
+surrounding text, so returns @racket[#f] when both are omitted or
+empty, with no exceptions.
 
 @history[#:added "1.61"]
 }
 
 
 @defproc[(misc-location [#:howpublished howpublished any/c #f])
-         element?]{
-Combines elements to generate an element that is suitable for
-describing a bibtex misc entry's location.
-
+         (or/c element? #f)]{
+Combines the supplied information to produce content suitable for
+describing a bibtex misc entry's location. Its one argument isn't
+wrapped in surrounding text, so returns @racket[#f] when it's omitted
+or empty, with no exception.
 @history[#:added "1.61"]
 }
 
 
 @defproc[(manual-location [#:organization organization any/c #f]
                           [#:edition edition any/c #f])
-         element?]{
-Combines elements to generate an element that is suitable for
-describing a manual's location.
+         (or/c element? #f)]{
+Combines the supplied information to produce content suitable for
+describing a manual's location. Returns @racket[#f] when both
+arguments are omitted or empty, except that explicitly-supplied-but-
+trivial content raises for @racket[#:edition] specifically (see
+above).
 
 @history[#:added "1.61"]
 }
@@ -286,8 +391,7 @@ describing a manual's location.
                            [#:number number any/c #f]
                            [#:address address any/c #f])
          element?]{
-
-Combines elements to generate an element that is suitable for
+Combines the supplied information to produce content suitable for
 describing a technical report's location.
 
 @history[#:changed "1.61" @elem{Added fields for bibtex support: type address.}]
@@ -298,22 +402,11 @@ describing a technical report's location.
                                 [#:type type any/c #f]
                                 [#:address address any/c #f])
          element?]{
-
-Combines elements to generate an element that is suitable for
+Combines the supplied information to produce content suitable for
 describing a dissertation.
 
 @history[#:changed "1.61"
   @elem{Added fields for bibtex support: type address.}]
-}
-
-@defproc[(webpage-location [url string? #f]
-                           [#:accessed accessed any/c #f])
-         element?]{
- Combines elements to generate an element that is suitable for
- describing a web page.
-
- @history[#:changed "1.61"
-   @elem{Made field url optional now that any autobib entry may have a url.}]
 }
 
 
@@ -328,9 +421,10 @@ describing a dissertation.
                                 [#:publisher publisher any/c #f]
                                 [#:address address any/c #f])
          element?]{
-
-Combines elements to generate an element that is suitable for
+Combines the supplied information to produce content suitable for
 describing a paper's location within a chapter or part of a book or collection of books.
+
+The @racket[chapter] argument is formatted as by @racket[book-location].
 
 @history[#:changed "1.61"
   @elem{Added fields for bibtex support: editor chapter number address.}]
@@ -369,7 +463,15 @@ one created by @racket[other-authors] renders as ``et al.''}
 
 Takes an author-name element and create one that represents the editor
 of a collection. If a @racket[name] is a string, it is parsed in the
-same way as by @racket[make-bib].}
+same way as by @racket[make-bib].
+
+Raises a contract violation if @racket[name] is empty or otherwise
+trivial content (e.g. @racket[""]), rather than silently producing a
+name-less ``(Ed.)'' credit.
+
+@history[#:changed "1.68"
+  @elem{Raises on empty or trivial content instead of silently
+        producing a bogus, name-less credit.}]}
 
 @defparam[abbreviate-given-names abbreviate? any/c]{
   Shortens given names in calls to @racket[author] and @racket[make-bib]

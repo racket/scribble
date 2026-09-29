@@ -21,13 +21,19 @@
          author-name org-author-name
          (contract-out
           [authors (->* (content?) #:rest (listof content?) element?)]
+          ;; proceedings-location, book-location, booklet-location, misc-location, and
+          ;; manual-location may legitimately be called by bibtex.rkt with no useful
+          ;; content at all (e.g. an entry missing every optional bibtex field), so they
+          ;; keep returning #f in that case. The others all have a genuinely required
+          ;; argument and so always have something to say: they always return an element.
           [proceedings-location
            (->* [any/c] [#:pages (or/c (list/c any/c any/c) #f)
                          #:series any/c #:volume any/c #:number any/c
                          #:editor any/c #:address any/c #:publisher any/c #:organization any/c]
-                element?)]
+                (or/c element? #f))]
           [journal-location
-           (->* [any/c] [#:pages (or/c (list/c any/c any/c) #f) #:volume any/c #:number any/c] element?)]
+           (->* [any/c] [#:pages (or/c (list/c any/c any/c) #f) #:volume any/c #:number any/c]
+                element?)]
           [book-location
            (->* []
                 [#:edition any/c #:chapter any/c #:editor any/c
@@ -38,7 +44,8 @@
           [misc-location
            (->* [] [#:howpublished any/c] (or/c element? #f))]
           [techrpt-location
-           (->* [#:institution any/c] [#:number any/c #:type any/c #:address any/c] element?)]
+           (->* [#:institution any/c] [#:number any/c #:type any/c #:address any/c]
+                element?)]
           [dissertation-location
            (->* [#:institution any/c] [#:degree any/c #:type any/c #:address any/c]
                 element?)]
@@ -46,9 +53,8 @@
            (->* [any/c]
                 [#:edition any/c #:editor any/c #:chapter any/c
                  #:series any/c #:volume any/c #:number any/c #:pages (or/c (list/c any/c any/c) #f)
-                 #:publisher any/c #:address any/c] element?)]
-          [webpage-location
-           (->* [] [string? #:accessed any/c] (or/c element? #f))]
+                 #:publisher any/c #:address any/c]
+                element?)]
           [manual-location
            (->* [] [#:organization any/c #:edition any/c] (or/c element? #f))])
          other-authors
@@ -79,14 +85,17 @@
      (make-typ-addition (abs "autobib.typ")))))
 
 (define bib-single-style (make-style "AutoBibliography" autobib-style-extras))
-(define bib-columns-style (make-style #f autobib-style-extras))
 
-(define bibentry-style (make-style "Autobibentry" autobib-style-extras))
+(define bibentry-style
+  (make-style "Autobibentry"
+              (cons (alt-tag "div") autobib-style-extras)))
+(define colbibentry-style
+  (make-style "Autocolbibentry"
+              (cons (alt-tag "div") autobib-style-extras)))
 (define bibentrytarget-style (make-style "Autobibtarget" autobib-style-extras))
 (define colbibnumber-style (make-style "Autocolbibnumber" autobib-style-extras))
-(define colbibentry-style (make-style "Autocolbibentry" autobib-style-extras))
 
-(define-struct auto-bib (author date title location url note is-book? doi key specific))
+(define-struct auto-bib (author date title location url accessed note is-book? doi key specific))
 (define-struct bib-group (ht))
 
 (define-struct (author-element element) (names cite)) ;; NB: names should always be a string
@@ -246,6 +255,7 @@
     (define/public (render-citation date-cite i) date-cite)
     (define/public (render-author+dates author dates) (list* author " " dates))
     (define/public (bibliography-line i e) (list e))
+    (define/public (bibliography-prefix i) null)
     (super-new)))
 
 (define author+date-style (new author+date-style%))
@@ -260,7 +270,7 @@
 (define number-style
   (new
    (class object%
-     (define/public (bibliography-table-style) bib-columns-style)
+     (define/public (bibliography-table-style) bib-single-style)
      (define/public (entry-style) colbibentry-style)
      (define/public (disambiguate-date?) #f)
      (define/public (collapse-for-date?) #f)
@@ -270,10 +280,12 @@
      (define/public (get-item-sep) ", ")
      (define/public (render-citation date-cite i) (number->string i))
      (define/public (render-author+dates author dates) dates)
+     (define/public (bibliography-prefix i)
+       (make-element
+        colbibnumber-style
+        (list "[" (number->string i) "]" 'nbsp)))
      (define/public (bibliography-line i e)
-       (list (make-paragraph plain
-                             (make-element colbibnumber-style (list "[" (number->string i) "]")))
-             e))
+       (list e))
      (super-new))))
 
 (define (gen-bib tag group sec-title
@@ -310,11 +322,6 @@
   (define disambiguated
     (let ()
       (define (bib->para bib disambiguation i)
-        (define collect-target
-          (list (make-target-element
-                  #f
-                  (bib->entry bib style disambiguation render-date-bib i)
-                  `(autobib ,(auto-bib-key bib)))))
         ;; Communicate to scribble's resolve step.
         (define (collect ci)
           ;; store the author
@@ -336,11 +343,29 @@
           (collect-put! ci
                         `(autobib-disambiguation ,(auto-bib-key bib))
                         (or disambiguation 'unambiguous)))
+        (define entry
+          (bib->entry bib style disambiguation render-date-bib i))
+        (define blocks (compound-paragraph-blocks entry))
+        (define first-block (car blocks))
+        (define marked-first
+          (make-paragraph
+           (paragraph-style first-block)
+           (list
+            (send style bibliography-prefix i)
+            (make-collect-element
+             bibentrytarget-style
+             (list
+              (make-target-element
+               #f
+               (paragraph-content first-block)
+               `(autobib ,(auto-bib-key bib))))
+             collect))))
         (send style
               bibliography-line
               i
-              (make-paragraph plain
-                              (list (make-collect-element bibentrytarget-style collect-target collect)))))
+              (make-compound-paragraph
+               (compound-paragraph-style entry)
+               (cons marked-first (cdr blocks)))))
       ;; create the bibliography with disambiguations added.
       (define-values (last num-ambiguous rev-disambiguated*)
         (for/fold ([last #f] [num-ambiguous 0] [rev-disambiguated '()]) ([bib (in-list bibs)]
@@ -385,44 +410,91 @@
                null)
     table))
 
+;; Build a potentially multi-paragraph entry base on the note field.
 (define (bib->entry bib style disambiguation render-date-bib i)
-  (define-values (author date title location url note is-book? doi)
+  (define-values (author date title location url accessed note is-book? doi)
     (values (auto-bib-author bib)
             (auto-bib-date bib)
             (auto-bib-title bib)
             (auto-bib-location bib)
             (auto-bib-url bib)
+            (auto-bib-accessed bib)
             (auto-bib-note bib)
             (auto-bib-is-book? bib)
             (auto-bib-doi bib)))
-  (make-element (send style entry-style)
-                (append
-                 (if author
-                     `(,author
-                       ,@(if (ends-in-punc? author)
-                             '(" ")
-                             '(". ")))
-                     null)
-                 ;; (if is-book? null '(ldquo))
-                 (if is-book?
-                     (list (italic title))
-                     (decode-content (list title)))
-                 (if (ends-in-punc? title)
-                     null
-                     '("."))
-                 ;; (if is-book? null '(rdquo))
-                 (if location
-                     `(" " ,@(decode-content (list location)) ,(if date "," "."))
-                     null)
-                 (if date `(" "
-                            ,@(if disambiguation
-                                  `(,@(decode-content (list (render-date-bib date))) ,disambiguation)
-                                  (decode-content (list (render-date-bib date))))
-                            ".")
-                     null)
-                 (if (and (not doi) url) `(" " ,[(url-rendering) url]) null)
-                 (if doi `(" " ,[(doi-rendering) doi]) null)
-                 (if note `(" " ,note) null))))
+  (define note-blocks
+    (if (and note
+             (not (string=? "" (string-trim (content->string note)))))
+      (note->flow note)
+      null))
+  (define header
+    (append
+     (if author
+         `(,author
+           ,@(if (ends-in-punc? author)
+                 '(" ")
+                 '(". ")))
+         null)
+     ;; (if is-book? null '(ldquo))
+     (if title
+         (append
+          (if is-book?
+              (list (italic title))
+              (decode-content (list title)))
+          (if (ends-in-punc? title)
+              null
+              '(".")))
+         null)
+     ;; (if is-book? null '(rdquo))
+     (if location
+         `(" " ,@(decode-content (list location)) ,(if date "," "."))
+         null)
+     (if date `(" "
+                ,@(if disambiguation
+                      `(,@(decode-content (list (render-date-bib date))) ,disambiguation)
+                      (decode-content (list (render-date-bib date))))
+                ".")
+         null)
+     (cond
+      (doi
+       `(" " ,[(doi-rendering) doi]
+         ,@(if (pair? note-blocks) '(".") null)))
+      (url
+       ;; do NOT include a . immediately after a naked URL (no accessed date), it's confusing
+       `(" " ,[(url-rendering) url]
+         ,@(if accessed
+               `(" (accessed " ,@(decode-content (list (contentify accessed))) ")"
+                 ,@(if (pair? note-blocks) '(".") null))
+               null)))
+      (else
+       null))))
+  (define first-content
+    (append header
+            (if (pair? note-blocks)
+                (cons " " (paragraph-content (car note-blocks)))
+                null)))
+  (make-compound-paragraph
+   (send style entry-style)
+   (cons
+    (make-paragraph plain first-content)
+    (for/list ([p (in-list (if (pair? note-blocks)
+                               (cdr note-blocks)
+                               null))])
+              (make-paragraph
+               (make-style #f '(never-indents))
+               (paragraph-content p))))))
+
+(define (note->flow note)
+  (define (split-lines c)
+    (cond
+      [(string? c)
+       (add-between
+        (string-split c "\n" #:trim? #f #:repeat? #f)
+        "\n")]
+      [(list? c)
+       (append-map split-lines c)]
+      [else (list c)]))
+  (decode-flow (split-lines note)))
 
 (define-syntax (define-cite stx)
   (syntax-parse stx
@@ -482,6 +554,7 @@
                   #:location [location #f]
                   #:date [date #f]
                   #:url [url #f]
+                  #:accessed [accessed #f]
                   #:doi [doi #f]
                   #:note [note #f])
   ;; TODO what to do with type??
@@ -490,15 +563,16 @@
           [(author-element? author) author]
           [else (parse-author author)]))
   (define parsed-date (understand-date date))
-  (make-auto-bib author* parsed-date title location url note is-book? doi
+  (make-auto-bib author* parsed-date title location url accessed note is-book? doi
                  (content->string
                   (make-element #f
                                 (append
                                  (if author* (list author*) null)
-                                 (list title)
+                                 (if title (list title) null)
                                  (if location (decode-content (list location)) null)
                                  (if date (decode-content (list (default-render-date-bib parsed-date))) null)
                                  (if (and (not doi) url) (list [(url-rendering) url]) null)
+                                 (if (and (not doi) url accessed) (decode-content (list (contentify accessed))) null)
                                  (if doi (list [(doi-rendering) doi]) null)
                                  (if note (list note) null))))
                  ""))
@@ -510,6 +584,7 @@
    (auto-bib-title bib)
    (auto-bib-location bib)
    (auto-bib-url bib)
+   (auto-bib-accessed bib)
    (auto-bib-note bib)
    (auto-bib-is-book? bib)
    (auto-bib-doi bib)
@@ -540,11 +615,194 @@
 (define (given-names->initials str)
   (regexp-replace* #rx"(.)[^ ]*( |$)" str "\\1. "))
 
+;; return content for v, preserve false
+(define (contentify v)
+  (if (or (not v) (content? v))
+      v
+      (format "~a" v)))
+;; return string for v, preserve false
+(define (stringify v)
+  (and v (content->string (contentify v))))
+
+;; wrap non-#f content as an element, for backward compatibility with
+;; the *-location functions' historical result type. Flattens c first, so
+;; content that's merely empty (e.g. "") normalizes to #f like an omitted
+;; argument does, rather than becoming a visibly-empty but non-#f element.
+;; Only call this on results that aren't already elements.
+(define (elemify c)
+  (define fc (flatten-content c))
+  (and fc (elem fc)))
+
+;; Flattens c and returns the (non-#f) flattened content; raises an error
+;; if c flattens to #f, i.e. is empty or otherwise trivial content -- as
+;; opposed to c simply being #f, which flatten-content also treats as
+;; trivial, but which callers use throughout this file to mean "omitted"
+;; rather than "supplied but empty." Distinguishing the two matters: an
+;; omitted, optional argument should quietly contribute nothing, but an
+;; argument that's explicitly supplied yet trivial (e.g. #:editor "") is
+;; almost always a caller mistake, and silently swallowing it just produces
+;; a bogus fragment (e.g. a stray "(Ed.)" credit with no name) instead of
+;; either the intended content or a clear error.
+;; what, if given, names the argument/field/function that was expected to
+;; be non-trivial, for a more specific error message.
+(define (ensure-nontrivial-content c [what "content"])
+  (or (flatten-content c)
+      (raise-argument-error 'autobib (format "non-trivial (non-empty) ~a" what) c)))
+
 (module+ test
   (require rackunit)
   (check-equal? (given-names->initials "Matthew") "M. ")
   (check-equal? (given-names->initials "Matthew R.") "M. R. ")
-  (check-equal? (given-names->initials "Matthew Raymond") "M. R. "))
+  (check-equal? (given-names->initials "Matthew Raymond") "M. R. ")
+  (check-equal? (content->string (journal-location (bold "Journal of Things"))) "Journal of Things")
+  (check-equal? (content->string (author-name (italic "Ada") "Lovelace")) "Ada Lovelace")
+
+  (check-false (contentify #f))
+  (check-false (stringify #f))
+  (check-equal? (contentify 42) "42")
+  (check-equal? (stringify 42) "42")
+  (define emphasized (italic "foo"))
+  (check-eq? (contentify emphasized) emphasized)
+  (check-equal? (stringify emphasized) "foo")
+
+  (check-false (flatten-content '(#f "" () #f)))
+  (check-equal? (flatten-content '(("a") #f ("b" "c")))
+                '("a" "b" "c"))
+  (check-equal?
+   (concatenate-content #:separator ", "
+                        '("foo" "bar") #f "baz")
+   '("foo" "bar" ", " "baz"))
+
+  (check-equal? (flatten-content 'foo) "foo")
+  (check-equal? (flatten-content 42) "42")
+  (check-equal? (content->string (book-location #:edition 'second))
+                "Second edition")
+
+  (check-equal? (capitalize-content "second") "Second")
+  (check-equal? (capitalize-content '("" "second")) "Second")
+  (define emphasized-second (emph "second"))
+  (check-eq? (capitalize-content emphasized-second)
+             emphasized-second)
+  (check-equal?
+   (capitalize-content (list emphasized-second " edition"))
+   (list emphasized-second " edition"))
+  (check-equal?
+   (content->string (book-location #:edition "second"))
+   "Second edition")
+
+  (define no-note
+    (make-bib #:title "Title" #:doi "10.1234/foo"))
+  (define with-note
+    (make-bib #:title "Title"
+              #:doi "10.1234/foo"
+              #:note "A note"))
+  (define (entry-first-text bib)
+    (content->string
+     (paragraph-content
+      (car (compound-paragraph-blocks
+            (bib->entry bib author+date-style #f
+                        default-render-date-bib 1))))))
+  (check-equal? (entry-first-text no-note)
+                "Title. doi:10.1234/foo")
+  ;; #:title is a mandatory keyword, but its value may still be #f -- e.g. a
+  ;; bibtex misc entry has no required fields at all. make-bib must be able
+  ;; to construct such a bib, and bib->entry must be able to render it,
+  ;; without a title.
+  (check-not-exn (λ () (make-bib #:title #f #:doi "10.1234/foo")))
+  (check-equal? (entry-first-text (make-bib #:title #f #:doi "10.1234/foo"))
+                " doi:10.1234/foo")
+  (check-equal? (entry-first-text with-note)
+                "Title. doi:10.1234/foo. A note")
+  (check-equal?
+   (entry-first-text (make-bib #:title "Title" #:doi "10.1/x" #:note ""))
+   "Title. doi:10.1/x")
+  (check-equal?
+   (entry-first-text (make-bib #:title "Title" #:doi "10.1/x" #:note " \n "))
+   "Title. doi:10.1/x")
+  (check-equal?
+   (entry-first-text (make-bib #:title "Title"
+                               #:url "https://example.org"
+                               #:note "A note"))
+   "Title. https://example.org A note")
+  (check-equal?
+   (entry-first-text (make-bib #:title "Title"
+                               #:url "https://example.org"
+                               #:accessed "January 2024"))
+   "Title. https://example.org (accessed January 2024)")
+  (check-equal?
+   (entry-first-text (make-bib #:title "Title"
+                               #:url "https://example.org"
+                               #:accessed "January 2024"
+                               #:note "A note"))
+   "Title. https://example.org (accessed January 2024). A note")
+  (check-equal?
+   (entry-first-text (make-bib #:title "Title"
+                               #:doi "10.1234/foo"
+                               #:url "https://example.org"
+                               #:accessed "January 2024"
+                               #:note "A note"))
+   "Title. doi:10.1234/foo. A note")
+  ;; journal-location, techrpt-location, and book-chapter-location are contracted to
+  ;; always return an element when given #f for their required argument (i.e.
+  ;; supplying no real information), via ensure-nontrivial-content; see
+  ;; scribble-test/tests/scriblib/autobib.rkt for the check-exn versions of this
+  ;; going through the exported, contracted bindings instead.
+  ;; proceedings-location, book-location, booklet-location, misc-location, and
+  ;; manual-location may gracefully return #f when every argument is #f or
+  ;; empty content -- but only for plain (undecorated) fields: an explicitly
+  ;; empty value for a decorated one (edition, editor, location) is a caller
+  ;; mistake and raises via ensure-nontrivial-content instead, since silently
+  ;; swallowing it would otherwise leave orphaned decoration (e.g. a stray
+  ;; "(Ed.)" credit with no name) in the output.
+  (check-false (proceedings-location #f))
+  (check-exn exn:fail:contract? (λ () (proceedings-location "")))
+  (check-equal? (content->string (proceedings-location #f #:publisher "ACM"))
+                "ACM")
+  (check-false (book-location))
+  (check-exn exn:fail:contract? (λ () (book-location #:edition "")))
+  (check-false (booklet-location))
+  (check-false (booklet-location #:howpublished "" #:address ""))
+  (check-false (misc-location))
+  (check-false (misc-location #:howpublished ""))
+  (check-false (manual-location))
+  (check-false (manual-location #:organization ""))
+  (check-exn exn:fail:contract? (λ () (manual-location #:edition "")))
+  (check-equal?
+   (content->string
+    (book-location
+     #:edition "second"
+     #:chapter 3
+     #:series "LNCS"
+     #:volume 42
+     #:number 7
+     #:pages '(10 20)
+     #:publisher "Springer"
+     #:address "Berlin"))
+   "Second edition, chapter 3, LNCS, 42(7), pp. 10--20. Springer, Berlin")
+  (check-equal?
+   (content->string (book-location #:chapter 3))
+   "Chapter 3")
+  (check-equal?
+   (content->string
+    (book-location #:edition "second" #:chapter 3))
+   "Second edition, chapter 3")
+
+  (define multi-note
+    (make-bib
+     #:title "Title"
+     #:note "First paragraph.\n\nSecond paragraph."))
+  (define entry
+    (bib->entry multi-note author+date-style #f
+                default-render-date-bib 1))
+  (check-true (compound-paragraph? entry))
+  (define paragraphs (compound-paragraph-blocks entry))
+  (check-equal? (length paragraphs) 2)
+  (check-equal?
+   (content->string (paragraph-content (first paragraphs)))
+   "Title. First paragraph.")
+  (check-equal?
+   (content->string (paragraph-content (second paragraphs)))
+   "Second paragraph."))
 
 (define (proceedings-location
          #:editor [editor_ #f]
@@ -556,46 +814,69 @@
          #:organization [organization #f]
          #:publisher [publisher #f]
          #:address [address #f])
-  (concatenate-elements
-   (concatenate-elements
-    @elem{In }
-    (concatenate-elements
+  (define location-content*
+    (and location (italic (ensure-nontrivial-content location "proceedings-location's location argument"))))
+  (define details
+    (concatenate-content
      #:separator ", "
      (and editor_ (editor editor_))
-     @italic{@elem{Proc. @to-string[location]}}
-     (series-volume-number-pages-element series volume number pages)))
-   #:separator ". "
-   (organization-publisher-address-element organization publisher address)))
+     (and location-content* @list{Proc. @location-content*})
+     (series-volume-number-pages-content series volume number pages)))
+  (elemify
+   (concatenate-content
+    (and details
+         (if location-content*
+             (concatenate-content "In " details)
+             details))
+    #:separator ". "
+    (organization-publisher-address-content organization publisher address))))
 
 (define (journal-location
          location
          #:volume [volume #f]
          #:number [number #f]
          #:pages [pages #f])
-  (concatenate-elements
-   @italic{@to-string[location]}
-   #:separator " "
-   (series-volume-number-pages-element #f volume number pages)))
+  (elemify
+   (concatenate-content
+    @italic[(ensure-nontrivial-content location "journal-location's title argument")]
+    #:separator " "
+    (series-volume-number-pages-content #f volume number pages))))
 
-;; The URL is now redundant with the URL in make-bib, so we now (2025-12) make it optional
-(define (webpage-location (url #f) #:accessed [accessed #f])
-  (concatenate-elements
-   (and url ((url-rendering) url))
-   #:separator " "
-   (and accessed @elem{(accessed @to-string[accessed])})))
+(define (capitalize-string s)
+  (string-append
+   (string (char-upcase (string-ref s 0)))
+   (substring s 1)))
 
-(define (string-capitalize str)
-  (if (non-empty-string? str)
-      (let ([chars (string->list str)])
-        (list->string (cons (char-upcase (car chars)) (cdr chars))))
-      str))
+(define (capitalize-content content)
+  (match (flatten-content content)
+    [(? non-empty-string? s) (capitalize-string s)]
+    [(cons (? non-empty-string? s) r) (cons (capitalize-string s) r)]
+    [x x]))
 
-(define (concatenate-elements #:separator (separator "") . elements)
-  (let loop ((l (filter (lambda (x) x) elements))) ;; remove #f from the list
-     (match l
-       ['() #f]
-       [(list a) (elem a)]
-       [(cons a b) (elem a separator (loop (cdr l)))])))
+(define (flatten-content content)
+  (define a '())
+  (let loop ((c content))
+    (cond
+      [(pair? c)                                       (loop (car c)) (loop (cdr c))]
+      [(or (null? c) (not c) (void? c) (equal? c ""))  (void)]
+      [else                                            (set! a (cons (contentify c) a))]))
+  (match a
+    ['() #f]
+    [(list x) x]
+    [else (reverse a)]))
+
+(define (concatenate-content #:separator (separator #f) . content)
+  (define l (filter values (map flatten-content content)))
+  (and (pair? l) (flatten-content (if separator (add-between l separator) l))))
+
+(define (chapter-content chapter)
+  (cond
+    [(number? chapter)
+     (list "chapter " (number->string chapter))]
+    [(and (string? chapter)
+          (regexp-match? #px"^[0-9]+$" chapter))
+     (list "chapter " chapter)]
+    [else chapter]))
 
 (define (book-location
          #:edition [edition #f]
@@ -607,53 +888,63 @@
          #:pages [pages #f]
          #:publisher [publisher #f]
          #:address [address #f])
-  (concatenate-elements
-   (concatenate-elements
-    #:separator ", "
-    (edition-element edition)
-    (to-string* chapter)
-    (and editor_ (editor editor_))
-    (series-volume-number-pages-element series volume number pages))
-   #:separator ". "
-   (organization-publisher-address-element #f publisher address)))
+  (define edition-content* (edition-content edition))
+  (define chapter-content* (chapter-content chapter))
+  (elemify
+   (concatenate-content
+    (concatenate-content
+     #:separator ", "
+     edition-content*
+     (if edition-content*
+       chapter-content*
+       (capitalize-content chapter-content*))
+     (and editor_ (editor editor_))
+     (series-volume-number-pages-content series volume number pages))
+    #:separator ". "
+    (organization-publisher-address-content #f publisher address))))
 
 (define (booklet-location
          #:howpublished [howpublished #f]
          #:address [address #f])
-  (concatenate-elements #:separator ". "
-    (to-string* howpublished)
-    (to-string* address)))
+  (elemify
+   (concatenate-content #:separator ". "
+     howpublished
+     address)))
 
 (define (misc-location
          #:howpublished [howpublished #f])
-  (and howpublished (elem (to-string howpublished))))
+  (elemify (and howpublished (contentify howpublished))))
 
 (define (manual-location
          #:organization [organization #f]
          #:edition [edition #f])
-  (concatenate-elements
-   (edition-element edition)
-   #:separator ", "
-   (to-string* organization)))
+  (elemify
+   (concatenate-content
+    (edition-content edition)
+    #:separator ", "
+    organization)))
 
 (define (techrpt-location
          #:institution institution
          #:type [type #f]
          #:number [number #f]
          #:address [address #f])
-  (concatenate-elements #:separator ", "
-    (to-string* institution) (to-string* type) (to-string* number) (to-string* address)))
+  (elemify
+   (concatenate-content #:separator ", "
+     (ensure-nontrivial-content institution "techrpt-location's institution argument")
+     type number address)))
 
 (define (dissertation-location
          #:institution institution
          #:degree [degree "PhD"]
          #:type [type #f]
          #:address [address #f])
-  (concatenate-elements #:separator ", "
-    @elem{@to-string[degree] dissertation}
-    (to-string institution)
-    (to-string* type)
-    (to-string* address)))
+  (elemify
+   (concatenate-content #:separator ", "
+     @list{@(ensure-nontrivial-content degree "degree argument") dissertation}
+     (ensure-nontrivial-content institution "dissertation-location's institution argument")
+     type
+     address)))
 
 (define (book-chapter-location
          location
@@ -666,30 +957,35 @@
          #:pages [pages #f]
          #:publisher [publisher #f]
          #:address [address #f])
-  (concatenate-elements #:separator " "
-   @elem{In @italic{@elem{@to-string[location]}}}
-   (book-location #:edition edition #:chapter chapter #:editor editor_
-         #:series series #:volume volume #:number number #:pages pages
-         #:publisher publisher #:address address)))
+  (elemify
+   (concatenate-content #:separator " "
+    @list{In @italic[(ensure-nontrivial-content location "book-chapter-location's location argument")]}
+    (book-location #:edition edition #:chapter chapter #:editor editor_
+          #:series series #:volume volume #:number number #:pages pages
+          #:publisher publisher #:address address))))
 
 ;; ----------------------------------------
 
 (define (author-name first last #:suffix [suffix #f])
+  (define first* (contentify first))
+  (define last* (contentify last))
+  (define suffix* (contentify suffix))
+
+  ;; Plain-text projections are needed for sorting.
+  (define first-string (stringify first*))
+  (define last-string (stringify last*))
+  (define suffix-string (stringify suffix*))
   (make-author-element
    #f
-   (list
-    (format "~a ~a~a"
-            (if (abbreviate-given-names)
-                (given-names->initials first)
-                first)
-            last
-            (if suffix
-                (format " ~a" suffix)
-                "")))
-   (format "~a ~a~a" last first (if suffix
-                                    (format " ~a" suffix)
-                                    ""))
-   last))
+   (concatenate-content #:separator " "
+    (if (abbreviate-given-names)
+              (given-names->initials first-string)
+              first*)
+    last*
+    suffix*)
+   (format "~a ~a~a" last-string first-string
+           (if suffix-string (format " ~a" suffix-string) ""))
+   last*))
 
 (define (org-author-name org)
   (make-author-element
@@ -744,30 +1040,29 @@
   (let ([name (parse-author name)])
     (make-author-element
      #f
-     (append (element-content name)
-             '(" (Ed.)"))
+     (list (ensure-nontrivial-content (element-content name) "editor name")
+           " (Ed.)")
      (author-element-names name)
      (author-element-cite name))))
 
-(define (to-string v) (format "~a" v))
-(define (to-string* v) (and v (to-string v)))
-(define (edition-element edition)
-  (and edition @elem{@(string-capitalize (to-string edition)) edition}))
-(define (pages-element pages)
-  (and pages @elem{pp. @(to-string (car pages))--@(to-string (cadr pages))}))
-(define (series-volume-number-pages-element series volume number pages)
-  (concatenate-elements
-   (to-string* series)
+(define (edition-content edition)
+  (and edition
+       @list{@(ensure-nontrivial-content (capitalize-content edition) "edition argument") edition}))
+(define (pages-content pages)
+  (and pages @elem{pp. @(ensure-nontrivial-content (car pages) "pages start")--@(ensure-nontrivial-content (cadr pages) "pages end")}))
+(define (series-volume-number-pages-content series volume number pages)
+  (concatenate-content
+   series
    #:separator ", "
-   (concatenate-elements
-    (to-string* volume)
-    (and number @elem{(@to-string[number])}))
-   (pages-element pages)))
-(define (organization-publisher-address-element organization publisher address)
-  (concatenate-elements
-   (to-string* organization)
+   (concatenate-content
+    volume
+    (and number @list{(@(ensure-nontrivial-content number "number argument"))}))
+   (pages-content pages)))
+(define (organization-publisher-address-content organization publisher address)
+  (concatenate-content
+   organization
    #:separator ". "
-   (concatenate-elements
-    (to-string* publisher)
+   (concatenate-content
+    publisher
     #:separator ", "
-    (to-string* address))))
+    address)))
