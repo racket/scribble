@@ -324,3 +324,113 @@ tbody > tr:first-child > td > .together {
     padding: 0.2rem;
     text-align: left;
 }
+
+@media (prefers-color-scheme: dark) {
+    a.RktValDef, a.RktStxDef, a.RktSymDef,
+    span.RktValDef, span.RktStxDef, span.RktSymDef {
+        color: #b5c2e6;
+    }
+
+    .inherited {
+        background-color: #9E1C1F;
+    }
+
+    .RktValLink, .RktStxLink, .RktModLink {
+        color: #e6ccff;
+    }
+
+    h2 a.RktStxLink, h3 a.RktStxLink, h4 a.RktStxLink, h5 a.RktStxLink,
+    h2 a.RktValLink, h3 a.RktValLink, h4 a.RktValLink, h5 a.RktValLink,
+    h2 .RktSym, h3 .RktSym, h4 .RktSym, h5 .RktSym,
+    h2 .RktMod, h3 .RktMod, h4 .RktMod, h5 .RktMod,
+    h2 .RktVal, h3 .RktVal, h4 .RktVal, h5 .RktVal,
+    h2 .RktPn, h3 .RktPn, h4 .RktPn, h5 .RktPn {
+        color: #e6ccff;
+    }
+
+    .tocset td a.tocviewselflink .RktValLink,
+    .tocset td a.tocviewselflink .RktStxLink,
+    .tocset td a.tocviewselflink .RktMod,
+    .tocset td a.tocviewselflink .RktSym {
+        color: #e6ccff;
+    }
+
+    .toptoclink .RktStxLink, .toclink .RktStxLink,
+    .toptoclink .RktValLink, .toclink .RktValLink,
+    .toptoclink .RktModLink, .toclink .RktModLink {
+        color: #e6ccff;
+
+    }
+
+    .tocset .RktValLink, .tocset .RktStxLink, .tocset .RktModLink, .tocset .RktSym {
+        color: #e6ccff;
+    }
+
+    .SVInsetFlow .RktVar {
+        color: #e6ccff;
+    }
+
+    .RktVar {
+        color: #b5c2e6;
+    }
+
+    .RktRes {
+        color: #ffc9d1;
+    }
+
+    .RktSym {
+        color: #b5c2e6;
+    }
+
+    .RktOut {
+        color: #e6ccff;
+    }
+
+    .defmodule {
+        border-top: 1px dotted #99b;
+        background-color: #2c2e35;
+        border-bottom-left-radius: 5px;
+        border-bottom-right-radius: 5px;
+    }
+
+    .defmodule a {
+        color: #e6ccff;
+    }
+
+    .defmodule .RktPn {
+        color: #b35f61;
+    }
+
+    .RktVal {
+        color: #ffc9d1;
+    }
+
+    .RktMeta {
+        color: #e6ccff;
+    }
+
+    .RktPn {
+        color: #b35f61;
+    }
+
+    .RktErr {
+        color: #9E1C1F;
+    }
+
+    .RktOpt {
+        color: #b5c2e6;
+    }
+
+    .SHistory {
+        color: #ffc9d1;
+    }
+
+    .stt {
+        color: #e6ccff;
+    }
+
+    .together {
+        border-top: 1px dotted #e6ccff;
+        padding: 8px;
+    }
+}
