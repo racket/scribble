@@ -1470,8 +1470,6 @@
                              (not (or (not n)
                                       (string=? "" (apply string-append (format-number n '(""))))))]
                             [else #f])]
-                             (not (or (not n)
-                                      (string=? "" (apply string-append (format-number n '(""))))))])]
                          [(number-link?)
                           (and dest
                                (not ext-id)
