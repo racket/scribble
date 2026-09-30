@@ -1464,10 +1464,12 @@
                          [(has-number?)
                           ;; If the section number is empty, don't generate an
                           ;; empty link:
-                          (and dest
-                               (let ([n (dest-number dest)])
-                                 (not (or (not n)
-                                          (string=? "" (apply string-append (format-number n '(""))))))))]
+                          (cond
+                            [(not dest) #f]
+                            [else
+                             (define n (dest-number dest))
+                             (not (or (not n)
+                                      (string=? "" (apply string-append (format-number n '(""))))))])]
                          [(number-link?)
                           (and dest
                                (not ext-id)
