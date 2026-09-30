@@ -377,7 +377,13 @@
           [else #f]))
       (and content
            (begin
-             (render-content (make-link-element (element-style e) content (link-element-tag e)) part ri)
+             ;; Wrap in a list so the replacement link's content is never
+             ;; '() itself (even when e.g. the title being substituted in
+             ;; is itself empty) -- empty-content? is a bare (null? c), so
+             ;; an unwrapped '() here would make the replacement link look
+             ;; like another empty-content part-label link, re-entering
+             ;; this same method indefinitely.
+             (render-content (make-link-element (element-style e) (list content) (link-element-tag e)) part ri)
              #t)))
 
     (define/override (render-content e part ri)

@@ -74,13 +74,18 @@
       ;; 'number-and-title falls back to just the quoted title (still
       ;; distinguishable from the plain heading) when unnumbered.
       (check-true (has? html-out "“An Unnumbered Section”"))
-      ;; Regression: a target with no numbering metadata at all (dest-number
-      ;; is #f, not just an empty list, e.g. for a bare target-element that
-      ;; isn't a section) used to crash number-and-title-link?'s rendering,
-      ;; since it called format-number unconditionally. Should render as
-      ;; just the quoted title, like the unnumbered-section case above.
+      ;; A target with no numbering metadata at all (dest-number is #f,
+      ;; not just an empty list, e.g. for a bare target-element that
+      ;; isn't a section) should render as just the quoted title, like
+      ;; the unnumbered-section case above.
       (check-true (has? html-out "“A Bare Target”"))
 
+      ;; This also exercises 'short on an unnumbered section with a
+      ;; genuinely empty title, which render-self-contained-secref must
+      ;; not mistake for another empty-content part-label link (that
+      ;; would re-enter the same method indefinitely). There isn't much
+      ;; else to meaningfully assert about a link with an empty title,
+      ;; so this check-not-exn is the test for it.
       (check-not-exn
        (λ () (build-doc (latex:render-mixin render%) "secref-styles.tex")))
       (define tex-out (file->string (build-path work-dir "secref-styles.tex")))
@@ -101,12 +106,11 @@
       ;; 'number-and-title falls back to just the quoted title when
       ;; unnumbered.
       (check-true (has? tex-out "{``}An Unnumbered Section{''}"))
-      ;; Same no-numbering-metadata regression as above, for LaTeX.
+      ;; Same no-numbering-metadata case as above, for LaTeX.
       (check-true (has? tex-out "{``}A Bare Target{''}"))
-      ;; Regression: the self-contained 'short/'number-and-title path used
-      ;; to hardcode #f for the replacement link's style, discarding any
-      ;; other style properties (e.g. color) attached to the original
-      ;; secref. \intextcolor{red}{...} should wrap the "{\S}1" content.
+      ;; The self-contained 'short/'number-and-title path must preserve
+      ;; the original link's style (e.g. color), not just its content:
+      ;; \intextcolor{red}{...} should wrap the "{\S}1" content.
       (check-true (has? tex-out "\\intextcolor{red}{{\\S}1}"))
       (void))
     (λ () (delete-directory/files work-dir))))

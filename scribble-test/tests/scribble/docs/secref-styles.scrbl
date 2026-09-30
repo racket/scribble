@@ -33,3 +33,10 @@ Colored short, to check the original link's style (e.g. color) survives:
   (make-style #f (list (link-render-style 'short) (make-color-property "red")))
   null
   (make-section-tag "numbered")).
+
+@section[#:style '(unnumbered) #:tag "empty"]{}
+
+Short, empty title (exercises the case where the fallback title is
+itself empty, which the self-contained LaTeX rendering must not
+mistake for another empty-content part-label link):
+@secref["empty" #:link-render-style (link-render-style 'short)].
