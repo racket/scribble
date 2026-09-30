@@ -338,7 +338,7 @@
           (printf "\\noindent ")))
       (super render-intrapara-block p part ri first? last? starting-item?))
 
-    ;; Renders a part-label secref/figure-ref element completely on its own,
+    ;; Renders an empty-content part link, such as secref, on its own,
     ;; for the 'short and 'number-and-title link-render-style modes: "§N.M"
     ;; or "§N.M "Title"". When the section has no number, 'short falls back
     ;; to the plain title and 'number-and-title to just the quoted title.
