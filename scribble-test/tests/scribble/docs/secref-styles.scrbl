@@ -22,3 +22,14 @@ Number and title: @secref["numbered" #:link-render-style (link-render-style 'num
 Short, unnumbered: @secref["unnumbered" #:link-render-style (link-render-style 'short)].
 
 Number and title, unnumbered: @secref["unnumbered" #:link-render-style (link-render-style 'number-and-title)].
+
+A target with no numbering metadata at all (not a section):
+@(make-target-element #f (list "A Bare Target") '(part "bare-target")) is here.
+
+Number and title, no numbering metadata: @secref["bare-target" #:link-render-style (link-render-style 'number-and-title)].
+
+Colored short, to check the original link's style (e.g. color) survives:
+@(make-link-element
+  (make-style #f (list (link-render-style 'short) (make-color-property "red")))
+  null
+  (make-section-tag "numbered")).

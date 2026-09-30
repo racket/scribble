@@ -377,7 +377,7 @@
           [else #f]))
       (and content
            (begin
-             (render-content (make-link-element #f content (link-element-tag e)) part ri)
+             (render-content (make-link-element (element-style e) content (link-element-tag e)) part ri)
              #t)))
 
     (define/override (render-content e part ri)

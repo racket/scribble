@@ -1665,7 +1665,7 @@ subsection numbers. See also @racket[collected-info].
 @history[#:added "1.1"]}
 
 
-@defstruct[link-render-style ([mode (or/c 'default 'number 'number-and-title)])]{
+@defstruct[link-render-style ([mode (or/c 'default 'number 'short 'number-and-title)])]{
 
 Used as a @tech{style property} for a @racket[part] or a specific
 @racket[link-element] to control the way that a hyperlink is rendered

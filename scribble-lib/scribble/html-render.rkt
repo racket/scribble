@@ -1572,8 +1572,9 @@
                                  `("§" ,@(format-number (dest-number dest) '("")))
                                  (render-content (strip-aux (dest-title dest)) part ri))]
                             [number-and-title-link?
-                             (define num (format-number (dest-number dest) '(" ")))
-                             `(,@(if (null? num) '() `("§" ,@num))
+                             `(,@(if has-number?
+                                     `("§" ,@(format-number (dest-number dest) '(" ")))
+                                     '())
                                "“" ,@(render-content (strip-aux (dest-title dest)) part ri) "”")]
                             [else
                              (render-content (strip-aux (dest-title dest)) part ri)])

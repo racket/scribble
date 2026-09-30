@@ -74,6 +74,12 @@
       ;; 'number-and-title falls back to just the quoted title (still
       ;; distinguishable from the plain heading) when unnumbered.
       (check-true (has? html-out "“An Unnumbered Section”"))
+      ;; Regression: a target with no numbering metadata at all (dest-number
+      ;; is #f, not just an empty list, e.g. for a bare target-element that
+      ;; isn't a section) used to crash number-and-title-link?'s rendering,
+      ;; since it called format-number unconditionally. Should render as
+      ;; just the quoted title, like the unnumbered-section case above.
+      (check-true (has? html-out "“A Bare Target”"))
 
       (check-not-exn
        (λ () (build-doc (latex:render-mixin render%) "secref-styles.tex")))
@@ -95,5 +101,12 @@
       ;; 'number-and-title falls back to just the quoted title when
       ;; unnumbered.
       (check-true (has? tex-out "{``}An Unnumbered Section{''}"))
+      ;; Same no-numbering-metadata regression as above, for LaTeX.
+      (check-true (has? tex-out "{``}A Bare Target{''}"))
+      ;; Regression: the self-contained 'short/'number-and-title path used
+      ;; to hardcode #f for the replacement link's style, discarding any
+      ;; other style properties (e.g. color) attached to the original
+      ;; secref. \intextcolor{red}{...} should wrap the "{\S}1" content.
+      (check-true (has? tex-out "\\intextcolor{red}{{\\S}1}"))
       (void))
     (λ () (delete-directory/files work-dir))))
