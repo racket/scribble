@@ -1465,9 +1465,11 @@
                           ;; If the section number is empty, don't generate an
                           ;; empty link:
                           (cond
-                            [(not dest) #f]
-                            [else
+                            [dest
                              (define n (dest-number dest))
+                             (not (or (not n)
+                                      (string=? "" (apply string-append (format-number n '(""))))))]
+                            [else #f])]
                              (not (or (not n)
                                       (string=? "" (apply string-append (format-number n '(""))))))])]
                          [(number-link?)
