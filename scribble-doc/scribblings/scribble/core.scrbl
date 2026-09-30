@@ -1127,9 +1127,9 @@ property}:
 
        For both @racket['short] and @racket['number-and-title], a
        section with no number (e.g., an @racket['unnumbered] part)
-       falls back instead: @racket['number-and-title] shows just the
-       quoted title, with no ``§'' or number; @racket['short] falls
-       back to whatever @racket['default] would show.}
+       falls back instead to just the title, with no ``§'' or number:
+       quoted for @racket['number-and-title], plain for
+       @racket['short].}
 
  @item{For Latex/PDF output, the generated reference's format can
        depend on the document style in addition the @racket[_mode],

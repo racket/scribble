@@ -340,10 +340,11 @@
 
     ;; Renders a part-label secref/figure-ref element completely on its own,
     ;; for the 'short and 'number-and-title link-render-style modes: "§N.M"
-    ;; or "§N.M "Title"" (falling back to just the quoted title when the
-    ;; section is unnumbered). Bypasses the \SecRef*/\ChapRef* macro family
-    ;; entirely, so it doesn't depend on which .tex style is loaded, unlike
-    ;; 'default and 'number (see render-content below).
+    ;; or "§N.M "Title"". When the section has no number, 'short falls back
+    ;; to the plain title and 'number-and-title to just the quoted title.
+    ;; Bypasses the \SecRef*/\ChapRef* macro family entirely, so it doesn't
+    ;; depend on which .tex style is loaded, unlike 'default and 'number
+    ;; (see render-content below).
     ;;
     ;; Builds ordinary content -- "§", the number, the curly-quoted title --
     ;; and wraps it in a fresh link-element sharing e's tag but with
@@ -369,8 +370,10 @@
           [(and ok? (eq? mode 'number-and-title))
            (append (if has-number? (list "§" formatted-number " ") null)
                    (list "“" (strip-aux (vector-ref dest 0)) "”"))]
-          [(and ok? (eq? mode 'short) has-number?)
-           (list "§" formatted-number)]
+          [(and ok? (eq? mode 'short))
+           (if has-number?
+               (list "§" formatted-number)
+               (strip-aux (vector-ref dest 0)))]
           [else #f]))
       (and content
            (begin

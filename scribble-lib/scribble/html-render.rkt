@@ -1477,7 +1477,6 @@
                          [(short-link?)
                           (and dest
                                (not ext-id)
-                               has-number?
                                (eq? 'short (link-render-style-at-element e))
                                (empty-content? (element-content e)))]
                          [(number-and-title-link?)
@@ -1568,7 +1567,10 @@
                     ,@(if (empty-content? (element-content e))
                           (cond
                             [number-link? (format-number (dest-number dest) '(""))]
-                            [short-link? `("§" ,@(format-number (dest-number dest) '("")))]
+                            [short-link?
+                             (if has-number?
+                                 `("§" ,@(format-number (dest-number dest) '("")))
+                                 (render-content (strip-aux (dest-title dest)) part ri))]
                             [number-and-title-link?
                              (define num (format-number (dest-number dest) '(" ")))
                              `(,@(if (null? num) '() `("§" ,@num))
