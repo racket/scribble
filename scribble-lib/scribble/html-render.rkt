@@ -1461,15 +1461,30 @@
                                    external-tag-path)
                               (values #f #f)
                               (resolve-get/ext-id part ri (link-element-tag e)))]
+                         [(has-number?)
+                          ;; If the section number is empty, don't generate an
+                          ;; empty link:
+                          (cond
+                            [dest
+                             (define n (dest-number dest))
+                             (not (or (not n)
+                                      (string=? "" (apply string-append (format-number n '(""))))))]
+                            [else #f])]
                          [(number-link?)
                           (and dest
                                (not ext-id)
-                               (let ([n (dest-number dest)])
-                                 ;; If the section number is empty, don't generate an
-                                 ;; empty link:
-                                 (not (or (not n)
-                                          (string=? "" (apply string-append (format-number n '("")))))))
+                               has-number?
                                (eq? 'number (link-render-style-at-element e))
+                               (empty-content? (element-content e)))]
+                         [(short-link?)
+                          (and dest
+                               (not ext-id)
+                               (eq? 'short (link-render-style-at-element e))
+                               (empty-content? (element-content e)))]
+                         [(number-and-title-link?)
+                          (and dest
+                               (not ext-id)
+                               (eq? 'number-and-title (link-render-style-at-element e))
                                (empty-content? (element-content e)))])
              (define (extract-query)
                (let ([s (element-style e)])
@@ -1554,6 +1569,15 @@
                     ,@(if (empty-content? (element-content e))
                           (cond
                             [number-link? (format-number (dest-number dest) '(""))]
+                            [short-link?
+                             (if has-number?
+                                 `("§" ,@(format-number (dest-number dest) '("")))
+                                 (render-content (strip-aux (dest-title dest)) part ri))]
+                            [number-and-title-link?
+                             `(,@(if has-number?
+                                     `("§" ,@(format-number (dest-number dest) '(" ")))
+                                     '())
+                               "“" ,@(render-content (strip-aux (dest-title dest)) part ri) "”")]
                             [else
                              (render-content (strip-aux (dest-title dest)) part ri)])
                           (render-content (element-content e) part ri))))

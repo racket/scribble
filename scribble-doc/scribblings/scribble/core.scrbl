@@ -1114,10 +1114,26 @@ property}:
        Instead, the word ``section'' is shown followed by a
        hyperlinked section number. The word ``section'' starts in
        uppercase if the element's style includes a @racket['uppercase]
-       property.}
+       property.
+
+       In @racket['short] mode, only the section number is shown, as
+       ``§3.2'', the whole thing (symbol and number together)
+       hyperlinked as a unit --- no word, no title.
+
+       In @racket['number-and-title] mode, both the number and the
+       title are shown together, hyperlinked as a unit: the section
+       number (if the section has one), the symbol ``§'', and the
+       section title in quotes --- e.g., ``§3.2 “Some Section”''.
+
+       For both @racket['short] and @racket['number-and-title], a
+       section with no number (e.g., an @racket['unnumbered] part)
+       falls back instead to just the title, with no ``§'' or number:
+       quoted for @racket['number-and-title], plain for
+       @racket['short].}
 
  @item{For Latex/PDF output, the generated reference's format can
-       depend on the document style in addition the @racket[_mode].
+       depend on the document style in addition the @racket[_mode],
+       for the @racket['default] and @racket['number] modes.
        For the @racket['default] mode and a default document style, a
        section number is shown by the word ``section'' followed by the
        section number, and the word ``section'' and the section number
@@ -1130,10 +1146,17 @@ property}:
        only the number is hyperlinked, not the word ``section'' or
        the ``§'' symbol.
 
-       A new document style can customize Latex/PDF output (see
-       @secref["config"]) by redefining the @ltx{SecRefLocal}, @|etc|,
-       macros (see @secref["builtin-latex"]). The @ltx{SecRef},
-       @|etc|, variants are used in @racket['number] mode.}
+       A new document style can customize this part of Latex/PDF
+       output (see @secref["config"]) by redefining the
+       @ltx{SecRefLocal}, @|etc|, macros (see
+       @secref["builtin-latex"]). The @ltx{SecRef}, @|etc|, variants
+       are used in @racket['number] mode.
+
+       The @racket['short] and @racket['number-and-title] modes
+       render the same way as they do for HTML (described above),
+       @emph{regardless} of the document style: they bypass the
+       @ltx{SecRefLocal} macro family entirely, so a document style
+       cannot customize their appearance by redefining those macros.}
 
 ]
 
@@ -1172,7 +1195,9 @@ properties for all @racket[element]s:
 ]
 
 @history[#:changed "1.26" @elem{Added @racket[link-render-style] support.}
-         #:changed "1.65" @elem{Added @racket[link-query-addition] support.}]}
+         #:changed "1.65" @elem{Added @racket[link-query-addition] support.}
+         #:changed "1.69" @elem{Added the @racket['short] and
+           @racket['number-and-title] modes.}]}
 
 
 @defstruct[(index-element element) ([tag tag?]
@@ -1640,7 +1665,7 @@ subsection numbers. See also @racket[collected-info].
 @history[#:added "1.1"]}
 
 
-@defstruct[link-render-style ([mode (or/c 'default 'number)])]{
+@defstruct[link-render-style ([mode (or/c 'default 'number 'short 'number-and-title)])]{
 
 Used as a @tech{style property} for a @racket[part] or a specific
 @racket[link-element] to control the way that a hyperlink is rendered
@@ -1655,7 +1680,16 @@ hyperlinked. The @racket['default] style is more flexible, allowing a
 more appropriate choice for the rendering context, such as using the
 target section's name for a hyperlink in HTML.
 
-@history[#:added "1.26"]}
+The @racket['short] mode shows just the number, as ``§3.2''; the
+@racket['number-and-title] mode shows the number and the title
+together, as ``§3.2 “Some Section”''. Both bypass the document style's
+own customization of @racket['default]/@racket['number] rendering; see
+@racket[link-element] for the exact rendering, including how each
+falls back when a section has no number.
+
+@history[#:added "1.26"
+         #:changed "1.69" @elem{Added the @racket['short] and
+           @racket['number-and-title] modes.}]}
 
 
 @defparam[current-link-render-style style link-render-style?]{

@@ -192,7 +192,7 @@
  link-render-style?
  link-render-style-mode
  (contract-out
-  [link-render-style ((or/c 'default 'number)
+  [link-render-style ((or/c 'default 'number 'short 'number-and-title)
                       . -> . link-render-style?)]
   [current-link-render-style (parameter/c link-render-style?)]))
 
