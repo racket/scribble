@@ -373,11 +373,11 @@
          (set-mcdr! p (loop (mcdr v)))
          p)]
       [(vector? v)
-       (let ([v2 (make-vector (vector-length v))])
-         (hash-set! ht v v2)
-         (for ([i (in-range (vector-length v2))])
-           (vector-set! v2 i (loop (vector-ref v i))))
-         v2)]
+       (define v2 (make-vector (vector-length v)))
+       (hash-set! ht v v2)
+       (for ([i (in-range (vector-length v2))])
+         (vector-set! v2 i (loop (vector-ref v i))))
+       v2]
       [(box? v)
        (define v2 (box #f))
        (hash-set! ht v v2)
