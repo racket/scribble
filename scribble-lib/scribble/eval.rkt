@@ -582,9 +582,9 @@
             (set! evaluations (cdr evaluations))
             (display output init-out-p #| (current-output-port) |#)
             (display error-output init-err-p #| (current-error-port) |#)
-            (cond
-              [(exn? result) (raise result)]
-              [(list? result) (apply values result)])))))))
+            (when (exn? result)
+              (raise result))
+            (apply values result)))))))
   ev)
 
 (define (close-eval e)
