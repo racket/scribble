@@ -543,9 +543,8 @@
   (define (wait-loop cust)
     (define thd (find-thread cust))
     (when thd
-      (cond
-        [(eq? give-up-evt (sync thd give-up-evt)) (void)]
-        [else (wait-loop cust)])))
+      (unless (eq? give-up-evt (sync thd give-up-evt))
+        (wait-loop cust))))
   (wait-loop sub-cust))
 
 (define (make-eval/replay logfile)
