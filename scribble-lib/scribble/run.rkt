@@ -2,6 +2,9 @@
 (require "xref.rkt"
          "render.rkt"
          racket/cmdline
+         racket/system
+         racket/exn
+         racket/rerequire
          raco/command-name
          (prefix-in text:     "text-render.rkt")
          (prefix-in markdown: "markdown-render.rkt")
@@ -32,6 +35,7 @@
 (define current-directory-depth    (make-parameter 0))
 (define current-lib-mode           (make-parameter #f))
 (define current-quiet              (make-parameter #f))
+(define use-watcher-for-typst?     (make-parameter #f))
 (define helper-file-prefix         (make-parameter #f))
 (define keep-existing-helper-files? (make-parameter #f))
 (define doc-command-line-arguments (make-parameter null))
@@ -71,6 +75,10 @@
     (current-render-mixin latex:render-mixin)]
    [("--typst") "generate Typst-format output"
     (current-html #f)
+    (current-render-mixin typst:render-mixin)]
+   [("--typst-watch") "watch scribbles and automatically compile them to Typst-format output"
+    (current-html #f)
+    (use-watcher-for-typst? #t)
     (current-render-mixin typst:render-mixin)]
    [("--pdf") "generate PDF-format output (via PDFLaTeX)"
     (current-html #f)
@@ -174,26 +182,57 @@
       (dynamic-require 'errortrace #f))]
    #:args (file . another-file)
    (let ([files (cons file another-file)]
+         [declared? (lambda (mp)
+                      ;; Try `doc' submodule first, but do not loaded in `watch' mode.
+                      (module-declared? `(submod ,mp ,doc-binding) (not (use-watcher-for-typst?))))]
          [maker (and make?
                      (make-compilation-manager-load/use-compiled-handler))])
      (parameterize ([current-command-line-arguments
                      (list->vector (reverse (doc-command-line-arguments)))])
-       (build-docs (map (lambda (file)
-                          (define (go)
-                            (let ([mp (if (current-lib-mode)
-                                          `(lib ,file)
-                                          `(file ,file))])
-                              ;; Try `doc' submodule, first:
-                              (if (module-declared? `(submod ,mp ,doc-binding) #t)
-                                  (dynamic-require `(submod ,mp ,doc-binding)
-                                                   doc-binding)
-                                  (dynamic-require mp doc-binding))))
-                          (if maker
-                              (parameterize ([current-load/use-compiled maker])
-                                (go))
-                              (go)))
-                        files)
-                   files)))))
+       (define (mk-doc file [pre-process! #f])
+         (define (go)
+           (define mp (if (current-lib-mode)
+                          `(lib ,file)
+                          `(file ,file)))
+           (define mp^ (if (declared? mp)
+                           `(submod ,mp ,doc-binding)
+                           mp))
+           (when pre-process!
+             (pre-process! mp^))
+           (dynamic-require mp^ doc-binding))
+         (if maker
+             (parameterize ([current-load/use-compiled maker])
+               (go))
+             (go)))
+       (cond
+         [(use-watcher-for-typst?)
+          (define typst-bin (find-executable-path "typst"))
+          (unless typst-bin
+            (raise-user-error 'scribble "cannot find typst in your $PATH"))
+          (apply process*
+                 typst-bin
+                 "watch"
+                 (map (lambda (x)
+                        (path-replace-extension x ".typ"))
+                      files))
+          (let loop ()
+            (let/ec k
+              (define changed
+                (apply sync (for/list ([i (in-list files)])
+                              (wrap-evt (filesystem-change-evt i)
+                                        (lambda _ i)))))
+              (build-docs (list (mk-doc changed (lambda (mp)
+                                                  (with-handlers ([exn:fail? (lambda (e)
+                                                                               (printf "~a" (exn->string e))
+                                                                               (k))])
+                                                    (dynamic-rerequire mp #:verbosity 'reload)))))
+                          (list changed)))
+            (loop))]
+         [else
+          (with-handlers ([exn:fail? (lambda (e)
+                                               (display "got en error")
+                                               (raise e))])
+            (build-docs (map mk-doc files) files))])))))
 
 (define (build-docs docs files)
   (when (and (current-dest-name)
