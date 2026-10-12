@@ -24,7 +24,7 @@ AddOnLoad(function() {
     codeBlock.addEventListener('copy', function(e) {
       var selection = window.getSelection();
       var text = selection.toString();
-      var codeText = text.replace(/\n\n/g, '\n');
+      var codeText = text.replace(/\n\n/g, '\n').replace(/\u00A0/g, ' ');
       if (text != codeText) {
         e.preventDefault();
         e.clipboardData.setData('text/plain', codeText);
