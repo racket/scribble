@@ -40,7 +40,7 @@
 
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesClass{acmart}
-[2026/08/16 v2.20 Typesetting articles for the Association for Computing Machinery]
+[2026/11/01 v2.21 Typesetting articles for the Association for Computing Machinery]
 \def\@classname{acmart}
 \InputIfFileExists{acmart-preload-hook.tex}{%
   \ClassWarning{\@classname}{%
@@ -176,7 +176,12 @@
 \DeclareOptionX{language}{%
   \ifx\ACM@languages\@empty
   \gdef\ACM@languages{english}\fi
-  \g@addto@macro\ACM@languages{, #1}}
+  \g@addto@macro\ACM@languages{, #1}%
+  \def\@tempa{#1}%
+  \def\@tempb{spanish}%
+  \ifx\@tempb\@tempa\relax
+    \g@addto@macro\ACM@languages{, es-noquoting}%
+  \fi}
 \DeclareOptionX{draft}{\PassOptionsToClass{\CurrentOption}{amsart}}
 \DeclareOptionX{*}{\PassOptionsToClass{\CurrentOption}{amsart}}
 \ProcessOptionsX
@@ -185,6 +190,7 @@
 \newif\if@ACM@journal
 \newif\if@ACM@journal@bibstrip
 \newif\if@ACM@journal@bibstrip@or@tog
+\newif\if@ACM@addressesinfootnote
 \newif\if@ACM@sigchiamode
 \newif\if@ACM@engage
 \@ACM@engagefalse
@@ -253,6 +259,7 @@
 \if@ACM@journal
   \@ACM@journal@bibstriptrue
   \@ACM@journal@bibstrip@or@togtrue
+  \@ACM@addressesinfootnotetrue
 \else
  \@ACM@journal@bibstripfalse
 \fi
@@ -812,7 +819,6 @@
 \if@ACM@sigchiamode
   \renewcommand{\familydefault}{\sfdefault}
 \fi
-\RequirePackage{pifont}
 \newif\if@Description@present
 \@Description@presenttrue
 \newif\if@undescribed@images
@@ -1527,7 +1533,8 @@
 }%
 \def\acmJournal#1{\setkeys{ACM}{acmJournal=#1}%
   \global\@ACM@journal@bibstriptrue
-  \global\@ACM@journal@bibstrip@or@togtrue}
+  \global\@ACM@journal@bibstrip@or@togtrue
+  \global\@ACM@addressesinfootnotetrue}
 \def\@journalCode@nr{0}
 \def\@journalName{}%
 \def\@journalNameShort{\@journalName}%
@@ -1662,7 +1669,11 @@
   \selectlanguage{#1}%
   {\@specialsection{\keywordsname}%
     \noindent#2\par}\egroup}
-\def\@titlenotes{}
+\def\@titlenotes{%
+  \if@ACM@corresponding@present
+   \footnotetext[1]{Corresponding author}%
+  \fi
+}
 \def\titlenote#1{%
   \g@addto@macro\@title{\footnotemark}%
   \if@ACM@anonymous
@@ -1688,12 +1699,20 @@
     \g@addto@macro\@authornotes{%
       \stepcounter{footnote}\footnotetext{#1}}%
   \fi}
+\newif\if@ACM@corresponding@present
+\@ACM@corresponding@presentfalse
 \newcommand\correspondingauthor{%
   \if@ACM@anonymous\else
-  \g@addto@macro\addresses{\@correspondingauthormark}%
+    \if@ACM@corresponding@present
+        \ClassError{\@classname}{You can have no more than one
+          corresponding author}
+    \fi
+    \@ACM@corresponding@presenttrue
+    \g@addto@macro\addresses{\@correspondingauthormark}%
+
   \fi}
 \def\@correspondingauthormark{\g@addto@macro\@currentauthors{%
-    \advance\hfuzz by 5pt\relax\textsuperscript{\ding{41}}\relax}}
+    \advance\hfuzz by 5pt\relax\textsuperscript{*}\relax}}
 \newcommand\authornotemark[1][\relax]{%
   \if@ACM@anonymous\else
     \ifx#1\relax\relax\relax
@@ -2145,7 +2164,7 @@
    \IfEq{\ACM@cc@type}{zero}{%
      \def\ACM@CC@Url{https://creativecommons.org/publicdomain/zero/1.0}}{%
   \edef\ACM@CC@Url{https://creativecommons.org/licenses/\ACM@cc@type/\ACM@cc@version}}%
-   \href{\ACM@CC@Url}{\includegraphics[height=5ex]{doclicense-CC-\ACM@cc@type-88x31}}\\
+   \href{\ACM@CC@Url}{\includegraphics[height=5ex,artifact]{doclicense-CC-\ACM@cc@type-88x31}}\\
    \href{\ACM@CC@Url}{%
    This work is licensed under a Creative Commons
    \IfEq{\ACM@cc@type}{zero}{CC0 1.0 Universal}{%
@@ -2199,13 +2218,14 @@
   \let\@footnotemark\@footnotemark@nolink
   \let\@footnotetext\@footnotetext@nolink
   \renewcommand\thefootnote{\@fnsymbol\c@footnote}%
+  \setcounter{footnote}{1}%
   \hsize=\textwidth
   \def\@makefnmark{\hbox{\@textsuperscript{\@thefnmark}}}%
   \@mktitle\if@ACM@sigchiamode\else\@mkauthors\fi\@mkteasers
   \@printtopmatter
   \if@ACM@sigchiamode\@mkauthors\fi
-  \setcounter{footnote}{0}%
   \def\@makefnmark{\hbox{\@textsuperscript{\normalfont\@thefnmark}}}%
+  \setcounter{footnote}{1}%
   \@titlenotes
   \@subtitlenotes
   \@authornotes
@@ -2219,7 +2239,7 @@
   \if@ACM@acmcp\else
     \ifx\@empty\@authorsaddresses\else
        \if@ACM@anonymous\else
-         \if@ACM@journal@bibstrip@or@tog
+         \if@ACM@addressesinfootnote
            \footnotetextauthorsaddresses{%
              \def\par{\let\par\@par}\parindent\z@\@setauthorsaddresses}%
          \fi
@@ -3569,6 +3589,8 @@
        #1:#2%
     \fi
   \fi}
+\newcommand\showISBNx[1]{ISBN~#1.}
+\newcommand\showISBNxiii[1]{ISBN-13~#1.}
 \def\theindex{\@restonecoltrue\if@twocolumn\@restonecolfalse\fi
   \columnseprule\z@ \columnsep 35\p@
   \@indextitlestyle
