@@ -91,9 +91,9 @@
          (write (serialize result) log-file)
          (newline log-file)
          (flush-output log-file)
-         (if (gui-exn? result)
-             (raise (make-exn:fail (gui-exn-message result) (current-continuation-marks)))
-             result)))]
+         (when (gui-exn? result)
+           (raise (make-exn:fail (gui-exn-message result) (current-continuation-marks))))
+         result))]
     [else
      (define log-file
        (with-handlers ([exn:fail:filesystem? (lambda (exn) (open-input-string ""))])
@@ -101,26 +101,25 @@
      (λ (gui-eval get-predicate? get-render get-get-width get-get-height)
        (lambda (ev catching-exns? expr)
          (with-handlers ([exn:fail? (lambda (exn)
-                                      (if catching-exns?
-                                          (raise exn)
-                                          (void)))])
+                                      (when catching-exns?
+                                        (raise exn))
+                                      (void))])
            (define v (read log-file))
-           (if (eof-object? v)
-               (error "expression not in log file")
-               (let ([v (deserialize v)])
-                 (if (equal? v
-                             (if (syntax? expr)
-                                 (syntax->datum expr)
-                                 expr))
-                     (let ([v (read log-file)])
-                       (if (eof-object? v)
-                           (error "expression result missing in log file")
-                           (let ([v (deserialize v)])
-                             (if (gui-exn? v)
-                                 (raise (make-exn:fail (gui-exn-message v)
-                                                       (current-continuation-marks)))
-                                 v))))
-                     (error 'mreval "expression does not match log file: ~e versus: ~e" expr v)))))))]))
+           (when (eof-object? v)
+             (error "expression not in log file"))
+           (let ([v (deserialize v)])
+             (if (equal? v
+                         (if (syntax? expr)
+                             (syntax->datum expr)
+                             expr))
+                 (let ([v (read log-file)])
+                   (if (eof-object? v)
+                       (error "expression result missing in log file")
+                       (let ([v (deserialize v)])
+                         (if (gui-exn? v)
+                             (raise (make-exn:fail (gui-exn-message v) (current-continuation-marks)))
+                             v))))
+                 (error 'mreval "expression does not match log file: ~e versus: ~e" expr v))))))]))
 
 (define image-counter 0)
 
