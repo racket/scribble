@@ -404,12 +404,11 @@
                        (list 'src 1 0 1 5))]
                      [(((kw ...) ...) ...)
                       (for/list ([ids (in-list (syntax->list #'((arg ...) ...)))])
-                        (map (lambda (arg)
-                               (if (and (pair? (syntax-e arg)) (eq? (syntax-e #'mode) 'new))
-                                   (list (string->keyword
-                                          (symbol->string (syntax-e (car (syntax-e arg))))))
-                                   null))
-                             (syntax->list ids)))])
+                        (for/list ([arg (in-list (syntax->list ids))])
+                          (if (and (pair? (syntax-e arg)) (eq? (syntax-e #'mode) 'new))
+                              (list (string->keyword
+                                     (symbol->string (syntax-e (car (syntax-e arg))))))
+                              null)))])
          #'(make-constructor (lambda ()
                                (defproc* #:mode mode #:within name
                                  [[(make [kw ... . arg] ...) result] ...]
