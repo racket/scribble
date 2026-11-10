@@ -1148,8 +1148,9 @@
                         d
                         ri)
                        null)
+                 ,@(if (and show-version? show-date?) '(" ") null)
                  ,@(if show-date?
-                       `((span ([class "document-date"]) ,date))
+                       `((div ([class "document-date"]) ,date))
                        null)))
           null))
 
