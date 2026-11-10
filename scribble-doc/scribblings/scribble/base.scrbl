@@ -102,15 +102,20 @@ structure. Use @racket[""] as @racket[vers] to suppress version
 rendering in the output.
 
 The @racket[date] argument is propagated to the @racket[title-decl]
-structure via a @racket[document-date] @tech{style property}. Use
-@racket[""] as @racket[date] to suppress date rendering in Latex
-output.
+structure via a @racket[document-date] @tech{style property}.
+In HTML output, a nonempty date is shown in the version box.
+In LaTeX output, a supplied date is passed to the @tt{\date} command.
+If @racket[date] is @racket[#f] (the default), HTML omits the date
+and LaTeX uses the document class's default, typically @tt{\today}.
+Use @racket[""] as @racket[date] to suppress the date in both formats.
 
 The section title is automatically indexed by
 @racket[decode-part]. For the index key, leading whitespace and a
 leading ``A'', ``An'', or ``The'' (followed by more whitespace) is
 removed.}
 
+@history[#:changed "1.70"
+         @elem{A nonempty @racket[#:date] is now displayed in HTML output.}]
 
 @def-section-like[section part-start?]{ Like @racket[title], but
  generates a @racket[part-start] of depth @racket[0] to be picked up by

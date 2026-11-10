@@ -1,12 +1,15 @@
 #lang racket/base
 
 (require racket/class
+         racket/file
          rackunit
          scribble/base
          scribble/base-render
          scribble/core
+         (only-in scribble/decode decode)
          scribble/html-properties
-         (prefix-in html: scribble/html-render))
+         (prefix-in html: scribble/html-render)
+         (only-in scribble/render render))
 
 (define renderer
   (new (html:render-mixin render%)
@@ -61,3 +64,38 @@
   (check-equal?
    (render-content (elem #:style "emph" "custom style"))
    '((span ((class "emph")) "custom style"))))
+
+(define (render-title version date)
+  (define dest (make-temporary-directory))
+  (dynamic-wind
+    void
+    (lambda ()
+      (define doc
+        (decode (list (title #:version version #:date date "Example"))))
+      (render (list doc) (list "example")
+              #:render-mixin html:render-mixin
+              #:dest-dir dest)
+      (file->string (build-path dest "example.html")))
+    (lambda () (delete-directory/files dest))))
+
+(test-case "document date in the HTML version box"
+  (define date "2026-11-09")
+  (define date-element
+    #rx"<span class=\"document-date\">2026-11-09</span>")
+  (define version-class #rx"class=\"versionNoNav\"")
+  (define date-only (render-title "" date))
+
+  (check-true
+   (regexp-match?
+    #px"class=\"versionNoNav\">1\\.2\\.3</span>\\s*<span class=\"document-date\">2026-11-09</span>"
+    (render-title "1.2.3" date)))
+  (check-true (regexp-match? date-element date-only))
+  (check-false (regexp-match? version-class date-only))
+
+  (for ([absent-date (in-list (list #f ""))])
+    (define version-only (render-title "1.2.3" absent-date))
+    (check-true (regexp-match? version-class version-only))
+    (check-false (regexp-match? #rx"class=\"document-date\"" version-only)))
+
+  (check-false
+   (regexp-match? #rx"class=\"versionbox\"" (render-title "" ""))))

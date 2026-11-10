@@ -209,6 +209,15 @@ table td {
 .version:before, .versionNoNav:before {
   content: "Version ";
 }
+.versionbox .document-date {
+  display: block;
+  font-family: sans-serif;
+  font-size: small;
+}
+.versionNoNav + .document-date {
+  font-size: xx-small;
+}
+
 
 /* ---------------------------------------- */
 /* Language Family */

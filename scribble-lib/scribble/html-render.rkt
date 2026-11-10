@@ -279,6 +279,7 @@
              quiet-table-of-contents
              extract-part-style-files
              extract-version
+             extract-date
              extract-authors
              extract-pretitle
              extend-part-context
@@ -1132,19 +1133,25 @@
       (render-one-part d ri fn null))
 
     (define/public (render-version d ri)
-      (let ([v (current-version)])
-        (if (equal? v "")
-            ;; don't show empty version:
-            null
-            ;; show version:
-            `((div ([class "versionbox"])
-                   ,@(render-content
-                      (list (make-element (if (include-navigation?)
-                                              "version"
-                                              "versionNoNav")
-                                          v))
-                      d
-                      ri))))))
+      (define v (current-version))
+      (define date (extract-date d))
+      (define show-version? (not (equal? v "")))
+      (define show-date? (and date (not (equal? date ""))))
+      (if (or show-version? show-date?)
+          `((div ([class "versionbox"])
+                 ,@(if show-version?
+                       (render-content
+                        (list (make-element (if (include-navigation?)
+                                                "version"
+                                                "versionNoNav")
+                                            v))
+                        d
+                        ri)
+                       null)
+                 ,@(if show-date?
+                       `((span ([class "document-date"]) ,date))
+                       null)))
+          null))
 
     (define/private (render-language-family d ri)
       (define show-fam? (extract-show-language-family d ri))
