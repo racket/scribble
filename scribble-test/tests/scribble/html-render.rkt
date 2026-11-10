@@ -81,13 +81,13 @@
 (test-case "document date in the HTML version box"
   (define date "2026-11-09")
   (define date-element
-    #rx"<span class=\"document-date\">2026-11-09</span>")
+    #rx"<div class=\"document-date\">2026-11-09</div>")
   (define version-class #rx"class=\"versionNoNav\"")
   (define date-only (render-title "" date))
 
   (check-true
    (regexp-match?
-    #px"class=\"versionNoNav\">1\\.2\\.3</span>\\s*<span class=\"document-date\">2026-11-09</span>"
+    #px"class=\"versionNoNav\">1\\.2\\.3</span>\\s*<div class=\"document-date\">2026-11-09</div>"
     (render-title "1.2.3" date)))
   (check-true (regexp-match? date-element date-only))
   (check-false (regexp-match? version-class date-only))
