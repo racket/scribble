@@ -32,17 +32,23 @@
   \ifnum\AutobibNeedlines>0
     \Needspace{\AutobibNeedlines\baselineskip}%
   \fi
-  \begingroup
-    \AutobibEntrySetup
-    \leftskip=\ABindent
-    \parindent=\AutobibParindent
-    \parskip=0pt
-    \noindent
-    \hspace*{-\ABindent}%
-    \ignorespaces
+  \begin{list}{}{%
+    \setlength{\leftmargin}{\ABindent}%
+    \setlength{\rightmargin}{0pt}%
+    \setlength{\itemindent}{-\ABindent}%
+    \setlength{\listparindent}{\AutobibParindent}%
+    \setlength{\labelwidth}{0pt}%
+    \setlength{\labelsep}{0pt}%
+    \setlength{\topsep}{0pt}%
+    \setlength{\partopsep}{0pt}%
+    \setlength{\parsep}{0pt}%
+    \setlength{\itemsep}{0pt}%
+  }%
+  \AutobibEntrySetup
+  \item\relax
+  \ignorespaces
 }{%
-    \par
-  \endgroup
+  \end{list}%
   \addvspace{1ex}%
 }
 
