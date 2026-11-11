@@ -1,7 +1,7 @@
 #lang racket/base
-(require "xref.rkt"
-         "render.rkt"
+(require "private/build.rkt"
          racket/cmdline
+         "private/watch.rkt"
          raco/command-name
          (prefix-in text:     "text-render.rkt")
          (prefix-in markdown: "markdown-render.rkt")
@@ -16,26 +16,8 @@
 (define multi-html:render-mixin
   (lambda (%) (html:render-multi-mixin (html:render-mixin %))))
 
-(define current-render-mixin       (make-parameter html:render-mixin))
-(define current-html               (make-parameter #t))
-(define current-dest-directory     (make-parameter #f))
-(define current-dest-name          (make-parameter #f))
-(define current-info-output-file   (make-parameter #f))
-(define current-info-input-files   (make-parameter null))
-(define current-xref-input-modules (make-parameter null))
-(define current-prefix-file        (make-parameter #f))
-(define current-style-file         (make-parameter #f))
-(define current-style-extra-files  (make-parameter null))
-(define current-extra-files        (make-parameter null))
-(define current-redirect           (make-parameter #f))
-(define current-redirect-main      (make-parameter #f))
-(define current-directory-depth    (make-parameter 0))
-(define current-lib-mode           (make-parameter #f))
-(define current-quiet              (make-parameter #f))
-(define helper-file-prefix         (make-parameter #f))
-(define keep-existing-helper-files? (make-parameter #f))
+(define watch?                     (make-parameter #f))
 (define doc-command-line-arguments (make-parameter null))
-(define current-image-prefs        (make-parameter null)) ; reverse order
 
 (define (read-one str)
   (let ([i (open-input-string str)])
@@ -44,8 +26,6 @@
         (and (eof-object? (read i)) v)))))
 
 (define (run)
-  (define doc-binding 'doc)
-  (define make? #f)
   (command-line
    #:program (short-program+command-name)
    #:once-any
@@ -162,9 +142,11 @@
     (current-quiet #t)]
    [("--doc-binding") id
     "render document provided as <id> instead of `doc`"
-    (set! doc-binding (string->symbol id))]
+    (current-doc-binding (string->symbol id))]
+   [("--watch") "re-render whenever <file> or a local dependency changes"
+    (watch? #t)]
    [("--make" "-y") "enable automatic update of compiled files"
-    (set! make? #t)]
+    (current-doc-load-handler (make-compilation-manager-load/use-compiled-handler))]
    [("--errortrace") "enable errortrace"
     (with-handlers ([exn:fail:filesystem:missing-module?
                      (λ (e)
@@ -173,59 +155,19 @@
                         "errortrace not installed"))])
       (dynamic-require 'errortrace #f))]
    #:args (file . another-file)
-   (let ([files (cons file another-file)]
-         [maker (and make?
-                     (make-compilation-manager-load/use-compiled-handler))])
+   (let ([files (cons file another-file)])
      (parameterize ([current-command-line-arguments
                      (list->vector (reverse (doc-command-line-arguments)))])
-       (build-docs (map (lambda (file)
-                          (define (go)
-                            (let ([mp (if (current-lib-mode)
-                                          `(lib ,file)
-                                          `(file ,file))])
-                              ;; Try `doc' submodule, first:
-                              (if (module-declared? `(submod ,mp ,doc-binding) #t)
-                                  (dynamic-require `(submod ,mp ,doc-binding)
-                                                   doc-binding)
-                                  (dynamic-require mp doc-binding))))
-                          (if maker
-                              (parameterize ([current-load/use-compiled maker])
-                                (go))
-                              (go)))
-                        files)
-                   files)))))
-
-(define (build-docs docs files)
-  (when (and (current-dest-name)
-             ((length files) . > . 1))
-    (raise-user-error 'scribble "cannot supply a destination name with multiple inputs"))
-  (render docs
-          (map (lambda (fn)
-                 (let-values ([(base name dir?) (split-path fn)])
-                   (or (current-dest-name) name)))
-               files)
-          #:dest-dir (current-dest-directory)
-          #:render-mixin (current-render-mixin)
-          #:image-preferences (reverse (current-image-prefs))
-          #:prefix-file (current-prefix-file)
-          #:style-file (current-style-file)
-          #:style-extra-files (reverse (current-style-extra-files))
-          #:extra-files (reverse (current-extra-files))
-          #:helper-file-prefix (helper-file-prefix)
-          #:keep-existing-helper-files? (keep-existing-helper-files?)
-          #:redirect (and (current-html) (current-redirect))
-          #:redirect-main (and (current-html) (current-redirect-main))
-          #:directory-depth (current-directory-depth)
-          #:quiet? (current-quiet)
-          #:info-in-files (reverse (current-info-input-files))
-          #:xrefs (for/list ([mod+id (in-list (reverse (current-xref-input-modules)))])
-                    (let* ([get-xref (dynamic-require (car mod+id) (cdr mod+id))]
-                           [xr (get-xref)])
-                      (unless (xref? xr)
-                        (raise-user-error
-                         'scribble "result from `~s' of `~s' is not an xref: ~e"
-                         (cdr mod+id) (car mod+id) xr))
-                      xr))
-          #:info-out-file (current-info-output-file)))
+       (cond
+         [(watch?)
+          (unless (null? (cdr files))
+            (raise-user-error 'scribble "--watch takes a single file, given: ~a"
+                              (length files)))
+          (watch-doc (car files))]
+         [else
+          (with-handlers ([exn:fail? (lambda (e)
+                                               (display "got en error")
+                                               (raise e))])
+            (build-docs (map mk-doc files) files))])))))
 
 (run)
