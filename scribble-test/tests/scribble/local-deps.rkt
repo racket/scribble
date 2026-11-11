@@ -57,3 +57,24 @@
   (check-equal? (sort-rel-names (local-deps (build-path proj-dir "sub" "s1.scrbl") proj-dir))
                 '("proj/sub/s1.scrbl")))
 
+;; Submodules
+(define (subs-deps name)
+  (sort-rel-names (local-deps (build-path docs-dir name) docs-dir)))
+
+(test-case "requires inside submodules are followed"
+  ;; subs-helpers.rkt reaches subs-extra-dep.rkt from `module`, subs-nested-dep.rkt
+  ;; from a nested submodule, and subs-test-only.rkt from `module+`
+  (check-equal? (subs-deps "subs-helpers.rkt")
+                '("subs-extra-dep.rkt" "subs-helpers.rkt"
+                  "subs-nested-dep.rkt" "subs-test-only.rkt")))
+
+(test-case "an lp2 document's requires are found from the document itself"
+  (check-equal? (subs-deps "subs-lp.scrbl")
+                '("subs-lp-dep.rkt" "subs-lp.scrbl")))
+
+(test-case "a (submod file ...) dependency is reported as its file, once"
+  (check-equal? (subs-deps "subs-main.scrbl")
+                '("subs-extra-dep.rkt" "subs-helpers.rkt" "subs-lp-dep.rkt"
+                  "subs-lp.scrbl" "subs-main.scrbl" "subs-nested-dep.rkt"
+                  "subs-test-only.rkt")))
+
