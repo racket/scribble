@@ -10,9 +10,10 @@
 (provide watch-doc)
 
 ;; watch-doc : string [#:on-watch ((listof path) -> any)] [#:stop evt?] -> void
-;; Loads `file` (with `mk-doc` and `dynamic-rerequire`) once at the start, then
-;; reloads and renders it (with `build-docs`) after every change to it or to a
-;; local dependency, i.e. one in the document's folder. `on-watch` gets the
+;; Loads (with `mk-doc` and `dynamic-rerequire`) and renders (with `build-docs`,
+;; in whatever format the parameters select) `file` at the start, then again
+;; after every change to it or to a local dependency, i.e. one in the
+;; document's folder. `on-watch` gets the
 ;; watched files whenever the watcher starts waiting; the loop ends when `stop`
 ;; is ready.
 (define (watch-doc file
@@ -28,8 +29,11 @@
   (define doc-mods (list doc-path `(submod ,doc-path ,(current-doc-binding))))
   (define (load)
     (mk-doc file (lambda (mp) (dynamic-rerequire mp #:verbosity 'reload))))
+  ;; render : any -> void
+  ;; Renders the document, printing the error if that fails.
   (define (render doc)
-    (build-docs (list doc) (list file)))
+    (with-handlers ([exn:fail? (lambda (e) (eprintf "~a" (exn->string e)))])
+      (build-docs (list doc) (list file))))
 
   ;; error-files : exn -> (listof path)
   ;; The local files an error's source locations point to (for a read or
@@ -66,9 +70,10 @@
     (remove-duplicates (append (local-deps declared root)
                                (filter path? undeclared))))
 
-  ;; Load (but don't render) the document once, so its dependencies are
-  ;; declared and can be watched from the start.
-  (define-values (_doc err-files) (load-doc))
+  ;; Load and render the document once, which also declares its dependencies so
+  ;; they can be watched from the start.
+  (define-values (doc err-files) (load-doc))
+  (when doc (render doc))
   ;; `watches` maps each watched file to its change evt (#f while the file is
   ;; missing).
   (let loop ([watches (arm-evts (deps-of (append doc-mods err-files)))])
@@ -90,9 +95,7 @@
        ;; wait return at once and triggers another rebuild.
        (define pending (arm-evts (hash-keys watches)))
        (define-values (doc err-files) (load-doc))
-       (when doc
-         (with-handlers ([exn:fail? (lambda (e) (eprintf "~a" (exn->string e)))])
-           (render doc)))
+       (when doc (render doc))
        ;; Reusing `pending` keeps the evts that fired during the reload.
        (define next (arm-evts (deps-of (append doc-mods err-files)) pending))
        (cancel-evts pending next)

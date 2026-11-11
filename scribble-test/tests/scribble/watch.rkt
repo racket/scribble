@@ -109,6 +109,8 @@
   (with-watcher
    (lambda (edit! expect-render next-watched rendered proj)
      (check-equal? (next-watched) main-deps)
+     ;; rendered once at startup, before any edit
+     (check-not-false (rendered))
      (edit! "main.scrbl" "@title{Main}" "@title{Main MARK0}")
      (expect-render "MARK0")
      (edit! "ch1.scrbl" "\"one\"" "\"one MARK1\"")               ; include-section
@@ -127,10 +129,11 @@
   (with-watcher
    (lambda (edit! expect-render next-watched rendered proj)
      (next-watched)
+     (define before (rendered))
      (edit! "ch1.scrbl" "@title{Chapter 1}" "@title{Chapter 1} @(")
-     ;; no render, but the watcher keeps going (and still watches ch1.scrbl)
+     ;; no new render, but the watcher keeps going (and still watches ch1.scrbl)
      (check-equal? (next-watched) main-deps)
-     (check-false (rendered))
+     (check-equal? (rendered) before)
      (edit! "ch1.scrbl" "@title{Chapter 1} @(" "@title{Chapter 1 FIXED}")
      (expect-render "FIXED"))))
 
@@ -154,8 +157,10 @@
    #:before-start
    (lambda (edit!) (edit! "ch1.scrbl" "@title{Chapter 1}" "@title{Chapter 1} @("))
    (lambda (edit! expect-render next-watched rendered proj)
-     ;; main.scrbl never loaded, so only it and the broken file are watched
+     ;; main.scrbl never loaded, so nothing is rendered, and only it and the
+     ;; broken file are watched
      (check-equal? (next-watched) '("ch1.scrbl" "main.scrbl"))
+     (check-false (rendered))
      (edit! "ch1.scrbl" "@title{Chapter 1} @(" "@title{Chapter 1 FIXED}")
      (check-equal? (expect-render "FIXED") main-deps)
      (edit! "common.rkt" "(italic s)" "(italic s \" MARK3\")")
