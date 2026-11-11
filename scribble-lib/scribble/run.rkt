@@ -1,7 +1,6 @@
 #lang racket/base
 (require "private/build.rkt"
          racket/cmdline
-         racket/system
          "private/watch.rkt"
          raco/command-name
          (prefix-in text:     "text-render.rkt")
@@ -17,7 +16,7 @@
 (define multi-html:render-mixin
   (lambda (%) (html:render-multi-mixin (html:render-mixin %))))
 
-(define use-watcher-for-typst?     (make-parameter #f))
+(define watch?                     (make-parameter #f))
 (define doc-command-line-arguments (make-parameter null))
 
 (define (read-one str)
@@ -52,10 +51,6 @@
     (current-render-mixin latex:render-mixin)]
    [("--typst") "generate Typst-format output"
     (current-html #f)
-    (current-render-mixin typst:render-mixin)]
-   [("--typst-watch") "watch scribbles and automatically compile them to Typst-format output"
-    (current-html #f)
-    (use-watcher-for-typst? #t)
     (current-render-mixin typst:render-mixin)]
    [("--pdf") "generate PDF-format output (via PDFLaTeX)"
     (current-html #f)
@@ -148,6 +143,8 @@
    [("--doc-binding") id
     "render document provided as <id> instead of `doc`"
     (current-doc-binding (string->symbol id))]
+   [("--watch") "re-render whenever <file> or a local dependency changes"
+    (watch? #t)]
    [("--make" "-y") "enable automatic update of compiled files"
     (current-doc-load-handler (make-compilation-manager-load/use-compiled-handler))]
    [("--errortrace") "enable errortrace"
@@ -162,19 +159,10 @@
      (parameterize ([current-command-line-arguments
                      (list->vector (reverse (doc-command-line-arguments)))])
        (cond
-         [(use-watcher-for-typst?)
+         [(watch?)
           (unless (null? (cdr files))
-            (raise-user-error 'scribble "--typst-watch takes a single file, given: ~a"
+            (raise-user-error 'scribble "--watch takes a single file, given: ~a"
                               (length files)))
-          (define typst-bin (find-executable-path "typst"))
-          (unless typst-bin
-            (raise-user-error 'scribble "cannot find typst in your $PATH"))
-          (apply process*
-                 typst-bin
-                 "watch"
-                 (map (lambda (x)
-                        (path-replace-extension x ".typ"))
-                      files))
           (watch-doc (car files))]
          [else
           (with-handlers ([exn:fail? (lambda (e)
