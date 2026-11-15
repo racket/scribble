@@ -34,22 +34,16 @@
 ;; #f, or a `current-load/use-compiled` handler to load documents with (--make)
 (define current-doc-load-handler   (make-parameter #f))
 
-;; mk-doc : string [(or/c #f (module-path -> any))] -> any
+;; mk-doc : string -> any
 ;; Loads `file` (a `lib` path in lib mode) and returns its document, taken from
-;; the `doc` submodule if there is one. With `reload!` (the watcher passes
-;; `dynamic-rerequire`), `reload!` (re)loads the chosen module first, and the
-;; submodule is used only if it is already declared, rather than loading the
-;; module just to check.
-(define (mk-doc file [reload! #f])
+;; the `doc` submodule if there is one.
+(define (mk-doc file)
   (define (go)
     (define mp (if (current-lib-mode)
                    `(lib ,file)
                    `(file ,file)))
     (define sub `(submod ,mp ,(current-doc-binding)))
-    (define mp^ (if (module-declared? sub (not reload!)) sub mp))
-    (when reload!
-      (reload! mp^))
-    (dynamic-require mp^ (current-doc-binding)))
+    (dynamic-require (if (module-declared? sub #t) sub mp) (current-doc-binding)))
   (define handler (current-doc-load-handler))
   (if handler
       (parameterize ([current-load/use-compiled handler])

@@ -3,6 +3,7 @@
 ;; Tests for `local-deps`, which collects the files a loaded document depends on.
 
 (require rackunit
+         racket/list
          racket/path
          racket/runtime-path
          scribble/private/walk)
@@ -99,3 +100,26 @@
   (check-equal? (subs-deps "subs-main.scrbl")
                 '("subs-extra-dep.rkt" "subs-helpers.rkt" "subs-lp-dep.rkt"
                   "subs-lp.scrbl" "subs-main.scrbl" "subs-nested-dep.rkt")))
+
+;; Graphs
+(define (graph-of file root)
+  (parameterize ([current-namespace (make-base-namespace)])
+    (dynamic-require (simple-form-path file) #f)
+    (local-graph (doc-modules file) root)))
+
+(test-case "the graph maps each local module to all of its imports"
+  (define g (graph-of main-file proj-dir))
+  (define (in-proj rel) (simple-form-path (build-path proj-dir rel)))
+  ;; keys are the local modules, as complete paths or (submod path name ...)
+  (check-equal? (sort-rel-names (remove-duplicates (map module-file (hash-keys g)))) proj-files)
+  (check-not-false (member `(submod ,(in-proj "lp.scrbl") doc) (hash-keys g)))
+  ;; edges to local modules, at any phase (api.rkt is for-label)
+  (define main-imports (hash-ref g (in-proj "main.scrbl")))
+  (check-not-false (member (in-proj "ch1.scrbl") main-imports))
+  (check-not-false (member (in-proj "api.rkt") main-imports))
+  ;; non-local imports are leaves, not keys
+  (define leaves (filter (lambda (i) (not (hash-has-key? g i))) main-imports))
+  (check-not-false (pair? leaves))
+  (check-not-false (member (simple-form-path (build-path docs-dir "lib" "util.rkt"))
+                           (hash-ref g (in-proj "ch2.scrbl"))))
+  (check-false (hash-has-key? g (simple-form-path (build-path docs-dir "lib" "util.rkt")))))

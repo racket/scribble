@@ -11,6 +11,7 @@
          racket/port
          racket/runtime-path
          racket/string
+         compiler/cm
          scribble/private/build
          scribble/private/watch
          (prefix-in text: scribble/text-render))
@@ -20,10 +21,12 @@
 ;; How long to wait for the watcher before failing.
 (define timeout 30)
 
-;; with-watcher : procedure [#:before-start ((string string string -> void) -> any)] -> void
+;; with-watcher : procedure [#:before-start ((string string string -> void) -> any)]
+;;                [#:doc string] [#:precompile? boolean] -> void
 ;; Copies the fixtures to a temporary directory and starts `watch-doc` on
-;; proj/main.scrbl in a fresh namespace, rendering text output into a temporary
-;; directory. Then calls `body` with:
+;; proj/<doc> (proj/main.scrbl by default) in a fresh namespace, rendering text
+;; output into a temporary directory. With `precompile?`, the document is
+;; compiled to .zo files first. Then calls `body` with:
 ;;  - `edit!` : rel-path old new -> void, which replaces `old` with `new` in a file;
 ;;  - `expect-render` : (or/c string (string -> any)) -> (listof string), which
 ;;    waits for a render made after the last edit whose text contains the given
@@ -34,23 +37,27 @@
 ;;  - `rendered` : -> (or/c string #f), the current rendered text, if any;
 ;;  - `proj`, the copied proj/ directory.
 ;; `before-start` gets `edit!` and runs before the watcher starts.
-(define (with-watcher body #:before-start [before-start void])
+(define (with-watcher body
+                      #:before-start [before-start void]
+                      #:doc [doc "main.scrbl"]
+                      #:precompile? [precompile? #f])
   (define tmp (make-temporary-directory))
   (for ([d (in-list '("proj" "lib" "projish"))])
     (copy-directory/files (build-path docs-dir d) (build-path tmp d)))
   (define proj (build-path tmp "proj"))
   (define out-dir (build-path tmp "out"))
-  (define out-file (build-path out-dir "main.txt"))
+  (define out-file (build-path out-dir (path-replace-extension doc #".txt")))
   (define watched (make-async-channel))
-  (define stop (make-semaphore))
+  ;; Owns the watcher thread and its change evts; shutting it down stops both.
+  (define watcher-custodian (make-custodian))
   (define last-edit 0)
   (define (edit! rel old new)
     (define p (build-path proj rel))
     (define s (file->string p))
     (unless (string-contains? s old)
       (error 'edit! "~a does not contain ~s" rel old))
-    ;; `dynamic-rerequire` compares modification times in whole seconds, so an
-    ;; edit within the same second as the previous load would not be reloaded.
+    ;; The compilation manager compares modification times in whole seconds, so
+    ;; an edit within the same second as the previous compile could be missed.
     ;; This also makes renders from before the edit older than `last-edit`.
     (sleep 1.1)
     (set! last-edit (current-seconds))
@@ -77,29 +84,30 @@
           files
           (loop))))
   (before-start edit!)
+  (when precompile?
+    (parameterize ([current-namespace (make-base-namespace)])
+      (managed-compile-zo (build-path proj doc))))
   ;; Share this module's instances of the renderer (and so scribble/core), so the
   ;; document's structs are the ones the renderer knows.
   (define ns (make-base-namespace))
   (define this-ns (variable-reference->namespace (#%variable-reference)))
   (namespace-attach-module this-ns 'scribble/private/watch ns)
   (namespace-attach-module this-ns 'scribble/text-render ns)
-  (define watcher
-    (parameterize ([current-namespace ns]
-                   [current-error-port (open-output-nowhere)]
-                   [current-render-mixin text:render-mixin]
-                   [current-dest-directory out-dir]
-                   [current-quiet #t])
-      (thread
-       (lambda ()
-         (watch-doc (path->string (build-path proj "main.scrbl"))
-                    #:on-watch (lambda (files) (async-channel-put watched files))
-                    #:stop (semaphore-peek-evt stop))))))
+  (parameterize ([current-namespace ns]
+                 [current-custodian watcher-custodian]
+                 [current-error-port (open-output-nowhere)]
+                 [current-render-mixin text:render-mixin]
+                 [current-dest-directory out-dir]
+                 [current-quiet #t])
+    (thread
+     (lambda ()
+       (watch-doc (path->string (build-path proj doc))
+                  #:on-watch (lambda (files) (async-channel-put watched files))))))
   (dynamic-wind
    void
    (lambda () (body edit! expect-render next-watched rendered proj) (void))
    (lambda ()
-     (semaphore-post stop)
-     (unless (sync/timeout timeout watcher) (kill-thread watcher))
+     (custodian-shutdown-all watcher-custodian)
      (delete-directory/files tmp))))
 
 (define main-deps
@@ -165,3 +173,64 @@
      (check-equal? (expect-render "FIXED") main-deps)
      (edit! "common.rkt" "(italic s)" "(italic s \" MARK3\")")
      (expect-render "MARK3"))))
+
+(test-case "a changed macro is re-expanded in the modules that use it"
+  (with-watcher
+   (lambda (edit! expect-render next-watched rendered proj)
+     (next-watched)
+     (check-not-false (string-contains? (rendered) "STAMP-V1"))
+     ;; ch2.scrbl uses the `stamp` macro from common.rkt, and its compiled form
+     ;; holds the macro's old expansion
+     (edit! "common.rkt" "STAMP-V1" "STAMP-V2")
+     (expect-render "STAMP-V2"))))
+
+(test-case "a precompiled document is rebuilt after edits"
+  (with-watcher
+   #:precompile? #t
+   (lambda (edit! expect-render next-watched rendered proj)
+     (check-equal? (next-watched) main-deps)
+     (check-not-false (rendered))
+     (edit! "ch1.scrbl" "\"one\"" "\"one MARK7\"")
+     (expect-render "MARK7")
+     (edit! "common.rkt" "STAMP-V1" "STAMP-V2")
+     (expect-render "STAMP-V2"))))
+
+(test-case "a document whose content is in a doc submodule renders from the start"
+  (with-watcher
+   #:doc "lp.scrbl"
+   (lambda (edit! expect-render next-watched rendered proj)
+     (check-equal? (next-watched) '("lp.scrbl"))
+     (check-not-false (string-contains? (rendered) "Literate"))
+     (edit! "lp.scrbl" "@title{Literate}" "@title{Literate MARK8}")
+     (expect-render "MARK8"))))
+
+(test-case "cm-rebuild reuses the modules that don't depend on a changed file"
+  (define tmp (make-temporary-directory))
+  (dynamic-wind
+   void
+   (lambda ()
+     (for ([d (in-list '("proj" "lib" "projish"))])
+       (copy-directory/files (build-path docs-dir d) (build-path tmp d)))
+     (define proj (simple-form-path (build-path tmp "proj")))
+     (define main (path->string (build-path proj "main.scrbl")))
+     (define (doc-in ns rel)
+       (parameterize ([current-namespace ns])
+         (dynamic-require (build-path proj rel) 'doc)))
+     (define ns1 (make-base-namespace))
+     (define-values (doc1 graph1) (cm-rebuild main proj ns1 #f (hash) '()))
+     (sleep 1.1) ; see `edit!` in `with-watcher`
+     (define ch1 (build-path proj "ch1.scrbl"))
+     (call-with-output-file ch1 #:exists 'append
+       (lambda (o) (write-string "\nAppended MARK9.\n" o)))
+     (define ns2 (make-base-namespace))
+     (define-values (doc2 graph2) (cm-rebuild main proj ns2 ns1 graph1 (list ch1)))
+     (check-equal? (sort (hash-keys graph2) string<? #:key (lambda (k) (format "~s" k)))
+                   (sort (hash-keys graph1) string<? #:key (lambda (k) (format "~s" k))))
+     ;; attached from ns1: the same instances
+     (check-eq? (doc-in ns2 "sub/s1.scrbl") (doc-in ns1 "sub/s1.scrbl"))
+     (check-eq? (doc-in ns2 "ch2.scrbl") (doc-in ns1 "ch2.scrbl"))
+     ;; the changed file and the file that includes it: loaded again
+     (check-not-eq? (doc-in ns2 "ch1.scrbl") (doc-in ns1 "ch1.scrbl"))
+     (check-not-eq? doc2 doc1)
+     (check-not-false (regexp-match? #rx"MARK9" (format "~s" doc2))))
+   (lambda () (delete-directory/files tmp))))
