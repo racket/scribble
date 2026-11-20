@@ -57,9 +57,10 @@
 ;; covers all characters that are (or can be) markup-significant;
 ;; parentheses and `.` are included because, immediately after an
 ;; embedded code expression, an open parenthesis would be parsed as
-;; a function call and a `.` as a field access.
+;; a function call, a `.` as a field access, and a `;` as the end of
+;; the expression, which Typst would then swallow.
 (define (typst-escape s)
-  (regexp-replace* #rx"[][()\\{}#$*`@<>/~'\".=+_-]" s "\\\\&"))
+  (regexp-replace* #rx"[][()\\{}#$*`@<>/~'\".;=+_-]" s "\\\\&"))
 
 ;; Escape a string for use inside a Typst string literal:
 (define (typst-string-escape s)
