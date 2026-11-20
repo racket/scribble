@@ -275,5 +275,14 @@ and rendered, which could affect the content that
  @item{@DFlag{errortrace} --- enable @racketmodname[errortrace #:indirect]}
 ]
 
+@;{TODO: document the --watch flag here, as an item in the list above:
+   - it takes a single file only;
+   - it re-renders whenever the file or one of its local dependencies
+     (files in the document's folder) changes;
+   - it combines with any output format, e.g.
+     scribble --typst-pdf --watch doc.scrbl
+   Then add to the history below:
+     #:changed "1.70" @elem{Added @DFlag{watch}.}}
+
 @history[#:changed "1.38" @elem{Added the @DFlag{errortrace} flag.}
          #:changed "1.44" @elem{Added the @DFlag{make}/@Flag{y} flag.}]
