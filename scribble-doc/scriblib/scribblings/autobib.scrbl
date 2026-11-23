@@ -256,9 +256,9 @@ rest is treated as the first name.
 @history[#:changed "1.49" @elem{Added @racket[#:doi].}
          #:changed "1.68"
   @elem{Added @racket[#:accessed], which replaces the accessed-date
-        support formerly provided by the now-removed @tt{webpage-location}
-        function: the accessed date is now attached directly to the
-        bib entry instead of being embedded in its @racket[#:location],
+        support provided in old form by the @racket[webpage-location]
+        function. The accessed date via @racket[#:accessed] is attached directly to the
+        entry instead of being embedded in its @racket[#:location],
         so it renders next to the URL rather than before the date.}]}
 
 @defproc[(in-bib [orig bib?] [where string?]) bib?]{
@@ -411,6 +411,17 @@ describing a dissertation.
 
 @history[#:changed "1.61"
   @elem{Added fields for bibtex support: type address.}]
+}
+
+
+@defproc[(webpage-location [url (or/c string? #f) #f]
+                           [#:accessed accessed any/c #f])
+         element?]{
+ Combines elements to generate an element that is suitable for
+ describing a web page.
+
+ @history[#:changed "1.61"
+   @elem{Made the @racket[url] field optional.}]
 }
 
 

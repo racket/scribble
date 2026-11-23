@@ -55,6 +55,8 @@
                  #:series any/c #:volume any/c #:number any/c #:pages (or/c (list/c any/c any/c) #f)
                  #:publisher any/c #:address any/c]
                 element?)]
+          [webpage-location
+           (->* [] [(or/c string? #f) #:accessed any/c] (or/c element? #f))]
           [manual-location
            (->* [] [#:organization any/c #:edition any/c] (or/c element? #f))])
          other-authors
@@ -829,6 +831,12 @@
              details))
     #:separator ". "
     (organization-publisher-address-content organization publisher address))))
+
+(define (webpage-location (url #f) #:accessed [accessed #f])
+  (concatenate-content
+   (and url ((url-rendering) url))
+   #:separator " "
+   (and accessed @elem{(accessed @contentify[accessed])})))
 
 (define (journal-location
          location
