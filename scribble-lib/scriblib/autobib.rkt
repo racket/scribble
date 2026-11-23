@@ -833,10 +833,11 @@
     (organization-publisher-address-content organization publisher address))))
 
 (define (webpage-location (url #f) #:accessed [accessed #f])
-  (concatenate-content
-   (and url ((url-rendering) url))
-   #:separator " "
-   (and accessed @elem{(accessed @contentify[accessed])})))
+  (elemify
+   (concatenate-content
+    (and url ((url-rendering) url))
+    #:separator " "
+    (and accessed @elem{(accessed @contentify[accessed])}))))
 
 (define (journal-location
          location
