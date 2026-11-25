@@ -174,19 +174,18 @@
                    (cond
                      [a
                       (loop queue
-                            (append (map (lambda (m)
-                                           (if (pair? m)
-                                               (list (module-path-index-rejoin (car m) mod)
-                                                     (list-ref m 2)
-                                                     defn-phase
-                                                     (list-ref m 1)
-                                                     (list-ref m 3))
-                                               (list (module-path-index-rejoin m mod)
-                                                     id
-                                                     defn-phase
-                                                     import-phase
-                                                     export-phase)))
-                                         (reverse (cadr a)))
+                            (append (for/list ([m (in-list (reverse (cadr a)))])
+                                      (if (pair? m)
+                                          (list (module-path-index-rejoin (car m) mod)
+                                                (list-ref m 2)
+                                                defn-phase
+                                                (list-ref m 1)
+                                                (list-ref m 3))
+                                          (list (module-path-index-rejoin m mod)
+                                                id
+                                                defn-phase
+                                                import-phase
+                                                export-phase)))
                                     rqueue)
                             need-result?)]
                      ;; A dead end may not be our fault: the files could
