@@ -373,11 +373,11 @@
          (set-mcdr! p (loop (mcdr v)))
          p)]
       [(vector? v)
-       (let ([v2 (make-vector (vector-length v))])
-         (hash-set! ht v v2)
-         (for ([i (in-range (vector-length v2))])
-           (vector-set! v2 i (loop (vector-ref v i))))
-         v2)]
+       (define v2 (make-vector (vector-length v)))
+       (hash-set! ht v v2)
+       (for ([i (in-range (vector-length v2))])
+         (vector-set! v2 i (loop (vector-ref v i))))
+       v2]
       [(box? v)
        (define v2 (box #f))
        (hash-set! ht v v2)
@@ -543,9 +543,8 @@
   (define (wait-loop cust)
     (define thd (find-thread cust))
     (when thd
-      (cond
-        [(eq? give-up-evt (sync thd give-up-evt)) (void)]
-        [else (wait-loop cust)])))
+      (unless (eq? give-up-evt (sync thd give-up-evt))
+        (wait-loop cust))))
   (wait-loop sub-cust))
 
 (define (make-eval/replay logfile)
@@ -583,9 +582,9 @@
             (set! evaluations (cdr evaluations))
             (display output init-out-p #| (current-output-port) |#)
             (display error-output init-err-p #| (current-error-port) |#)
-            (cond
-              [(exn? result) (raise result)]
-              [(list? result) (apply values result)])))))))
+            (when (exn? result)
+              (raise result))
+            (apply values result)))))))
   ev)
 
 (define (close-eval e)
