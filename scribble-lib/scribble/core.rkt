@@ -362,9 +362,9 @@
   (cond
    [(collect-info? i)
     (define p (hash-ref (collect-info-fp i) b #f))
-    (if (block? p)
-        p
-        (error 'traverse-block-block "no block computed for traverse-block: ~e" b))]
+    (unless (block? p)
+      (error 'traverse-block-block "no block computed for traverse-block: ~e" b))
+    p]
    [(resolve-info? i)
     (traverse-block-block b (resolve-info-ci i))]))
 
@@ -417,9 +417,9 @@
   (cond
    [(collect-info? i)
     (define c (hash-ref (collect-info-fp i) e #f))
-    (if (content? c)
-        c
-        (error 'traverse-block-block "no block computed for traverse-block: ~e" e))]
+    (unless (content? c)
+      (error 'traverse-block-block "no block computed for traverse-block: ~e" e))
+    c]
    [(resolve-info? i)
     (traverse-element-content e (resolve-info-ci i))]))
 
@@ -450,10 +450,10 @@
    (or (current-load-relative-directory) (current-directory)))
   #:transparent)
 
-(provide/contract
- (struct delayed-element ([resolve (any/c part? resolve-info? . -> . content?)]
-                          [sizer (-> any)]
-                          [plain (-> any)])))
+(provide (contract-out (struct delayed-element
+                               ([resolve (any/c part? resolve-info? . -> . content?)] [sizer (-> any)]
+                                                                                      [plain
+                                                                                       (-> any)]))))
 
 (module+ deserialize-info
   (provide deserialize-delayed-element))
@@ -483,26 +483,25 @@
   prop:serializable
   (make-serialize-info
    (lambda (d)<
-     (let ([ri (current-serialize-resolve-info)])
-       (unless ri
-         (error 'serialize-part-relative-element
-                "current-serialize-resolve-info not set"))
-       (with-handlers ([exn:fail:contract?
-                        (lambda (exn)
-                          (error 'serialize-part-relative-element
-                                 "serialization failed (wrong resolve info? part-relative element never rendered?); ~a"
-                                 (exn-message exn)))])
-         (vector
-          (part-relative-element-content d ri)))))
+     (define ri (current-serialize-resolve-info))
+     (unless ri
+       (error 'serialize-part-relative-element "current-serialize-resolve-info not set"))
+     (with-handlers
+         ([exn:fail:contract?
+           (lambda (exn)
+             (error
+              'serialize-part-relative-element
+              "serialization failed (wrong resolve info? part-relative element never rendered?); ~a"
+              (exn-message exn)))])
+       (vector (part-relative-element-content d ri))))
    #'deserialize-part-relative-element
    #f
    (or (current-load-relative-directory) (current-directory)))
   #:transparent)
 
-(provide/contract
- (struct part-relative-element ([collect (collect-info? . -> . content?)]
-                                [sizer (-> any)]
-                                [plain (-> any)])))
+(provide (contract-out (struct part-relative-element
+                               ([collect (collect-info? . -> . content?)] [sizer (-> any)]
+                                                                          [plain (-> any)]))))
 
 (module+ deserialize-info
   (provide deserialize-part-relative-element))
@@ -527,17 +526,14 @@
   prop:serializable 
   (make-serialize-info
    (lambda (d)
-     (let ([ri (current-serialize-resolve-info)])
-       (unless ri
-         (error 'serialize-delayed-index-desc
-                "current-serialize-resolve-info not set"))
-       (with-handlers ([exn:fail:contract?
-                        (lambda (exn)
-                          (error 'serialize-index-desc
-                                 "serialization failed (wrong resolve info?); ~a"
-                                 (exn-message exn)))])
-         (vector
-          (delayed-element-content d ri)))))
+     (define ri (current-serialize-resolve-info))
+     (unless ri
+       (error 'serialize-delayed-index-desc "current-serialize-resolve-info not set"))
+     (with-handlers ([exn:fail:contract? (lambda (exn)
+                                           (error 'serialize-index-desc
+                                                  "serialization failed (wrong resolve info?); ~a"
+                                                  (exn-message exn)))])
+       (vector (delayed-element-content d ri))))
    #'deserialize-delayed-index-desc
    #f
    (or (current-load-relative-directory) (current-directory)))

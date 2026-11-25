@@ -50,7 +50,7 @@
   (define b (identifier-label-binding id))
   (unless b
     (error 'scribble "no class/interface/mixin information for identifier: ~e" id))
-  (list (caddr b) (list-ref b 3) (list-ref b 4) (list-ref b 5) (list-ref b 6)))
+  (take (drop b 2) 5))
 
 (define (make-inherited-table r d ri decl)
   (define start
@@ -404,12 +404,11 @@
                        (list 'src 1 0 1 5))]
                      [(((kw ...) ...) ...)
                       (for/list ([ids (in-list (syntax->list #'((arg ...) ...)))])
-                        (map (lambda (arg)
-                               (if (and (pair? (syntax-e arg)) (eq? (syntax-e #'mode) 'new))
-                                   (list (string->keyword
-                                          (symbol->string (syntax-e (car (syntax-e arg))))))
-                                   null))
-                             (syntax->list ids)))])
+                        (for/list ([arg (in-list (syntax->list ids))])
+                          (if (and (pair? (syntax-e arg)) (eq? (syntax-e #'mode) 'new))
+                              (list (string->keyword
+                                     (symbol->string (syntax-e (car (syntax-e arg))))))
+                              null)))])
          #'(make-constructor (lambda ()
                                (defproc* #:mode mode #:within name
                                  [[(make [kw ... . arg] ...) result] ...]

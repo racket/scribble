@@ -345,13 +345,13 @@
                             (+ raw-ex 2)
                             raw-ex)])
       (cc-superimpose (dc (λ (dc dx dy)
-                            (let ([pen (send dc get-pen)])
-                              (send dc set-pen
-                                    type-link-color ;(send pen get-color)
-                                    (if (is-a? dc post-script-dc%) 4 2)
-                                    'dot)
-                              (send dc draw-line (+ dx sx) (+ dy sy) (+ dx ex) (+ dy ey))
-                              (send dc set-pen pen)))
+                            (define pen (send dc get-pen))
+                            (send dc set-pen
+                                  type-link-color ;(send pen get-color)
+                                  (if (is-a? dc post-script-dc%) 4 2)
+                                  'dot)
+                            (send dc draw-line (+ dx sx) (+ dy sy) (+ dx ex) (+ dy ey))
+                            (send dc set-pen pen))
                           (pict-width pict)
                           (pict-height pict))
                       pict)))
@@ -360,8 +360,8 @@
                       base
                       dot1
                       (λ (ignored1 ignored2)
-                        (let-values ([(x y) (cc-find pict dot2)])
-                          (values (+ x 2) y)))
+                        (define-values (x y) (cc-find pict dot2))
+                        (values (+ x 2) y))
                       dot2
                       cc-find
                       #:color type-link-color)
